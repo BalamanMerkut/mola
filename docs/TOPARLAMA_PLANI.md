@@ -192,7 +192,7 @@
   - Y1 menünün kendi adresi: `MERKEZ_MENU_ORIGIN` (`https://menu.molayazilim.com.tr`), Merkez `/q/*`'yi yalnız o adla açar, başka adda `308`, o adda başka hiçbir şey yok; kafe `guest.menu-origin` bayrağıyla QR'a yalnız o adresi koyar (eski Merkez uyumlu); Caddyfile (doküman + Linux paketi), DNS `menu` kaydı. Yerel ağda (hafta sonu ev ağı provası) hiçbir şey değişmez. `/s/` sitede kaldı.
   - O5 sharp 0.35.5 (her platformun `@img` paketleri aynı sürümden), `npm audit --omit=dev` temiz.
   - O6 tek lisans (her zaman `features`), Merkez ilk açılışta bir kez yeniden imzalar; kafede `features`siz lisans yalnız 12 Ekim öncesi ve listeli lisans hiç görülmemişse "her şey".
-  - Testler: SONUC_YER_TUTUCU
+  - Testler: typecheck temiz; `npm test` 807 test (806 geçti, 1 atlanan; ayrıca 12 Ekim sonrası tarihle bir kez denendi, aynı sonuç); `build`; `test:e2e` 118/118 (3500/3590; `guest-internet` ve `qr-ordering` önce tek tek 3400/3490); `installer` (her platformun sharp dosyaları 0.35.5 / libvips 1.3.4); `check-pilot-package` geçti; `test:paket` 25 denetim geçti. Yeni testler: `tests/guest-tunnel.test.ts` "menu host", `tests/feature-gate.test.ts` ve `tests/merkez-packages.test.ts` "O6".
 
 ## En son (kullanıcı kararı, 5 Ekim)
 1. Önce bütün fonksiyonlarıyla "en üst sürüm" bitsin.
