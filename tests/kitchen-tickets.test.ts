@@ -7,7 +7,8 @@ import { resolve } from 'node:path';
 import { createServer as createHttpServer } from 'node:http';
 import { createServer, type AddressInfo } from 'node:net';
 import { createApp, DEMO_PASSWORD } from '../server/app.js';
-import { PrintService, PrinterFault, PAPER_QUERY, defaultTransport, networkCause, printingView } from '../server/printing.js';
+import { PrintService, PrinterFault, PAPER_QUERY, defaultTransport, networkCause, printingView, spooler, spoolerFault, spoolerResult, statusFault, statusQuery } from '../server/printing.js';
+import { fakePrinter } from './fake-printer.js';
 import { Store } from '../server/store.js';
 import { cancelOrder, editOrder, recordPayment, setStatus, submitOrder, submitTakeaway } from '../packages/domain/engine.js';
 import type { PrinterConfig } from '../packages/domain/printing.js';
@@ -178,23 +179,95 @@ test('Fiş modu: tickets due while the server was off print after it starts agai
   } finally { store.close(); }
 });
 
-test('network printer: paper-out status, plain causes and the paper query before the ticket', async () => {
-  const received: Buffer[] = [];
-  let answer: number | undefined;
-  const server = createServer(socket => socket.on('data', d => { received.push(d); if (answer !== undefined && d[0] === 0x10) socket.write(Buffer.from([answer])); }));
-  await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
-  const port = (server.address() as AddressInfo).port, data = Uint8Array.from([0x1b, 0x40, 65]);
+test('network printer: status questions before and after the ticket, paper out, cover open and plain causes', async () => {
+  const printer = await fakePrinter(), data = Uint8Array.from([0x1b, 0x40, 65]);
+  const to = { type: 'network' as const, host: '127.0.0.1', port: printer.port };
   try {
-    answer = 0x12; // paper present
-    await defaultTransport({ type: 'network', host: '127.0.0.1', port }, data);
+    // All fine: printer status, offline cause and paper sensor are asked, then the ticket, then once more after it.
+    await defaultTransport(to, data);
     await new Promise(r => setTimeout(r, 50));
-    assert.deepEqual(Buffer.concat(received), Buffer.concat([Buffer.from(PAPER_QUERY), Buffer.from(data)]));
-    answer = 0x72; received.length = 0; // paper end
-    await assert.rejects(defaultTransport({ type: 'network', host: '127.0.0.1', port }, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'paper');
+    assert.deepEqual(printer.bytes(), Buffer.concat([statusQuery(1), statusQuery(2), statusQuery(4), data, statusQuery(2), statusQuery(4)].map(b => Buffer.from(b))));
+    // The roll is empty: the ticket is not sent at all.
+    printer.clear(); printer.state.status = { printer: 0x1a, offline: 0x32, paper: 0x72 };
+    await assert.rejects(defaultTransport(to, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'paper' && /Yazıcıda kâğıt yok/.test(e.message));
+    assert.ok(!printer.bytes().includes(0x1b), 'no ticket bytes to a printer without paper');
+    // Cover open.
+    printer.state.status = { printer: 0x1a, offline: 0x16, paper: 0x12 };
+    await assert.rejects(defaultTransport(to, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'cover');
+    // The paper ran out while it printed: asked again after the ticket, it is a failed ticket.
+    printer.state.status = { printer: 0x12, offline: 0x12, paper: 0x12 }; printer.state.after = { printer: 0x1a, offline: 0x32, paper: 0x72 };
+    await assert.rejects(defaultTransport(to, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'paper');
+    // Nearly empty: it prints and says so.
+    printer.state.after = undefined; printer.state.status = { printer: 0x12, offline: 0x12, paper: 0x1e };
+    assert.deepEqual(await defaultTransport(to, data), { low: true });
+    // A printer without real-time status (no answer): the ticket goes after the first unanswered question.
+    printer.clear(); printer.state.status = null;
+    await defaultTransport(to, data);
+    await new Promise(r => setTimeout(r, 50));
+    assert.deepEqual(printer.bytes(), Buffer.concat([Buffer.from(statusQuery(1)), Buffer.from(data)]));
     await assert.rejects(defaultTransport({ type: 'network', host: '127.0.0.1', port: 1 }, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'network');
-  } finally { server.close(); }
+  } finally { await printer.close(); }
+  assert.equal(PAPER_QUERY.join(','), '16,4,4');
   assert.equal(networkCause('EHOSTUNREACH'), 'offline'); assert.equal(networkCause('ETIMEDOUT'), 'offline');
   assert.equal(networkCause('ENETUNREACH'), 'network'); assert.equal(networkCause('EWHATEVER'), 'unknown');
+  assert.deepEqual(statusFault({ printer: 0x12, offline: 0x12, paper: 0x12 }), {});
+  assert.equal(statusFault({ printer: 0x1a }).fault, 'error');
+});
+
+test('Windows USB printer: the spooler says paper out, cover open or offline (fake spooler, read only)', { skip: process.platform !== 'win32' && 'Windows yalnız' }, async () => {
+  const real = spooler.run, seen: Record<string, string>[] = [];
+  let answer = '';
+  spooler.run = async (_script, env) => { seen.push(env); return answer; };
+  const usb = { type: 'windows' as const, printerName: 'XP-80C' }, data = Uint8Array.from([0x1b, 0x40]);
+  try {
+    answer = 'MOLA:BEFORE:16:0';
+    await assert.rejects(defaultTransport(usb, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'paper' && /XP-80C/.test(e.message));
+    answer = 'MOLA:BEFORE:4194304:0';
+    await assert.rejects(defaultTransport(usb, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'cover');
+    answer = 'MOLA:BEFORE:0:1024';
+    await assert.rejects(defaultTransport(usb, data), (e: unknown) => e instanceof PrinterFault && e.fault === 'offline');
+    // Sent, then the job stuck in the queue with "kâğıt yok".
+    answer = 'MOLA:BEFORE:0:0\r\nMOLA:AFTER:0:0:64';
+    await assert.rejects(defaultTransport(usb, data, { name: 'Mola fis 12 order' }), (e: unknown) => e instanceof PrinterFault && e.fault === 'paper');
+    assert.equal(seen.at(-1)!.MOLA_PRINT_DOC, 'Mola fis 12 order', 'a kitchen ticket carries its own document name');
+    answer = 'MOLA:BEFORE:0:0\r\nMOLA:AFTER:0:0:128';
+    assert.deepEqual(await defaultTransport(usb, data), {});
+    // "Tekrar bas" while the earlier copy still waits in the queue (paper back in): not printed twice.
+    answer = 'MOLA:BEFORE:0:0\r\nMOLA:WAITING:0:0:0';
+    assert.deepEqual(await defaultTransport(usb, data, { name: 'Mola fis 12 order' }), {});
+    assert.equal(seen[0].MOLA_PRINT_DOC, 'Mola fis', 'a manual print has the plain name');
+  } finally { spooler.run = real; }
+  assert.equal(spoolerFault(0x10), 'paper'); assert.equal(spoolerFault(0x40), 'paper'); assert.equal(spoolerFault(0x400000), 'cover');
+  assert.equal(spoolerFault(0x80), 'offline'); assert.equal(spoolerFault(0, 0x400), 'offline'); assert.equal(spoolerFault(0x8), 'error'); assert.equal(spoolerFault(0, 0, 0x2), 'error');
+  assert.equal(spoolerFault(0), undefined); assert.deepEqual(spoolerResult('çöp'), {});
+});
+
+test('Ekran modu too: a failed kitchen ticket keeps its cause and printer on the order, the owner gets one Bildirim', async () => {
+  mkdirSync('.local/tests', { recursive: true });
+  const store = new Store(mkdtempSync(resolve('.local/tests/kitchen-tickets-screen-')), [T]);
+  try {
+    let fail: PrinterFault | null = new PrinterFault('paper', 'kâğıt yok'), low = false;
+    const notes: { key: string; title: string; text: string }[] = [];
+    const service = new PrintService(store, () => at(300), async () => { if (fail) throw fail; return low ? { low } : {}; });
+    service.notify = (_t, key, title, text) => { notes.push({ key, title, text }); };
+    store.mutate(T, s => { s.printers = [printer({ id: 'kitchen-printer' })]; staffOrder(s); staffOrder(s); });
+    service.refresh(T); await service.tick();
+    let s = store.read(T);
+    assert.equal(s.kitchenMode, undefined);
+    assert.deepEqual(s.orders.map(o => o.printProblems?.[0]?.cause), ['paper', 'paper']);
+    assert.equal(s.orders[0].printProblems![0].printer, 'Mutfak');
+    assert.equal(notes.length, 1, 'one Bildirim per printer and problem, not per order');
+    assert.equal(notes[0].title, 'Yazıcıda kâğıt yok · Mutfak'); assert.match(notes[0].text, /Yeni rulo takın/);
+    // Paper back in: the kitchen card's "Tekrar bas" prints and the warning goes; the next problem is told again.
+    fail = null; low = true;
+    await service.reprint(T, s.orders[0].id);
+    s = store.read(T);
+    assert.equal(s.orders[0].printProblems, undefined); assert.deepEqual(s.orders[0].printedTo, ['kitchen-printer']);
+    assert.equal(notes.at(-1)!.title, 'Yazıcıda kâğıt azaldı · Mutfak');
+    fail = new PrinterFault('cover', 'kapak');
+    await assert.rejects(service.reprint(T, s.orders[1].id), (e: unknown) => e instanceof PrinterFault && /Yazıcının kapağı açık · Mutfak/.test(e.message));
+    assert.equal(store.read(T).orders[1].printProblems![0].cause, 'cover');
+  } finally { store.close(); }
 });
 
 test('HTTP: Fiş needs a kitchen printer; warning buttons and "Hepsini teslim edildi" for the floor', async t => {

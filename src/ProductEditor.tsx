@@ -11,6 +11,7 @@ import { goTo } from './navigate';
 import { artForCategory } from '../packages/domain/sector';
 import { optionLabelSuggestion } from '../packages/domain/menu-translation';
 import { DEFAULT_VAT, productVat, suggestVat, vatSettings, type VatSettings } from '../packages/domain/vat';
+import { CROP_BYTES, encodePhoto, preparePhoto, sizeOf, SOURCE_BYTES, SOURCE_SIDE, type PhotoSource } from './photoPrep';
 import './menu-workspace.css';
 import './vat.css';
 // "Reçete": the Stok recipe of this product (src/StockRecipes.tsx), loaded only when the section is opened.
@@ -22,7 +23,7 @@ type DraftGroup = Omit<OptionGroup, 'options'> & { options: { id: string; name: 
 export const ProductEditor = memo(function ProductEditor({ initial, liveProduct, nextCode, revision, categoriesKey, subcategoriesKey = '[]', onClose, onSave, onDelete }: { subcategoriesKey?: string; categoriesKey: string; initial: Product | null; liveProduct?: Product; nextCode: string; revision: number; onClose: () => void; onDelete: () => void; onSave: (published: boolean) => void }) {
   const subcategories = useMemo(() => JSON.parse(subcategoriesKey) as { category: string; names: string[] }[], [subcategoriesKey]);
   const categories = useMemo(() => JSON.parse(categoriesKey) as string[], [categoriesKey]);
-  const [form, setForm] = useState({ code: initial?.code ?? nextCode, name: initial?.name ?? '', nameEn: initial?.nameEn ?? '', category: initial?.category ?? '', subtype: initial?.subtype ?? '', ingredients: initial?.ingredients ?? '', description: initial?.description ?? '', descriptionEn: initial?.descriptionEn ?? '', ingredientsEn: initial?.ingredientsEn ?? '', price: initial ? String(initial.price / 100) : '', soldOut: initial?.soldOut ?? false, unit: (initial?.unit === 'kg' ? 'kg' : 'piece') as 'piece' | 'kg' });
+  const [form, setForm] = useState({ code: initial?.code ?? nextCode, name: initial?.name ?? '', nameEn: initial?.nameEn ?? '', category: initial?.category ?? '', subtype: initial?.subtype ?? '', ingredients: initial?.ingredients ?? '', description: initial?.description ?? '', descriptionEn: initial?.descriptionEn ?? '', ingredientsEn: initial?.ingredientsEn ?? '', price: initial ? String(initial.price / 100) : '', soldOut: initial?.soldOut ?? false, readyMade: initial?.readyMade ?? false, unit: (initial?.unit === 'kg' ? 'kg' : 'piece') as 'piece' | 'kg' });
   const [groups, setGroups] = useState<DraftGroup[]>(() => (initial?.groups ?? []).map(g => ({ ...g, preset: g.preset ?? ({ boy: 'size', 'süt tercihi': 'milk', 'servis tercihi': 'service' } as Record<string, OptionGroup['preset']>)[g.name.trim().toLocaleLowerCase('tr')], options: g.options.map(o => ({ ...o, extra: String(o.extra / 100) })) })));
   const openedRevision = useRef(revision);
   const [uncertain, setUncertain] = useState(false);
@@ -84,6 +85,8 @@ export const ProductEditor = memo(function ProductEditor({ initial, liveProduct,
         <VatField rate={vatRate} auto={autoVat !== null} list={vatList} name={form.name} category={form.category} onChange={setVat} onApplied={revision => { openedRevision.current = revision; }} />
         <div className="editor-price-code"><label>{form.unit === 'kg' ? 'Fiyat (TL / kg)' : 'Fiyat (TL)'} <span aria-hidden="true" className="required-mark">*</span><input aria-label={form.unit === 'kg' ? 'Fiyat (TL / kg)' : 'Fiyat (TL)'} inputMode="decimal" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required /></label><label>Ürün kodu <span aria-hidden="true" className="required-mark">*</span><input aria-label="Ürün kodu" inputMode="numeric" value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} required /><small>Otomatik verilir, değiştirilebilir.</small></label></div>
         <label>{form.category === 'Tatlılar' ? 'Tatlı türü' : 'Alt kategori'} <small>İsteğe bağlı</small><select id="product-subtypes" disabled={!form.category} value={form.subtype} onChange={e => setForm(f => ({ ...f, subtype: e.target.value }))}><option value="">Alt kategori seçiniz</option>{[...new Set([...(subcategories.find(c => c.category === form.category)?.names ?? []), ...(kinds[form.category] ?? []), ...(form.subtype ? [form.subtype] : [])])].map(k => <option key={k} value={k}>{k}</option>)}</select></label>
+        {/* 11 Ekim: a bottled/canned drink the kitchen does not prepare; the waiter may swap it until the bill is paid (packages/domain/order-change.ts). */}
+        <label className="checkbox-label editor-ready-made"><input type="checkbox" checked={form.readyMade} onChange={e => setForm(f => ({ ...f, readyMade: e.target.checked }))} />Hazır ürün (kutu, şişe: mutfakta hazırlanmaz)<HelpTip title="Hazır ürün">Kola, ayran, su, soda gibi hazır gelen ürünler. Garson bu ürünü hesap ödenene kadar başka bir hazır ürünle değiştirebilir ya da adedini değiştirebilir; fiyat farkı hesaba kendiliğinden yansır ve kasada “Değişti” diye görünür. Mutfak bu değişiklik için uyarılmaz.</HelpTip></label>
       </section><section className="editor-photo"><h3>Ürün fotoğrafı <small>İsteğe bağlı</small></h3><PhotoEditor photo={photo} art={art} onChange={setPhoto} onBusy={setPhotoBusy} /></section></div>
       <details className="editor-disclosure" open={!!initial?.groups.length || undefined}><summary>Müşteri seçenekleri <small>Boy, süt tercihi veya ek malzeme</small></summary><p className="muted small">Fiyat farkında −10 gibi negatif bir tutar ürün fiyatını düşürür.</p><OptionFields groups={groups} category={form.category} setGroups={setGroups} /></details>
       {!stockOn && <LockedRow feature="stock" title="Reçete" line="Stok ve kârlılık için malzeme miktarları: Stok, reçete ve kârlılık hizmetiyle." />}
@@ -163,7 +166,7 @@ const EnglishFields = memo(function EnglishFields({ values, onChange, groups, se
 });
 
 const PhotoEditor = memo(function PhotoEditor({ photo, art, onChange, onBusy }: { photo: string | null; art: Product['art']; onChange: (value: string | null) => void; onBusy: (value: boolean) => void }) {
-  const [source, setSource] = useState<HTMLImageElement | null>(null); const [legacy, setLegacy] = useState(false); const [zoom, setZoom] = useState(1); const [x, setX] = useState(50); const [y, setY] = useState(50); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  const [source, setSource] = useState<PhotoSource | null>(null); const [legacy, setLegacy] = useState(false); const [zoom, setZoom] = useState(1); const [x, setX] = useState(50); const [y, setY] = useState(50); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null); const generation = useRef(0);
   useEffect(() => () => { generation.current++; }, []);
   useEffect(() => {
@@ -173,10 +176,10 @@ const PhotoEditor = memo(function PhotoEditor({ photo, art, onChange, onBusy }: 
   }, [source, zoom, x, y]);
   async function choose(file?: File) {
     if (!file) return; setError('');
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) { setError('En fazla 10 MB boyutunda JPG, PNG veya WebP seçin.'); return; }
-    const run = ++generation.current; const url = URL.createObjectURL(file); onBusy(true); setBusy(true);
-    try { const img = new Image(); img.src = url; await img.decode(); if (run !== generation.current) return; if (img.naturalWidth * img.naturalHeight > 40_000_000) throw new Error('Fotoğraf çok büyük. 40 megapikselden küçük bir fotoğraf seçin.'); setSource(img); setLegacy(false); setZoom(1); setX(50); setY(50); }
-    catch (e) { setError((e as Error).message); onBusy(false); } finally { URL.revokeObjectURL(url); setBusy(false); }
+    // A phone photo (12–48 MP, iPhone HEIC too) is made at most 2048 px here, upright, before anything is sent (src/photoPrep.ts).
+    const run = ++generation.current; onBusy(true); setBusy(true);
+    try { const prepared = await preparePhoto(file); if (run !== generation.current) return; setSource(prepared); setLegacy(false); setZoom(1); setX(50); setY(50); }
+    catch (e) { setError((e as Error).message); onBusy(false); } finally { setBusy(false); }
   }
   async function editPhoto() {
     if (!photo) return; setBusy(true); onBusy(true); setError('');
@@ -190,25 +193,23 @@ const PhotoEditor = memo(function PhotoEditor({ photo, art, onChange, onBusy }: 
     setBusy(true); setError('');
     try { const output = document.createElement('canvas'); output.width = 800; output.height = 800;
       drawCrop(output, source!, zoom, x, y);
-      const data = await canvasData(output, .8);
-      const originalCanvas = document.createElement('canvas');
-      const ratio = Math.min(1, 2048 / Math.max(source!.naturalWidth, source!.naturalHeight));
-      originalCanvas.width = Math.max(1, Math.round(source!.naturalWidth * ratio)); originalCanvas.height = Math.max(1, Math.round(source!.naturalHeight * ratio));
-      originalCanvas.getContext('2d')!.drawImage(source!, 0, 0, originalCanvas.width, originalCanvas.height);
-      const originalData = await canvasData(originalCanvas, .88);
+      const data = await encodePhoto(output, .82, CROP_BYTES);
+      const size = sizeOf(source!), ratio = Math.min(1, SOURCE_SIDE / Math.max(size.width, size.height));
+      let originalCanvas = source as HTMLCanvasElement;
+      if (!(source instanceof HTMLCanvasElement) || ratio < 1) {
+        originalCanvas = document.createElement('canvas');
+        originalCanvas.width = Math.max(1, Math.round(size.width * ratio)); originalCanvas.height = Math.max(1, Math.round(size.height * ratio));
+        originalCanvas.getContext('2d')!.drawImage(source!, 0, 0, originalCanvas.width, originalCanvas.height);
+      }
+      const originalData = await encodePhoto(originalCanvas, .85, SOURCE_BYTES);
       const result = await api<{ photo: string }>('/api/staff/photos', { data, source: { data: originalData, crop: { zoom, x, y } } }); onChange(result.photo); setSource(null); onBusy(false); }
     catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
-  return <div className="photo-editor">{source ? <>{legacy && <p className="small muted">Bu eski fotoğrafın yalnızca kaydedilmiş kırpımı var; kırpımın dışındaki alanlar geri getirilemez.</p>}<div className="crop-preview"><canvas ref={canvas} width={320} height={320} aria-label="Fotoğraf kırpma önizlemesi" /></div><div className="crop-controls"><CropControl label="Yakınlaştır" value={zoom} initial={1} min={1} max={3} step={.05} onChange={setZoom} disabled={busy} /><CropControl label="Yatay konum" value={x} initial={50} min={0} max={100} onChange={setX} disabled={busy} /><CropControl label="Dikey konum" value={y} initial={50} min={0} max={100} onChange={setY} disabled={busy} /></div><div className="option-presets"><button type="button" disabled={busy} className="btn primary" onClick={() => void usePhoto()}><Check size={16} />{busy ? 'Fotoğraf hazırlanıyor…' : 'Fotoğrafı kullan'}</button><button type="button" className="btn secondary" disabled={busy} onClick={() => { setSource(null); onBusy(false); }}>Kırpmadan vazgeç</button></div></> : <div className="photo-current"><ProductArt kind={art} photo={photo} alt="Ürün fotoğrafı önizlemesi" /><div><label className="photo-upload"><ImagePlus size={20} />{busy ? 'Fotoğraf açılıyor…' : photo ? 'Fotoğrafı değiştir' : 'Fotoğraf seç'}<input aria-label="Ürün fotoğrafı seç" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => { void choose(e.target.files?.[0]); e.target.value = ''; }} /></label><p className="small muted">JPG, PNG, WebP · En fazla 10 MB<br />Kare kırpma ve otomatik küçültme.</p>{photo && <button type="button" className="btn secondary small-btn" disabled={busy} onClick={() => void editPhoto()}>Fotoğrafı düzenle</button>}{photo && <button type="button" className="text-btn" onClick={() => onChange(null)}>Fotoğrafı kaldır</button>}</div></div>}{error && <Notice tone="error">{error}</Notice>}</div>;
+  return <div className="photo-editor">{source ? <>{legacy && <p className="small muted">Bu eski fotoğrafın yalnızca kaydedilmiş kırpımı var; kırpımın dışındaki alanlar geri getirilemez.</p>}<div className="crop-preview"><canvas ref={canvas} width={320} height={320} aria-label="Fotoğraf kırpma önizlemesi" /></div><div className="crop-controls"><CropControl label="Yakınlaştır" value={zoom} initial={1} min={1} max={3} step={.05} onChange={setZoom} disabled={busy} /><CropControl label="Yatay konum" value={x} initial={50} min={0} max={100} onChange={setX} disabled={busy} /><CropControl label="Dikey konum" value={y} initial={50} min={0} max={100} onChange={setY} disabled={busy} /></div><div className="option-presets"><button type="button" disabled={busy} className="btn primary" onClick={() => void usePhoto()}><Check size={16} />{busy ? 'Fotoğraf hazırlanıyor…' : 'Fotoğrafı kullan'}</button><button type="button" className="btn secondary" disabled={busy} onClick={() => { setSource(null); onBusy(false); }}>Kırpmadan vazgeç</button></div></> : <div className="photo-current"><ProductArt kind={art} photo={photo} alt="Ürün fotoğrafı önizlemesi" /><div><label className="photo-upload"><ImagePlus size={20} />{busy ? 'Fotoğraf açılıyor…' : photo ? 'Fotoğrafı değiştir' : 'Fotoğraf seç'}<input aria-label="Ürün fotoğrafı seç" type="file" accept="image/*" disabled={busy} onChange={e => { void choose(e.target.files?.[0]); e.target.value = ''; }} /></label><p className="small muted">Telefonla çekilmiş fotoğraf da olur (JPG, PNG, WebP, iPhone HEIC).<br />Gönderilmeden önce küçültülür; kare kırpılır.</p>{photo && <button type="button" className="btn secondary small-btn" disabled={busy} onClick={() => void editPhoto()}>Fotoğrafı düzenle</button>}{photo && <button type="button" className="text-btn" onClick={() => onChange(null)}>Fotoğrafı kaldır</button>}</div></div>}{error && <Notice tone="error">{error}</Notice>}</div>;
 });
 
-function drawCrop(canvas: HTMLCanvasElement, source: HTMLImageElement, zoom: number, x: number, y: number) {
-  const side = Math.min(source.naturalWidth, source.naturalHeight) / zoom;
-  canvas.getContext('2d')!.clearRect(0, 0, canvas.width, canvas.height);
-  canvas.getContext('2d')!.drawImage(source, (source.naturalWidth - side) * x / 100, (source.naturalHeight - side) * y / 100, side, side, 0, 0, canvas.width, canvas.height);
-}
-
-async function canvasData(canvas: HTMLCanvasElement, quality: number) {
-  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Fotoğraf hazırlanamadı.')), 'image/webp', quality));
-  return new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result as string); reader.onerror = () => reject(new Error('Fotoğraf okunamadı.')); reader.readAsDataURL(blob); });
+function drawCrop(canvas: HTMLCanvasElement, source: PhotoSource, zoom: number, x: number, y: number) {
+  const { width, height } = sizeOf(source), side = Math.min(width, height) / zoom, g = canvas.getContext('2d')!;
+  g.clearRect(0, 0, canvas.width, canvas.height); g.imageSmoothingQuality = 'high';
+  g.drawImage(source, (width - side) * x / 100, (height - side) * y / 100, side, side, 0, 0, canvas.width, canvas.height);
 }

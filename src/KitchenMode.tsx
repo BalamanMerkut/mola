@@ -10,6 +10,8 @@ import { KitchenCancellation } from './KitchenCancellation';
 import { KitchenSound, type KitchenNotice } from './KitchenSound';
 import { WaitingTime, useMinuteClock, waitedMinutes } from './KitchenTimer';
 import { StockQuestions } from './StockQuestions';
+import { problemText } from '../packages/domain/print-problems';
+import { OrderChanges } from './StaffChange';
 import './kitchen-mode.css';
 // "Tanıtım" label of a demo business (server/demo-reset.ts).
 import { DemoBadge } from './DemoBadge';
@@ -108,7 +110,7 @@ export function KitchenMode({ data, view, onView, connected, error, onError, onT
       {board ? <>
         <div className="kitchen-notices">
           {/* Cancellations by someone else stay in red above the board for 30 s ("İPTAL · kim · neden"), with their own sound. */}
-          {strip.length > 0 && <div className="kitchen-cancel-strip" role="alert">{strip.map(n => <p key={n.id}><strong>İPTAL</strong><span>{n.heading} · {n.who}{n.reason ? ` · ${n.reason}` : ''}</span>{n.items && <small>{n.items}</small>}</p>)}</div>}
+          {strip.length > 0 && <div className="kitchen-cancel-strip" role="alert">{strip.map(n => <p key={n.id}><strong>{n.kind === 'change' ? 'DEĞİŞTİ' : 'İPTAL'}</strong><span>{n.heading} · {n.who}{n.reason ? ` · ${n.reason}` : ''}</span>{n.items && <small>{n.items}</small>}</p>)}</div>}
           {!!data.stockQuestions?.length && <StockQuestions questions={data.stockQuestions} onSaved={message => { onToast(message); void load(); }} />}
           {/* QR approvals and delivery platform orders waiting for Kabul/Reddet. */}
           <ApprovalQueue data={data} onlyWaiting kitchen onSaved={() => void load()} />
@@ -121,7 +123,11 @@ export function KitchenMode({ data, view, onView, connected, error, onError, onT
             <div className="column-heading"><Status value={status} /><span>{count(status)}</span></div>
             {data.orders.filter(o => o.status === status).map(o => { const late = lateness(o, now); return <article className={`kitchen-card ${o.takeaway ? 'kitchen-takeaway' : ''} ${late}`.trim()} key={o.id} data-order={o.id} data-late={late || undefined}>
               <div className="order-head">{o.external ? <PlatformHeading source={o.external} /> : o.takeaway ? <h3 className="takeaway-heading"><ShoppingBag size={17} aria-hidden="true" />{takeawayHeading(o.takeaway.number)}</h3> : <h3>{o.tableName}</h3>}<span className="kitchen-card-tools">#{o.number}{data.printing?.orders && <button type="button" className="icon-btn ticket-reprint" aria-label={`Sipariş #${o.number} fişini yeniden yazdır`} title="Fişi yeniden yazdır" onClick={() => onPrint(o)}><Printer size={15} /></button>}</span></div>
-              {!!o.printFailedTo?.length && <p className="print-failed">Fiş yazdırılamadı · Yazıcıyı kontrol edip <Printer size={12} aria-hidden="true" /> simgesine basın.</p>}
+              {/* 11 Ekim: the ticket did not print and why ("Yazıcıda kâğıt yok · Mutfak"), with "Tekrar bas" once fixed. */}
+              {o.printProblems?.length ? o.printProblems.map(p => <p key={p.printerId} className="print-failed print-problem" role="alert"><span>Fiş basılamadı: {problemText(p.cause, p.printer)}.</span>{data.printing?.orders && <button type="button" className="btn secondary small-btn" onClick={() => onPrint(o)}><Printer size={14} aria-hidden="true" />Tekrar bas</button>}</p>)
+                : !!o.printFailedTo?.length && <p className="print-failed">Fiş yazdırılamadı · Yazıcıyı kontrol edip <Printer size={12} aria-hidden="true" /> simgesine basın.</p>}
+              <OrderChanges order={o} />
+
               <div className="order-meta"><span>{o.takeaway ? o.takeaway.label ?? '' : o.guestLabel}</span><WaitingTime since={o.createdAt} lateAfter={status === 'ready' ? Infinity : LATE_MINUTES} />{late && <span className="late-label">{late === 'very-late' ? 'Çok gecikti' : 'Gecikti'}</span>}</div>
               {o.packed && <PackedBadge loud />}{o.external && <PlatformDetails source={o.external} kitchen />}
               {o.paymentBeforePreparation && <p className="muted small">{o.paid ? 'Ödeme alındı' : 'Ödeme bekleniyor · Hazırlık kilitli'}</p>}

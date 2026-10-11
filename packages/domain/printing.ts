@@ -2,7 +2,8 @@ import { balances, changeDeadline, isOrderPaid } from './engine.js';
 import { formatWeight } from './lines.js';
 import { takeawayHeading } from './takeaway.js';
 import { deliveryText, externalHeading } from './platforms.js';
-import type { Order, OrderLine, State } from './types.js';
+import type { LineChange, Order, OrderLine, State } from './types.js';
+import { changeSideText } from './lines.js';
 import { productVat, receiptVat, vatSettings } from './vat.js';
 
 /** document: an ordinary office printer (laser / inkjet) that cannot read receipt-printer commands; it gets plain text through its own driver. */
@@ -124,6 +125,23 @@ export function cancelTicket(s: State, o: Order, printer: PrinterConfig, lines: 
     { rule: true }, ...itemLines(lines), { rule: true },
   ];
 }
+/** A waiter changed one line after the order printed: "*** DEĞİŞİKLİK ***", what it was, what it is now, and the whole order as it stands. */
+export function changeTicket(s: State, o: Order, printer: PrinterConfig, change: LineChange): Ticket {
+  return [
+    { text: '*** DEĞİŞİKLİK ***', align: 'center', bold: true, large: true },
+    ...heading(s, o),
+    { text: `Sipariş #${o.number} · ${timeFormat.format(new Date(change.at))}`, align: 'center' },
+    { text: printer.name.toLocaleUpperCase('tr-TR'), align: 'center' },
+    { rule: true },
+    { text: `ESKİ: ${changeSideText(change.from)}` },
+    ...(change.from.note ? [{ text: `    Not: ${change.from.note}` } as Op] : []),
+    { text: `YENİ: ${changeSideText(change.to)}`, bold: true, tall: true },
+    ...(change.to.note ? [{ text: `    Not: ${change.to.note}`, bold: true } as Op] : []),
+    { rule: true },
+    { text: 'Siparişin son hali:', align: 'left' },
+    ...itemLines(o.lines), { rule: true },
+  ];
+}
 /** The lines of `lines` this printer makes (same rule as orderTargets: tek mutfak, every line). */
 export function linesFor(_s: State, _printer: PrinterConfig, lines: OrderLine[]) {
   return lines;
@@ -144,7 +162,8 @@ export function billTicket(s: State, accountId: string, now: Date): Ticket {
   const discount = orders.flatMap(o => o.lines).reduce((n, l) => n + ((l.originalUnitPrice ?? l.unitPrice) - l.unitPrice) * l.quantity, 0);
   return [
     { text: s.name, align: 'center', bold: true, large: true },
-    { text: 'HESAP ÖZETİ', align: 'center', bold: true },
+    // Only information on the slip (11 Ekim, sahibin kararı): a two-word title tells it from a fiscal receipt, no legal sentences.
+    { text: 'BİLGİ FİŞİ', align: 'center', bold: true },
     { text: `${table} · ${dateFormat.format(now)}`, align: 'center' },
     // The seated reservation's name, so staff and guest see whose bill it is.
     ...(account.guest?.name ? [{ text: account.guest.name, align: 'center' } as Op] : []),
@@ -157,8 +176,6 @@ export function billTicket(s: State, accountId: string, now: Date): Ticket {
     ...(paid > 0 || depositCredit > 0 ? [...(paid > 0 ? [{ pair: ['Ödenen', printMoney(paid)] } as Op] : []), { pair: ['KALAN', printMoney(balance)], bold: true } as Op] : []),
     { rule: true },
     ...billVat(s, orders.flatMap(o => o.lines)),
-    { text: 'Bilgi fişidir. Mali değeri yoktur.', align: 'center' },
-    { text: 'Teşekkür ederiz.', align: 'center' },
   ];
 }
 /** Receipt for one recorded payment (cash or card). Informational, like the bill. */
@@ -179,16 +196,13 @@ export function paymentTicket(s: State, paymentId: string, now: Date): Ticket {
     : [{ text: 'Hesap tutarından kısmi ödeme' }];
   return [
     { text: s.name, align: 'center', bold: true, large: true },
-    { text: 'ÖDEME FİŞİ', align: 'center', bold: true },
+    { text: 'BİLGİ FİŞİ', align: 'center', bold: true },
     { text: `${table} · ${dateFormat.format(new Date(payment.createdAt))}`, align: 'center' },
     { rule: true }, ...items, { rule: true },
     { pair: ['ÖDENEN', printMoney(payment.amount)], bold: true },
     { pair: ['Ödeme şekli', payment.method === 'cash' ? 'Nakit' : payment.method === 'platform' ? 'Platform ödemesi' : 'Kart'] },
     ...(payment.method === 'cash' ? [{ pair: ['Alınan nakit', printMoney(payment.tendered)] } as Op, { pair: ['Para üstü', printMoney(payment.change)] } as Op] : []),
     { pair: ['Kalan hesap', printMoney(Math.max(0, remaining))] },
-    { rule: true },
-    { text: 'Bilgi fişidir. Mali değeri yoktur.', align: 'center' },
-    { text: 'Teşekkür ederiz.', align: 'center' },
     ...(now.getTime() - Date.parse(payment.createdAt) > 10 * 60000 ? [{ text: `Tekrar yazdırıldı · ${dateFormat.format(now)}`, align: 'center' } as Op] : []),
   ];
 }

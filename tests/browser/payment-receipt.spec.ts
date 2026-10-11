@@ -25,14 +25,16 @@ test('cashier sees receipt controls; an unreachable printer never undoes the sav
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.getByRole('button', { name: 'Hesap fişi' }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog.getByText('Yazıcıya ulaşılamadı. Kağıdı ve kabloyu kontrol edin.')).toBeVisible({ timeout: 15000 });
+  // 11 Ekim: the message names the printer's address and what to check.
+  await expect(dialog.getByText(/Yazıcı kapalı ya da kablosu çıkmış · Kasa\. Yazıcıyı açın, kablosunu kontrol edin/)).toBeVisible({ timeout: 15000 });
+  await expect(dialog.getByRole('button', { name: 'Tekrar bas' })).toBeVisible();
   await expect(dialog).not.toContainText('Takip kodu');
   await expect(dialog.getByRole('button', { name: 'Ödemeyi kaydet' })).toBeInViewport({ ratio: 1 });
   await expect(dialog.locator('.payment-change')).toBeInViewport({ ratio: 1 });
   await page.getByRole('button', { name: 'Ödemeyi kaydet' }).click();
   await expect(page.locator('.toast')).toContainText('Hesap kapandı');
   await expect(page.locator('.toast')).not.toContainText('Para üstü', { timeout: 100 });
-  await expect(page.getByText('Ödeme kaydedildi. Yazıcıya ulaşılamadı. Kağıdı ve kabloyu kontrol edin.')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/^Ödeme kaydedildi\. Yazıcı kapalı ya da kablosu çıkmış · Kasa/)).toBeVisible({ timeout: 15000 });
   await expect(page.getByText(/Takip kodu/)).toHaveCount(0);
   const after = await (await page.request.get('/api/staff/state')).json();
   expect(after.tables[0].account).toBeNull();

@@ -1,5 +1,5 @@
 import type { State } from './types.js';
-import { BEFORE_WEEKS, campaignProducts, campaignViews, categoriesPlace, scheduleDayLength, scheduleSlots, scheduleText } from './campaigns.js';
+import { BEFORE_WEEKS, campaignProducts, campaignViews, categoriesPlace, isMonthly, scheduleDayLength, scheduleOccurrences, scheduleSlots, scheduleText } from './campaigns.js';
 import { campaignKey, mergeTotals, stateRecords, summarize, type Totals } from './history.js';
 const DAY = 86400000;
 /** Totals of all orders created inside [start, end). The server answers from stored daily summaries. */
@@ -27,12 +27,17 @@ export function* campaignReportSteps(s: State, now: Date, span: SpanTotals = sta
     // Weekly campaigns count only their active days and hours, against the same weekdays and hours of the weeks before;
     // "a day" is one active window, so averages stay per active day. Date-range campaigns keep the plain 7-day comparison.
     const recurring = !!c.schedule, dayLength = scheduleDayLength(c.schedule), previousStart = start - (recurring ? BEFORE_WEEKS * 7 : 7) * DAY;
+    // A monthly campaign ("her ayın 15'i") is compared with every day of the 4 weeks before it (same hours): an ordinary day.
+    const monthly = isMonthly(c.schedule), beforeSchedule = monthly ? { days: [1, 2, 3, 4, 5, 6, 7], ...(c.schedule!.from && c.schedule!.to ? { from: c.schedule!.from, to: c.schedule!.to } : {}) } : c.schedule;
     const slots = (from: number, to: number) => scheduleSlots(c.schedule, from, to), length = (list: [number, number][]) => list.reduce((n, [a, b]) => n + b - a, 0) / dayLength;
-    const duringSlots = slots(start, end), beforeSlots = slots(previousStart, start);
-    function* spans(list: [number, number][]) { const parts: Totals[] = []; for (const [a, b] of list) { parts.push(span(a, b)); yield; } return mergeTotals(parts); }
+    const duringSlots = slots(start, end), beforeSlots = scheduleSlots(beforeSchedule, previousStart, start);
+    // "Tekrarlar": each day the campaign ran, with what it discounted that day (newest last).
+    const occurrences: { start: string; end: string; quantity: number; amount: number; discount: number }[] = [];
+    const occurrence = (a: number, b: number, t: Totals) => { let quantity = 0, amount = 0, discount = 0; for (const p of t.campaigns.get(campaignKey(c))?.values() ?? []) { quantity += p.quantity; amount += p.amount; discount += p.discount; } occurrences.push({ start: new Date(a).toISOString(), end: new Date(b).toISOString(), quantity, amount, discount }); };
+    function* spans(list: [number, number][], record = false) { const parts: Totals[] = []; for (const [a, b] of list) { if (record) for (const [x, y] of scheduleOccurrences(c.schedule!, a, b)) { const t = span(x, y); parts.push(t); occurrence(x, y, t); yield; } else { parts.push(span(a, b)); yield; } } return mergeTotals(parts); }
     function* one(a: number, b: number) { const t = span(a, b); yield; return t; }
     const durationDays = recurring ? length(duringSlots) : (end - start) / DAY, beforeDays = recurring ? length(beforeSlots) : 7;
-    const beforeSpan = recurring ? yield* spans(beforeSlots) : yield* one(previousStart, start), during = recurring ? yield* spans(duringSlots) : yield* one(start, end);
+    const beforeSpan = recurring ? yield* spans(beforeSlots) : yield* one(previousStart, start), during = recurring ? yield* spans(duringSlots, monthly) : yield* one(start, end);
     // Discounted lines are counted over the whole period, so nothing priced by the campaign is ever left out.
     const applied = (recurring ? yield* one(start, end) : during).campaigns.get(campaignKey(c));
     // A category campaign lists what is in its categories now plus everything it actually discounted (a product moved
@@ -49,7 +54,7 @@ export function* campaignReportSteps(s: State, now: Date, span: SpanTotals = sta
     const before = products.reduce((n, p) => n + p.before, 0), quantity = products.reduce((n, p) => n + p.quantity, 0);
     const dailyBefore = beforeDays ? before / beforeDays : 0, dailyDuring = durationDays ? quantity / durationDays : 0;
     const appliedAmount = products.reduce((n, p) => n + p.appliedAmount, 0), discount = products.reduce((n, p) => n + p.discount, 0);
-    rows.push({ quotaUnavailable, id: c.reportId ?? c.id, name: c.name, minQuantity: c.minQuantity, kind: c.kind ?? 'percent', percent: c.percent, amount: c.amount, ...(c.schedule ? { scheduleText: scheduleText(c.schedule) } : {}), ...(c.categories ? { scopeText: `${categoriesPlace(c.categories)} geçerli (bölümün tamamı${c.excludedProductIds?.length ? `, ${c.excludedProductIds.length} ürün hariç` : ''})` } : {}), recurring, startsAt: new Date(start).toISOString(), endsAt: new Date(end).toISOString(), previousStart: new Date(previousStart).toISOString(), durationDays, beforeDays, ongoing: !quotaUnavailable && start <= +now && !c.supersededAt && (!c.endsAt || Date.parse(c.endsAt) > +now), products, before, quantity, dailyBefore, dailyDuring, changePercent: dailyBefore && durationDays ? (dailyDuring / dailyBefore - 1) * 100 : null, appliedAmount, appliedQuantity: products.reduce((n, p) => n + p.appliedQuantity, 0), discount, originalAmount: appliedAmount + discount });
+    rows.push({ quotaUnavailable, id: c.reportId ?? c.id, name: c.name, minQuantity: c.minQuantity, kind: c.kind ?? 'percent', percent: c.percent, amount: c.amount, ...(c.schedule ? { scheduleText: scheduleText(c.schedule) } : {}), ...(monthly ? { monthly: true, occurrences } : {}), ...(c.categories ? { scopeText: `${categoriesPlace(c.categories)} geçerli (bölümün tamamı${c.excludedProductIds?.length ? `, ${c.excludedProductIds.length} ürün hariç` : ''})` } : {}), recurring, startsAt: new Date(start).toISOString(), endsAt: new Date(end).toISOString(), previousStart: new Date(previousStart).toISOString(), durationDays, beforeDays, ongoing: !quotaUnavailable && start <= +now && !c.supersededAt && (!c.endsAt || Date.parse(c.endsAt) > +now), products, before, quantity, dailyBefore, dailyDuring, changePercent: dailyBefore && durationDays ? (dailyDuring / dailyBefore - 1) * 100 : null, appliedAmount, appliedQuantity: products.reduce((n, p) => n + p.appliedQuantity, 0), discount, originalAmount: appliedAmount + discount });
   }
   return { generatedAt: now.toISOString(), campaigns: rows.sort((a, b) => b.startsAt.localeCompare(a.startsAt)) };
 }

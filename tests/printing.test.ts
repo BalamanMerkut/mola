@@ -7,7 +7,7 @@ import { mkdirSync, mkdtempSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { seed } from '../server/seed.js';
 import { Store } from '../server/store.js';
-import { PAPER_QUERY, PrintService, defaultTransport, privateIPv4, ticketData } from '../server/printing.js';
+import { PrintService, defaultTransport, privateIPv4, statusQuery, ticketData } from '../server/printing.js';
 import { billTicket, cancelTicket, testTicket, encodeEscPos, kitchenTicket, orderTargets, paymentTicket, readyToPrint, renderText, type PrinterConfig } from '../packages/domain/printing.js';
 import { cancelOrder, recordPayment, submitOrder } from '../packages/domain/engine.js';
 import type { Actor, State } from '../packages/domain/types.js';
@@ -43,8 +43,9 @@ test('bill summary is informational, shows discounts, payments and remaining bal
   const s = seed(); order(s);
   recordPayment(s, { tenantId: 'mola-demo', id: 'cashier', role: 'cashier' }, { requestId: randomUUID(), accountId: s.accounts[0].id, version: s.accounts[0].version, method: 'cash', amount: 10000, tendered: 10000 }, ctx(90));
   const text = renderText(billTicket(s, s.accounts[0].id, at(100)), { width: 80 }).join('\n');
-  assert.match(text, /HESAP ÖZETİ/); assert.match(text, /TOPLAM\s+580,00 TL/); assert.match(text, /Ödenen\s+100,00 TL/); assert.match(text, /KALAN\s+480,00 TL/);
-  assert.match(text, /Mali değeri yoktur/);
+  assert.match(text, /BİLGİ FİŞİ/); assert.match(text, /TOPLAM\s+580,00 TL/); assert.match(text, /Ödenen\s+100,00 TL/); assert.match(text, /KALAN\s+480,00 TL/);
+  // Only information on the slip (11 Ekim): a short title, no legal sentences, no thank-you line.
+  assert.doesNotMatch(text, /Mali değeri|Bilgi fişidir|resmi fiş|Teşekkür/); assert.match(text, /KDV dahildir/);
   assert.ok(text.split('\n').every(l => l.length <= 48));
 });
 test('payment receipt shows what was paid, how, the change and what is left', () => {
@@ -53,9 +54,9 @@ test('payment receipt shows what was paid, how, the change and what is left', ()
     recordPayment(s, cashier, { requestId: randomUUID(), accountId: s.accounts[0].id, version: s.accounts[0].version, method, amount, tendered, ...(selections ? { selections } : {}) }, ctx(90)).paymentId;
   const cake = s.orders[0].lines[1];
   const first = renderText(paymentTicket(s, pay(19000, 'cash', 20000, [{ orderId: s.orders[0].id, lineId: cake.id, quantity: 1 }]), at(95)), { width: 80 }).join('\n');
-  assert.match(first, /ÖDEME FİŞİ/); assert.match(first, /1 x San Sebastian\s+190,00 TL/); assert.doesNotMatch(first, /Latte/);
+  assert.match(first, /BİLGİ FİŞİ/); assert.match(first, /1 x San Sebastian\s+190,00 TL/); assert.doesNotMatch(first, /Latte/);
   assert.match(first, /ÖDENEN\s+190,00 TL/); assert.match(first, /Ödeme şekli\s+Nakit/); assert.match(first, /Para üstü\s+10,00 TL/); assert.match(first, /Kalan hesap\s+390,00 TL/);
-  assert.match(first, /Mali değeri yoktur/);
+  assert.doesNotMatch(first, /Mali değeri|Bilgi fişidir|Teşekkür/);
   const second = renderText(paymentTicket(s, pay(39000, 'card', 39000, [{ orderId: s.orders[0].id, lineId: s.orders[0].lines[0].id, quantity: 2 }]), at(96)), { width: 58 }).join('\n');
   assert.match(second, /Kart/); assert.doesNotMatch(second, /Para üstü/); assert.match(second, /Kalan hesap\s+0,00 TL/);
   const t = seed(); order(t);
@@ -163,8 +164,8 @@ test('network transport writes raw ESC/POS bytes to port 9100 style sockets', as
     const data = encodeEscPos([{ text: 'Deneme' }], { width: 58, charset: 'ascii' });
     await defaultTransport({ type: 'network', host: '127.0.0.1', port: (server.address() as AddressInfo).port }, data);
     await new Promise(r => setTimeout(r, 50));
-    // The paper-status query (DLE EOT 4) goes first; a printer that does not answer gets the ticket after a short wait.
-    assert.deepEqual(Buffer.concat(received), Buffer.concat([Buffer.from(PAPER_QUERY), Buffer.from(data)]));
+    // The status question (DLE EOT 1) goes first; a printer that does not answer gets the ticket after a short wait.
+    assert.deepEqual(Buffer.concat(received), Buffer.concat([Buffer.from(statusQuery(1)), Buffer.from(data)]));
     await assert.rejects(defaultTransport({ type: 'network', host: '127.0.0.1', port: 1 }, data), /Yazıcıya ulaşılamadı/);
   } finally { server.close(); }
   assert.equal(privateIPv4('192.168.1.50'), true); assert.equal(privateIPv4('8.8.8.8'), false); assert.equal(privateIPv4('localhost'), false);

@@ -22,18 +22,25 @@ header .when{text-align:right;font-size:9.5pt;color:#5d6862;white-space:nowrap}
 .lead{margin:10px 0 0;padding:9px 12px;background:#eef4f0;border-radius:6px;font-size:11.5pt}
 .figures{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 2px}
 .figure{border:1px solid #d6dfd9;border-radius:6px;padding:6px 8px}
-.figure span{display:block;font-size:8.5pt;color:#5d6862}
-.figure strong{font-size:13pt;color:#234c3e}
+.figure{min-width:0}
+.figure>span{display:block;font-size:8.5pt;color:#5d6862}
+.figure strong{display:block;font-size:12.5pt;color:#234c3e;overflow-wrap:anywhere}
 .parts{columns:2;column-gap:10mm}
-section{break-inside:avoid;margin-top:10px}
+section{break-inside:avoid;margin-top:10px;min-width:0}
 section.wide{break-inside:auto;margin-top:14px}
 h2{font-size:11pt;margin:0 0 3px;color:#234c3e;border-bottom:1px solid #cfd9d2;padding-bottom:2px}
 table{width:100%;border-collapse:collapse}
-td{padding:2.5px 0;border-bottom:1px solid #edf0ed;vertical-align:top}
-td.v{text-align:right;font-weight:600;white-space:nowrap;padding-left:8px}
-.grid th,.grid td{padding:3px 6px 3px 0;border-bottom:1px solid #edf0ed;text-align:left;vertical-align:top;font-size:9.5pt}
+/* Long texts wrap inside their column (11 Ekim: the Kasa kapanışı rows ran off the page and were cut in print). A value
+   wraps at its spaces, never inside an amount (.n); a word longer than the column breaks. */
+td{padding:2.5px 0;border-bottom:1px solid #edf0ed;vertical-align:top;overflow-wrap:anywhere}
+td.v{text-align:right;font-weight:600;padding-left:8px;max-width:62%}
+.grid{table-layout:auto}
+.grid th,.grid td{padding:3px 6px 3px 0;border-bottom:1px solid #edf0ed;text-align:left;vertical-align:top;font-size:9.5pt;overflow-wrap:anywhere}
 .grid th{font-size:8.5pt;color:#5d6862;font-weight:600;border-bottom:1px solid #cfd9d2}
-.grid .r{text-align:right;white-space:nowrap;padding-right:0;padding-left:8px}
+.grid .r{text-align:right;white-space:nowrap;padding-right:0;padding-left:8px;overflow-wrap:normal}
+.grid th.r{white-space:normal}
+/* An amount never breaks inside; the text around it wraps. */
+.n{white-space:nowrap;overflow-wrap:normal}
 .grid tfoot td{font-weight:700;border-top:1.5px solid #234c3e;border-bottom:0}
 .grid tr{break-inside:avoid}
 thead{display:table-header-group}
@@ -50,11 +57,13 @@ export type DocSpec = {
   business: string; title: string; pageTitle?: string; when: string; lead: string; note?: string;
   figures?: [string, string][]; parts?: Section[]; tables?: DocTable[]; prepared: string;
 };
-const figure = ([label, value]: [string, string]) => `<div class="figure"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
-const part = (s: Section) => `<section><h2>${esc(s.title)}</h2><table>${s.rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="v">${esc(v)}</td></tr>`).join('')}</table>${s.note ? `<p class="note">${esc(s.note)}</p>` : ''}</section>`;
+/** Escaped text with every amount kept on one line (`.n`). */
+const num = (text: string) => esc(text).replace(/[−-]?₺[\d.]+(?:,\d+)?/g, m => `<span class="n">${m}</span>`);
+const figure = ([label, value]: [string, string]) => `<div class="figure"><span>${esc(label)}</span><strong>${num(value)}</strong></div>`;
+const part = (s: Section) => `<section><h2>${esc(s.title)}</h2><table>${s.rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="v">${num(v)}</td></tr>`).join('')}</table>${s.note ? `<p class="note">${esc(s.note)}</p>` : ''}</section>`;
 function grid(t: DocTable) {
   const cls = (i: number) => t.right?.includes(i) ? ' class="r"' : '';
-  const body = t.rows.length ? `<table class="grid"><thead><tr>${t.head.map((h, i) => `<th${cls(i)}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r => `<tr>${r.map((c, i) => `<td${cls(i)}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>${t.foot ? `<tfoot><tr>${t.foot.map((c, i) => `<td${cls(i)}>${esc(c)}</td>`).join('')}</tr></tfoot>` : ''}</table>` : `<p class="empty">${esc(t.empty ?? 'Bu dönemde kayıt yok.')}</p>`;
+  const body = t.rows.length ? `<table class="grid"><thead><tr>${t.head.map((h, i) => `<th${cls(i)}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r => `<tr>${r.map((c, i) => `<td${cls(i)}>${num(c)}</td>`).join('')}</tr>`).join('')}</tbody>${t.foot ? `<tfoot><tr>${t.foot.map((c, i) => `<td${cls(i)}>${esc(c)}</td>`).join('')}</tr></tfoot>` : ''}</table>` : `<p class="empty">${esc(t.empty ?? 'Bu dönemde kayıt yok.')}</p>`;
   return `<section class="wide"><h2>${esc(t.title)}</h2>${body}${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}</section>`;
 }
 /** Any printable report page: heading, the plain sentence, a few big numbers, two-column parts, then full-width tables. */

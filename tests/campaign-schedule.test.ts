@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { seed } from '../server/seed.js';
-import { campaignActiveAt, campaignPhase, campaignStatus, campaignTimingError, discountedPrice, nextCampaignStart, repeatEnd, saleProducts, scheduleSlots, scheduleSummary, type Campaign } from '../packages/domain/campaigns.js';
+import { campaignActiveAt, campaignPhase, campaignState, campaignStatus, campaignTimingError, campaignWhen, discountedPrice, nextCampaignStart, repeatEnd, repeatMonths, repeatMonthsEnd, saleProducts, scheduleSlots, scheduleSummary, scheduleText, type Campaign } from '../packages/domain/campaigns.js';
 import { editOrder, submitOrder } from '../packages/domain/engine.js';
 import { campaignReport } from '../packages/domain/campaign-reports.js';
 // Turkish wall time; 3 Oct 2026 is a Saturday.
@@ -110,4 +110,102 @@ test('report counts only active days and hours, compared with the same hours of 
   // Mid-window the elapsed part counts as a fraction of an active day.
   const live = campaignReport(s, new Date(tr('2026-10-03T15:30'))).campaigns[0];
   assert.equal(live.durationDays, 0.5); assert.equal(live.ongoing, true);
+});
+
+// ---- Her ayın N'inci günü (11 Ekim, sahibin isteği: maaş günü kampanyası her ayın 15'i). ----
+const monthly = (extra: Partial<Campaign> = {}) => weekend({ id: 'maas', reportId: 'maas1', name: 'Maaş günü', startsAt: iso('2026-10-01T00:00'), endsAt: repeatMonthsEnd(iso('2026-10-01T00:00'), 3), schedule: { monthDay: 15 }, ...extra });
+
+test('monthly: the chosen day of every month, the last day of shorter months, with an optional window', () => {
+  const c = monthly();
+  assert.equal(campaignActiveAt(c, tr('2026-10-14T23:59:59')), false);
+  assert.equal(campaignActiveAt(c, tr('2026-10-15T00:00')), true);
+  assert.equal(campaignActiveAt(c, tr('2026-10-15T23:59:59')), true);
+  assert.equal(campaignActiveAt(c, tr('2026-10-16T00:00')), false);
+  assert.equal(campaignActiveAt(c, tr('2026-11-15T12:00')), true);
+  // Three months from 1 Ekim: 15 Ekim, 15 Kasım, 15 Aralık; 15 Ocak is outside.
+  assert.equal(c.endsAt, iso('2027-01-01T00:00'));
+  assert.equal(campaignActiveAt(c, tr('2026-12-15T12:00')), true);
+  assert.equal(campaignActiveAt(c, tr('2027-01-15T12:00')), false);
+  // 31: 31 Ekim, 30 Kasım (no 31st), 31 Aralık; 28 Şubat 2027.
+  const last = monthly({ schedule: { monthDay: 31 }, endsAt: repeatMonthsEnd(iso('2026-10-01T00:00'), 5) });
+  assert.deepEqual(scheduleSlots(last.schedule, Date.parse(last.startsAt), Date.parse(last.endsAt!)).map(([a]) => new Date(a + 3 * 3600000).toISOString().slice(0, 10)), ['2026-10-31', '2026-11-30', '2026-12-31', '2027-01-31', '2027-02-28']);
+  // A window: only those hours of the day.
+  const lunch = monthly({ schedule: { monthDay: 15, from: '12:00', to: '15:00' } });
+  assert.equal(campaignActiveAt(lunch, tr('2026-10-15T11:59')), false);
+  assert.equal(campaignActiveAt(lunch, tr('2026-10-15T12:00')), true);
+  assert.equal(campaignActiveAt(lunch, tr('2026-10-15T15:00')), false);
+  assert.equal(scheduleText(lunch.schedule!), 'Her ayın 15. günü · 12:00–15:00');
+  assert.equal(scheduleText({ monthDay: 31 }), 'Her ayın 31. günü (kısa aylarda ayın son günü)');
+  // Prices follow it like every campaign (saleProducts).
+  const s = seed(); s.campaigns = [c];
+  const price = (at: number) => { const p = saleProducts(s, new Date(at)).find(p => p.id === 'tea')!; return discountedPrice(p, p.price).price; };
+  assert.equal(price(tr('2026-10-15T10:00')), 2800); assert.equal(price(tr('2026-10-16T10:00')), 3500);
+});
+
+test('monthly: N months give N runs, a plain summary, the next start and plain errors', () => {
+  assert.equal(repeatMonthsEnd(iso('2026-10-11T00:00'), 3), iso('2027-01-11T00:00'));
+  assert.equal(repeatMonthsEnd(iso('2026-01-31T00:00'), 1), iso('2026-02-28T00:00'));
+  assert.equal(repeatMonths(monthly()), 3);
+  assert.equal(repeatMonths(monthly({ endsAt: iso('2026-12-20T00:00') })), null);
+  const c = monthly();
+  assert.equal(scheduleSummary(c), 'Her ayın 15. günü · 3 ay (15 Eki – 15 Ara)');
+  assert.equal(nextCampaignStart(c, tr('2026-10-16T10:00')), tr('2026-11-15T00:00'));
+  assert.equal(nextCampaignStart(c, tr('2026-12-16T10:00')), null);
+  const view = { ...c, remainingQuantity: null };
+  assert.equal(campaignStatus(view, tr('2026-10-20T10:00')), 'Sıradaki: 15 Kas Pazar 00:00');
+  assert.equal(campaignPhase(view, tr('2026-12-20T10:00')), 'ended');
+  const check = (schedule: Campaign['schedule'], endsAt: string | null) => campaignTimingError({ startsAt: c.startsAt, endsAt, schedule });
+  assert.equal(check({ monthDay: 15 }, c.endsAt), null);
+  assert.equal(check({ monthDay: 0 }, c.endsAt), 'Ayın gününü 1–31 arasında seçin.');
+  assert.equal(check({ monthDay: 32 }, c.endsAt), 'Ayın gününü 1–31 arasında seçin.');
+  assert.equal(check({ monthDay: 15 }, null), 'Her ay tekrarlanan kampanya için ay sayısı veya son gün seçin.');
+  assert.equal(check({ monthDay: 15 }, repeatMonthsEnd(c.startsAt, 12)), null);
+  assert.equal(check({ monthDay: 15 }, repeatMonthsEnd(c.startsAt, 13)), 'Her ay tekrarlanan kampanya en fazla 12 ay sürebilir.');
+  assert.equal(check({ monthDay: 20 }, iso('2026-10-10T00:00')), 'Seçilen tarihler arasında ayın bu günü yok. Ayın gününü veya tarihleri kontrol edin.');
+  assert.equal(check({ monthDay: 15, days: [1] } as unknown as Campaign['schedule'], c.endsAt), 'Ayın günüyle hafta günleri birlikte seçilemez.');
+});
+
+test('the four states the owner sees: Taslak, Planlandı, Aktif, Bitti, with the card line', () => {
+  const view = { ...monthly(), remainingQuantity: null };
+  assert.equal(campaignState({ ...view, enabled: false }, tr('2026-10-15T10:00')), 'draft');
+  assert.equal(campaignWhen({ ...view, enabled: false }, tr('2026-10-15T10:00')), 'Menüde görünmez');
+  assert.equal(campaignState(view, tr('2026-09-20T10:00')), 'planned');
+  assert.equal(campaignWhen(view, tr('2026-09-20T10:00')), 'Başlıyor: 15 Eki Perşembe 00:00');
+  assert.equal(campaignState(view, tr('2026-10-15T10:00')), 'active');
+  assert.equal(campaignWhen(view, tr('2026-10-15T10:00')), 'Şu an uygulanıyor');
+  assert.equal(campaignWhen(view, tr('2026-10-16T10:00')), 'Sıradaki: 15 Kas Pazar 00:00');
+  assert.equal(campaignState(view, tr('2027-01-02T10:00')), 'ended');
+  assert.equal(campaignWhen(view, tr('2027-01-02T10:00')), 'Süresi doldu');
+  // A used-up quota ends it as well; a plain date-range campaign that has started is Aktif.
+  assert.equal(campaignState({ ...view, remainingQuantity: 0 }, tr('2026-10-15T10:00')), 'ended');
+  assert.equal(campaignWhen({ ...view, remainingQuantity: 0 }, tr('2026-10-15T10:00')), 'Adet sınırı doldu');
+  const plain = { ...view, schedule: undefined, endsAt: null };
+  assert.equal(campaignState(plain, tr('2026-10-02T10:00')), 'active');
+  assert.equal(campaignWhen(plain, tr('2026-10-02T10:00')), 'Şu an uygulanıyor');
+});
+
+test('monthly report: its days against an ordinary day of the four weeks before, one row per occurrence', () => {
+  const s = seed();
+  s.campaigns = [monthly({ endsAt: repeatMonthsEnd(iso('2026-10-01T00:00'), 2) })];
+  const actor = { tenantId: s.tenantId, role: 'owner' as const, id: 'owner' };
+  const order = (local: string, quantity: number, unit: number) => submitOrder(s, actor, { requestId: randomUUID(), tableId: 'table-1', expectedTotal: quantity * unit, lines: [{ productId: 'tea', quantity, selections: [] }] }, { now: new Date(tr(local)), id: randomUUID });
+  // Before: every day of 3 Eylül – 30 Eylül counts (14 teas over 28 days); 30 Ağustos is outside.
+  order('2026-08-30T12:00', 9, 3500); order('2026-09-10T12:00', 7, 3500); order('2026-09-20T12:00', 7, 3500);
+  // During: 15 Ekim and 15 Kasım; 16 Ekim is not a campaign day.
+  order('2026-10-15T12:00', 6, 2800); order('2026-10-16T12:00', 5, 3500); order('2026-11-15T09:00', 4, 2800);
+  const row = campaignReport(s, new Date(tr('2026-12-05T12:00'))).campaigns[0];
+  assert.equal(row.recurring, true); assert.equal(row.monthly, true); assert.equal(row.scheduleText, 'Her ayın 15. günü');
+  assert.equal(row.previousStart, iso('2026-09-03T00:00'));
+  assert.equal(row.beforeDays, 28); assert.equal(row.before, 14); assert.equal(row.dailyBefore, 0.5);
+  assert.equal(row.durationDays, 2); assert.equal(row.quantity, 10); assert.equal(row.dailyDuring, 5); assert.equal(row.changePercent, 900);
+  assert.equal(row.appliedQuantity, 10); assert.equal(row.discount, 7000);
+  assert.deepEqual(row.occurrences, [
+    { start: iso('2026-10-15T00:00'), end: iso('2026-10-16T00:00'), quantity: 6, amount: 16800, discount: 4200 },
+    { start: iso('2026-11-15T00:00'), end: iso('2026-11-16T00:00'), quantity: 4, amount: 11200, discount: 2800 },
+  ]);
+});
+
+test('Kampanyayı yinele: a monthly campaign of whole months runs as many months again from today', async () => {
+  const { renewedTiming } = await import('../packages/domain/campaign-ends.js');
+  assert.deepEqual(renewedTiming(monthly(), tr('2027-01-20T10:00')), { startsAt: iso('2027-01-20T00:00'), endsAt: iso('2027-04-20T00:00') });
 });

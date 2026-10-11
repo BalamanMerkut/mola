@@ -6,20 +6,23 @@ import { randomUUID } from 'node:crypto';
 import type { Express, Request } from 'express';
 import { z } from 'zod';
 import { DomainError, isOrderPaid, once, requireRole, setStatus } from '../packages/domain/engine.js';
-import { billTicket, cancelTicket, kitchenPrinters, linesFor, encodeEscPos, kitchenTicket, orderTargets, paymentTicket, readyToPrint, renderText, settlePrinted, singleKitchen, testTicket, type PrinterConfig, type PrinterConnection, type Ticket } from '../packages/domain/printing.js';
-import { causeText, NO_PRINTER, type PrintCause } from '../packages/domain/print-problems.js';
+import { billTicket, cancelTicket, changeTicket, kitchenPrinters, linesFor, encodeEscPos, kitchenTicket, orderTargets, paymentTicket, readyToPrint, renderText, settlePrinted, singleKitchen, testTicket, type PrinterConfig, type PrinterConnection, type Ticket } from '../packages/domain/printing.js';
+import { causeAdvice, causeText, NO_PRINTER, problemText, type PrintCause } from '../packages/domain/print-problems.js';
 import type { Actor, Order, State } from '../packages/domain/types.js';
 import type { Store } from './store.js';
 import { runProgram } from './programs.js';
 
-export type PrintTransport = (connection: PrinterConnection, data: Uint8Array) => Promise<void>;
+/** `low`: the printer said its roll is nearly out (the ticket still printed). */
+export type SendResult = { low?: boolean };
+/** `job.name`: the spooler document name of a kitchen ticket ("Mola fis 12 order"), so a retry finds the copy still queued. */
+export type PrintTransport = (connection: PrinterConnection, data: Uint8Array, job?: { name?: string }) => Promise<SendResult | void>;
 
 export function privateIPv4(host: string) {
   return isIPv4(host) && /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
 }
-/** A failed print with its plain cause (Mutfak fişi modu shows it: "Kâğıt bitti", "Yazıcı kapalı ya da kablosu çıkmış"…). */
+/** A failed print with its plain cause ("Yazıcıda kâğıt yok", "Yazıcı kapalı ya da kablosu çıkmış"…). */
 export class PrinterFault extends DomainError {
-  constructor(public fault: PrintCause, message: string) { super('PRINTER_UNREACHABLE', message, 502); }
+  constructor(public fault: PrintCause, message: string) { super('PRINTER_FAULT', message, 409); }
 }
 /** The plain cause of any print error; anything not recognised is "Yazıcı yanıt vermedi". */
 export const faultOf = (e: unknown): PrintCause => e instanceof PrinterFault ? e.fault : e instanceof DomainError && e.code === 'PRINTER_UNSUPPORTED' ? 'windows' : 'unknown';
@@ -29,40 +32,94 @@ export function networkCause(code?: string): PrintCause {
   if (code === 'ECONNREFUSED' || code === 'ECONNRESET' || code === 'ENETUNREACH' || code === 'ENETDOWN' || code === 'EADDRNOTAVAIL' || code === 'EPIPE') return 'network';
   return 'unknown';
 }
+const faultMessage = (cause: PrintCause, where: string) => `${causeText(cause)} (${where}). ${causeAdvice(cause)}`;
 /**
- * DLE EOT 4 (ESC/POS real-time status, paper roll sensor). A printer out of paper still accepts the bytes over the network and
- * prints nothing, so it is asked first: a status byte (0xx1xx10) with bits 5–6 set means the roll is empty. Printers that do
- * not answer within STATUS_WAIT_MS simply get the ticket.
+ * ESC/POS real-time status (DLE EOT n): 1 printer status, 2 why it is offline, 4 the paper roll sensor. A printer out of
+ * paper (or with its cover open) still accepts the bytes over the network and prints nothing, so it is asked first, one
+ * question at a time. A printer that does not answer the first question within STATUS_WAIT_MS has no real-time status and
+ * simply gets the ticket (as before). One that answers is asked again AFTER_PRINT_MS after the ticket: a roll that ran out
+ * halfway is a failed ticket too.
  */
-export const PAPER_QUERY = Uint8Array.from([0x10, 0x04, 0x04]);
-const STATUS_WAIT_MS = 300;
+export const statusQuery = (n: 1 | 2 | 4) => Uint8Array.from([0x10, 0x04, n]);
+export const PAPER_QUERY = statusQuery(4);
+export const STATUS_WAIT_MS = 300, AFTER_PRINT_MS = 1000;
+/** A real-time status byte has the fixed bits 0xx1xx10. */
+export const statusByte = (b: number) => (b & 0x93) === 0x12;
+export type PrinterStatus = { printer?: number; offline?: number; paper?: number };
+/** What the status bytes say: a fault that stops the ticket, or `low` (roll nearly out; it still prints). */
+export function statusFault(st: PrinterStatus): { fault?: PrintCause; low?: boolean } {
+  if (st.paper !== undefined && (st.paper & 0x60) === 0x60) return { fault: 'paper' };
+  if (st.offline !== undefined) {
+    if (st.offline & 0x20) return { fault: 'paper' };
+    if (st.offline & 0x04) return { fault: 'cover' };
+    if (st.offline & 0x40) return { fault: 'error' };
+  }
+  if (st.printer !== undefined && st.printer & 0x08) return { fault: 'error' };
+  return st.paper !== undefined && (st.paper & 0x0c) === 0x0c ? { low: true } : {};
+}
 function sendNetwork(host: string, port: number, data: Uint8Array) {
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<SendResult>((resolve, reject) => {
     const socket = createConnection({ host, port });
-    let done = false, wrote = false, wait: NodeJS.Timeout | undefined;
-    const fail = (cause: PrintCause, message: string) => { if (done) return; done = true; clearTimeout(wait); socket.destroy(); reject(new PrinterFault(cause, message)); };
-    const write = () => { if (done || wrote) return; wrote = true; clearTimeout(wait); socket.end(Buffer.from(data)); };
+    let settled = false, ending: SendResult | undefined, wait: NodeJS.Timeout | undefined, pending: ((b: number | undefined) => void) | undefined;
+    const fail = (cause: PrintCause, message: string) => { if (settled) return; settled = true; clearTimeout(wait); pending = undefined; socket.destroy(); reject(new PrinterFault(cause, message)); };
     socket.setTimeout(6000, () => fail('offline', `Yazıcıya ulaşılamadı (${host}). Yazıcının açık ve aynı ağda olduğunu kontrol edin.`));
     socket.once('error', (e: NodeJS.ErrnoException) => fail(networkCause(e.code), `Yazıcıya ulaşılamadı (${host}). IP adresini ve kabloyu kontrol edin.`));
-    socket.once('connect', () => { socket.write(Buffer.from(PAPER_QUERY)); wait = setTimeout(write, STATUS_WAIT_MS); });
+    socket.once('close', () => {
+      if (ending && !settled) { settled = true; clearTimeout(wait); resolve(ending); return; }
+      fail('unknown', `Yazıcı bağlantıyı kapattı (${host}). Yazıcıyı kapatıp açın.`);
+    });
     socket.on('data', (chunk: Buffer) => {
-      if (done || wrote) return;
-      if ((chunk[0] & 0x93) === 0x12 && (chunk[0] & 0x60) === 0x60) fail('paper', `Yazıcıda kâğıt bitti (${host}). Yeni rulo takıp tekrar deneyin.`);
-      else write();
+      const b = [...chunk].find(statusByte);
+      if (b === undefined || !pending) return;
+      const answer = pending; pending = undefined; clearTimeout(wait); answer(b);
     });
-    socket.once('close', hadError => {
-      clearTimeout(wait);
-      if (done || hadError) return;
-      if (wrote) { done = true; resolve(); } else fail('unknown', `Yazıcı bağlantıyı kapattı (${host}). Yazıcıyı kapatıp açın.`);
+    // One question; undefined when no answer comes in time.
+    const ask = (n: 1 | 2 | 4) => new Promise<number | undefined>(done => {
+      if (settled) return;
+      pending = done; socket.write(Buffer.from(statusQuery(n)));
+      wait = setTimeout(() => { if (pending === done) { pending = undefined; done(undefined); } }, STATUS_WAIT_MS);
     });
+    // null: the first question got no answer (a printer without real-time status).
+    const status = async (questions: (1 | 2 | 4)[]) => {
+      const st: PrinterStatus = {};
+      for (const n of questions) {
+        const b = await ask(n);
+        if (b === undefined) { if (n === questions[0]) return null; continue; }
+        st[n === 1 ? 'printer' : n === 2 ? 'offline' : 'paper'] = b;
+      }
+      return st;
+    };
+    socket.once('connect', () => void (async () => {
+      const before = await status([1, 2, 4]), first = before ? statusFault(before) : {};
+      if (first.fault) return fail(first.fault, faultMessage(first.fault, host));
+      if (settled) return;
+      socket.write(Buffer.from(data));
+      let low = !!first.low;
+      if (before) {
+        await new Promise(r => { wait = setTimeout(r, AFTER_PRINT_MS); });
+        if (settled) return;
+        const after = await status([2, 4]), second = after ? statusFault(after) : {};
+        if (second.fault) return fail(second.fault, faultMessage(second.fault, host));
+        low ||= !!second.low;
+      }
+      if (settled) return;
+      ending = low ? { low } : {}; socket.end();
+    })());
   });
 }
-// Raw bytes through the Windows spooler (winspool.drv), so USB printers need no extra software.
-const windowsScript = `$ErrorActionPreference='Stop'
-Add-Type -TypeDefinition @"
-using System; using System.Runtime.InteropServices;
+/*
+ * Raw bytes through the Windows spooler (winspool.drv), so USB printers need no extra software. The spooler's own word on
+ * the printer is read too, read only (GetPrinter / GetJob / EnumJobs; nothing is changed or deleted): before sending (no
+ * ticket goes to a printer that says "kâğıt yok", "kapak açık", "çevrimdışı") and for up to 3 s after, while the job is in
+ * the queue. The script prints raw numbers (MOLA:BEFORE|WAITING|AFTER:status:attributes[:job]); spoolerFault reads them.
+ * A kitchen ticket's job carries its own document name: when the paper ran out at the last try its copy may still wait in
+ * the queue, and "Tekrar bas" then does not print it a second time (WAITING). How much a USB printer tells Windows depends on
+ * its driver: many receipt-printer drivers report "kâğıt yok", the plainest "Generic / Text Only" one may say nothing.
+ */
+const spoolSource = `using System; using System.Runtime.InteropServices; using System.Threading;
 public static class MolaRawPrint {
   [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)] public class DOCINFO { [MarshalAs(UnmanagedType.LPWStr)] public string pDocName; [MarshalAs(UnmanagedType.LPWStr)] public string pOutputFile; [MarshalAs(UnmanagedType.LPWStr)] public string pDataType; }
+  [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)] public struct JOB_INFO_1 { public int JobId; public IntPtr pPrinterName; public IntPtr pMachineName; public IntPtr pUserName; public IntPtr pDocument; public IntPtr pDatatype; public IntPtr pStatus; public int Status; public int Priority; public int Position; public int TotalPages; public int PagesPrinted; public short y; public short mo; public short dw; public short d; public short h; public short mi; public short s; public short ms; }
   [DllImport("winspool.drv", CharSet=CharSet.Unicode, SetLastError=true)] static extern bool OpenPrinter(string name, out IntPtr h, IntPtr d);
   [DllImport("winspool.drv", SetLastError=true)] static extern bool ClosePrinter(IntPtr h);
   [DllImport("winspool.drv", CharSet=CharSet.Unicode, SetLastError=true)] static extern int StartDocPrinter(IntPtr h, int level, [In] DOCINFO di);
@@ -70,21 +127,84 @@ public static class MolaRawPrint {
   [DllImport("winspool.drv", SetLastError=true)] static extern bool StartPagePrinter(IntPtr h);
   [DllImport("winspool.drv", SetLastError=true)] static extern bool EndPagePrinter(IntPtr h);
   [DllImport("winspool.drv", SetLastError=true)] static extern bool WritePrinter(IntPtr h, byte[] buf, int count, out int written);
-  public static void Send(string printer, byte[] data) {
+  [DllImport("winspool.drv", CharSet=CharSet.Unicode, SetLastError=true)] static extern bool GetPrinter(IntPtr h, int level, IntPtr buf, int size, out int needed);
+  [DllImport("winspool.drv", CharSet=CharSet.Unicode, SetLastError=true)] static extern bool GetJob(IntPtr h, int id, int level, IntPtr buf, int size, out int needed);
+  [DllImport("winspool.drv", CharSet=CharSet.Unicode, SetLastError=true)] static extern bool EnumJobs(IntPtr h, int first, int count, int level, IntPtr buf, int size, out int needed, out int returned);
+  const int BAD = 0x2|0x8|0x10|0x40|0x80|0x1000|0x100000|0x400000, BAD_JOB = 0x2|0x20|0x40|0x200|0x400, PRINTED = 0x80;
+  static string State(IntPtr h) {
+    int needed; GetPrinter(h, 2, IntPtr.Zero, 0, out needed); if (needed <= 0) return "0:0";
+    IntPtr buf = Marshal.AllocHGlobal(needed);
+    try { if (!GetPrinter(h, 2, buf, needed, out needed)) return "0:0"; int off = 13 * IntPtr.Size; return Marshal.ReadInt32(buf, off + 20) + ":" + Marshal.ReadInt32(buf, off); }
+    finally { Marshal.FreeHGlobal(buf); }
+  }
+  static bool Bad(string state, int job) { string[] p = state.Split(':'); return (int.Parse(p[0]) & BAD) != 0 || (int.Parse(p[1]) & 0x400) != 0 || (job & BAD_JOB) != 0; }
+  static int JobStatus(IntPtr h, int id) {
+    int needed; GetJob(h, id, 1, IntPtr.Zero, 0, out needed); if (needed <= 0) return -1;
+    IntPtr buf = Marshal.AllocHGlobal(needed);
+    try { if (!GetJob(h, id, 1, buf, needed, out needed)) return -1; return ((JOB_INFO_1)Marshal.PtrToStructure(buf, typeof(JOB_INFO_1))).Status; }
+    finally { Marshal.FreeHGlobal(buf); }
+  }
+  static int Waiting(IntPtr h, string doc) {
+    int needed, count; EnumJobs(h, 0, 255, 1, IntPtr.Zero, 0, out needed, out count); if (needed <= 0) return 0;
+    IntPtr buf = Marshal.AllocHGlobal(needed);
+    try {
+      if (!EnumJobs(h, 0, 255, 1, buf, needed, out needed, out count)) return 0;
+      int size = Marshal.SizeOf(typeof(JOB_INFO_1));
+      for (int i = 0; i < count; i++) { JOB_INFO_1 j = (JOB_INFO_1)Marshal.PtrToStructure(new IntPtr(buf.ToInt64() + (long)i * size), typeof(JOB_INFO_1)); if (Marshal.PtrToStringUni(j.pDocument) == doc) return j.JobId; }
+      return 0;
+    } finally { Marshal.FreeHGlobal(buf); }
+  }
+  public static string Peek(string printer) { IntPtr h; if (!OpenPrinter(printer, out h, IntPtr.Zero)) throw new Exception("OPEN"); try { return State(h); } finally { ClosePrinter(h); } }
+  public static bool IsBad(string state) { return Bad(state, 0); }
+  public static void Send(string printer, byte[] data, string doc) {
     IntPtr h; if (!OpenPrinter(printer, out h, IntPtr.Zero)) throw new Exception("OPEN");
     try {
-      DOCINFO di = new DOCINFO(); di.pDocName = "Mola fis"; di.pDataType = "RAW";
-      if (StartDocPrinter(h, 1, di) == 0) throw new Exception("DOC");
+      string state = State(h); Console.WriteLine("MOLA:BEFORE:" + state);
+      if (Bad(state, 0)) return;
+      if (doc != "Mola fis") { int waiting = Waiting(h, doc); if (waiting != 0) { Console.WriteLine("MOLA:WAITING:" + State(h) + ":" + Math.Max(0, JobStatus(h, waiting))); return; } }
+      DOCINFO di = new DOCINFO(); di.pDocName = doc; di.pDataType = "RAW";
+      int job = StartDocPrinter(h, 1, di); if (job == 0) throw new Exception("DOC");
       try { StartPagePrinter(h); int w; if (!WritePrinter(h, data, data.Length, out w) || w != data.Length) throw new Exception("WRITE"); EndPagePrinter(h); }
       finally { EndDocPrinter(h); }
+      int st = 0;
+      for (int i = 0; i < 12; i++) { Thread.Sleep(250); st = JobStatus(h, job); state = State(h); if (st < 0 || (st & PRINTED) != 0 || Bad(state, st)) break; }
+      Console.WriteLine("MOLA:AFTER:" + state + ":" + Math.Max(0, st));
     } finally { ClosePrinter(h); }
   }
-}
+}`;
+const windowsScript = `$ErrorActionPreference='Stop'
+Add-Type -TypeDefinition @"
+${spoolSource}
 "@
-[MolaRawPrint]::Send($env:MOLA_PRINTER, [IO.File]::ReadAllBytes($env:MOLA_PRINT_FILE))`;
+[MolaRawPrint]::Send($env:MOLA_PRINTER, [IO.File]::ReadAllBytes($env:MOLA_PRINT_FILE), $env:MOLA_PRINT_DOC)`;
+/** PRINTER_INFO_2.Status / Attributes and JOB_INFO_1.Status bits (winspool.h). */
+const SPOOL = { ERROR: 0x2, PAPER_JAM: 0x8, PAPER_OUT: 0x10, PAPER_PROBLEM: 0x40, OFFLINE: 0x80, NOT_AVAILABLE: 0x1000, USER_INTERVENTION: 0x100000, DOOR_OPEN: 0x400000, WORK_OFFLINE: 0x400 } as const;
+const JOB = { ERROR: 0x2, OFFLINE: 0x20, PAPEROUT: 0x40, BLOCKED: 0x200, USER_INTERVENTION: 0x400 } as const;
+/** The spooler's flags in staff words ("Yazıcıda kâğıt yok"…), or undefined when Windows sees nothing wrong. */
+export function spoolerFault(status: number, attributes = 0, job = 0): PrintCause | undefined {
+  if (status & (SPOOL.PAPER_OUT | SPOOL.PAPER_PROBLEM) || job & JOB.PAPEROUT) return 'paper';
+  if (status & SPOOL.DOOR_OPEN) return 'cover';
+  if (status & (SPOOL.OFFLINE | SPOOL.NOT_AVAILABLE) || attributes & SPOOL.WORK_OFFLINE || job & JOB.OFFLINE) return 'offline';
+  if (status & (SPOOL.ERROR | SPOOL.PAPER_JAM | SPOOL.USER_INTERVENTION) || job & (JOB.ERROR | JOB.BLOCKED | JOB.USER_INTERVENTION)) return 'error';
+  return undefined;
+}
+/** The script's last MOLA: line: a fault, and `waiting` when this ticket's earlier copy is still in the queue (not sent again). */
+export function spoolerResult(out: string): { fault?: PrintCause; waiting?: boolean } {
+  const last = out.split(/\r?\n/).map(v => v.trim()).filter(v => v.startsWith('MOLA:')).pop();
+  if (!last) return {};
+  const [, phase, status, attributes, job] = last.split(':'), fault = spoolerFault(Number(status) || 0, Number(attributes) || 0, Number(job) || 0);
+  return { ...(fault ? { fault } : {}), ...(phase === 'WAITING' ? { waiting: true } : {}) };
+}
 // Office printers (laser / inkjet, e.g. host-based HP LaserJets) silently drop raw receipt commands: Windows reports
 // "printed" and an empty page or nothing comes out. They get the receipt as plain monospaced text drawn by their driver.
+// The spooler's word is read first here too.
 const documentScript = `$ErrorActionPreference='Stop'
+Add-Type -TypeDefinition @"
+${spoolSource}
+"@
+$state = [MolaRawPrint]::Peek($env:MOLA_PRINTER)
+[Console]::Out.WriteLine("MOLA:BEFORE:$state")
+if ([MolaRawPrint]::IsBad($state)) { exit 0 }
 Add-Type -AssemblyName System.Drawing
 $lines = [IO.File]::ReadAllText($env:MOLA_PRINT_FILE, [Text.Encoding]::UTF8) -split "\`n"
 $doc = New-Object System.Drawing.Printing.PrintDocument
@@ -108,18 +228,23 @@ async function powershell(script: string, env: Record<string, string> = {}) {
   if (r.code !== 0) throw new Error(`powershell ${r.code}`);
   return r.out;
 }
-async function sendWindows(printerName: string, data: Uint8Array, document = false) {
+/** Runs a spooler script; tests put a fake spooler here (its MOLA: lines), nothing else changes it. */
+export const spooler = { run: (script: string, env: Record<string, string>) => powershell(script, env) };
+async function sendWindows(printerName: string, data: Uint8Array, document = false, doc = 'Mola fis'): Promise<SendResult> {
   if (process.platform !== 'win32') throw new DomainError('PRINTER_UNSUPPORTED', 'USB yazıcı yalnız Windows bilgisayarda kullanılabilir.', 409);
   const folder = mkdtempSync(join(tmpdir(), 'mola-print-')), file = join(folder, 'ticket.bin');
+  let answer: ReturnType<typeof spoolerResult>;
   try {
     writeFileSync(file, data);
-    await powershell(document ? documentScript : windowsScript, { MOLA_PRINTER: printerName, MOLA_PRINT_FILE: file });
+    answer = spoolerResult(await spooler.run(document ? documentScript : windowsScript, { MOLA_PRINTER: printerName, MOLA_PRINT_FILE: file, MOLA_PRINT_DOC: doc }));
   } catch (e) {
     if (e instanceof DomainError) throw e;
     throw new PrinterFault('windows', `“${printerName}” yazıcısına gönderilemedi. Yazıcının Windows’ta kurulu ve açık olduğunu kontrol edin.`);
   } finally { rmSync(folder, { recursive: true, force: true }); }
+  if (answer.fault) throw new PrinterFault(answer.fault, faultMessage(answer.fault, printerName));
+  return {};
 }
-export const defaultTransport: PrintTransport = (connection, data) => connection.type === 'network' ? sendNetwork(connection.host, connection.port, data) : sendWindows(connection.printerName, data, connection.document);
+export const defaultTransport: PrintTransport = (connection, data, job) => connection.type === 'network' ? sendNetwork(connection.host, connection.port, data) : sendWindows(connection.printerName, data, connection.document, job?.name);
 /** Receipt printers get ESC/POS; an office printer gets the same receipt as plain text (large titles at normal size). */
 export function ticketData(ticket: Ticket, printer: PrinterConfig): Uint8Array {
   if (printer.connection.type !== 'windows' || !printer.connection.document) return encodeEscPos(ticket, printer);
@@ -132,20 +257,37 @@ export async function windowsPrinters() {
 }
 
 // 'part': an İPTAL slip for items staff took off an order that goes on (Order.cancellations, by partId).
-type Job = { tenant: string; orderId: string; printerId: string; kind: 'order' | 'cancel' | 'part'; partId?: string };
+// 'change': a DEĞİŞİKLİK slip for a line a waiter changed after the order printed (Order.changes, by partId).
+type Job = { tenant: string; orderId: string; printerId: string; kind: 'order' | 'cancel' | 'part' | 'change'; partId?: string };
 const retryDelays = [0, 5000, 20000];
 /** A retry still waiting an hour after it was due will not run any more (its order is no longer printable). */
 const STALE_ATTEMPT_MS = 3600_000;
+/** The spooler document name of a kitchen ticket: a retry of the same ticket finds its copy still in a Windows queue. */
+const jobName = (o: Pick<Order, 'number'>, kind: string, part = '') => `Mola fis ${o.number} ${kind}${part ? ` ${part.slice(0, 8)}` : ''}`;
+/** Where a kitchen ticket was going, for the owner's Bildirim ("Masa 5 siparişi (#12) mutfağa basılamadı."). */
+function orderPlace(s: State, o: Order) {
+  const table = s.tables.find(t => t.id === s.accounts.find(a => a.id === o.accountId)?.tableId);
+  return table?.takeaway ? `Masasız #${table.takeaway.number}` : table?.name ?? 'Masa';
+}
+/** `notify` (server/app.ts): one Bildirim for the owner (key unique; an existing key is not added again). */
+export type PrintNotify = (tenant: string, key: string, title: string, text: string) => void;
 /**
- * Prints kitchen tickets (tek mutfak: one printer) once an order may be prepared, and a cancel slip if a printed order is cancelled.
- * Runs inside the business's local server: it can reach printers on the café network.
+ * Prints kitchen tickets (tek mutfak: one printer) once an order may be prepared, a cancel slip if a printed order is
+ * cancelled and a DEĞİŞİKLİK slip when a waiter changes a line of a printed order. Runs inside the business's local server:
+ * it can reach printers on the café network.
+ * A kitchen ticket that fails keeps `printProblems` on its order in both kitchen modes (11 Ekim): Fiş modu shows the red
+ * warning on the floor, Ekran modu on the kitchen card; the owner gets one Bildirim per printer and problem ("Yazıcıda kâğıt
+ * yok · Mutfak") until a print to that printer works again.
  */
 export class PrintService {
   private tenants = new Set<string>();
   private busy = new Set<string>();
   private attempts = new Map<string, { count: number; next: number; tenant: string; orderId: string }>();
+  /** `${tenant}:${printerId}` → the cause the owner was last told about; cleared by the next print that works. */
+  private told = new Map<string, PrintCause>();
   private timer?: NodeJS.Timeout;
   private ticking = false;
+  notify?: PrintNotify;
   constructor(private store: Store, private now: () => Date = () => new Date(), public send: PrintTransport = defaultTransport) {
     for (const row of store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]) this.refresh(row.tenant);
   }
@@ -165,13 +307,15 @@ export class PrintService {
   pendingJobs(tenant: string): Job[] {
     const s = this.store.read(tenant), now = this.now(), since = now.getTime() - 86400000;
     const jobs: Job[] = [];
+    const live = (printerId: string) => !!s.printers?.some(p => p.id === printerId && p.enabled);
     for (const o of s.orders) {
       if (Date.parse(o.createdAt) < since) continue;
-      for (const part of o.cancellations ?? []) for (const printerId of part.printTo ?? []) if (s.printers?.some(p => p.id === printerId && p.enabled)) jobs.push({ tenant, orderId: o.id, printerId, kind: 'part', partId: part.id });
+      for (const part of o.cancellations ?? []) for (const printerId of part.printTo ?? []) if (live(printerId)) jobs.push({ tenant, orderId: o.id, printerId, kind: 'part', partId: part.id });
       if (o.status === 'cancelled') {
-        if (!o.cancelPrinted && o.printedTo?.length) for (const printerId of o.printedTo) if (s.printers?.some(p => p.id === printerId && p.enabled)) jobs.push({ tenant, orderId: o.id, printerId, kind: 'cancel' });
+        if (!o.cancelPrinted && o.printedTo?.length) for (const printerId of o.printedTo) if (live(printerId)) jobs.push({ tenant, orderId: o.id, printerId, kind: 'cancel' });
         continue;
       }
+      for (const change of o.changes ?? []) for (const printerId of change.printTo ?? []) if (live(printerId)) jobs.push({ tenant, orderId: o.id, printerId, kind: 'change', partId: change.id });
       if (!readyToPrint(s, o, now)) continue;
       for (const { printer } of orderTargets(s, o)) {
         // A printer added today does not flood the kitchen with orders that were already in progress.
@@ -207,28 +351,44 @@ export class PrintService {
   }
   /** Entries in the attempts map, for tests. */
   get retryCount() { return this.attempts.size; }
+  /** The owner's Bildirim for a printer that needs a hand: once per printer and cause, again only after a print there worked. */
+  private tell(tenant: string, printer: Pick<PrinterConfig, 'id' | 'name'>, cause: PrintCause, what: string) {
+    const key = `${tenant}:${printer.id}`;
+    if (this.told.get(key) === cause) return;
+    this.told.set(key, cause);
+    try { this.notify?.(tenant, `printer:${printer.id}:${cause}:${this.now().toISOString()}`, problemText(cause, printer.name), `${what} ${causeAdvice(cause)}`); } catch { /* printing goes on */ }
+  }
+  /** A print reached `printer`: its problem is over; a roll nearly out is said once a day. */
+  private worked(tenant: string, printer: Pick<PrinterConfig, 'id' | 'name'>, result: SendResult | void) {
+    this.told.delete(`${tenant}:${printer.id}`);
+    if (!result?.low) return;
+    try { this.notify?.(tenant, `printer-low:${printer.id}:${this.now().toISOString().slice(0, 10)}`, `Yazıcıda kâğıt azaldı · ${printer.name}`, 'Rulo bitmek üzere. Yeni ruloyu yazıcının yanına koyun; kâğıt bitince Mola “Yazıcıda kâğıt yok” diye uyarır.'); } catch { /* printing goes on */ }
+  }
   private async run(job: Job) {
-    const key = `${job.tenant}:${job.orderId}:${job.printerId}:${job.kind}`, attempt = this.attempts.get(key);
+    const key = `${job.tenant}:${job.orderId}:${job.printerId}:${job.kind}:${job.partId ?? ''}`, attempt = this.attempts.get(key);
     if (this.busy.has(key) || (attempt && attempt.next > this.now().getTime())) return;
     const s = this.store.read(job.tenant), order = s.orders.find(o => o.id === job.orderId), printer = s.printers?.find(p => p.id === job.printerId);
     if (!order || !printer) return;
     const part = job.kind === 'part' ? order.cancellations?.find(c => c.id === job.partId) : undefined;
-    if (job.kind === 'part' && !part) return;
-    const lines = part ? linesFor(s, printer, part.lines) : orderTargets(s, order).find(t => t.printer.id === printer.id)?.lines ?? [];
+    const change = job.kind === 'change' ? order.changes?.find(c => c.id === job.partId) : undefined;
+    if ((job.kind === 'part' && !part) || (job.kind === 'change' && !change)) return;
+    const lines = part ? linesFor(s, printer, part.lines) : change ? order.lines : orderTargets(s, order).find(t => t.printer.id === printer.id)?.lines ?? [];
     if (!lines.length) { if (job.kind !== 'order') this.store.mutate(job.tenant, state => this.finish(state, job)); return; }
+    const ticket = job.kind === 'order' ? kitchenTicket(s, order, printer, lines) : change ? changeTicket(s, order, printer, change) : cancelTicket(s, order, printer, lines, part);
     this.busy.add(key);
     try {
-      await this.send(printer.connection, ticketData(job.kind === 'order' ? kitchenTicket(s, order, printer, lines) : cancelTicket(s, order, printer, lines, part), printer));
-      this.attempts.delete(key);
+      const result = await this.send(printer.connection, ticketData(ticket, printer), { name: jobName(order, job.kind, job.partId) });
+      this.attempts.delete(key); this.worked(job.tenant, printer, result);
       this.store.mutate(job.tenant, state => {
         const o = state.orders.find(v => v.id === job.orderId); if (!o) return;
         if (job.kind !== 'order') { this.finish(state, job); return; }
         printed(state, o, job.printerId);
       });
     } catch (e) {
-      const count = (attempt?.count ?? 0) + 1;
-      // Fiş modu: the warning shows from the first failure (the kitchen is waiting); a retry that works clears it again.
-      if (job.kind === 'order') this.store.mutate(job.tenant, state => { const o = state.orders.find(v => v.id === job.orderId); if (o && state.kitchenMode === 'ticket') noteProblem(o, job.printerId, faultOf(e), this.now()); });
+      const count = (attempt?.count ?? 0) + 1, cause = faultOf(e);
+      // The warning shows from the first failure (the kitchen is waiting); a retry that works clears it again.
+      if (job.kind === 'order') this.store.mutate(job.tenant, state => { const o = state.orders.find(v => v.id === job.orderId); if (o) noteProblem(o, printer, cause, this.now()); });
+      this.tell(job.tenant, printer, cause, `${orderPlace(s, order)} siparişinin (#${order.number}) ${job.kind === 'order' ? 'mutfak fişi' : job.kind === 'change' ? 'DEĞİŞİKLİK fişi' : 'İPTAL fişi'} basılamadı.`);
       if (count < retryDelays.length) this.attempts.set(key, { count, next: this.now().getTime() + retryDelays[count], tenant: job.tenant, orderId: job.orderId });
       else {
         this.attempts.delete(key);
@@ -239,15 +399,29 @@ export class PrintService {
       }
     } finally { this.busy.delete(key); }
   }
-  /** A cancel slip is done (printed, or given up after the retries): never printed twice. */
+  /** A cancel or change slip is done (printed, or given up after the retries): never printed twice. */
   private finish(state: State, job: Job) {
     const o = state.orders.find(v => v.id === job.orderId); if (!o) return;
     if (job.kind === 'cancel') { o.cancelPrinted = true; return; }
-    const part = o.cancellations?.find(c => c.id === job.partId); if (!part) return;
+    const part = job.kind === 'change' ? o.changes?.find(c => c.id === job.partId) : o.cancellations?.find(c => c.id === job.partId); if (!part) return;
     part.printTo = part.printTo?.filter(id => id !== job.printerId);
     if (!part.printTo?.length) delete part.printTo;
   }
-  async printNow(printer: PrinterConfig, ticket: Ticket) { await this.send(printer.connection, ticketData(ticket, printer)); }
+  /**
+   * A print asked for now (test slip, bill, receipt, kitchen reprint, cash closing). A printer problem comes back in staff
+   * words with the printer's name ("Yazıcıda kâğıt yok · Kasa. Yeni rulo takın, sonra “Tekrar bas”a basın."); with
+   * `about` the owner also gets the Bildirim.
+   */
+  async printNow(printer: PrinterConfig, ticket: Ticket, about?: { tenant: string; what: string; job?: string }) {
+    try {
+      const result = await this.send(printer.connection, ticketData(ticket, printer), about?.job ? { name: about.job } : undefined);
+      if (about) this.worked(about.tenant, printer, result);
+    } catch (e) {
+      const cause = faultOf(e);
+      if (about) this.tell(about.tenant, printer, cause, about.what);
+      throw new PrinterFault(cause, `${problemText(cause, printer.name)}. ${causeAdvice(cause)}`);
+    }
+  }
   /**
    * Fiş modu warning → "Tekrar bas": prints the order on the kitchen printer now. `to` is the same printer, or the current
    * kitchen printer when the problem names another one (none was set, or the "Mutfak fişleri" role moved meanwhile); the
@@ -255,7 +429,7 @@ export class PrintService {
    * "Hazırlanıyor"; on failure the warning stays with the new cause and the caller gets it.
    */
   async printKitchen(tenant: string, orderId: string, printerId: string, to = printerId) {
-    const key = `${tenant}:${orderId}:${printerId}:order`;
+    const key = `${tenant}:${orderId}:${printerId}:order:`;
     if (this.busy.has(key)) throw new DomainError('PRINT_BUSY', 'Fiş şu anda basılıyor. Birkaç saniye sonra bakın.', 409);
     const s = this.store.read(tenant), o = s.orders.find(v => v.id === orderId);
     if (!o || ['cancelled', 'served'].includes(o.status)) throw new DomainError('NOT_FOUND', 'Sipariş bulunamadı ya da artık mutfakta değil.', 404);
@@ -265,8 +439,8 @@ export class PrintService {
     const source = s.printers?.find(p => p.id === printerId), lines = source ? linesFor(s, source, o.lines) : o.lines;
     this.busy.add(key);
     try {
-      await this.send(target.connection, ticketData(kitchenTicket(s, o, target, lines.length ? lines : o.lines), target));
-      this.attempts.delete(key);
+      const result = await this.send(target.connection, ticketData(kitchenTicket(s, o, target, lines.length ? lines : o.lines), target), { name: jobName(o, 'order') });
+      this.attempts.delete(key); this.worked(tenant, target, result);
       this.store.mutate(tenant, state => {
         const order = state.orders.find(v => v.id === orderId); if (!order) return;
         if (to === printerId) { printed(state, order, printerId); return; }
@@ -277,9 +451,27 @@ export class PrintService {
       });
     } catch (e) {
       const cause = faultOf(e);
-      this.store.mutate(tenant, state => { const order = state.orders.find(v => v.id === orderId); if (order) noteProblem(order, printerId, cause, this.now()); });
-      throw new DomainError('PRINTER_UNREACHABLE', `Basılamadı: ${causeText(cause)}. ${cause === 'paper' ? 'Yeni rulo takıp tekrar deneyin.' : 'Yazıcıyı kontrol edip tekrar deneyin ya da siparişi mutfağa söyleyip “Elle iletildi” deyin.'}`, 409);
+      this.store.mutate(tenant, state => { const order = state.orders.find(v => v.id === orderId); if (order) noteProblem(order, { id: printerId, name: target.name }, cause, this.now()); });
+      throw new DomainError('PRINTER_FAULT', `Basılamadı: ${problemText(cause, target.name)}. ${cause === 'paper' || cause === 'cover' ? causeAdvice(cause) : 'Yazıcıyı kontrol edip tekrar deneyin ya da siparişi mutfağa söyleyip “Elle iletildi” deyin.'}`, 409);
     } finally { this.busy.delete(key); }
+  }
+  /**
+   * The kitchen card's "Tekrar bas" (Ekran modu) and "Fişi yeniden yazdır": the whole order again, marked "Tekrar
+   * yazdırıldı". A warning on the order clears once it printed; a failure keeps it with the new cause.
+   */
+  async reprint(tenant: string, orderId: string) {
+    const s = this.store.read(tenant), order = s.orders.find(o => o.id === orderId && o.status !== 'cancelled' && o.status !== 'awaiting_approval');
+    if (!order) throw new DomainError('NOT_FOUND', 'Sipariş bulunamadı.', 404);
+    const targets = orderTargets(s, order);
+    if (!targets.length) throw new DomainError('NO_PRINTER', 'Mutfak fişleri için yazıcı seçilmemiş. Ayarlar → Cihazlar → Yazıcılar’dan bir yazıcıyı “Mutfak fişleri” için seçin.', 409);
+    for (const { printer, lines } of targets) {
+      try { await this.printNow(printer, kitchenTicket(s, order, printer, lines, true), { tenant, what: `${orderPlace(s, order)} siparişinin (#${order.number}) mutfak fişi basılamadı.`, job: jobName(order, 'order') }); }
+      catch (e) {
+        this.store.mutate(tenant, state => { const o = state.orders.find(v => v.id === order.id); if (o) noteProblem(o, printer, faultOf(e), this.now()); });
+        throw e;
+      }
+      this.store.mutate(tenant, state => { const o = state.orders.find(v => v.id === order.id); if (o) printed(state, o, printer.id); });
+    }
   }
 }
 /** A kitchen ticket reached `printerId`: no retry, no warning; in Fiş modu the order may now be "Hazırlanıyor". */
@@ -294,11 +486,11 @@ function clearProblem(o: Order, printerId: string) {
   o.printProblems = o.printProblems.filter(p => p.printerId !== printerId);
   if (!o.printProblems.length) delete o.printProblems;
 }
-/** Keeps the first failure's time (the warning sound rings once per problem), with the latest cause. */
-function noteProblem(o: Order, printerId: string, cause: PrintCause, now: Date) {
-  const current = o.printProblems?.find(p => p.printerId === printerId);
-  if (current) { current.cause = cause; return; }
-  o.printProblems = [...(o.printProblems ?? []), { printerId, cause, at: now.toISOString() }];
+/** Keeps the first failure's time (the warning sound rings once per problem), with the latest cause and the printer's name. */
+function noteProblem(o: Order, printer: Pick<PrinterConfig, 'id' | 'name'>, cause: PrintCause, now: Date) {
+  const current = o.printProblems?.find(p => p.printerId === printer.id);
+  if (current) { current.cause = cause; current.printer = printer.name; return; }
+  o.printProblems = [...(o.printProblems ?? []), { printerId: printer.id, cause, at: now.toISOString(), printer: printer.name }];
 }
 /** What "Teslim edildi" may close: in the kitchen's hands (or ready), no cancel request open, paid first where that is the rule. */
 function deliverable(s: State, o: Order) {
@@ -434,16 +626,8 @@ export function printingRoutes(app: Express, store: Store, staffActor: (req: Req
   app.post('/api/staff/print/order', async (req, res) => {
     const a = staffActor(req), s = store.read(a.tenantId); requireRole(s, a, ['owner', 'manager', 'cashier', 'kitchen']); throttle(a);
     const { orderId } = z.object({ orderId: z.string().min(1).max(100) }).parse(req.body);
-    const order = s.orders.find(o => o.id === orderId && o.status !== 'cancelled' && o.status !== 'awaiting_approval');
-    if (!order) throw new DomainError('NOT_FOUND', 'Sipariş bulunamadı.', 404);
-    const targets = orderTargets(s, order);
-    if (!targets.length) throw new DomainError('NO_PRINTER', 'Mutfak fişleri için yazıcı seçilmemiş. Ayarlar → Cihazlar → Yazıcılar’dan bir yazıcıyı “Mutfak fişleri” için seçin.', 409);
-    const failed: string[] = [];
-    for (const { printer, lines } of targets) {
-      try { await service.printNow(printer, kitchenTicket(s, order, printer, lines, true)); } catch { failed.push(printer.name); continue; }
-      store.mutate(a.tenantId, state => { const o = state.orders.find(v => v.id === order.id); if (o) printed(state, o, printer.id); });
-    }
-    if (failed.length) throw new DomainError('PRINTER_UNREACHABLE', `Yazdırılamadı: ${failed.join(', ')}. Yazıcının açık ve bağlı olduğunu kontrol edin.`, 502);
+    // The kitchen card's "Tekrar bas" (Ekran modu) too: a warning on the order clears once it printed.
+    await service.reprint(a.tenantId, orderId);
     res.json({ ok: true });
   });
   app.post('/api/staff/print/bill', async (req, res) => {
@@ -452,7 +636,8 @@ export function printingRoutes(app: Express, store: Store, staffActor: (req: Req
     if (!s.accounts.some(v => v.id === accountId && v.status === 'open')) throw new DomainError('ACCOUNT_CLOSED', 'Hesap kapanmış.', 409);
     const printer = s.printers?.find(p => p.enabled && p.bill);
     if (!printer) throw new DomainError('NO_PRINTER', 'Hesap fişi için yazıcı seçilmemiş. Ayarlar → Cihazlar → Yazıcılar bölümünden ekleyin.', 409);
-    await service.printNow(printer, billTicket(s, accountId, now()));
+    const table = s.tables.find(t => t.id === s.accounts.find(v => v.id === accountId)?.tableId)?.name ?? 'Masa';
+    await service.printNow(printer, billTicket(s, accountId, now()), { tenant: a.tenantId, what: `${table} hesap fişi basılamadı.` });
     res.json({ ok: true });
   });
   app.post('/api/staff/print/payment', async (req, res) => {
@@ -461,7 +646,7 @@ export function printingRoutes(app: Express, store: Store, staffActor: (req: Req
     if (!s.payments.some(p => p.id === paymentId)) throw new DomainError('NOT_FOUND', 'Tahsilat bulunamadı.', 404);
     const printer = s.printers?.find(p => p.enabled && p.bill);
     if (!printer) throw new DomainError('NO_PRINTER', 'Fiş için yazıcı seçilmemiş. Ayarlar → Cihazlar → Yazıcılar bölümünden ekleyin.', 409);
-    await service.printNow(printer, paymentTicket(s, paymentId, now()));
+    await service.printNow(printer, paymentTicket(s, paymentId, now()), { tenant: a.tenantId, what: 'Ödeme fişi basılamadı.' });
     res.json({ ok: true });
   });
 }

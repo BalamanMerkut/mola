@@ -42,7 +42,7 @@ test('item payments cannot charge an item twice; merge preserves payments and ma
   assert.equal(recordPayment(s, a, pay, c).change, 1500); recordPayment(s, a, pay, c);
   assert.throws(() => recordPayment(s, a, { ...pay, requestId: randomUUID(), version: first.version, amount: 7000, tendered: 7000, selections: [{ ...pay.selections[0], quantity: 2 }] }, c));
   const merge = { requestId: randomUUID(), sourceId: first.id, sourceVersion: first.version, targetId: second.id, targetVersion: second.version };
-  assert.throws(() => mergeAccounts(s, { ...a, role: 'waiter' }, merge, c));
+  assert.throws(() => mergeAccounts(s, { ...a, role: 'kitchen' }, merge, c));
   mergeAccounts(s, a, merge, c); mergeAccounts(s, a, merge, c);
   assert.deepEqual(balances(s, second.id), { total: 10500, paid: 3500, balance: 7000 }); assert.equal(s.payments.length, 1); assert.equal(s.tables[0].epoch, 1); assert.equal(s.tables[1].epoch, 1);
   recordPayment(s, a, { ...pay, requestId: randomUUID(), accountId: second.id, version: second.version }, c);

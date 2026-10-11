@@ -42,6 +42,9 @@ test('Satış ve Raporlar: sade özet first, "Detaylı göster" remembered, KDV 
   await expect(summary.getByLabel('En çok kazandıranlar').locator('li')).toHaveCount(2);
   await expect(summary.getByRole('heading', { name: 'En çok kazandıran 3 ürün' })).toBeVisible();
   await expect(summary.getByLabel('Kasa durumu')).toBeVisible();
+  // Prices include KDV (11 Ekim): the Satış card says how much of it is KDV, the same sum as the KDV dökümü.
+  const kdv = (gross: number, rate: number) => gross - Math.round(gross * 100 / (100 + rate)), inside = kdv(sold.tea.price * 3, 10) + kdv(sold.total - sold.tea.price * 3, 20);
+  await expect(summary.getByTestId('simple-vat')).toHaveText(`Bu satışın içindeki KDV: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: inside % 100 ? 2 : 0 }).format(inside / 100)}`);
   await expect(reportGroups(page)).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Dönem' })).toBeVisible();
   await shot(page, 'rapor-sade.png', info.outputPath('rapor-sade.png'));

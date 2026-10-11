@@ -110,7 +110,9 @@ export function SimpleSummary({ range, onDetail, onRange }: { range: Range; onDe
     <p className="simple-sentence" data-testid="simple-sentence">{s.sentence}</p>
     <div className="simple-grid">
       <article className="simple-card simple-sales"><span className="simple-label"><Wallet size={16} aria-hidden="true" />Satış</span><strong>{money(n.sales)}</strong>
-        <ul className="simple-split" aria-label="Ödeme türleri">{split.map(([k, v]) => <li key={k}><span>{k}</span><b>{money(v)}</b></li>)}</ul></article>
+        <ul className="simple-split" aria-label="Ödeme türleri">{split.map(([k, v]) => <li key={k}><span>{k}</span><b>{money(v)}</b></li>)}</ul>
+        {/* Prices include KDV (11 Ekim): the KDV inside the sales, refunds taken off; the full table is "KDV dökümü" in the details. */}
+        {!!s.vat?.total.vat && <small className="simple-vat" data-testid="simple-vat">Bu satışın içindeki KDV: <b>{money(s.vat.total.vat)}</b>{n.refunds > 0 ? ' (iadeler düşülünce)' : ''}</small>}</article>
       <TipCard className="simple-card simple-expenses" title="Giderler" label={<><Receipt size={16} aria-hidden="true" /><span>Giderler</span></>} tip={<ExpenseTip n={n} />}><strong>{money(n.expenses)}</strong>
         <small>{stockAmount ? <>Stok alışları dahil (<b>{money(stockAmount)}</b>)</> : 'Kira, malzeme, fatura gibi kayıtlı ödemeler.'}</small><PlaceLink to={{ view: 'cash', tab: 'expenses', part: 'records' }}>Gider kayıtlarını aç</PlaceLink></TipCard>
       <TipCard className="simple-card simple-kept" title="Elde kalan" label={<><Landmark size={16} aria-hidden="true" /><span>Elde kalan{n.unknownCommission?.count ? ' (geçici)' : ''}</span></>} tip={<KeptTip n={n} />}><strong>{amountText(n.kept)}</strong>

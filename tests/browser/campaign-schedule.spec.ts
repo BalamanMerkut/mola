@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { ensureSetup, openReport, openView } from './helpers';
+// KAFE_EKRAN: also saved for docs/ekran/kafe (the owner's guide).
+const keep = async (page: import('@playwright/test').Page, file: string, fullPage = false) => { const folder = process.env.KAFE_EKRAN; if (folder) { mkdirSync(folder, { recursive: true }); await page.screenshot({ path: join(folder, file), fullPage }); } };
 
 const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 test('weekly campaign prices only on chosen days, the editor stays simple on mobile and the report explains active days', async ({ page, browser }, info) => {
@@ -19,7 +23,7 @@ test('weekly campaign prices only on chosen days, the editor stays simple on mob
   await picker.getByRole('button', { name: /Demleme Çay/ }).click();
   await picker.getByRole('button', { name: /Seçimi tamamla/ }).click();
   await expect(editor.getByRole('button', { name: 'Tarih aralığı', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await editor.getByRole('button', { name: 'Belirli günlerde tekrarla', exact: true }).click();
+  await editor.getByRole('button', { name: 'Her hafta', exact: true }).click();
   await expect(editor).toContainText('Kampanyanın geçerli olacağı günleri seçin.');
   await expect(save).toBeDisabled();
   await editor.getByRole('button', { name: today, exact: true }).click();
@@ -42,7 +46,7 @@ test('weekly campaign prices only on chosen days, the editor stays simple on mob
   await page.screenshot({ path: info.outputPath('weekly-editor-mobile.png') });
   await save.click();
   const card = page.locator('.campaign-card').filter({ hasText: 'Haftalık çay günü' });
-  await expect(card).toContainText('Şu an aktif');
+  await expect(card).toContainText('Aktif'); await expect(card).toContainText('Şu an uygulanıyor');
   await expect(card).toContainText(`Her ${today} · 5 hafta`);
   const saved = (await (await page.request.get('/api/staff/campaigns')).json()).campaigns.find((c: any) => c.name === 'Haftalık çay günü');
   expect(saved.schedule).toEqual({ days: [index + 1] });
@@ -57,7 +61,7 @@ test('weekly campaign prices only on chosen days, the editor stays simple on mob
     await guest.getByRole('button', { name: 'Tamam', exact: true }).click();
     // Moving the campaign to another weekday ends today's discount at once; the accepted order keeps its price.
     await card.getByRole('button', { name: 'Kampanyayı düzenle', exact: true }).click();
-    await expect(editor.getByRole('button', { name: 'Belirli günlerde tekrarla', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(editor.getByRole('button', { name: 'Her hafta', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(editor.getByLabel('Kaç hafta?')).toHaveValue('5');
     await editor.getByRole('button', { name: other, exact: true }).click();
     await editor.getByRole('button', { name: today, exact: true }).click();
@@ -83,5 +87,96 @@ test('weekly campaign prices only on chosen days, the editor stays simple on mob
     await expect(page.getByRole('tooltip')).toContainText('aynı gün ve saatler');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: info.outputPath('weekly-report-mobile.png'), fullPage: true });
+  } finally { await customer.close(); }
+});
+
+test('monthly campaign: "her ayın N. günü" prices only on that day, planned campaigns stay off the menu, the report lists each run', async ({ page, browser }, info) => {
+  await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } }); await ensureSetup(page.request);
+  const initial = await (await page.request.get('/api/staff/state')).json();
+  const table = initial.tables.find((t: any) => !t.account && !t.needsCleaning);
+  const date = new Date(Date.now() + 3 * 3600000).getUTCDate(), other = (date % 28) + 1;
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto('/'); await openView(page, 'Kampanyalar');
+  // The four states, one line each, above the cards: a saved campaign never waits for an approval.
+  const states = page.getByRole('list', { name: 'Kampanya durumları' });
+  for (const s of ['Taslak', 'Planlandı', 'Aktif', 'Bitti']) await expect(states).toContainText(s);
+  await page.getByRole('button', { name: 'Kampanya ekle', exact: true }).click();
+  const editor = page.getByRole('dialog'), save = editor.getByRole('button', { name: 'Kampanyayı kaydet', exact: true });
+  await editor.getByLabel('Kampanya adı').fill('Maaş günü');
+  await editor.getByLabel('İndirim (%)').fill('20');
+  await editor.getByRole('button', { name: /Menüden seç/ }).click();
+  const picker = page.getByRole('dialog', { name: 'Menüden kampanya ürünü seç' });
+  await picker.getByRole('button', { name: /Demleme Çay/ }).click();
+  await picker.getByRole('button', { name: /Seçimi tamamla/ }).click();
+  await editor.getByRole('button', { name: 'Her ay', exact: true }).click();
+  // Today's day of the month is ready; two months.
+  await expect(editor.getByLabel('Ayın kaçıncı günü?')).toHaveValue(String(date));
+  await editor.getByLabel('Kaç ay?').fill('13');
+  await expect(editor).toContainText('1–12 arasında bir ay sayısı girin.');
+  await expect(save).toBeDisabled();
+  await editor.getByLabel('Kaç ay?').fill('2');
+  await expect(editor.locator('.campaign-schedule-summary')).toContainText(`Her ayın ${date}. günü · 2 ay (`);
+  // "Müşteri menüde böyle görür": the price the guest will see and that it applies now.
+  const preview = editor.getByRole('complementary', { name: 'Müşteri menüde böyle görür' });
+  await expect(preview).toContainText('Demleme Çay'); await expect(preview).toContainText('₺28'); await expect(preview).toContainText('Şu an uygulanıyor');
+  await editor.getByRole('checkbox', { name: 'Kampanya etkin', exact: true }).uncheck();
+  await expect(preview).toContainText('Taslak'); await expect(editor).toContainText('Kaydedince Taslak olur');
+  await editor.getByRole('checkbox', { name: 'Kampanya etkin', exact: true }).check();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 1900 });
+  await keep(page, 'kampanya-penceresi.png');
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await keep(page, 'kampanya-penceresi-telefon.png');
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await save.click();
+  const card = page.getByRole('article', { name: 'Maaş günü' });
+  await expect(card).toContainText('Aktif'); await expect(card).toContainText('Şu an uygulanıyor'); await expect(card).toContainText(`Her ayın ${date}. günü · 2 ay`);
+  const saved = (await (await page.request.get('/api/staff/campaigns')).json()).campaigns.find((c: any) => c.name === 'Maaş günü');
+  expect(saved.schedule).toEqual({ monthDay: date });
+  // A date-range campaign starting tomorrow: "Planlandı", and the guest does not see it before it applies.
+  await page.getByRole('button', { name: 'Kampanya ekle', exact: true }).click();
+  await editor.getByLabel('Kampanya adı').fill('Yarınki latte');
+  await editor.getByRole('button', { name: /Menüden seç/ }).click();
+  await picker.getByRole('button', { name: /Caffè Latte/ }).click();
+  await picker.getByRole('button', { name: /Seçimi tamamla/ }).click();
+  const tomorrow = new Date(Date.now() + 3 * 3600000 + 86400000).toISOString().slice(0, 10).split('-').reverse().join('.');
+  await editor.getByLabel('Başlangıç günü').fill(tomorrow);
+  await expect(editor.getByRole('complementary', { name: 'Müşteri menüde böyle görür' })).toContainText('Planlandı');
+  await save.click();
+  const planned = page.getByRole('article', { name: 'Yarınki latte' });
+  await expect(planned).toContainText('Planlandı'); await expect(planned).toContainText('Başlıyor: Yarın');
+  await keep(page, 'kampanya-durumlari.png', true);
+  const customer = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  try {
+    const guest = await customer.newPage(); await guest.goto(`/m/${table.token}`);
+    await expect(guest.getByRole('button', { name: /Demleme Çay/ })).toContainText('₺28');
+    await expect(guest.getByRole('button', { name: /Caffè Latte/ }).locator('del')).toHaveCount(0);
+    await guest.getByRole('button', { name: 'Kampanyalı ürünler', exact: true }).click();
+    await expect(guest.getByRole('button', { name: /Caffè Latte/ })).toHaveCount(0);
+    const product = guest.getByRole('button', { name: /Demleme Çay/ }); await product.click();
+    await guest.getByRole('button', { name: /Sepete ekle/ }).click();
+    await guest.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
+    await guest.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
+    await guest.getByRole('button', { name: 'Tamam', exact: true }).click();
+    // Another day of the month: today is back to the menu price at once.
+    await card.getByRole('button', { name: 'Kampanyayı düzenle', exact: true }).click();
+    await expect(editor.getByRole('button', { name: 'Her ay', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(editor.getByLabel('Kaç ay?')).toHaveValue('2');
+    await editor.getByLabel('Ayın kaçıncı günü?').selectOption(String(other));
+    await save.click();
+    await expect(card).toContainText('Sıradaki: ');
+    await guest.goto(`/m/${table.token}`);
+    await expect(guest.getByRole('button', { name: /Demleme Çay/ })).toContainText('₺35');
+    const report = await (await page.request.get('/api/staff/reports/campaigns')).json();
+    const period = report.campaigns.find((c: any) => c.name === 'Maaş günü' && c.appliedAmount === 2800);
+    expect(period.monthly).toBe(true); expect(period.occurrences.length).toBe(1); expect(period.occurrences[0].quantity).toBe(1);
+    await openView(page, 'Satış ve Raporlar');
+    await openReport(page, 'Kampanyalar');
+    await page.getByLabel('Kampanya dönemi').selectOption(period.id);
+    await expect(page.getByText('Önceki 4 haftanın her günü').first()).toBeVisible();
+    const runs = page.getByRole('region', { name: 'Tekrarlar' });
+    await expect(runs.locator('tbody tr')).toHaveCount(1); await expect(runs).toContainText('1 adet');
+    await page.screenshot({ path: info.outputPath('monthly-report.png'), fullPage: true });
   } finally { await customer.close(); }
 });

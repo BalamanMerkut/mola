@@ -181,3 +181,52 @@ body.desktop-shell #root{margin-left:68px}
 .approval-compact{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;border:1px solid #d6e3cf;background:#f2f7ee;color:var(--ink);border-radius:10px;padding:6px 12px;margin:0 0 8px;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
 .approval-compact-count{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:12px;background:var(--green);color:#fff;font-size:12px;font-weight:700}
 .approval-compact-show{margin-left:auto;display:inline-flex;align-items:center;gap:3px;color:var(--green);font-weight:700}.approval-auto-line{margin:0 0 12px;font-size:13px}
+
+/* Uzun süredir sipariş yok (11 Ekim): garsona yumuşak hatırlatma, "Gittim" ile kapanır. */
+.table-reminders{display:grid;gap:6px;margin:0 0 14px}
+.table-reminders.compact{margin:0 0 8px}
+.table-reminder{display:flex;align-items:center;gap:8px;border:1px solid #d9e2ec;background:#f3f6fa;border-radius:10px;padding:6px 6px 6px 10px;min-width:0}
+.table-reminder-open{display:flex;align-items:center;gap:8px;flex:1;min-width:0;border:0;background:none;padding:4px 0;color:#3d4f63;font-size:13px;text-align:left;line-height:1.4}
+.table-reminder-open svg{flex:none;color:#5b7088}
+.table-reminder-done.btn{margin:0;flex:none;min-height:40px}
+/* Mutfak fişi basılamadı (Ekran modu, mutfak kartında) ve garsonun değişikliği */
+.print-failed.print-problem{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-weight:600}
+.print-failed.print-problem .btn{margin:0;min-height:36px}
+.order-change-list{display:grid;gap:4px;margin:8px 0}
+.order-change-list p{margin:0}
+.transfer-merge-note{margin:6px 0 0}
+.staff-change-open{margin-left:6px}
+.change-block-note{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.45}
+
+/* Ayarlar → Masalar ve QR: bölümler ve sıra (11 Ekim) */
+.table-layout{display:grid;gap:10px;margin:4px 0 12px}
+.layout-section{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:8px 10px;min-width:0}
+.layout-section-head{display:flex;align-items:center;gap:8px;min-height:36px;color:var(--green)}
+.layout-section-head strong{color:var(--ink);font-size:14px;min-width:0;overflow-wrap:anywhere}
+.layout-section-head small{color:var(--muted);font-size:12px;white-space:nowrap}
+.layout-tools{display:inline-flex;align-items:center;gap:2px;margin-left:auto;flex:none}
+.layout-tools .icon-btn{margin:0;width:36px;height:36px;padding:0;display:inline-grid;place-items:center}
+.layout-tables{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px}
+.layout-tables li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:4px 0;border-top:1px solid var(--line);min-width:0}
+.layout-tables li:first-child{border-top:0}
+.layout-table-name{font-weight:600;font-size:13.5px;min-width:56px;flex:1 1 56px}
+.table-layout .layout-tables select{flex:0 1 150px;width:auto;min-width:0;max-width:100%;min-height:38px;height:38px;padding:4px 28px 4px 10px;font-size:13px}
+@media (max-width:520px){.table-layout .layout-tables select{flex-basis:124px}.layout-tools .icon-btn{width:34px;height:34px}}
+.layout-inline-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px;flex-basis:100%;margin:4px 0}
+.layout-inline-form label{display:grid;gap:4px;flex:1 1 180px;font-size:12.5px;min-width:0}
+.layout-inline-form .btn{margin:0}
+.layout-saved{display:flex;align-items:center;gap:6px;margin:0;font-size:12.5px;color:var(--green)}
+.print-retry{margin-left:8px}
+.ready-others-toggle{margin-top:6px}
+.panel.ready-other{opacity:.75}
+.change-summary{display:grid;gap:4px;border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+.change-summary p{margin:0;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:13.5px}
+.change-summary p>span:last-child{margin-left:auto;font-weight:600}
+.change-line-pick{border:0;padding:0;margin:0;display:grid;gap:6px}
+.change-line-pick legend{font-weight:600;font-size:13px;margin-bottom:4px}
+.change-quantity{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
+.reminder-minutes{display:flex;align-items:center;gap:8px}
+.payment-changes{display:grid;gap:4px;margin:0 0 10px}
+.payment-changes .order-change-notice{margin:0}
+.order-change-notice.ready-change{background:#eef4fb;border-color:#c9d8ea;border-left-color:#5b7fa8;color:#30465f}
+.editor-ready-made{margin-top:4px}

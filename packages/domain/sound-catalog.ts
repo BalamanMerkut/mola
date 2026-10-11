@@ -16,13 +16,13 @@ export const soundNames: Record<SoundId, string> = {
  * `externalOrder`: a delivery platform order (StaffSnapshot.externalOrders waiting for Kabul, or an accepted Order.external)
  * plays this instead of the kitchen/approval sound, once per platform order.
  */
-export const soundEvents = ['waiterCall', 'billRequest', 'approval', 'kitchen', 'ready', 'externalOrder', 'kitchenCancel', 'printError', 'notification'] as const;
+export const soundEvents = ['waiterCall', 'billRequest', 'approval', 'kitchen', 'ready', 'externalOrder', 'kitchenCancel', 'printError', 'notification', 'tableReminder'] as const;
 export type SoundEvent = typeof soundEvents[number];
 export const soundEventNames: Record<SoundEvent, string> = {
   waiterCall: 'Garson çağrısı', billRequest: 'Hesap isteme', approval: 'Yeni QR siparişi (onay bekliyor)',
   kitchen: 'Mutfağa yeni sipariş', ready: 'Sipariş hazır (garsona)', externalOrder: 'Dış platform siparişi',
   kitchenCancel: 'Sipariş iptali (mutfağa)', printError: 'Mutfak fişi basılamadı (yazıcı hatası)',
-  notification: 'Bildirim sesi',
+  notification: 'Bildirim sesi', tableReminder: 'Uzun süredir sipariş yok (garsona hatırlatma)',
 };
 // The sounds play wherever the person is in Mola (Stok, Hesabım…), not only on the screen named here.
 export const soundEventWhere: Record<SoundEvent, string> = {
@@ -33,8 +33,9 @@ export const soundEventWhere: Record<SoundEvent, string> = {
   ready: 'Garson ekranında çalar; garson ataması açıksa yalnız o masanın garsonunda. Kuryeyle giden platform siparişlerinde çalmaz.',
   externalOrder: 'Yemeksepeti, Getir gibi platformlardan sipariş gelince mutfakta, kasiyerde, müdürde ve işletme sahibinde çalar; normal sipariş sesi yerine.',
   kitchenCancel: 'Garson, işletme sahibi ya da müşteri bir siparişi veya ürünü iptal edince (ya da iptal isteyince) mutfakta çalar.',
-  printError: 'Mutfak fiş modundayken bir sipariş mutfak yazıcısından çıkamayınca kasiyer, müdür, işletme sahibi ve garson ekranlarında çalar.',
+  printError: 'Bir sipariş mutfak yazıcısından çıkamayınca (kâğıt yok, kapak açık, yazıcı kapalı) çalar: Fiş modunda kasiyer, müdür, işletme sahibi ve garson ekranlarında, Ekran modunda mutfak ekranında.',
   notification: 'Zile yeni bir bildirim gelince (iade isteği, kasa farkı, biten kampanya…) işletme sahibi ve müdür ekranlarında çalar. Başlangıçta kapalıdır.',
+  tableReminder: 'Hesabı açık bir masada uzun süredir yeni sipariş ya da çağrı yoksa garson ekranında bir kez, yumuşak sesle çalar. Garson ataması açıksa yalnız o masanın garsonunda. Süre: Ayarlar → Sipariş ve mutfak → Sipariş ve onay.',
 };
 
 export type SoundChoice = { sound: SoundId; on: boolean };
@@ -51,6 +52,8 @@ export const defaultSounds: Record<SoundEvent, SoundChoice> = {
   kitchenCancel: { sound: 'alcalan', on: true }, printError: { sound: 'gong', on: true },
   // 10 Ekim: the bell's own sound is off until the owner switches it on (the toast and the count are already there).
   notification: { sound: 'nazik', on: false },
+  // 11 Ekim: a gentle reminder, not an alarm.
+  tableReminder: { sound: 'kus', on: true },
 };
 export const isSound = (v: unknown): v is SoundId => typeof v === 'string' && (soundIds as readonly string[]).includes(v);
 /** Every event with a valid choice: stored values where they are valid, defaults elsewhere (old data, unknown ids). */

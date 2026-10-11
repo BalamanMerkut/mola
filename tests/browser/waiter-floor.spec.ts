@@ -1,5 +1,7 @@
-import { test, expect, type APIRequestContext, type Browser } from '@playwright/test';
-import { bottomNav, ensureSetup } from './helpers';
+import { test, expect, type APIRequestContext, type Browser, type Page } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { bottomNav, ensureSetup, openSettings } from './helpers';
 
 const PASSWORD = 'MolaDemo!2026';
 const id = () => crypto.randomUUID().replace(/-/g, '');
@@ -158,4 +160,168 @@ test('cancel window: a campaign-priced tea tied to a paid tea cannot be chosen, 
       await page.request.post('/api/staff/campaigns', { data: { requestId: id(), revision: now.revision, campaign: { id: campaignId, name: c.name, productIds: c.productIds, minQuantity: 2, kind: 'fixed', amount: 2000, startsAt: c.startsAt, endsAt: null, enabled: false, combine: false } } });
     }
   }
+});
+
+/* Hafta sonu bulguları (11 Ekim): 5 garson siparişi değiştirir, 4 uzun süredir sipariş yok hatırlatması, 6a garson ataması ve
+ * "Servise hazır", 9 garson masaları birleştirir. Screens for docs/ekran/kafe when KAFE_EKRAN is set. */
+async function shot(page: Page, file: string, path: string) {
+  await page.screenshot({ path });
+  const folder = process.env.KAFE_EKRAN;
+  if (folder) { mkdirSync(folder, { recursive: true }); await page.screenshot({ path: join(folder, file) }); }
+}
+
+test('11 Ekim · 5: the waiter changes a line before the kitchen starts; the kitchen card says "Değişti"; a started order says which way remains', async ({ browser }, info) => {
+  const waiter = await signedIn(browser, 'garson', { width: 390, height: 844 }), waiterApi = await api(browser, 'garson'), kitchenApi = await api(browser, 'mutfak'), kitchen = await signedIn(browser, 'mutfak');
+  try {
+    const sent = await order(waiterApi, 'table-9', [{ productId: 'tea', quantity: 2 }]);
+    const started = await order(waiterApi, 'table-9', [{ productId: 'lemonade', quantity: 1 }]);
+    await step(kitchenApi, started.orderId, 'preparing');
+    await waiter.goto('/');
+    await waiter.locator('[data-table="table-9"]').click();
+    const table = waiter.getByRole('dialog', { name: 'Masa 09' });
+    await expect(table.locator('.change-block-note')).toContainText('Mutfak hazırlamaya başladı');
+    await expect(table.locator('.change-block-note')).toContainText('İptal et');
+    await table.getByRole('button', { name: `Sipariş #${sent.number} · değiştir` }).click();
+    const change = waiter.getByRole('dialog', { name: `Sipariş #${sent.number} · Değiştir` });
+    await change.getByLabel('Yeni ürün').selectOption('lemonade');
+    await change.getByRole('button', { name: 'Bir azalt' }).click();
+    await expect(change.locator('.change-summary')).toContainText('Hesap farkı');
+    await expect(change.locator('.change-summary')).toContainText('+');
+    expect(await waiter.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await shot(waiter, 'garson-siparis-degistir.png', info.outputPath('garson-siparis-degistir.png'));
+    await change.getByRole('button', { name: 'Değişikliği kaydet' }).click();
+    await expect(waiter.locator('.toast')).toContainText(`Sipariş #${sent.number} değişti: 2 x`);
+    await waiter.locator('[data-table="table-9"]').click();
+    await expect(table.locator('.order-line-change').first()).toContainText('Değişti: 2 x');
+    // The kitchen's card says it plainly; the strip (DEĞİŞTİ) came with the order sound.
+    await kitchen.goto('/');
+    const card = kitchen.locator('.kitchen-card', { hasText: `#${sent.number}` });
+    await expect(card.locator('.order-line-change')).toContainText('Değişti: 2 x');
+    await shot(kitchen, 'mutfak-degisiklik.png', info.outputPath('mutfak-degisiklik.png'));
+  } finally { await waiter.context().close(); await kitchen.context().close(); }
+});
+
+test('11 Ekim · 4: a long-open table reminds the waiter softly once; "Gittim" closes it; the owner sets the minutes', async ({ browser, page }, info) => {
+  const waiter = await signedIn(browser, 'garson', { width: 390, height: 844 }), waiterApi = await api(browser, 'garson');
+  try {
+    await order(waiterApi, 'table-10', [{ productId: 'tea', quantity: 1 }]);
+    // The server counts real minutes (tests/hafta-sonu-garson.test.ts); here the screen gets a reminder 47 minutes old.
+    let inject = false;
+    await waiter.route('**/api/staff/state', async route => {
+      // Always the full answer (no X-Mola-Tag): the screen's tag must never keep the made-up reminder after "Gittim".
+      const { 'x-mola-tag': _tag, ...headers } = route.request().headers(), r = await route.fetch({ headers });
+      if (!inject || r.status() !== 200) return route.fulfill({ response: r });
+      const body = await r.json();
+      body.tableReminders = [{ tableId: 'table-10', tableName: 'Masa 10', epoch: body.tables.find((t: { id: string }) => t.id === 'table-10').epoch, minutes: 47, since: new Date(Date.now() - 47 * 60_000).toISOString() }];
+      await route.fulfill({ response: r, json: body });
+    });
+    await waiter.goto('/');
+    await waiter.getByRole('button', { name: 'Ses kapalı · açmak için dokunun' }).click();
+    const before = await waiter.evaluate(() => (window as any).__rings);
+    inject = true;
+    await expect(waiter.locator('.table-reminder')).toContainText('Masa 10: 47 dakikadır yeni sipariş yok. Bir isteği var mı?', { timeout: 15_000 });
+    await expect.poll(() => waiter.evaluate(() => (window as any).__rings)).toBeGreaterThan(before);
+    expect(await waiter.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await shot(waiter, 'garson-hatirlatma.png', info.outputPath('garson-hatirlatma.png'));
+    inject = false;
+    await waiter.getByRole('button', { name: 'Masa 10 · Gittim' }).click();
+    await expect(waiter.locator('.table-reminder')).toHaveCount(0);
+    // The owner's setting: Sipariş ve mutfak → Sipariş ve onay → Garson hatırlatması.
+    await page.goto('/');
+    await openSettings(page, 'Sipariş ve onay');
+    const card = page.locator('.settings-card', { hasText: 'Garson hatırlatması' });
+    await expect(card.getByRole('checkbox', { name: /Uzun süredir sipariş verilmeyen masa/ })).toBeChecked();
+    await card.getByLabel('Kaç dakika sonra?').fill('30');
+    await card.getByLabel('Kaç dakika sonra?').blur();
+    await expect.poll(async () => (await (await page.request.get('/api/staff/state')).json()).tableReminderMinutes).toBe(30);
+    await card.scrollIntoViewIfNeeded();
+    await expect(page.locator('.toast')).toHaveCount(0, { timeout: 8000 });
+    await shot(page, 'ayarlar-garson-hatirlatma.png', info.outputPath('ayarlar-garson-hatirlatma.png'));
+    expect((await page.request.post('/api/staff/table-reminder', { data: { minutes: 45 } })).ok()).toBe(true);
+  } finally { await waiter.context().close(); }
+});
+
+test('11 Ekim · 6a: with garson ataması the waiter\'s "Servise hazır" count and list are his own tables; another waiter\'s wait behind a button', async ({ browser, page }, info) => {
+  const users = await (await page.request.get('/api/staff/users')).json() as { id: string; username: string }[];
+  let second = users.find(u => u.username === 'garson.iki')?.id;
+  if (!second) { const made = await page.request.post('/api/staff/users', { data: { username: 'garson.iki', name: 'Ayşe Garson', role: 'waiter', password: 'GarsonIki!2026' } }); expect(made.ok(), await made.text()).toBe(true); second = (await (await page.request.get('/api/staff/users')).json() as { id: string; username: string }[]).find(u => u.username === 'garson.iki')!.id; }
+  const me = users.find(u => u.username === 'garson')!.id;
+  const kitchen = await api(browser, 'mutfak'), waiterApi = await api(browser, 'garson');
+  // Earlier tests of this file left ready orders: they are delivered first, so only this test's two count.
+  for (const o of (await (await waiterApi.get('/api/staff/state')).json()).orders.filter((x: { status: string }) => x.status === 'ready')) await waiterApi.post('/api/staff/status', { data: { requestId: id(), orderId: o.id, version: o.version, status: 'served' } });
+  expect((await page.request.post('/api/staff/assignments', { data: { enabled: true } })).ok()).toBe(true);
+  expect((await page.request.post('/api/staff/assignments', { data: { waiter: { id: me, areas: [], tables: ['table-1'] } } })).ok()).toBe(true);
+  expect((await page.request.post('/api/staff/assignments', { data: { waiter: { id: second, areas: [], tables: ['table-2'] } } })).ok()).toBe(true);
+  const waiter = await signedIn(browser, 'garson', { width: 390, height: 844 });
+  try {
+    const mine = await order(waiterApi, 'table-1', [{ productId: 'tea', quantity: 1 }]), theirs = await order(waiterApi, 'table-2', [{ productId: 'tea', quantity: 1 }]);
+    for (const o of [mine, theirs]) { await step(kitchen, o.orderId, 'preparing'); await step(kitchen, o.orderId, 'ready'); }
+    await waiter.goto('/');
+    const nav = bottomNav(waiter).getByRole('button', { name: /^Servise hazır/ });
+    await expect(nav.locator('.bottom-nav-count')).toHaveText('1');
+    await nav.click();
+    const list = waiter.locator('.ready-orders');
+    await expect(list.locator('article', { hasText: 'Masa 01' })).toHaveCount(1);
+    await expect(list.locator('article', { hasText: 'Masa 02' })).toHaveCount(0);
+    await list.getByRole('button', { name: 'Diğer garsonların masaları (1)' }).click();
+    await expect(list.locator('article.ready-other', { hasText: 'Masa 02' })).toHaveCount(1);
+    await shot(waiter, 'garson-servise-hazir-atama.png', info.outputPath('garson-servise-hazir-atama.png'));
+  } finally {
+    await waiter.context().close();
+    await page.request.post('/api/staff/assignments', { data: { enabled: false } });
+  }
+});
+
+test('11 Ekim · 9: the waiter joins two occupied tables on the phone for a large group', async ({ browser }, info) => {
+  const waiter = await signedIn(browser, 'garson', { width: 390, height: 844 }), waiterApi = await api(browser, 'garson');
+  try {
+    await order(waiterApi, 'table-11', [{ productId: 'tea', quantity: 1 }]); await order(waiterApi, 'table-12', [{ productId: 'tea', quantity: 2 }]);
+    await waiter.goto('/');
+    await waiter.locator('[data-table="table-11"]').click();
+    await waiter.getByRole('dialog', { name: 'Masa 11' }).getByRole('button', { name: 'Taşı / birleştir' }).click();
+    const move = waiter.getByRole('dialog', { name: 'Masa 11 · Taşı / birleştir' });
+    await move.getByLabel('Hedef masa').selectOption('table-12');
+    await expect(move.locator('.transfer-merge-note')).toContainText('Masa 11 boşalır');
+    await shot(waiter, 'garson-masa-birlestir.png', info.outputPath('garson-masa-birlestir.png'));
+    await move.getByRole('button', { name: 'Hesapları birleştir · Masa 12' }).click();
+    await expect(waiter.locator('.toast')).toContainText('Hesaplar Masa 12 üzerinde birleştirildi.');
+    const state = await (await waiterApi.get('/api/staff/state')).json();
+    expect(state.tables.find((t: { id: string }) => t.id === 'table-11').account).toBeNull();
+  } finally { await waiter.context().close(); }
+});
+
+test('11 Ekim · 5 (hazır ürün): a can is swapped after the kitchen started, the kitchen is not told, the cashier sees "Değişti … +₺85" before taking the money', async ({ browser, page }, info) => {
+  const mark = async (ids: string[], on: boolean) => {
+    for (const pid of ids) {
+      const state = await (await page.request.get('/api/staff/state')).json(), p = state.products.find((x: { id: string }) => x.id === pid);
+      const r = await page.request.post('/api/staff/products', { data: { requestId: id(), revision: state.revision, id: pid, product: { ...p, readyMade: on } } });
+      expect(r.ok(), await r.text()).toBe(true);
+    }
+  };
+  await mark(['tea', 'lemonade'], true);
+  const waiter = await signedIn(browser, 'garson', { width: 390, height: 844 }), cashier = await signedIn(browser, 'kasiyer'), waiterApi = await api(browser, 'garson'), kitchenApi = await api(browser, 'mutfak');
+  try {
+    const sent = await order(waiterApi, 'table-5', [{ productId: 'tea', quantity: 1 }]);
+    await step(kitchenApi, sent.orderId, 'preparing');
+    await waiter.goto('/');
+    await waiter.locator('[data-table="table-5"]').click();
+    const table = waiter.getByRole('dialog', { name: 'Masa 05' });
+    await table.getByRole('button', { name: `Sipariş #${sent.number} · hazır ürünü değiştir` }).click();
+    const change = waiter.getByRole('dialog', { name: `Sipariş #${sent.number} · Değiştir` });
+    await expect(change).toContainText('Mutfak uyarılmaz');
+    const options = await change.getByLabel('Yeni ürün').locator('option').evaluateAll(list => list.map(o => (o as HTMLOptionElement).value));
+    expect(options.sort()).toEqual(['lemonade', 'tea']);
+    await change.getByLabel('Yeni ürün').selectOption('lemonade');
+    await change.getByRole('button', { name: 'Değişikliği kaydet' }).click();
+    await expect(waiter.locator('.toast')).toContainText('Hesaba +₺85 yansıdı.');
+    expect((await (await kitchenApi.get('/api/staff/state')).json()).orders.find((o: { id: string }) => o.id === sent.orderId).changes).toBeUndefined();
+    // The cashier's payment window says what changed, by whom and the difference.
+    await cashier.goto('/');
+    await cashier.locator('.table-card', { hasText: 'Masa 05' }).first().click();
+    await cashier.getByRole('dialog', { name: 'Masa 05' }).getByRole('button', { name: 'Ödeme al' }).click();
+    const changes = cashier.locator('.payment-changes');
+    await expect(changes).toContainText('Değişti: 1 x Demleme Çay → 1 x');
+    await expect(changes).toContainText('+₺85');
+    await shot(cashier, 'kasa-hazir-urun-degisti.png', info.outputPath('kasa-hazir-urun-degisti.png'));
+  } finally { await waiter.context().close(); await cashier.context().close(); await mark(['tea', 'lemonade'], false); }
 });

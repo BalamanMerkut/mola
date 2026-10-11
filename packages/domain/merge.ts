@@ -2,7 +2,8 @@ import type { Actor, Context, State } from './types.js';
 import { balances, DomainError, once, requireRole } from './engine.js';
 import { isTakeaway } from './takeaway.js';
 export function mergeAccounts(s: State, actor: Actor, b: { requestId: string; sourceId: string; sourceVersion: number; targetId: string; targetVersion: number }, ctx: Context) {
-  requireRole(s, actor, ['cashier', 'manager', 'owner']);
+  // 11 Ekim (hafta sonu bulgusu 9): the waiter joins tables for a large group too, with the same rules and record as the cashier.
+  requireRole(s, actor, ['cashier', 'manager', 'owner', 'waiter']);
   return once(s, actor, 'merge-accounts', b.requestId, b, () => {
     const source = s.accounts.find(a => a.id === b.sourceId && a.status === 'open'), target = s.accounts.find(a => a.id === b.targetId && a.status === 'open');
     if (!source || !target || source.id === target.id || source.version !== b.sourceVersion || target.version !== b.targetVersion) throw new DomainError('ACCOUNT_CHANGED', 'Hesaplar değişti. Pencereyi kapatıp yeniden açın.', 409);

@@ -47,6 +47,9 @@ test('campaign quota shows live usage, expires automatically and releases cancel
     await expect(card).toContainText('2 / 2 adet', { timeout: 10000 });
     await expect(card).toContainText('Adet sınırı doldu');
     await expect(product).toContainText('₺35');
+    // A used-up quota is Bitti: the card moves under "Biten kampanyalar" (11 Ekim durumları).
+    await expect(card.locator('.campaign-state')).toHaveText('Bitti');
+    await page.getByText(/^Biten kampanyalar/).click();
     await page.screenshot({ path: info.outputPath('quota-complete-mobile.png') });
     await card.getByRole('button', { name: 'Kampanyayı düzenle' }).click();
     await editor.getByLabel('Kampanya kaç adetle sınırlı?').fill('1');

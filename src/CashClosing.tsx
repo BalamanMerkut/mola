@@ -253,7 +253,7 @@ function PrintSheet({ closing: c, corrections, business, onDone }: { closing: Cl
       {c.fiscal && <tr className="total"><th>Yazar kasaya girilmesi gereken</th><td>{kasaMoney(c.fiscal.total)}</td></tr>}
     </tbody></table>
     {c.note && <p><strong>Not:</strong> {c.note}</p>}
-    <p className="cash-print-foot">Sayım işletme sahibine iletildi. Bilgi fişidir. Mali değeri yoktur.</p>
+    <p className="cash-print-foot">Sayım işletme sahibine iletildi.</p>
   </div>, document.body);
   const f = c.figures;
   return createPortal(<div className="cash-print-root" aria-hidden="true">
@@ -284,6 +284,5 @@ function PrintSheet({ closing: c, corrections, business, onDone }: { closing: Cl
     {c.expenses.length > 0 && <><h3>Nakit giderler</h3><ul>{c.expenses.map(e => <li key={e.id}>{clock(e.at)} · {e.description} · {money(e.amount)} · {e.byName}</li>)}</ul></>}
     {!!c.refunds?.length && <><h3>İadeler</h3><ul>{c.refunds.map(r => <li key={r.id}>{clock(r.at)} · {r.text || 'İade'} · {money(r.amount)} {r.method === 'card' ? 'kart' : 'nakit'} · {r.byName}{r.cashier ? ' (kasiyer)' : ''}</li>)}</ul></>}
     {corrections.length > 0 && <><h3>Düzeltmeler</h3><ul>{corrections.map(x => <li key={x.id}>{clock(x.at)} · {signedMoney(x.amount)} · {x.note} · {x.byName}</li>)}</ul></>}
-    <p className="cash-print-foot">Bilgi fişidir. Mali değeri yoktur.</p>
   </div>, document.body);
 }

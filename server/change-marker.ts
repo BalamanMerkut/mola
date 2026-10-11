@@ -20,6 +20,8 @@ export const NOT_A_CHANGE: readonly string[] = [
   '/api/staff/lock', '/api/staff/unlock', '/api/staff/activity', '/api/staff/report-security/verify',
   '/api/staff/notifications/read', '/api/staff/announcements/read', '/api/staff/announcements/ack',
   '/api/staff/package/notice-seen', '/api/staff/printers/notice-seen', '/api/staff/update/seen',
+  // "Gittim" on a long-open table's reminder: only when the next reminder may come.
+  '/api/staff/tables/checked',
   // social-qr: reads the permanent QR address (Mola Merkez keeps the code; a restore gets it back with the next heartbeat).
   '/api/staff/photo-source', '/api/staff/social-qr', '/api/staff/support/sync', '/api/staff/email-reports/test', '/api/staff/update/install',
   '/api/staff/print/order', '/api/staff/print/bill', '/api/staff/print/payment', '/api/staff/print/kitchen', '/api/staff/printers/test', '/api/staff/cash/print',
@@ -30,14 +32,15 @@ export const NOT_A_CHANGE: readonly string[] = [
 export const REAL_CHANGES: readonly string[] = [
   // Orders, payments, the floor
   '/api/guest/orders', '/api/guest/orders/edit', '/api/guest/call', '/api/guest/cancel',
-  '/api/staff/orders', '/api/staff/takeaway/orders', '/api/staff/status', '/api/staff/status/undo', '/api/staff/cancel', '/api/staff/orders/cancel',
+  '/api/staff/orders', '/api/staff/takeaway/orders', '/api/staff/status', '/api/staff/status/undo', '/api/staff/cancel', '/api/staff/orders/cancel', '/api/staff/orders/change',
   '/api/staff/cancel-decline', '/api/staff/payments', '/api/staff/tables/move', '/api/staff/tables/clean', '/api/staff/close-empty', '/api/staff/accounts/merge',
   '/api/staff/orders/review', '/api/staff/calls/resolve', '/api/staff/block', '/api/staff/deliver-all', '/api/staff/print/handled',
   '/api/staff/payment-adjustments', '/api/staff/refunds', '/api/staff/refunds/requests', '/api/staff/refunds/requests/decline', '/api/staff/refunds/till-notices/seen', '/api/staff/fiscal/mark',
   // Menu, tables, settings
   '/api/staff/products', '/api/staff/products/discard-draft', '/api/staff/photos', '/api/staff/catalog/remove', '/api/staff/photo-trash', '/api/staff/photo-trash/restore',
   '/api/staff/categories', '/api/staff/campaigns', '/api/staff/vat', '/api/staff/vat/apply', '/api/staff/approval-mode', '/api/staff/settings', '/api/staff/qr-printed', '/api/staff/qr-ordering',
-  '/api/staff/tables/add', '/api/staff/tables/area', '/api/staff/tables/remove', '/api/staff/tables/renew-qr', '/api/staff/business-profile', '/api/staff/social-links',
+  '/api/staff/tables/add', '/api/staff/tables/area', '/api/staff/tables/layout', '/api/staff/tables/area-rename', '/api/staff/table-reminder',
+'/api/staff/tables/remove', '/api/staff/tables/renew-qr', '/api/staff/business-profile', '/api/staff/social-links',
   '/api/staff/sounds', '/api/staff/assignments', '/api/staff/printers', '/api/staff/printers/delete', '/api/staff/kitchen-mode', '/api/staff/first-steps',
   '/api/staff/email-reports', '/api/staff/email-reports/retry', '/api/staff/lock/settings', '/api/staff/update/settings', '/api/staff/demo/reset',
   // Staff and security

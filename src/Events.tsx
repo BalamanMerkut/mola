@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { CalendarClock, Hand, Pencil, Play, Plus, Users } from 'lucide-react';
 import { DateField } from './DateField';
-import { eventOverdue, eventStarted, statusNames, turkishDay, type CafeEvent, type Reservation } from '../packages/domain/reservations';
+import { eventOverdue, eventStarted, eventTableNames, statusNames, turkishDay, type CafeEvent, type Reservation } from '../packages/domain/reservations';
+import { Choice, Step } from './StepForm';
 import { longDay } from '../packages/domain/agenda';
 import { api, requestId } from './api';
 import { Modal, Notice } from './components';
@@ -25,40 +26,70 @@ function useEvents() {
   return { data, error, reload: useCallback(() => setVersion(v => v + 1), []) };
 }
 
-/** Create or change an event; the table count and names only when creating. */
+/** At most this many names are shown in the live list of table names; the rest is "+ 13 masa daha". */
+const SHOWN_NAMES = 12;
+/**
+ * Create or change an event; the table count and names only when creating. Four plain steps (11 Ekim, sahibin "karışık"
+ * bulduğu eski form yerine): Etkinlik · Ne zaman? · Kaç masa? · Masa adları, then how Masalar looks during it. Every choice
+ * shows what it will do right under it (the times as a sentence, the table names as chips).
+ */
 function EventForm({ event, today, onClose, onSaved }: { event?: EventRow; today: string; onClose: () => void; onSaved: (message: string) => void }) {
   const [f, setF] = useState({ name: event?.name ?? '', day: event?.day ?? today, start: event?.start ?? '19:00', end: event?.end ?? '', count: '25', naming: 'prefix' as 'prefix' | 'custom', prefix: 'D', names: '', capacity: '', hideNormal: event?.hideNormal ?? false });
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const set = (patch: Partial<typeof f>) => setF(v => ({ ...v, ...patch }));
-  const count = Number(f.count) || 0, custom = f.names.split('\n').map(n => n.trim()).filter(Boolean);
-  const preview = f.naming === 'prefix' ? (count > 0 ? `${f.prefix || 'D'}1, ${f.prefix || 'D'}2 … ${f.prefix || 'D'}${count}` : '') : `${custom.length} ad yazıldı`;
+  const custom = f.names.split('\n').map(n => n.trim()).filter(Boolean);
+  // Own names: as many tables as names written (the count field would only have to be kept in step).
+  const count = f.naming === 'custom' ? custom.length : Number(f.count) || 0, capacity = Number(f.capacity) || 0;
+  const names = eventTableNames(count, f.prefix.trim() || 'D', f.naming === 'custom' ? custom : undefined);
+  const tooMany = count > 100, longName = names.find(n => [...n].length > 20), twice = names.find((n, i) => names.findIndex(m => m.toLocaleLowerCase('tr') === n.toLocaleLowerCase('tr')) !== i);
+  const tablesProblem = !count ? (f.naming === 'custom' ? 'Her satıra bir masa adı yazın.' : 'Kaç masa açılacağını yazın.') : tooMany ? 'Bir etkinlikte en çok 100 geçici masa olabilir.' : longName ? `“${longName}” çok uzun; masa adı en çok 20 harf olabilir.` : twice ? `“${twice}” iki kez yazılmış; her masanın adı farklı olmalı.` : '';
+  // "19:00 – 23:30" or, an end before the start, the next morning (a night event; the server reads it the same way).
+  const whenLine = f.day && f.start ? `${longDay(f.day)} · ${f.start}${f.end ? ` – ${f.end}${f.end <= f.start ? ' (ertesi gün)' : ''}` : ' · bitiş saati yok'}` : '';
   async function save(e: FormEvent) {
     e.preventDefault(); if (busy) return; setBusy(true); setError('');
     try {
       if (event) await api('/api/staff/events/update', { requestId: requestId(), id: event.id, name: f.name, day: f.day, start: f.start, end: f.end || null, hideNormal: f.hideNormal });
-      else await api('/api/staff/events', { requestId: requestId(), name: f.name, day: f.day, start: f.start, end: f.end || null, count, ...(f.naming === 'custom' ? { names: custom } : { prefix: f.prefix || 'D' }), capacity: Number(f.capacity) || null, hideNormal: f.hideNormal });
+      else await api('/api/staff/events', { requestId: requestId(), name: f.name, day: f.day, start: f.start, end: f.end || null, count, ...(f.naming === 'custom' ? { names: custom } : { prefix: f.prefix.trim() || 'D' }), capacity: capacity || null, hideNormal: f.hideNormal });
       onSaved(event ? 'Etkinlik güncellendi.' : `${f.name.trim()} oluşturuldu: ${count} geçici masa.`);
     } catch (err) { setError((err as Error).message); setBusy(false); }
   }
-  return <Modal title={event ? 'Etkinliği düzenle' : 'Etkinlik oluştur'} onClose={onClose} dismissible={!busy} wide><form className="modal-body resv-form" onSubmit={e => void save(e)}>
-    <div className="resv-form-grid">
-      <label className="wide">Etkinlik adı *<input required maxLength={60} autoFocus value={f.name} placeholder="Ör. Elazığspor derbisi" onChange={e => set({ name: e.target.value })} /></label>
-      <label>Gün *<DateField required value={f.day} onChange={v => set({ day: v })} /></label>
-      <label>Başlangıç *<TimeField required value={f.start} onChange={start => set({ start })} /></label>
-      <label>Planlanan bitiş <small>(isteğe bağlı)</small><TimeField value={f.end} onChange={end => set({ end })} /><small>Bitişte yalnız “Etkinlik bitti mi?” diye sorulur; etkinlik kendiliğinden kapanmaz.</small></label>
-      {!event && <>
-        <label>Geçici masa sayısı *<input inputMode="numeric" required value={f.count} maxLength={3} onChange={e => set({ count: e.target.value.replace(/\D/g, '') })} /></label>
-        <label>Masa başı kişi <small>(isteğe bağlı)</small><input inputMode="numeric" value={f.capacity} maxLength={3} onChange={e => set({ capacity: e.target.value.replace(/\D/g, '') })} /></label>
-        <div className="wide resv-naming"><span className="resv-label">Masa adları</span>
-          <div className="resv-method" role="group" aria-label="Masa adları">{([['prefix', 'Sıra numarası'], ['custom', 'Kendi adlarım']] as const).map(([v, l]) => <button type="button" key={v} aria-pressed={f.naming === v} className={f.naming === v ? 'selected' : ''} onClick={() => set({ naming: v })}>{l}</button>)}</div>
-          {f.naming === 'prefix' ? <label>Ön ad<input maxLength={12} value={f.prefix} onChange={e => set({ prefix: e.target.value })} /></label>
-            : <label>Her satıra bir masa adı<textarea rows={4} value={f.names} placeholder={'Sahne önü\nPencere 1\nPencere 2'} onChange={e => set({ names: e.target.value })} /></label>}
-          <small className="muted">{preview}. Adları sonra da değiştirebilirsiniz. Geçici masaların QR kodu yoktur; siparişi personel alır.</small></div>
-      </>}
-      <label className="wide resv-check"><input type="checkbox" checked={f.hideNormal} onChange={e => set({ hideNormal: e.target.checked })} />Etkinlik sırasında normal masaları gizle</label>
-    </div>
+  let n = 0;
+  return <Modal title={event ? 'Etkinliği düzenle' : 'Etkinlik oluştur'} onClose={onClose} dismissible={!busy} wide className="event-form-dialog"><form className="modal-body step-form event-form" onSubmit={e => void save(e)}>
+    <Step n={++n} title="Etkinlik">
+      <label>Etkinlik adı *<input required maxLength={60} autoFocus value={f.name} placeholder="Ör. Elazığspor derbisi" onChange={e => set({ name: e.target.value })} /></label>
+    </Step>
+    <Step n={++n} title="Ne zaman?" help="Bitiş saati yalnız hatırlatma içindir: o saatte size “Etkinlik bitti mi?” diye sorulur. Etkinlik kendiliğinden kapanmaz; masaların hesabı kapanınca siz kapatırsınız. Bitiş başlangıçtan önceyse ertesi gün sayılır (gece etkinliği).">
+      <div className="step-row">
+        <label>Gün *<DateField required value={f.day} onChange={v => set({ day: v })} /></label>
+        <label>Başlangıç saati *<TimeField required value={f.start} onChange={start => set({ start })} /></label>
+        <label><span>Bitiş saati <small>(isteğe bağlı)</small></span><TimeField value={f.end} onChange={end => set({ end })} /></label>
+      </div>
+      {whenLine && <p className="step-result" role="status">{whenLine}</p>}
+    </Step>
+    {!event && <>
+      <Step n={++n} title="Kaç masa?" help="Etkinlik için normal masalarınıza ek olarak geçici masalar açılır. QR kodları yoktur; siparişi personel alır. Etkinliği kapatınca geçici masalar silinir, satışları raporlarda kalır.">
+        <div className="step-row">
+          {f.naming === 'prefix' ? <label>Geçici masa sayısı *<input inputMode="numeric" required value={f.count} maxLength={3} onChange={e => set({ count: e.target.value.replace(/\D/g, '') })} /></label>
+            : <div className="step-fixed"><span>Geçici masa sayısı <small>(yazdığınız ad kadar)</small></span><strong>{count}</strong></div>}
+          <label><span>Bir masada kaç kişi? <small>(isteğe bağlı)</small></span><input inputMode="numeric" value={f.capacity} maxLength={3} placeholder="Ör. 4" onChange={e => set({ capacity: e.target.value.replace(/\D/g, '') })} /></label>
+        </div>
+        {count > 0 && !tooMany && <p className="step-result" role="status">{count} geçici masa{capacity ? ` · toplam ${(count * capacity).toLocaleString('tr-TR')} kişilik yer` : ''}</p>}
+      </Step>
+      <Step n={++n} title="Masa adları" help="Numaralı seçerseniz masalar sırayla adlandırılır (D1, D2, D3…); baştaki harfi değiştirebilirsiniz. “Adları ben yazayım” ile her satıra bir ad yazarsınız. Masaların adını etkinlik kartından sonra da değiştirebilirsiniz.">
+        <Choice label="Masa adları" value={f.naming} options={[['prefix', 'Numaralı (D1, D2…)'], ['custom', 'Adları ben yazayım']]} onChange={naming => set({ naming })} />
+        {f.naming === 'prefix'
+          ? <div className="step-row"><label>Adın başı<input maxLength={12} value={f.prefix} placeholder="D" onChange={e => set({ prefix: e.target.value })} /></label></div>
+          : <label>Her satıra bir masa adı<textarea rows={5} value={f.names} placeholder={'Sahne önü\nPencere 1\nPencere 2'} onChange={e => set({ names: e.target.value })} /></label>}
+        {tablesProblem ? <p className="step-result warn" role="status">{tablesProblem}</p>
+          : <ul className="step-chips" aria-label="Açılacak masalar">{names.slice(0, SHOWN_NAMES).map(m => <li key={m}>{m}</li>)}{names.length > SHOWN_NAMES && <li className="more">+ {names.length - SHOWN_NAMES} masa daha (son: {names.at(-1)})</li>}</ul>}
+      </Step>
+    </>}
+    <Step n={++n} title="Masalar ekranı" help="Etkinlik başlayınca (ya da “Etkinliği başlat” deyince) geçici masalar Masalar ekranında kendi bölümünde görünür. Normal masaları gizlerseniz ekranda yalnız etkinlik masaları kalır; “Normal masaları göster” ile her an geri açılır.">
+      <label className="step-check"><input type="checkbox" checked={f.hideNormal} onChange={e => set({ hideNormal: e.target.checked })} />Etkinlik sürerken yalnız etkinlik masalarını göster</label>
+      <p className="step-hint">{f.hideNormal ? 'Normal masalar etkinlik boyunca gizlenir; gerekirse tek dokunuşla açılır.' : 'Normal masalar etkinlik masalarıyla birlikte görünür.'}</p>
+    </Step>
     {error && <Notice tone="error">{error}</Notice>}
-    <div className="resv-dialog-actions"><button type="button" className="btn secondary" disabled={busy} onClick={onClose}>Vazgeç</button><button className="btn primary" disabled={busy || !f.name.trim() || (!event && (count < 1 || (f.naming === 'custom' && custom.length !== count)))}>{busy ? 'Kaydediliyor…' : event ? 'Kaydet' : 'Etkinliği oluştur'}</button></div>
+    <div className="resv-dialog-actions"><button type="button" className="btn secondary" disabled={busy} onClick={onClose}>Vazgeç</button><button className="btn primary" disabled={busy || !f.name.trim() || !f.day || !f.start || (!event && !!tablesProblem)}>{busy ? 'Kaydediliyor…' : event ? 'Kaydet' : 'Etkinliği oluştur'}</button></div>
   </form></Modal>;
 }
 

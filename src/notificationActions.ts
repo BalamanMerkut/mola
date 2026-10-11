@@ -1,7 +1,7 @@
 import type { GoTo } from './navigate';
 
 /** A notification of the owner's bell (GET /api/staff/notifications). */
-export type NotificationItem = { id: string; kind: 'reminder' | 'license' | 'backup' | 'merkez' | 'stock' | 'cash' | 'expense' | 'report' | 'demo' | 'campaign'; title: string; text: string; at: string; day?: string; read: boolean; /** 'campaign': the ended campaign (src/CampaignEnded.tsx). */ campaign?: { id: string; reportId: string; reason: 'time' | 'quota'; endedAt: string; uses?: number } };
+export type NotificationItem = { id: string; kind: 'reminder' | 'license' | 'backup' | 'merkez' | 'stock' | 'cash' | 'expense' | 'report' | 'demo' | 'campaign' | 'printer'; title: string; text: string; at: string; day?: string; read: boolean; /** 'campaign': the ended campaign (src/CampaignEnded.tsx). */ campaign?: { id: string; reportId: string; reason: 'time' | 'quota'; endedAt: string; uses?: number } };
 /** The count on the bell: "3", and "9+" above nine (10 Ekim). */
 export const bellCount = (unread: number) => unread > 9 ? '9+' : String(unread);
 /**
@@ -10,7 +10,8 @@ export const bellCount = (unread: number) => unread > 9 ? '9+' : String(unread);
  * hides after a few seconds; all stay in Bildirimler.
  */
 export function importantNotification(n: Pick<NotificationItem, 'kind' | 'title'>) {
-  if (n.kind === 'license' || n.kind === 'backup') return true;
+  // A printer out of paper stays until closed too (11 Ekim); "kâğıt azaldı" is only a note.
+  if (n.kind === 'license' || n.kind === 'backup' || (n.kind === 'printer' && !/azaldı/.test(n.title))) return true;
   if (n.kind !== 'cash') return false;
   const title = n.title.toLocaleLowerCase('tr-TR');
   return /^iade isteği:/.test(title) || /eksi|açı[kğ]/.test(title) || (/fark/.test(title) && !/fark yok/.test(title));
@@ -34,5 +35,6 @@ export function notificationActionOf(n: Pick<NotificationItem, 'kind' | 'title' 
   if (n.kind === 'report') return ['Raporları aç', { view: 'reports', tab: 'summary' }];
   if (n.kind === 'license') return ['Paket ve lisans', { view: 'settings', topic: 'business', part: 'package' }];
   if (n.kind === 'backup') return ['Yedek', { view: 'settings', topic: 'security', part: 'backup' }];
+  if (n.kind === 'printer') return ['Yazıcılar', { view: 'settings', topic: 'devices', part: 'printers' }];
   return null;
 }

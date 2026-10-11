@@ -12,7 +12,7 @@ import { dockFiscal, FiscalSlot, trackFiscal } from './FiscalHelper';
 const printPreference = 'mola-print-after-payment';
 /** `onLater`: a masasız ticket opened right after sending can be paid later; "Sonra öde" closes without a payment. */
 /** `prefer`: the guest said how they will pay when asking for the bill ("Hesap · Kart"); the window opens on that method. */
-export function PaymentModal({ table, context, restored, canPay, printing = false, prefer, onClose, onSuccess, onRefresh, onPrintError, onLater }: { table: PaymentTable; context: string; restored?: PendingPayment; canPay: boolean; printing?: boolean; prefer?: 'cash' | 'card'; onClose: () => void; onSuccess: (msg: string, settled: boolean, change?: number) => Promise<void>; onRefresh: () => void; onPrintError?: (message: string) => void; onLater?: () => void }) {
+export function PaymentModal({ table, context, restored, canPay, printing = false, prefer, onClose, onSuccess, onRefresh, onPrintError, onLater, changes }: { changes?: string[]; table: PaymentTable; context: string; restored?: PendingPayment; canPay: boolean; printing?: boolean; prefer?: 'cash' | 'card'; onClose: () => void; onSuccess: (msg: string, settled: boolean, change?: number) => Promise<void>; onRefresh: () => void; onPrintError?: (message: string, retry?: { path: string; body: unknown }) => void; onLater?: () => void }) {
   const paymentForm = useRef<HTMLFormElement>(null);
   // Remembered per device: the cashier sets it once instead of pressing print after every payment.
   const [printAfter, setPrintAfter] = useState(() => { try { return localStorage.getItem(printPreference) !== '0'; } catch { return true; } });
@@ -76,7 +76,7 @@ export function PaymentModal({ table, context, restored, canPay, printing = fals
       clearPendingPayment(paymentStorage(), context, submitted.body.requestId);
       dockFiscal(fiscal.current); fiscal.current = trackFiscal(r.paymentId); setFiscalKey(fiscal.current);
       // The payment is already saved; a printer problem is reported separately and never undoes it.
-      if (printing && printAfter) void api('/api/staff/print/payment', { paymentId: r.paymentId }).catch(e => onPrintError?.(`Ödeme kaydedildi. ${printProblem(e)}`));
+      if (printing && printAfter) void api('/api/staff/print/payment', { paymentId: r.paymentId }).catch(e => onPrintError?.(`Ödeme kaydedildi. ${printProblem(e)}`, { path: '/api/staff/print/payment', body: { paymentId: r.paymentId } }));
       pending.current = null; setUncertain(false); setChosen(null); setTip(''); setTipOpen(false); setTipMethod(null); setTipPaidOut(null);
       // "Evet, kasadan nakit verildi": the drawer's "Kart bahşişi nakit ödendi" movement (never undoes the payment if it fails).
       // The closing reads "Kart bahşişi nakit ödendi ₺20 · Kasa Kerem · Masa 05 · kartla bahşiş" (10 Ekim son kullanıcı testi:
@@ -127,8 +127,10 @@ export function PaymentModal({ table, context, restored, canPay, printing = fals
       {paymentNotice && <Notice tone="success">{paymentNotice}</Notice>}
       <FiscalSlot itemKey={fiscalKey} />
       <div className="payment-balance"><small>KALAN HESAP</small><h2>{money(account.balance)}</h2>{account.paid > 0 && <p>{money(account.paid)} tahsil edildi</p>}{depositCredit > 0 && <p className="payment-deposit">Kapora düşüldü: {money(depositCredit)} <small>(rezervasyonda alınmıştı)</small></p>}</div>
+      {/* 11 Ekim: what the waiter changed on this bill ("Değişti: Ayran → Kola · +₺5 · Garson · 21:40"), so the money matches what was served. */}
+      {!!changes?.length && <div className="payment-changes" role="note" aria-label="Siparişte yapılan değişiklikler">{changes.map((c, i) => <p key={i} className="order-change-notice order-line-change">{c}</p>)}</div>}
       {printing && <div className="payment-bill-row"><button type="button" className="btn secondary small-btn" disabled={billBusy || !canPay} onClick={() => void printBill()}><Printer size={15} />{billBusy ? 'Yazdırılıyor…' : 'Hesap fişi'}</button></div>}
-      {billNotice && <Notice tone={billNotice.ok ? 'success' : 'error'}>{billNotice.text}</Notice>}
+      {billNotice && <Notice tone={billNotice.ok ? 'success' : 'error'}>{billNotice.text}{!billNotice.ok && <button type="button" className="btn secondary small-btn print-retry" disabled={billBusy} onClick={() => void printBill()}><Printer size={15} aria-hidden="true" />Tekrar bas</button>}</Notice>}
       <div className="payment-method"><button type="button" disabled={locked || uncertain} className={method === 'cash' ? 'selected' : ''} onClick={() => setMethod('cash')}><Wallet size={20} />Nakit</button><button type="button" disabled={locked || uncertain} className={method === 'card' ? 'selected' : ''} onClick={() => setMethod('card')}><CreditCard size={20} />Kart</button></div>
       {prefer && <p className="payment-prefer" role="status">Müşteri hesabı isterken “{prefer === 'card' ? 'Kart' : 'Nakit'}” dedi.</p>}
       <div className="payment-scope" role="group" aria-label="Ne kadar ödenecek">{([['all', 'Tamamı'], ['part', 'Bir kısmı'], ['items', 'Ürün seç']] as const).map(([value, label]) => <button type="button" key={value} aria-pressed={mode === value} className={mode === value ? 'selected' : ''} disabled={locked || uncertain} onClick={() => chooseMode(value)}>{label}</button>)}</div>

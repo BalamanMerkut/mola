@@ -71,6 +71,8 @@ function TableBill({ due, bill, staffItems, en }: { due: number; bill?: GuestSna
     <span>{en ? 'Table bill' : 'Masanın hesabı'}</span>
     <small>{staffItems ? (en ? 'Every item at this table, also those added by staff.' : 'Masadaki tüm ürünler, garsonun ekledikleri de.') : (en ? 'Every item at this table.' : 'Masadaki tüm ürünler.')}</small>
     {bill && (paid > 0 || deposit > 0) && <small className="customer-due-lines">{en ? 'Total' : 'Toplam'} {money(bill.total)}{paid > 0 ? ` · ${en ? 'Paid' : 'Ödenen'} ${money(paid)}` : ''}{deposit > 0 ? ` · ${en ? 'Deposit' : 'Kapora'} ${money(deposit)}` : ''}</small>}
+    {/* Prices include KDV; the bill says how much of it is KDV, like the printed bill (11 Ekim). */}
+    {!!bill?.vat && <small className="customer-due-vat">{en ? `Prices include VAT · VAT in this bill ${money(bill.vat)}` : `Fiyatlara KDV dahildir · bu hesaptaki KDV ${money(bill.vat)}`}</small>}
   </div><div className="customer-due-left"><small>{en ? 'To pay' : 'Ödenecek'}</small><strong>{money(due)}</strong></div></div>;
 }
 export function Customer({ token }: { token: string }) {

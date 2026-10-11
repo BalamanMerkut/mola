@@ -226,6 +226,8 @@ test('My orders: newest first, no product code under plain lines, cancelled tota
   await expect(guest.locator('.customer-order .order-line small', { hasText: '#21' })).toHaveCount(0);
   await expect(guest.locator('.customer-due')).toContainText('Masanın hesabı');
   await expect(guest.locator('.customer-due strong')).toHaveText('₺105');
+  // Prices include KDV: the bill says how much of it is KDV, like the printed bill (11 Ekim; demo menu at %10).
+  await expect(guest.locator('.customer-due-vat')).toHaveText('Fiyatlara KDV dahildir · bu hesaptaki KDV ₺9,55');
   // The guest asks to cancel the oldest order and the café approves: its total is struck and leaves the own total.
   const oldest = cards.last();
   await oldest.getByRole('button', { name: 'Siparişi iptal et' }).click();

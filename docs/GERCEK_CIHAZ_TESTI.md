@@ -184,7 +184,8 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | # | Ne yapın | Ne olmalı | ☐ | Not |
 |---|---|---|---|---|
 | 3.1 | **Menü yönetimi**'ni açın. | Başlangıç menüsü kategorileriyle listelenir. Üstte Ürün ekle, Kategorileri yönet, Menüyü önizle. | ☐ |  |
-| 3.2 | **Ürün ekle**: ürün adı, kategori, fiyat, açıklama, İngilizce adı. **Ürün fotoğrafı**'ndan bilgisayardaki bir fotoğrafı seçin, kırpın. | Fotoğraf kare kırpılır. "JPG, PNG, WebP · En fazla 10 MB". | ☐ |  |
+| 3.2 | **Ürün ekle**: ürün adı, kategori, fiyat, açıklama, İngilizce adı. **Ürün fotoğrafı**'ndan bilgisayardaki bir fotoğrafı seçin, kırpın. | Fotoğraf kare kırpılır. "Telefonla çekilmiş fotoğraf da olur (JPG, PNG, WebP, iPhone HEIC)". | ☐ |  |
+| 3.2a | **Telefondan:** iPhone'da Safari ve Android'de Chrome ile kafeye girin, bir ürünün **Fotoğraf seç**'ine dokunup kamerayla yeni bir fotoğraf çekin (48 MP kamera varsa onunla), kırpın, **Fotoğrafı kullan**. Bir de telefonu yan tutarak çekin. | "Kaynak fotoğraf çok büyük" çıkmaz; fotoğraf birkaç saniyede yüklenir ve **düz** durur (yan tutulan da). **Fotoğrafı düzenle** kırpımı geri getirir. iPhone HEIC açılamazsa ekranda ne yapılacağı yazar. | ☐ |  |
 | 3.3 | Aynı üründe KDV listesinden %10 seçin. Bir seçenek grubu ekleyin (**Boy ekle**: Küçük, Büyük +15 TL). → **Kaydet ve yayınla**. | Ürün menüde fotoğrafıyla görünür. | ☐ |  |
 | 3.4 | Yeni bir ürün: adı `Bira` olsun. KDV alanına bakın. | KDV kendiliğinden %20 olur, altında "Alkollü içecek gibi göründüğü için %20 seçildi." yazar. Kaydedin. | ☐ |  |
 | 3.5 | Bir ürünü düzenleyin, fiyatını değiştirin → **Taslak kaydet**. Müşteri menüsüne (Menüyü önizle) bakın. | Taslak henüz müşteri menüsünde görünmez. | ☐ |  |
@@ -192,9 +193,11 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | 3.7 | Bir kategoride ürün düzenleyicideki **Bu bölümdeki ürünlere uygula** ile KDV'yi %20 yapın, sonra yine %10'a döndürün. | O kategorideki bütün ürünlerin KDV'si değişir. | ☐ |  |
 | 3.8 | **Kategorileri yönet**: yeni kategori ekleyin, adını değiştirin, sırasını değiştirin. | Değişiklik menüye yansır. | ☐ |  |
 | 3.9 | Bir ürünü **Tükendi** yapın. | Üründe "Tükendi" yazar. Bölüm 5'te müşteri menüsünde soluk görünmeli. | ☐ |  |
-| 3.10 | **Menü yönetimi** → **Kampanyalar** sekmesi → **Kampanya ekle**: yüzde indirim, "Seçtiğim ürünler", bugün için tarih aralığı → kaydedin. | Kampanya listede "etkin". | ☐ |  |
+| 3.10 | **Menü yönetimi** → **Kampanyalar** sekmesi → **Kampanya ekle**: yüzde indirim, "Seçtiğim ürünler", bugün için tarih aralığı → kaydedin. Pencere 5 adımdır (Ne indirimi? · Hangi ürünler? · Ne zaman? · Sınır · Durum); sağdaki "Müşteri menüde böyle görür" kutusuna bakın. | Kutular hizalı, taşma yok. Kampanya kartında **Aktif** · "Şu an uygulanıyor"; hiçbir yerde onay beklemez. Müşteri menüsünde indirimli fiyat ve sepette aynı fiyat. | ☐ |  |
+| 3.10a | Bir kampanya daha: başlangıcı **yarın** olan tarih aralığı. Sonra bir kampanyada **Kampanya etkin**'i kapatın. | İlki **Planlandı** · "Başlıyor: Yarın …", müşteri menüsünde görünmez. Kapatılan **Taslak** · "Menüde görünmez". Listenin üstünde dört durumun tek satırlık açıklaması. | ☐ |  |
+| 3.10b | **Her ay** kampanyası: ayın bugünkü günü, 2 ay (ör. maaş günü her ayın 15'i). Sonra ayın gününü başka bir güne çevirin. | Kartta "Her ayın N. günü · 2 ay (…)". Bugün indirim var; gün değişince indirim hemen kalkar, kartta "Sıradaki: …". Satış ve Raporlar → Kampanyalar'da "Tekrarlar" tablosu: her ayın günü bir satır. | ☐ |  |
 | 3.11 | İkinci kampanya: adet koşullu ("En az kaç adet?" 4), örneğin çayda %25. | Kaydedilir. | ☐ |  |
-| 3.12 | Üçüncü kampanya: "Belirli günlerde tekrarla", bugünün günü, şu andan sonraki bir saat aralığı. | Liste başlamamış kampanyayı doğru gösterir ("Devam ediyor" yazmamalı). | ☐ |  |
+| 3.12 | Üçüncü kampanya: "Her hafta", bugünün günü, şu andan sonraki bir saat aralığı. | Kart **Aktif** · "Sıradaki: Bugün …" der; o saate kadar müşteri menüsünde indirim yok. | ☐ |  |
 | 3.13 | **Menüyü önizle**. | Müşterinin göreceği menü: fotoğraflar, fiyatlar, "Kampanyalı ürünler". KDV yazmaz. | ☐ |  |
 | 3.14 | Dördüncü kampanya: bitişi **5 dakika sonra** olan bir tarih aralığı (ya da "Toplam adet sınırı" 2), o üründen sipariş verin. Bitiş geçince Mola'yı yeniden açın (ya da başka bir sayfaya geçip 1 dakika bekleyin). | İşletme sahibine bir kez **"Kampanya bitti: … · …"** penceresi: kaç siparişte uygulandı, kampanyalı adet, ciro, verilen indirim (reçete maliyeti varsa brüt kâr). **Kampanyayı yinele** kopyayı bugünden başlayan, aynı süren tarihlerle açar; **Raporu aç** kampanya raporunu. Pencere bir daha çıkmaz, zilde kalır. Müdür'ün zilinde yalnız bildirim, pencere yok; kasiyer ve garson hiçbir şey görmez. | ☐ |  |
 
@@ -274,6 +277,12 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | 6.5 | Masa 04 → **Taşı / birleştir** → Masa 05'e taşıyın. | Hesap Masa 05'e geçer. | ☐ |  |
 | 6.6 | Henüz hazırlanmayan bir siparişi garson iptal etsin (**İptal** → İptal nedeni seçin). | Mutfakta yarım dakika kırmızı "İPTAL" şeridi ve ses. | ☐ |  |
 | 6.7 | Mutfak başladıktan sonra bir siparişi iptal edin. | Mutfakta "Bu üründen stok kullanıldı mı?" sorusu çıkar. | ☐ |  |
+| 6.7a | Mutfak başlamadan bir siparişte masa penceresi → **Değiştir** → çayı limonata yapın, adedi azaltın → **Değişikliği kaydet**. | Pencerede eski/yeni ürün ve "Hesap farkı +₺…". Hesap yeni tutara döner. Mutfak kartında "Değişti: 2 x … → 1 x … · garson adı", panoda kısa DEĞİŞTİ şeridi ve sipariş sesi. Fiş modunda mutfağa **DEĞİŞİKLİK** fişi çıkar. | ☐ |  |
+| 6.7b | Mutfak "Hazırlamaya başla" dedikten sonra aynı siparişe bakın. | **Değiştir** yok; tek satır: "Mutfak hazırlamaya başladı: … İptal et ile çıkarıp yenisini sipariş edin". | ☐ |  |
+| 6.7c | (Sahip) Menü yönetimi → Kola ve Ayran'da **Hazır ürün** kutusunu işaretleyin. Garson Ayran siparişi versin; mutfak başlasın, hatta **Teslim edildi** olsun. Garson masa penceresinde **Hazır ürünü değiştir** → Kola. | Değişir; mutfakta hiçbir şey çıkmaz (şerit, ses, fiş yok). Kasada masa penceresinde ve **Ödeme al** penceresinde turuncu "Değişti: 1 x Ayran → 1 x Kola · +₺… · garson adı · saat"; kalan hesap Kola'yla. Ödeme alındıktan sonra değiştirilemez. | ☐ |  |
+| 6.7d | Kalabalık grup: iki dolu masa. Garson Masa 04 → **Taşı / birleştir** → "Dolu masalar"dan Masa 05 → **Hesapları birleştir**. | Kasiyere gerek kalmadan birleşir: "Hesaplar Masa 05 üzerinde birleştirildi." Masa 04 boşalır, ödemeler korunur. | ☐ |  |
+| 6.7e | (Sahip) Ayarlar → Sipariş ve mutfak → Sipariş ve onay → **Garson hatırlatması**: süreyi **10** dakika yapın. Bir masaya sipariş verin, mutfak hazır, garson teslim etsin; 10 dakika masaya dokunmayın. | Garson ekranında "Masa …: 10 dakikadır yeni sipariş yok. Bir isteği var mı?" ve bir kez yumuşak ses. **Gittim** → kalkar, 10 dakika sonra yine gelebilir. Kasiyer ve sahip ekranında çıkmaz. Sonra süreyi 45'e geri alın. | ☐ |  |
+| 6.7f | (Sahip) Personel → Personel ayarları → Garson ataması açık: garson1'e Masa 01, garson2'ye Masa 02. İki masada da sipariş hazır olsun. | garson1'in telefonunda yalnız Masa 01 için ses/titreşim; "Servise hazır" sayısı 1; Masa 02 "Diğer garsonların masaları (1)" arkasında. Sonra atamayı kapatın. | ☐ |  |
 | 6.8 | Üstteki QR çipine bakın. | "QR açık" yazar. | ☐ |  |
 | 6.9 | **Daha fazla** menüsünü açın. | Hesabım ve Çıkış yap gibi yerler. Ayarlar ve raporlar yok. | ☐ |  |
 | 6.10 | Telefonu yatay çevirin, sonra dik. | Ekran bozulmaz, yazılar kesilmez. | ☐ |  |
@@ -296,9 +305,11 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | 7.9 | **Ayarlar** → **Sipariş ve mutfak** → **Mutfak** → "Mutfak nasıl çalışıyor" → **Fiş**. | Fiş modu seçili. | ☐ |  |
 | 7.10 | Garson bir sipariş göndersin. Sonra müşteri QR'dan bir sipariş göndersin. | Personel siparişi fişi hemen çıkar. QR siparişinin fişi değişiklik süresi (60 sn) ve garson onayından sonra çıkar. Müşteride "Hazırlanıyor". | ☐ |  |
 | 7.11 | Garson masada **Teslim edildi** desin. Başka bir masada demeden ödemeyi alın. | İkisinde de masa düzgün kapanır (ödenince kendiliğinden teslim sayılır). | ☐ |  |
-| 7.12 | Yazıcının kâğıdını çıkarın ya da yazıcıyı kapatın, yeni sipariş gönderin. | Kasada ve garson telefonunda kalıcı kırmızı uyarı: **Tekrar bas** ya da **Elle iletildi**. | ☐ |  |
-| 7.13 | Yazıcıyı açın → **Tekrar bas**. | Fiş çıkar, uyarı kalkar. | ☐ |  |
+| 7.12 | Yazıcının **kâğıdını çıkarın** (rulo bitmiş gibi), yeni sipariş gönderin. Sonra kapağı açık bırakıp, sonra yazıcıyı kapatıp tekrarlayın. | Kasada ve garson telefonunda kalıcı kırmızı uyarı, nedeni ve yazıcının adıyla: "Yazıcıda kâğıt yok · Mutfak", "Yazıcının kapağı açık", "Yazıcı kapalı ya da kablosu çıkmış"; **Tekrar bas** ya da **Elle iletildi**. Sahibin zilinde "Yazıcıda kâğıt yok · Mutfak" bildirimi (bir kez). Not: hangi yazıcı (marka, ağ/USB, sürücü adı) — USB'de uyarı çıkmazsa yazın. | ☐ |  |
+| 7.13 | Kâğıdı takın / yazıcıyı açın → **Tekrar bas**. | Fiş **bir kez** çıkar (USB'de Windows kuyruğunda bekleyen kopya ayrıca basılmaz), uyarı kalkar. | ☐ |  |
 | 7.14 | Mutfak modunu yine **Ekran** yapın. | Siparişler yeniden tablete düşer. | ☐ |  |
+| 7.15 | (Ekran modu, yazıcı "Mutfak fişleri"nde) Kâğıdı çıkarın, garson sipariş göndersin. | Mutfak kartında "Fiş basılamadı: Yazıcıda kâğıt yok · Mutfak." ve **Tekrar bas**; kısa uyarı sesi. Kâğıdı takıp **Tekrar bas** → fiş çıkar, satır kalkar. | ☐ |  |
+| 7.16 | (Kasada, yazıcıyla) Kâğıt yokken **Hesap fişi**. | Masalar'ın üstünde kırmızı satır: "Yazıcıda kâğıt yok · Kasa. Yeni rulo takın, sonra “Tekrar bas”a basın." ve **Tekrar bas**. Kâğıdı takıp basınca "Hesap fişi yazdırıldı." | ☐ |  |
 
 ## 8. Kasiyer
 
@@ -312,7 +323,7 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | 8.4 | Bir masadan nakit ödeme alın: **Ödeme al** → Tamamı → Nakit → hızlı düğmelerden biri (₺200 gibi) → **Ödemeyi kaydet**. | Para üstü doğru ve büyük yazıyla. Pencere kapanınca da ekranın altında birkaç saniye büyük **Verilecek para üstü ₺…** kalır (✕ ile kapanır). | ☐ |  |
 | 8.5 | Ödemeden sonra ekranın köşesine bakın. | Yazar kasa kartı: hangi KDV departmanına ne kadar, ödeme türü. **Girildi**'ye basın, kart hemen kalkar. | ☐ |  |
 | 8.5a | Art arda 4 ödeme alın, kartlara dokunmayın. | Köşede 3'ten fazla kart birikmez: eskiler tek satırda "N ödeme yazar kasaya girilmedi"; dokununca açılır, masaların üstünü kapatmaz. | ☐ |  |
-| 8.6 | (Yazıcıyla) Ödeme penceresinde **Hesap fişi**. | Fişin altında "KDV dahildir · %10: …" satırı. | ☐ |  |
+| 8.6 | (Yazıcıyla) Ödeme penceresinde **Hesap fişi**. | Fişin başında yalnız "BİLGİ FİŞİ"; altta "KDV dahildir · %10: …" satırı. "Bilgi fişidir. Mali değeri yoktur." ya da "Teşekkür ederiz" gibi cümleler **yok**. Müşterinin telefonunda "Masanın hesabı"nın altında "Fiyatlara KDV dahildir · bu hesaptaki KDV ₺…" yazar ve fişteki KDV ile aynıdır. | ☐ |  |
 | 8.7 | **Sipariş al** → ilk seçenek **Masasız sipariş** → müşteri adı `Ahmet` → 2 ürün → gönderin. | Mutfakta "MASASIZ #1" olarak görünür. Ödeme penceresi hemen açılır. | ☐ |  |
 | 8.8 | Ödeme penceresinde **Sonra öde**. | Masalar'da "Masasız siparişler" şeridi: ad, aşama, ödeme durumu. | ☐ |  |
 | 8.9 | Mutfak hazır desin. Şeritten **Ödeme al** → kaydedin. | "Ödendi · Müşteri alınca 'Teslim edildi'ye basın". | ☐ |  |
@@ -376,7 +387,8 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | 11.7 | **Kasa ve giderler** → **Kapanışlar**. | Gün sonu ve ek kapanış, 10 TL eksik, kimin yaptığı. | ☐ |  |
 | 11.8 | **Kasa ve giderler** → **İadeler** → bir nakit ödemeyi kart yapın (**Ödemeyi düzelt**). | Ödeme türü değişir, kasa hesabı güncellenir. | ☐ |  |
 | 11.9 | **Kasa ve giderler** → **Giderler** → **Kayıtlar** → **Gider ekle**: dünün tarihiyle 100 TL kira (tarih alanı gün.ay.yıl: `07102026` yazın ya da sağdaki takvim düğmesi). Sonra **Düzelt**. | Gider dünün gününe yazılır, düzeltme kaydedilir. | ☐ |  |
-| 11.10 | **Yazdır / PDF**. | Anlaşılır A4 sayfa, sayfa numaralı. PDF olarak kaydedilir. | ☐ |  |
+| 11.10 | **Yazdır / PDF** (Özet'te ve birkaç gün sonu yapılmış bir dönemde). Yazıcı: "Microsoft Print to PDF". | Anlaşılır A4 sayfa, sayfa numaralı. "Kasa kapanışı" satırlarındaki "Kasa fazla ₺… (sayılan ₺… · beklenen ₺…)" yazısı sütunun içinde alt satıra geçer; hiçbir yazı sayfadan taşmaz ya da kesilmez, tutarlar bölünmez. | ☐ |  |
+| 11.10a | Sade özette **Satış** kartı. | Altında "Bu satışın içindeki KDV: ₺…" yazar; Detaylı Özet'teki KDV dökümünün toplam KDV'siyle aynıdır. | ☐ |  |
 | 11.11 | **Muhasebeci için indir**: ayın ilk günlerinde geçen ay satış yoksa **Bu ay** seçili gelir. Bu ay ile indirin. | Excel dosyası iner ve açılır: günlük satış, ödemeler, giderler, iadeler, kasa kapanışları, KDV dökümü, ürün satışları. | ☐ |  |
 | 11.12 | Garson telefonunda raporlara girmeyi deneyin. | Garson raporları göremez. | ☐ |  |
 
@@ -415,6 +427,7 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | 13.2 | Masalar'da Masa 06. | "Rezerve · Ayşe · 4 kişi · saat" yazar. | ☐ |  |
 | 13.3 | Saat gelince (ya da geçince) masaya bakın → **Geldi**. | Hesap açılır, kapora hesaptan düşülür. | ☐ |  |
 | 13.4 | İkinci rezervasyon yapın, saat geçince **Gelmedi**. | "Kapora kararı bekleyenler"de görünür: **İade et** ya da **İşletmede kalsın**. | ☐ |  |
+| 13.4a | **Etkinlik oluştur** penceresine telefonda ve bilgisayarda bakın: bitiş saatini başlangıçtan önce yazın (ör. 01:30), "Bir masada kaç kişi?"ye 4 yazın, **Adları ben yazayım** ile üç ad yazın, sonra **Numaralı**'ya dönün. | Adımlar: Etkinlik · Ne zaman? · Kaç masa? · Masa adları · Masalar ekranı. Kutular hizalı, kayma yok. "… – 01:30 (ertesi gün)", "25 geçici masa · toplam 100 kişilik yer", masa adları altta tek tek (D1 … ve "+ 13 masa daha"). Ayrıntılar gri ⓘ'lerde. | ☐ |  |
 | 13.5 | **Etkinlikler** → **Etkinlik oluştur**: "Maç gecesi", bugün, 2 geçici masa. D1'e dokunun → ad yazıp kaydedin. → **Etkinliği başlat**. | D1 "Rezerve" olur (masa adı kalem simgesiyle değişir). Masalar'da geçici masalar (QR'sız). Rezervasyonlar planında da "Etkinlik: Maç gecesi" bölümü görünür. | ☐ |  |
 | 13.6 | Geçici masaya sipariş ve ödeme → **Etkinliği kapat**. | Etkinlik raporu çıkar. Satış ve Raporlar → Rezervasyon'da görünür. | ☐ |  |
 | 13.6a | Satış ve Raporlar → Rezervasyon → Etkinlikler. | En yeni etkinlik en üstte. | ☐ |  |
@@ -490,7 +503,7 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 |---|---|---|---|---|
 | 18.1 | Ayarlar'ı açın, konular arasında gezin. | Konular üstte, her birinin simgesi var (Destek sekmeleri gibi; dar ekranda simge yazının üstünde). Her konunun altında ikinci bir sekme satırı var (İşletme: Görünüm, Paketiniz, Sosyal medya, Raporlar ve e-posta; Masalar ve QR: Masalar ve QR, QR kodlarını yazdır, Rezervasyon; Sipariş ve kasa: Sipariş ve onay, Kasa ve ödeme, Vardiya ve bahşiş). Uzun açıklamalar gri ⓘ'de. Dikkat isteyen konuda rozet (örneğin "Eksik"). | ☐ |  |
 | 18.2 | **İşletme** → **Sosyal medya** → bir hesabın yanında **QR oluştur**. Sonra "Bizi takip edin" kartı → **PDF indir** ve Yazdır. | Kart ve PDF hazırlanır. Kartın taşıdığı adres bu bilgisayarın yerel adresidir. **Telefonla okutmayın**: yönlendirme VDS'ten sonra denenecek. | ☐ |  |
-| 18.3 | **Masalar ve QR**: bir masanın bölümünü masa penceresinden değiştirin. Masalar ekranında **Masa ekle** ve **Masa çıkar**. | Masa eklenir ve çıkar. | ☐ |  |
+| 18.3 | **Masalar ve QR** → "Masalar ve bölümler": bölümsüz bir masanın yanındaki seçimden **Yeni bölüm…** → `Üst kat`; başka bir masayı listeden Üst kat'a alın; ↑↓ ile bir masayı ve Üst kat bölümünü yukarı taşıyın; kalemle "Üst kat"ın adını `Teras` yapın. Masalar ekranında **Masa ekle** ve **Masa çıkar**. | Her değişiklik hemen kaydedilir ("… bölümüne alındı"). Masalar ekranında "Teras masaları" en üstte, masalar sizin sıranızla. Garson ataması Teras'a verilmişse adı değişince de sürer. Telefonda sayfa yana kaymaz. Masa eklenir ve çıkar. | ☐ |  |
 | 18.4 | **Cihazlar** → **Sesler**: birkaç sese **Dinle** ile basın. Garson çağrısının sesini değiştirin. | Sesler çalar. Bir dakika içinde garson telefonu yeni sesi çalar. | ☐ |  |
 | 18.5 | Garson telefonunda **Ses düzeyi**ni kısın. | Yalnız o cihazda değişir. | ☐ |  |
 | 18.6 | **Sipariş ve mutfak** → **Sipariş ve onay**: **Otomatik onay**'ı açın. Müşteri sipariş versin. | Sipariş garson onayı beklemeden mutfağa gider. Sonra kapatın. | ☐ |  |

@@ -156,6 +156,14 @@ export function allocateRefund(refund: { amount: number; items?: { amount: numbe
   }
   return splitByRate(refund.amount, payment, fallback);
 }
+/**
+ * The KDV inside a bill (11 Ekim, "müşterinin ödediği KDV hesapta görünmeli mi?"): the same sum as the bill receipt's line, for
+ * the guest's "Masanın hesabı". Each line at the rate it was sold with (unstamped: the product's rate now).
+ */
+export function billVatTotal(s: { vat?: Partial<VatSettings> | null; products: { id: string; vatRate?: number }[] }, lines: { total: number; productId: string; vatRate?: number }[]) {
+  const settings = vatSettings(s);
+  return receiptVat(lines.map(l => ({ amount: l.total, rate: l.vatRate ?? productVat(s.products.find(p => p.id === l.productId), settings) }))).reduce((n, p) => n + p.vat, 0);
+}
 /** The bill receipt's line: "KDV dahildir · %10: ₺12,73 · %20: ₺5,00" from the bill's lines (amounts after discounts). */
 export function receiptVat(lines: { amount: number; rate: number }[]) {
   const byRate = new Map<number, number>();

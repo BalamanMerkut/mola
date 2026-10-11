@@ -12,6 +12,7 @@ import { PersistentFailures } from './persistent-failures.js';
 import { clientKey, configureHttpSecurity, directLoopback, sessionCookie, type HttpSecurity } from './http-security.js';
 import { campaignRoutes } from './campaigns.js';
 import { saleProducts } from '../packages/domain/campaigns.js';
+import { billVatTotal } from '../packages/domain/vat.js';
 import { markTableClean, isOrderPaid } from '../packages/domain/engine.js';
 import { MerkezLink } from './kafe-link.js';
 import { kafeRoutes } from './kafe-routes.js';
@@ -27,7 +28,7 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { Actor, GuestSnapshot, Role, StaffSnapshot, State } from '../packages/domain/types.js';
-import { balances, moveTable, editOrder, changeDeadline, cancelByStaff, cancelOrder, declineCancellation, closeEmptyAccount, DomainError, once, recordPayment, requireRole, setStatus, undoStatus, submitOrder, submitTakeaway } from '../packages/domain/engine.js';
+import { balances, moveTable, editOrder, changeDeadline, cancelByStaff, changeByStaff, cancelOrder, declineCancellation, closeEmptyAccount, DomainError, once, recordPayment, requireRole, setStatus, undoStatus, submitOrder, submitTakeaway } from '../packages/domain/engine.js';
 import type { CafeTable, Order, OrderLine } from '../packages/domain/types.js';
 import { floorTables } from '../packages/domain/takeaway.js';
 import { sectorOf, sectors } from '../packages/domain/sector.js';
@@ -68,6 +69,7 @@ import { mobileAppRoutes } from './mobile-app.js';
 import { activeCalls, publicBillMethods, publicCalls, requestServiceCall, resolveServiceCall } from '../packages/domain/service-calls.js';
 import { isManagement } from '../packages/domain/roles.js';
 import { assignmentView } from '../packages/domain/assignments.js';
+import { checkTable, DEFAULT_REMINDER_MINUTES, dueReminders, MAX_REMINDER_MINUTES, MIN_REMINDER_MINUTES, reminderMinutes } from '../packages/domain/table-reminders.js';
 import { assignmentRoutes } from './assignments.js';
 import { emailReportRoutes } from './email-reports.js';
 import { reportExportRoutes } from './report-export.js';
@@ -99,7 +101,7 @@ const paymentContext = (actor: Actor) => createHash('sha256').update(JSON.string
 const paymentInput = z.object({ paymentContext: z.string().regex(/^[a-f0-9]{64}$/).optional(), selections: z.array(z.object({ orderId: idSchema, lineId: idSchema, quantity: z.number().int().min(1).max(20) })).min(1).max(100).optional(), requestId, accountId: idSchema, version: z.number().int().nonnegative(), method: z.enum(['cash', 'card']), amount: z.number().int().positive().max(100_000_000), tendered: z.number().int().positive().max(100_000_000), tip: z.number().int().positive().max(100_000_000).optional(), tipMethod: z.enum(['cash', 'card']).optional() });
 // Optional English for the EN guest menu, as long as the Turkish field; blank is dropped so the dictionary or Turkish text shows.
 const englishText = (max: number) => z.string().trim().max(max).optional().transform(v => v || undefined);
-const productInput = z.object({ vatRate: z.number().int().min(0).max(100).optional(), unit: z.enum(['piece', 'kg']).optional(), published: z.boolean().optional(), code: z.string().regex(/^\d{1,5}$/), name: z.string().trim().min(1).max(80), nameEn: z.string().trim().max(80), category: z.string().trim().max(60), description: z.string().max(240), price: z.number().int().min(0).max(1_000_000), soldOut: z.boolean(), art: z.enum(['coffee', 'tea', 'cold', 'cake', 'food', 'soup', 'burger', 'sweet']), subtype: z.string().trim().max(80).optional(), ingredients: z.string().trim().max(500).optional(), descriptionEn: englishText(240), ingredientsEn: englishText(500), photo: z.string().max(200).nullable().optional(), groups: z.array(z.object({ preset: z.enum(['size', 'milk', 'service', 'custom']).optional(), id: idSchema, name: z.string().trim().min(1).max(60), nameEn: englishText(60), required: z.boolean(), options: z.array(z.object({ id: idSchema, name: z.string().trim().min(1).max(60), nameEn: englishText(60), extra: z.number().int().min(-1000000).max(1000000) })).min(1).max(12) })).max(8).optional() });
+const productInput = z.object({ readyMade: z.boolean().optional(), vatRate: z.number().int().min(0).max(100).optional(), unit: z.enum(['piece', 'kg']).optional(), published: z.boolean().optional(), code: z.string().regex(/^\d{1,5}$/), name: z.string().trim().min(1).max(80), nameEn: z.string().trim().max(80), category: z.string().trim().max(60), description: z.string().max(240), price: z.number().int().min(0).max(1_000_000), soldOut: z.boolean(), art: z.enum(['coffee', 'tea', 'cold', 'cake', 'food', 'soup', 'burger', 'sweet']), subtype: z.string().trim().max(80).optional(), ingredients: z.string().trim().max(500).optional(), descriptionEn: englishText(240), ingredientsEn: englishText(500), photo: z.string().max(200).nullable().optional(), groups: z.array(z.object({ preset: z.enum(['size', 'milk', 'service', 'custom']).optional(), id: idSchema, name: z.string().trim().min(1).max(60), nameEn: englishText(60), required: z.boolean(), options: z.array(z.object({ id: idSchema, name: z.string().trim().min(1).max(60), nameEn: englishText(60), extra: z.number().int().min(-1000000).max(1000000) })).min(1).max(12) })).max(8).optional() });
 /**
  * Hizmet paketi: without "Rezervasyon ve etkinlik" the floor keeps an open event's tables (their bills must still be
  * settled) but shows no reservation marks or questions, and nobody books from the floor. Nothing is removed from the data.
@@ -472,6 +474,10 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     const result: StaffSnapshot = { ...qrPart, ...(link.isDemo(s.tenantId) ? { demo: true } : {}), ...session,...(supportOpen ? { supportConnected: supportOpen } : {}),...(assignment ? { assignment } : {}), ...(serviceNotice ? { serviceNotice } : {}), ...stockPart, ...floorPart(floorReservations(s, actor.role as Role, now().getTime(), view), on('reservations')), pkg, ...(actor.role !== 'waiter' && s.externalOrders?.length ? { externalOrders: publicExternalOrders(s, actor.role as Role) } : {}), sector: sectorOf(s), takeaways, ...(actor.role === 'owner' && !s.setupCompleted ? { starterMenu: untouchedStarterMenu(s) } : {}), ...(actor.role === 'kitchen' ? {} : { serviceCalls: publicCalls(s), billMethods: publicBillMethods(s) }), printing: printingView(s), licenseNotice, logo: s.logo, theme: s.theme, menuHero: s.menuHero, googleReviewUrl: s.googleReviewUrl, socialLinks: socialLinksOf(s), ...(['owner', 'manager', 'cashier'].includes(actor.role) ? { paymentContext: paymentContext(actor) } : {}), ...(manages ? { productDrafts: s.productDrafts ?? [] } : {}), paymentMode: s.paymentMode ?? 'after_service', cleaningEnabled: !!s.cleaningEnabled, waiterApproval: !!s.waiterApproval, autoApproveQr: !!s.autoApproveQr, approvalVersion: s.approvalVersion ?? 0, newProductIds: newProductIds(s.products, now()), popularProductIds: popularProductIds(s, now(), store.history.recentQuantities(s.tenantId, now().getTime())), categories: menuCategories(s), subcategories: menuSubcategories(s), categoryNamesEn: menuNamesEn(s), setupCompleted: s.setupCompleted, businessRevision: s.businessRevision, username: staffUser.username, displayName: staffUser.name, name: s.name, role: actor.role as Role, revision: s.menuRevision, products: saleProducts(s, now()).filter(p => manages || p.published !== false).map(p => hiddenMoney ? kitchenProduct(p) : p), tables, orders, changeSeconds: s.changeSeconds, commissionBps: actor.role === 'owner' ? s.commissionBps : null };
     // K-A (9 Ekim): "Sahip iadeyi yaptı" for the people at the till (packages/domain/till-notices.ts); only while there is one.
     const till = tillNoticesFor(s, actor, now().getTime()); if (till.length) result.tillNotices = till;
+    // Masa bölümlerinin sırası (Ayarlar → Masalar ve QR) and the long-open table reminders (waiters; the owner reads the setting).
+    if (s.areaOrder?.length) result.areaOrder = s.areaOrder;
+    if (actor.role === 'waiter') { const due = dueReminders(s, now().getTime(), assignment); if (due.length) result.tableReminders = due; }
+    if (actor.role === 'owner') result.tableReminderMinutes = reminderMinutes(s);
     res.json(result);
   });
   app.post('/api/guest/session', (req, res) => {
@@ -508,7 +514,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     // "Paid" only when a bill of this table closed during this visit with money taken; a move, a merge or an emptied bill is not.
     const paid = ended && !moved.length && s.accounts.some(a => a.tableId === table.id && a.status === 'closed' && (a.closedAt ?? '') >= since && s.payments.some(p => p.accountId === a.id));
     const own = s.orders.filter(o => o.guestId === actor.id && accountOf(o.accountId)?.tableId === table.id && (o.accountId === table.accountId || ended));
-    const orders: GuestSnapshot['orders'] = [...own, ...moved.filter(o => !own.includes(o))].map(({ guestId: _, reviewedBy: __, printedTo: ___, printFailedTo: ____, cancelPrinted: _____, printProblems: _printProblems, cancelledBy: ______, tableMovedFrom: _______, cancellations, ...o }) => ({ ...o, ...(cancellations ? { cancellations: cancellations.map(({ by: _by, printTo: _to, ...c }) => ({ ...c, by: '' })) } : {}), tableName: table.name, cancelRequested: o.cancelRequested && ['new', 'preparing', 'ready'].includes(o.status), canEdit: !ended && ['new', 'awaiting_approval'].includes(o.status) && now().getTime() < changeDeadline(o, s.changeSeconds) && balances(s, o.accountId).paid === 0 && accountOf(o.accountId)?.status === 'open' && !s.blocked.includes(actor.id) }));
+    const orders: GuestSnapshot['orders'] = [...own, ...moved.filter(o => !own.includes(o))].map(({ guestId: _, reviewedBy: __, printedTo: ___, printFailedTo: ____, cancelPrinted: _____, printProblems: _printProblems, changes: _changes, cancelledBy: ______, tableMovedFrom: _______, cancellations, ...o }) => ({ ...o, ...(cancellations ? { cancellations: cancellations.map(({ by: _by, printTo: _to, ...c }) => ({ ...c, by: '' })) } : {}), tableName: table.name, cancelRequested: o.cancelRequested && ['new', 'preparing', 'ready'].includes(o.status), canEdit: !ended && ['new', 'awaiting_approval'].includes(o.status) && now().getTime() < changeDeadline(o, s.changeSeconds) && balances(s, o.accountId).paid === 0 && accountOf(o.accountId)?.status === 'open' && !s.blocked.includes(actor.id) }));
     // Masanın hesabı (8 Ekim, the owner's decision): while this visit's bill is open, the guest sees every item on it, also
     // what the waiter added from his phone ("Garson ekledi") or another phone at the table sent; those are read-only here
     // (no change, no cancel; the server refuses them anyway: they are not this browser's). Only this table's open bill of
@@ -520,10 +526,12 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     for (const o of others) orders.push({ id: o.id, number: o.number, accountId: o.accountId, guestLabel: '', source: o.source, createdAt: o.createdAt, status: o.status, version: o.version, menuRevision: o.menuRevision, lines: o.lines, total: o.total, cancelRequested: false, ...(o.packed ? { packed: true } : {}), tableName: table.name, canEdit: false, addedBy: o.source === 'staff' ? 'staff' as const : 'table' as const, paid: isOrderPaid(s, o), ...pieces(o) });
     // "Masanın hesabı": the whole open bill, what was paid (also split and partial payments) and what is left to pay.
     const bill = billId ? balances(s, billId) : null;
+    // The KDV inside it (prices include KDV), as on the printed bill: "KDV dahil · ₺X" under Masanın hesabı.
+    const billVat = billId ? billVatTotal(s, s.orders.filter(o => o.accountId === billId && o.status !== 'cancelled' && o.status !== 'awaiting_approval').flatMap(o => o.lines)) : 0;
     const calls = activeCalls(s).filter(c => c.tableId === table.id && c.epoch === actor.epoch);
     // QR siparişleri: open, or why not (the guest's line), and whether Garson çağır works; none for "Sadece QR menü".
     const ordering = qrOrdering.applies(actor.tenantId) ? { ordering: qrOrdering.guestView(actor.tenantId, s) } : {};
-    const result: GuestSnapshot = { ...ordering, ...(link.isDemo(actor.tenantId) ? { demo: true } : {}), ...(ended ?{ ended: moved.length ? 'moved' as const : paid ? 'paid' as const : 'other' as const } : {}), ...(bill && bill.total > 0 ? { due: Math.max(0, bill.balance), bill: { total: bill.total, paid: bill.paid, ...(bill.depositCredit ? { depositCredit: bill.depositCredit } : {}) } } : {}), ...(s.blocked.includes(actor.id) ? { blocked: true } : {}), sector: sectorOf(s), menuOnly: link.menuOnly(actor.tenantId) || !link.has(actor.tenantId, 'qr-order'), calls: { waiter: calls.some(c => c.kind === 'waiter'), bill: calls.some(c => c.kind === 'bill') }, tableHasAccount: !!table.accountId && table.epoch === actor.epoch, logo: s.logo, theme: s.theme, menuHero: s.menuHero, googleReviewUrl: s.googleReviewUrl, ...guestSocial(s, link.has(actor.tenantId, 'social')), paymentMode: s.paymentMode ?? 'after_service', needsCleaning: !!table.needsCleaning, newProductIds: newProductIds(s.products, now()), popularProductIds: popularProductIds(s, now(), store.history.recentQuantities(s.tenantId, now().getTime())), categories: menuCategories(s), categoryNamesEn: menuNamesEn(s), subcategories: menuSubcategories({ ...s, products: s.products.filter(p => p.published !== false) }), table: { name: table.name }, products: saleProducts(s, now()).filter(p => p.published !== false), name: s.name, menuRevision: s.menuRevision, online: online(s.tenantId), closed: table.epoch !== actor.epoch, orders, changeSeconds: s.changeSeconds };
+    const result: GuestSnapshot = { ...ordering, ...(link.isDemo(actor.tenantId) ? { demo: true } : {}), ...(ended ?{ ended: moved.length ? 'moved' as const : paid ? 'paid' as const : 'other' as const } : {}), ...(bill && bill.total > 0 ? { due: Math.max(0, bill.balance), bill: { total: bill.total, paid: bill.paid, ...(bill.depositCredit ? { depositCredit: bill.depositCredit } : {}), ...(billVat ? { vat: billVat } : {}) } } : {}), ...(s.blocked.includes(actor.id) ? { blocked: true } : {}), sector: sectorOf(s), menuOnly: link.menuOnly(actor.tenantId) || !link.has(actor.tenantId, 'qr-order'), calls: { waiter: calls.some(c => c.kind === 'waiter'), bill: calls.some(c => c.kind === 'bill') }, tableHasAccount: !!table.accountId && table.epoch === actor.epoch, logo: s.logo, theme: s.theme, menuHero: s.menuHero, googleReviewUrl: s.googleReviewUrl, ...guestSocial(s, link.has(actor.tenantId, 'social')), paymentMode: s.paymentMode ?? 'after_service', needsCleaning: !!table.needsCleaning, newProductIds: newProductIds(s.products, now()), popularProductIds: popularProductIds(s, now(), store.history.recentQuantities(s.tenantId, now().getTime())), categories: menuCategories(s), categoryNamesEn: menuNamesEn(s), subcategories: menuSubcategories({ ...s, products: s.products.filter(p => p.published !== false) }), table: { name: table.name }, products: saleProducts(s, now()).filter(p => p.published !== false), name: s.name, menuRevision: s.menuRevision, online: online(s.tenantId), closed: table.epoch !== actor.epoch, orders, changeSeconds: s.changeSeconds };
     res.json(result);
   });
   app.post('/api/guest/orders', (req, res) => {
@@ -564,6 +572,30 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   app.post('/api/staff/calls/resolve', (req, res) => {
     const actor = staffActor(req); const b = z.object({ callId: idSchema }).parse(req.body);
     res.json(store.mutate(actor.tenantId, s => resolveServiceCall(s, actor, b, ctx())));
+  });
+  // "Uzun süredir sipariş yok" (packages/domain/table-reminders.ts): "Gittim" on the waiter's reminder.
+  app.post('/api/staff/tables/checked', (req, res) => {
+    const actor = staffActor(req); const b = z.object({ tableId: idSchema, epoch: z.number().int().nonnegative() }).parse(req.body);
+    res.json(store.mutate(actor.tenantId, s => {
+      requireRole(s, actor, ['owner', 'manager', 'cashier', 'waiter']);
+      const table = s.tables.find(t => t.id === b.tableId);
+      // The table's session ended meanwhile (paid, moved): nothing to remind any more, not an error.
+      if (!table || table.epoch !== b.epoch || !table.accountId) return { ok: true };
+      checkTable(s, table.id, table.epoch, now().toISOString());
+      s.audit.push({ action: 'table.checked', actor: actor.id, target: table.id, at: now().toISOString() });
+      return { ok: true };
+    }));
+  });
+  // Ayarlar → Sipariş ve mutfak → Sipariş ve onay: after how many minutes (0 = off).
+  app.post('/api/staff/table-reminder', (req, res) => {
+    const actor = staffActor(req); const b = z.object({ minutes: z.number().int().min(0).max(MAX_REMINDER_MINUTES) }).parse(req.body);
+    res.json(store.mutate(actor.tenantId, s => {
+      requireRole(s, actor, ['owner', 'support']);
+      if (b.minutes && b.minutes < MIN_REMINDER_MINUTES) throw new DomainError('INVALID_VALUE', `Süre en az ${MIN_REMINDER_MINUTES} dakika olmalı.`);
+      if (b.minutes === DEFAULT_REMINDER_MINUTES) delete s.tableReminderMinutes; else s.tableReminderMinutes = b.minutes;
+      s.audit.push({ action: 'settings.table_reminder', actor: actor.id, target: String(b.minutes), at: now().toISOString() });
+      return { minutes: reminderMinutes(s) };
+    }));
   });
   app.post('/api/guest/cancel', (req, res) => {
     const actor = guestActor(req); limitIp(req, 'guest-cancel', 30, 60_000);
@@ -617,6 +649,13 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     const actor = staffActor(req);
     const { stockUsed, ...body } = z.object({ requestId, orderId: idSchema, version: z.number().int().nonnegative(), reason: z.string().max(400), lines: z.array(z.object({ lineId: idSchema, quantity: z.number().int().min(1).max(20) })).min(1).max(30).optional(), stockUsed: z.boolean().optional() }).parse(req.body);
     res.json(answerAtOnce(actor, body.orderId, store.mutate(actor.tenantId, s => cancelByStaff(s, actor, body, ctx())), stockUsed));
+  });
+  // Garson siparişi değiştirir (packages/domain/order-change.ts): one line, before the kitchen starts it; audited, the kitchen
+  // card says "Değişti: …" and a printed order gets a DEĞİŞİKLİK slip (server/printing.ts).
+  app.post('/api/staff/orders/change', (req, res) => {
+    const actor = staffActor(req);
+    const body = z.object({ requestId, orderId: idSchema, version: z.number().int().nonnegative(), lineId: idSchema, line, expectedTotal: z.number().int().positive().max(100_000_000) }).parse(req.body);
+    res.json(store.mutate(actor.tenantId, s => changeByStaff(s, actor, body, ctx())));
   });
   app.post('/api/staff/cancel-decline', (req, res) => {
     const actor = staffActor(req);
@@ -770,6 +809,8 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     molaTickets: tenant => link.tickets(tenant).filter(t => t.messages[0]?.source === 'support').map(t => ({ id: t.id, subject: t.subject, createdAt: t.createdAt })) });
   // "Mola ekibi bağlandı / oturum bitti", "Telefon eşleştirildi": the owner's Bildirimler (üst çubuktaki zil).
   desk.notifications = () => notifications; remote.notifications = () => notifications; remoteAdmin.notifications = () => notifications;
+  // "Yazıcıda kâğıt yok · Mutfak" (11 Ekim, hafta sonu bulgusu 1): a ticket that did not print reaches the owner's bell too.
+  printService.notify = (tenant, key, title, text) => { try { notifications.add(tenant, key, { kind: 'printer', title, text }); } catch { /* printing goes on */ } };
   // Ayarlar → Giderler "Otomatik giderler": recorded on their days (before the report routes below read expenses).
   recurringExpenseRoutes(app, store, staffActor, now, notifications);
   // Before managementRoutes: it also watches POST /api/staff/expenses for a cashier's expense above the owner's limit.

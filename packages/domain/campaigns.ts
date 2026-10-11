@@ -1,7 +1,12 @@
 import type { CartLine, OrderLine, Product, State } from './types.js';
 export type CampaignDiscount = { kind?: 'percent'; percent: number; amount?: never } | { kind: 'fixed'; amount: number; percent?: never };
-/** Weekly repeat inside [startsAt, endsAt): ISO weekdays 1 (Pazartesi) … 7 (Pazar) and an optional daily "HH:MM" window, start inclusive, end exclusive. */
-export type CampaignSchedule = { days: number[]; from?: string; to?: string };
+/**
+ * A repeat inside [startsAt, endsAt), with an optional daily "HH:MM" window (start inclusive, end exclusive):
+ *   weekly  `days`: ISO weekdays 1 (Pazartesi) … 7 (Pazar);
+ *   monthly `monthDay`: a day of the month 1–31 ("her ayın 15. günü", 11 Ekim); a month without that day uses its last day
+ *           (31 → 30 Kasım, 28/29 Şubat).
+ */
+export type CampaignSchedule = { days: number[]; monthDay?: undefined; from?: string; to?: string } | { monthDay: number; days?: undefined; from?: string; to?: string };
 /**
  * What a campaign applies to. Without `categories` (every campaign made before category campaigns): the chosen
  * `productIds`. With `categories` ("Bütün bir bölüm"): `productIds` is empty and the campaign covers every product that is
@@ -56,13 +61,13 @@ export function categoryOfferText(o: Pick<DiscountOffer, 'categories' | 'minQuan
 /** Quantity conditions count pieces, so they cannot include products sold by weight. Shared by the editor and the server. */
 export const weightRuleMessage = (names: string[]) => `Adet koşulu kiloyla satılan ürünlerde kullanılamaz: ${names.join(', ')}. Bu ürünleri çıkarın veya adet koşulunu kapatın.`;
 export const productQuantity =(lines: CartLine[], productId: string) => lines.filter(l => l.productId === productId).reduce((sum, l) => sum + l.quantity, 0);
-type CampaignState = Pick<State, 'campaigns'> & Partial<Pick<State, 'orders' | 'archives' | 'archivedCampaignUsage'>>;
+type CampaignData = Pick<State, 'campaigns'> & Partial<Pick<State, 'orders' | 'archives' | 'archivedCampaignUsage'>>;
 export function campaignQuantities(lines: OrderLine[]) {
   const result = new Map<string, number>();
   for (const line of lines) for (const id of new Set(line.campaigns?.map(c => c.id))) result.set(id, (result.get(id) ?? 0) + line.quantity);
   return result;
 }
-export function campaignUsage(s: CampaignState, exceptOrderId?: string) {
+export function campaignUsage(s: CampaignData, exceptOrderId?: string) {
   const orders = new Map((s.archives ?? []).flatMap(a => a.orders).map(o => [o.id, o]));
   for (const order of s.orders ?? []) orders.set(order.id, order);
   // Units of orders already moved to long-term history are carried as one counter per campaign.
@@ -72,11 +77,11 @@ export function campaignUsage(s: CampaignState, exceptOrderId?: string) {
   }
   return used;
 }
-export function campaignViews(s: CampaignState, exceptOrderId?: string): CampaignView[] {
+export function campaignViews(s: CampaignData, exceptOrderId?: string): CampaignView[] {
   const used = campaignUsage(s, exceptOrderId);
   return (s.campaigns ?? []).map(c => ({ ...c, usedQuantity: used.get(c.id) ?? 0, remainingQuantity: c.maxQuantity == null ? null : Math.max(0, c.maxQuantity - (used.get(c.id) ?? 0)) }));
 }
-export function saleProducts(s: Pick<State, 'products'> & CampaignState, now: Date, exceptOrderId?: string): Product[] {
+export function saleProducts(s: Pick<State, 'products'> & CampaignData, now: Date, exceptOrderId?: string): Product[] {
   const views = s.campaigns?.some(c => c.maxQuantity != null) ? campaignViews(s, exceptOrderId) : (s.campaigns ?? []).map(c => ({ ...c, remainingQuantity: null }));
   // The single place that decides whether a campaign prices anything: menus, orders, edits and limits all come from here.
   const active = views.filter(c => c.enabled && (c.remainingQuantity === null || c.remainingQuantity >= (c.minQuantity ?? 1)) && campaignActiveAt(c, +now));
@@ -108,11 +113,22 @@ const weekdayOf = (day: number) => (day + 3) % 7 + 1;
 const minutesOf = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 const clock = (at: number) => new Date(at + TR).toISOString().slice(11, 16);
 const shortDate = (at: number) => new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' }).format(at);
-/** Inside [startsAt, endsAt) and, for a weekly campaign, on a chosen weekday and inside its daily window. Ignores enabled and quotas. */
+/** The day of the month (1–31) of a Turkish calendar day number, and how many days its month has. */
+const calendarOf = (day: number) => { const d = new Date(day * DAY); return { date: d.getUTCDate(), length: new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate() }; };
+export const isMonthly = (s: CampaignSchedule | undefined): s is Extract<CampaignSchedule, { monthDay: number }> => !!s && s.monthDay !== undefined;
+/** Does the repeat run on this Turkish calendar day: a chosen weekday, or the month's chosen day (its last day when shorter). */
+function onDay(s: CampaignSchedule, day: number) {
+  if (!isMonthly(s)) return s.days.includes(weekdayOf(day));
+  const { date, length } = calendarOf(day);
+  return date === Math.min(s.monthDay, length);
+}
+/** How far ahead the next run of a repeat can be: a week, or a month and a bit. */
+const lookahead = (s: CampaignSchedule | undefined) => (isMonthly(s) ? 32 : 8) * DAY;
+/** Inside [startsAt, endsAt) and, for a repeating campaign, on one of its days and inside its daily window. Ignores enabled and quotas. */
 export function campaignActiveAt(c: Timing, at: number) {
   if (Date.parse(c.startsAt) > at || (c.endsAt && at >= Date.parse(c.endsAt))) return false;
   const s = c.schedule; if (!s) return true;
-  const day = localDay(at); if (!s.days.includes(weekdayOf(day))) return false;
+  const day = localDay(at); if (!onDay(s, day)) return false;
   if (!s.from || !s.to) return true;
   const minute = Math.floor((at + TR - day * DAY) / MINUTE);
   return minute >= minutesOf(s.from) && minute < minutesOf(s.to);
@@ -122,7 +138,7 @@ export function scheduleSlots(s: CampaignSchedule | undefined, from: number, to:
   if (!s) return from < to ? [[from, to]] : [];
   const out: [number, number][] = [], open = s.from && s.to ? minutesOf(s.from) * MINUTE : 0, close = s.from && s.to ? minutesOf(s.to) * MINUTE : DAY;
   for (let day = localDay(from); day * DAY - TR < to; day++) {
-    if (!s.days.includes(weekdayOf(day))) continue;
+    if (!onDay(s, day)) continue;
     const base = day * DAY - TR, start = Math.max(from, base + open), end = Math.min(to, base + close);
     if (start >= end) continue;
     const last = out.at(-1); if (last && last[1] === start) last[1] = end; else out.push([start, end]);
@@ -136,31 +152,62 @@ export function nextCampaignStart(c: Timing, at: number) {
   const from = Math.max(at, Date.parse(c.startsAt)), end = c.endsAt ? Date.parse(c.endsAt) : Infinity;
   if (from >= end) return null;
   if (!c.schedule) return from;
-  return scheduleSlots(c.schedule, from, Math.min(end, from + 8 * DAY))[0]?.[0] ?? null;
+  return scheduleSlots(c.schedule, from, Math.min(end, from + lookahead(c.schedule)))[0]?.[0] ?? null;
 }
 /** "Next N weeks": the end is exactly N weeks after the start, so every chosen weekday occurs N times. */
 export const repeatEnd = (startsAt: string, weeks: number) => new Date(Date.parse(startsAt) + weeks * WEEK).toISOString();
+export const CAMPAIGN_MAX_MONTHS = 12;
+/**
+ * "Next N months" of a monthly campaign: the same day of the month N months later (the month's last day when it is shorter),
+ * at the start's time of day, so the chosen day of the month occurs exactly N times.
+ */
+export function repeatMonthsEnd(startsAt: string, months: number) {
+  const start = Date.parse(startsAt), day = localDay(start), d = new Date(day * DAY), offset = start - (day * DAY - TR);
+  const target = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + months, 1)), length = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(d.getUTCDate(), length));
+  return new Date(target.getTime() - TR + offset).toISOString();
+}
+/** Whole months between a monthly campaign's start and end (1–12), or null when the end is a chosen last day. */
+export function repeatMonths(c: Pick<Campaign, 'startsAt' | 'endsAt'>) {
+  if (!c.endsAt) return null;
+  for (let n = 1; n <= CAMPAIGN_MAX_MONTHS; n++) if (repeatMonthsEnd(c.startsAt, n) === new Date(Date.parse(c.endsAt)).toISOString()) return n;
+  return null;
+}
 /** Plain message for the first problem, or null. Shared by the editor and the server. */
 export function campaignTimingError(c: Timing) {
   const start = Date.parse(c.startsAt), end = c.endsAt ? Date.parse(c.endsAt) : null;
   if (!Number.isFinite(start) || (end !== null && !Number.isFinite(end))) return 'Tarihleri kontrol edin.';
   if (end !== null && end <= start) return 'Bitiş, başlangıçtan sonra olmalı.';
   const s = c.schedule; if (!s) return null;
-  if (!Array.isArray(s.days) || !s.days.length) return 'En az bir gün seçin.';
-  if (s.days.some(d => !Number.isInteger(d) || d < 1 || d > 7) || new Set(s.days).size !== s.days.length) return 'Günler geçersiz.';
+  if (isMonthly(s)) {
+    if (s.days !== undefined) return 'Ayın günüyle hafta günleri birlikte seçilemez.';
+    if (!Number.isInteger(s.monthDay) || s.monthDay < 1 || s.monthDay > 31) return 'Ayın gününü 1–31 arasında seçin.';
+  } else {
+    if (!Array.isArray(s.days) || !s.days.length) return 'En az bir gün seçin.';
+    if (s.days.some(d => !Number.isInteger(d) || d < 1 || d > 7) || new Set(s.days).size !== s.days.length) return 'Günler geçersiz.';
+  }
   if (!s.from !== !s.to) return 'Saat aralığının başlangıç ve bitiş saatini birlikte girin.';
   if (s.from && s.to) {
     if (![s.from, s.to].every(t => /^([01]\d|2[0-3]):[0-5]\d$/.test(t))) return 'Saatleri SS:DD biçiminde girin.';
     if (minutesOf(s.from) >= minutesOf(s.to)) return 'Saat aralığında başlangıç, bitişten önce olmalı.';
     if (minutesOf(s.to) - minutesOf(s.from) < 15) return 'Saat aralığı en az 15 dakika olmalı.';
   }
+  if (isMonthly(s)) {
+    if (end === null) return 'Her ay tekrarlanan kampanya için ay sayısı veya son gün seçin.';
+    if (end > Date.parse(repeatMonthsEnd(c.startsAt, CAMPAIGN_MAX_MONTHS))) return `Her ay tekrarlanan kampanya en fazla ${CAMPAIGN_MAX_MONTHS} ay sürebilir.`;
+    if (!scheduleSlots(s, start, end).length) return 'Seçilen tarihler arasında ayın bu günü yok. Ayın gününü veya tarihleri kontrol edin.';
+    return null;
+  }
   if (end === null) return 'Tekrarlanan kampanya için hafta sayısı veya son gün seçin.';
   if (end - start > CAMPAIGN_MAX_WEEKS * WEEK) return `Tekrarlanan kampanya en fazla ${CAMPAIGN_MAX_WEEKS} hafta sürebilir.`;
   if (!scheduleSlots(s, start, end).length) return 'Seçilen tarihler arasında bu günler yok. Günleri veya tarihleri kontrol edin.';
   return null;
 }
-/** "Her Cumartesi ve Pazar · 14:00–17:00" */
+/** "Her ayın 15. günü", "Her ayın 31. günü (kısa aylarda ayın son günü)": the same words on every screen. */
+export const monthDayText = (n: number) => `Her ayın ${n}. günü${n >= 29 ? ' (kısa aylarda ayın son günü)' : ''}`;
+/** "Her Cumartesi ve Pazar · 14:00–17:00", "Her ayın 15. günü · 12:00–15:00" */
 export function scheduleText(s: CampaignSchedule) {
+  if (isMonthly(s)) return s.from && s.to ? `${monthDayText(s.monthDay)} · ${s.from}–${s.to}` : monthDayText(s.monthDay);
   const days = [...s.days].sort((a, b) => a - b), names = days.map(d => WEEKDAY_NAMES[d - 1]);
   const text = days.length === 7 ? 'Her gün' : days.join() === '1,2,3,4,5' ? 'Hafta içi her gün' : `Her ${names.length > 1 ? `${names.slice(0, -1).join(', ')} ve ${names.at(-1)}` : names[0]}`;
   return s.from && s.to ? `${text} · ${s.from}–${s.to}` : text;
@@ -170,10 +217,24 @@ export function scheduleSummary(c: Timing) {
   if (!c.schedule) return '';
   const start = Date.parse(c.startsAt), end = c.endsAt ? Date.parse(c.endsAt) : NaN, text = scheduleText(c.schedule);
   if (!Number.isFinite(end) || end <= start) return text;
-  const first = scheduleSlots(c.schedule, start, Math.min(end, start + 8 * DAY))[0], last = scheduleSlots(c.schedule, Math.max(start, end - 8 * DAY), end).at(-1);
+  const ahead = lookahead(c.schedule), first = scheduleSlots(c.schedule, start, Math.min(end, start + ahead))[0], last = scheduleSlots(c.schedule, Math.max(start, end - ahead), end).at(-1);
   if (!first || !last) return text;
-  const dates = localDay(first[0]) === localDay(last[1] - 1) ? shortDate(first[0]) : `${shortDate(first[0])} – ${shortDate(last[1] - 1)}`, weeks = (end - start) / WEEK;
+  const dates = localDay(first[0]) === localDay(last[1] - 1) ? shortDate(first[0]) : `${shortDate(first[0])} – ${shortDate(last[1] - 1)}`;
+  if (isMonthly(c.schedule)) { const months = repeatMonths(c as Pick<Campaign, 'startsAt' | 'endsAt'>); return `${text} · ${months ? `${months} ay (${dates})` : dates}`; }
+  const weeks = (end - start) / WEEK;
   return `${text} · ${Number.isInteger(weeks) ? `${weeks} hafta (${dates})` : dates}`;
+}
+/**
+ * The dates a repeating campaign ran on, one per active day (its window that day), oldest first: the report's "Tekrarlar".
+ * Touching whole days of a weekly campaign stay separate occurrences here.
+ */
+export function scheduleOccurrences(s: CampaignSchedule, from: number, to: number): [number, number][] {
+  const out: [number, number][] = [];
+  for (const [a, b] of scheduleSlots(s, from, to)) for (let day = localDay(a); day * DAY - TR < b; day++) {
+    const start = Math.max(a, day * DAY - TR), end = Math.min(b, (day + 1) * DAY - TR);
+    if (start < end) out.push([start, end]);
+  }
+  return out;
 }
 /** "Bugün 14:00", "Yarın 08:00", "Cumartesi 00:00", or with the date when more than a week away. */
 function whenLabel(next: number, at: number) {
@@ -190,6 +251,33 @@ export function campaignPhase(c: Timing, at: number): 'active' | 'upcoming' | 'e
   if (c.endsAt && Date.parse(c.endsAt) <= at) return 'ended';
   if (Date.parse(c.startsAt) > at) return 'upcoming';
   return c.schedule && nextCampaignStart(c, at) === null && !campaignActiveAt(c, at) ? 'ended' : 'active';
+}
+/**
+ * The four states the owner sees (11 Ekim, "onaya düşüyor" karışıklığı): there is no approval step, a saved campaign is
+ * one of these. Taslak = not enabled; Planlandı = its start is still ahead; Aktif = between its start and end (a repeating
+ * one prices only on its days and hours); Bitti = its end passed or its quota is used up.
+ */
+export type CampaignState = 'draft' | 'planned' | 'active' | 'ended';
+export const CAMPAIGN_STATES: Record<CampaignState, { label: string; line: string }> = {
+  draft: { label: 'Taslak', line: 'Kaydedildi ama kapalı: menüde görünmez, indirim uygulanmaz.' },
+  planned: { label: 'Planlandı', line: 'Başlangıç zamanı gelince kendiliğinden başlar; o zamana kadar menüde görünmez, indirim uygulanmaz.' },
+  active: { label: 'Aktif', line: 'Menüde görünür ve indirim siparişe kendiliğinden uygulanır (tekrarlanan kampanyada yalnız seçilen gün ve saatlerde).' },
+  ended: { label: 'Bitti', line: 'Süresi doldu ya da adet sınırı bitti: menüde görünmez, indirim uygulanmaz.' },
+};
+export function campaignState(c: Timing & Pick<CampaignView, 'enabled' | 'remainingQuantity' | 'minQuantity'>, at: number): CampaignState {
+  if (!c.enabled) return 'draft';
+  const phase = campaignPhase(c, at);
+  if (phase === 'ended' || (c.remainingQuantity !== null && c.remainingQuantity < (c.minQuantity ?? 1))) return 'ended';
+  return phase === 'upcoming' ? 'planned' : 'active';
+}
+/** The card's second line next to the state: "Şu an uygulanıyor", "Başlıyor: Yarın 14:00", "Sıradaki: Cuma 14:00", "Süresi doldu". */
+export function campaignWhen(c: Timing & Pick<CampaignView, 'enabled' | 'remainingQuantity' | 'minQuantity'>, at: number) {
+  const state = campaignState(c, at);
+  if (state === 'draft') return 'Menüde görünmez';
+  if (state === 'ended') return c.endsAt && Date.parse(c.endsAt) <= at ? 'Süresi doldu' : c.remainingQuantity === 0 ? 'Adet sınırı doldu' : c.remainingQuantity !== null && c.remainingQuantity < (c.minQuantity ?? 1) ? 'Kalan adet yetersiz' : 'Süresi doldu';
+  if (campaignActiveAt(c, at)) return 'Şu an uygulanıyor';
+  const next = nextCampaignStart(c, at);
+  return next === null ? 'Süresi doldu' : `${state === 'planned' ? 'Başlıyor' : 'Sıradaki'}: ${whenLabel(next, at)}`;
 }
 /** Status line on the owner's campaign card. */
 export function campaignStatus(c: Timing & Pick<CampaignView, 'enabled' | 'remainingQuantity' | 'minQuantity'>, at: number) {

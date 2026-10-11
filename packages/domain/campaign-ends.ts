@@ -1,5 +1,5 @@
 import type { State } from './types.js';
-import { campaignViews, categoriesPlace, type CampaignView } from './campaigns.js';
+import { campaignViews, categoriesPlace, isMonthly, repeatMonths, repeatMonthsEnd, type CampaignView } from './campaigns.js';
 
 /**
  * "Kampanya bitti" (10 Ekim, sahibin onayı): a campaign whose end time passed or whose quota is used up is announced once, in
@@ -53,6 +53,9 @@ export function endedCampaigns(s: State, at: number): CampaignEnd[] {
 export function renewedTiming(c: Pick<CampaignView, 'startsAt' | 'endsAt' | 'schedule'>, now: number) {
   const DAY = 86400000, TR = 3 * 3600000, start = Date.parse(c.startsAt), end = c.endsAt ? Date.parse(c.endsAt) : null;
   const today = Math.floor((now + TR) / DAY) * DAY - TR;
+  // A monthly one that ran whole months runs as many months again ("her ayın 15'i · 3 ay"); months differ in length.
+  const months = isMonthly(c.schedule) ? repeatMonths(c) : null;
+  if (months) { const from = new Date(today).toISOString(); return { startsAt: from, endsAt: repeatMonthsEnd(from, months) }; }
   if (c.schedule) return { startsAt: new Date(today).toISOString(), endsAt: end === null ? null : new Date(today + (end - start)).toISOString() };
   // Today at the original start's time of day; if that leaves nothing of it (a short one that would already be over), from now.
   const timeOfDay = ((start + TR) % DAY + DAY) % DAY;

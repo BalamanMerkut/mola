@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { alertMemory, fromPlatform, newPlatformOrders, playEvents, playSound, soundChoice, useSoundChoices, type PlatformRef, type SoundEvent } from './sounds';
 import type { PublicOrder } from '../packages/domain/types';
-import { amountLabel } from '../packages/domain/lines';
+import { amountLabel, changeSideText } from '../packages/domain/lines';
+import { printAlertEvents } from './printAlerts';
 
 /** A cancellation the kitchen should see at once: the red "İPTAL · kim · neden" strip above the board (~30 s). */
-export type KitchenNotice = { id: string; orderId: string; heading: string; who: string; reason: string; items: string };
+/** kind: 'change': a waiter changed a line ("DEĞİŞTİ · Masa 5 · Ayşe", "1 x Kola → 1 x Ayran"). */
+export type KitchenNotice = { id: string; orderId: string; heading: string; who: string; reason: string; items: string; kind?: 'change' };
 const itemsText = (lines: PublicOrder['lines']) => lines.map(l => `${amountLabel(l)} ${l.name}`).join(', ');
 const whoCancelled = (o: PublicOrder) => o.cancelledByName ?? (o.external ? 'Platform' : o.source === 'qr' ? 'Müşteri' : 'Personel');
 
@@ -20,7 +22,7 @@ const whoCancelled = (o: PublicOrder) => o.cancelledByName ?? (o.external ? 'Pla
  */
 export function kitchenAlerts(orders: PublicOrder[], external: (PlatformRef & { stage?: string })[], seen: Set<string>, first = false, me?: string, notices?: KitchenNotice[]): SoundEvent[] {
   const key = (o: PublicOrder) => `${o.id}:${o.status === 'awaiting_approval' ? 'approval' : 'order'}`, events: SoundEvent[] = [];
-  const marks = (o: PublicOrder) => [...(o.status === 'cancelled' ? [`${o.id}:cancelled`] : []), ...(o.cancellations ?? []).map(c => `${o.id}:cx:${c.id}`), ...(o.cancelRequested ? [`${o.id}:request:${o.version}`, `${o.id}:asked`] : [])];
+  const marks = (o: PublicOrder) => [...(o.status === 'cancelled' ? [`${o.id}:cancelled`] : []), ...(o.cancellations ?? []).map(c => `${o.id}:cx:${c.id}`), ...(o.changes ?? []).map(c => `${o.id}:ch:${c.id}`), ...(o.cancelRequested ? [`${o.id}:request:${o.version}`, `${o.id}:asked`] : [])];
   const waiting = external.filter(e => !e.stage || e.stage === 'pending');
   if (first) { for (const o of orders) { seen.add(key(o)); for (const m of marks(o)) seen.add(m); } newPlatformOrders([...waiting, ...orders.flatMap(o => o.external ? [o.external] : [])], true); return events; }
   const heading = (o: PublicOrder) => `${o.tableName} · #${o.number}`;
@@ -41,6 +43,15 @@ export function kitchenAlerts(orders: PublicOrder[], external: (PlatformRef & { 
       if (c.by === me) continue;
       events.push('kitchenCancel');
       notices?.push({ id: mark, orderId: o.id, heading: heading(o), who: c.byName ?? 'Personel', reason: c.reason, items: itemsText(c.lines) });
+    }
+    // A waiter changed a line before the kitchen started it: the strip says what became what, with the order sound.
+    for (const c of o.changes ?? []) {
+      const mark = `${o.id}:ch:${c.id}`;
+      if (seen.has(mark)) continue;
+      seen.add(mark);
+      if (c.by === me || c.ready) continue;
+      events.push('kitchen');
+      notices?.push({ id: mark, orderId: o.id, heading: heading(o), who: c.byName ?? 'Personel', reason: '', items: `${changeSideText(c.from)} → ${changeSideText(c.to)}`, kind: 'change' });
     }
     if (o.cancelRequested && !seen.has(`${o.id}:request:${o.version}`)) { seen.add(`${o.id}:request:${o.version}`); seen.add(`${o.id}:asked`); events.push('kitchenCancel'); }
     if (seen.has(key(o))) continue;
@@ -87,7 +98,8 @@ export function KitchenSound({ orders, external = none, me, memory = 'kitchen', 
     // The kitchen also sees QR orders waiting for approval: one sound when one arrives, another when it is approved and
     // becomes a new order to prepare. Several orders of the same kind at once ring once; the same kind again within 5 s too.
     const { seen, first } = alertMemory(memory), notices: KitchenNotice[] = [];
-    const events = kitchenAlerts(orders, external, seen, first, me, notices);
+    // Ekran modu: a kitchen ticket that did not print (kâğıt yok…) rings here too, once per problem (the card shows it).
+    const events = [...kitchenAlerts(orders, external, seen, first, me, notices), ...printAlertEvents(orders, seen, first)];
     if (notices.length) cancelled.current?.(notices);
     if (!events.length) return;
     if (desired.current && audio.current) playEvents(audio.current, events);

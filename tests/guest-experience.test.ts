@@ -197,7 +197,8 @@ test('guest state: a moved or merged table is not "paid"; orders stay visible wi
     assert.equal(waiterOrder.status, 200);
     const mine = await a.state();
     assert.equal(mine.due, tea.price * 4, 'the whole table bill is to pay');
-    assert.deepEqual(mine.bill, { total: tea.price * 4, paid: 0 });
+    // The KDV inside the bill (11 Ekim), as on the printed bill: ₺140 at %10.
+  assert.deepEqual(mine.bill, { total: tea.price * 4, paid: 0, vat: tea.price * 4 - Math.round(tea.price * 4 * 100 / 110) });
     assert.equal(mine.orders.length, 4);
     const byStaff = mine.orders.filter((o: any) => o.addedBy === 'staff'), byOther = mine.orders.filter((o: any) => o.addedBy === 'table');
     assert.equal(byStaff.length, 1); assert.equal(byOther.length, 1);

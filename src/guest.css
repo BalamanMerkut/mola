@@ -28,3 +28,4 @@
 .guest-privacy-main code{background:#edf2e7;border-radius:4px;padding:1px 5px;font-size:13px}
 .guest-privacy-draft{display:inline-block;background:#fff3c4;color:#6b5400;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;margin:12px 0 0}
 .guest-privacy-back{margin-top:16px}
+.customer-due .customer-due-vat{font-variant-numeric:tabular-nums}

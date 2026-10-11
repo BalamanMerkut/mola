@@ -69,7 +69,7 @@ test('role × action matrix: owner, Müdür, cashier, waiter and kitchen get exa
     ['QR siparişi onayla', x => x('/staff/orders/review', { requestId: rid(), orderId: 'yok', version: 1, approve: true }), ['owner', 'manager', 'waiter', 'kitchen']],
     ['Temizlendi', x => x('/staff/tables/clean', { requestId: rid(), tableId: 'yok', epoch: 0 }), ['owner', 'manager', 'cashier', 'waiter']],
     ['sipariş iptali (neden ile)', x => x('/staff/orders/cancel', { requestId: rid(), orderId: 'yok', version: 0, reason: 'Yanlış sipariş' }), ['owner', 'manager', 'waiter', 'kitchen']],
-    ['hesap birleştir', x => x('/staff/accounts/merge', { requestId: rid(), sourceId: 'a', sourceVersion: 0, targetId: 'b', targetVersion: 0 }), ['owner', 'manager', 'cashier']],
+    ['hesap birleştir', x => x('/staff/accounts/merge', { requestId: rid(), sourceId: 'a', sourceVersion: 0, targetId: 'b', targetVersion: 0 }), ['owner', 'manager', 'cashier', 'waiter']],
     ['raporlar', x => x(`/staff/reports/overview?from=${DAY}&to=${DAY}`), ['owner', 'manager']],
     ['iade ve düzeltme listesi', x => x('/staff/payment-adjustments'), ['owner', 'manager']],
     ['kasa kapanışları raporu', x => x(`/staff/reports/cash-closings?from=${DAY}&to=${DAY}`), ['owner', 'manager']],

@@ -459,8 +459,6 @@ export function closingTicket(c: CashClosing, corrections: CashCorrection[], bus
     ...fiscalSlip(c),
     ...(c.mode === 'final' && c.left !== undefined ? [{ rule: true } as const, { pair: ['Kasada bırakılan', printMoney(c.left)] as [string, string], bold: true }, ...(c.taken ? [{ pair: ['Kasadan çıkarılan', printMoney(c.taken)] as [string, string] }] : [])] : []),
     ...(c.denominations ? [{ rule: true } as const, ...Object.entries(c.denominations).sort((a, b) => Number(b[0]) - Number(a[0])).map(([v, n]) => ({ pair: [`${denominationName(Number(v))} × ${n}`, printMoney(Number(v) * n)] as [string, string] }))] : []),
-    { rule: true },
-    { text: 'Bilgi fişidir. Mali değeri yoktur.', align: 'center' },
   ];
 }
 
@@ -480,7 +478,6 @@ export function blindTicket(c: CashClosing, business: string): Ticket {
     ...(c.denominations ? [{ rule: true } as const, ...Object.entries(c.denominations).sort((a, b) => Number(b[0]) - Number(a[0])).map(([v, n]) => ({ pair: [`${denominationName(Number(v))} × ${n}`, printMoney(Number(v) * n)] as [string, string] }))] : []),
     { rule: true },
     { text: 'Sayım işletme sahibine iletildi.', align: 'center' },
-    { text: 'Bilgi fişidir. Mali değeri yoktur.', align: 'center' },
   ];
 }
 

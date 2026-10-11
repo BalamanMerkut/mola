@@ -29,7 +29,7 @@ test('quantity offer follows basket changes and saved terms on order edits, with
   const card = page.locator('.campaign-card').filter({ hasText: 'İki çay fırsatı' });
   await expect(card).toContainText('2 adet ve üzeri');
   // No weekly schedule chosen: an ordinary date-range campaign, active right away.
-  await expect(card).toContainText('Aktif · 1 ürün');
+  await expect(card.locator('.campaign-state')).toHaveText('Aktif'); await expect(card).toContainText('1 ürün ·');
   expect((await (await page.request.get('/api/staff/campaigns')).json()).campaigns.find((c: any) => c.name === 'İki çay fırsatı').schedule).toBeUndefined();
   const customer = await browser.newContext({ viewport: { width: 390, height: 844 } });
   try {
@@ -37,6 +37,8 @@ test('quantity offer follows basket changes and saved terms on order edits, with
     await guest.goto(`/m/${table.token}`);
     const product = guest.getByRole('button', { name: /Demleme Çay/ });
     await expect(product).toContainText('₺35');
+    // The card names the condition: listed under the offers, yet one piece is at the menu price (11 Ekim).
+    await expect(product).toContainText('2 adet ve üzeri indirimli');
     async function add() { await product.click(); await guest.getByRole('button', { name: /Sepete ekle/ }).click(); }
     await product.click();
     await expect(guest.getByRole('dialog')).toContainText('2 adet ve üzeri');

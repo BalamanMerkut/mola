@@ -11,6 +11,7 @@ import { Notice } from './components';
 import { usePackage } from './FeatureLock';
 import { HelpTip } from './HelpTip';
 import { areaName } from './TableAreaPicker';
+import { orderedAreas } from '../packages/domain/table-sections';
 import { A4_CUTS, standCard, standPdf, type StandBusiness, type StandLabel, type StandPaper } from './tableStand';
 import './settings-qr.css';
 
@@ -99,7 +100,7 @@ export function QrCodesCard({ data, open: openAtStart = false, onSaved, page = f
   const [openFold, setOpen] = useState(openAtStart), card = useRef<HTMLDetailsElement>(null), open = page || openFold;
   useEffect(() => { if (openAtStart) { setOpen(true); requestAnimationFrame(() => card.current?.scrollIntoView({ block: 'start' })); } }, [openAtStart]);
   const [network, setNetwork] = useNetwork();
-  const areas = [...new Set(data.tables.map(t => t.area ?? ''))];
+  const areas = orderedAreas(data.tables, data.areaOrder);
   const [scope, setScope] = useState('all'), [per, setPer] = useState<Layout>(6), [chosenBase, setBase] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [paper, setPaper] = useState<StandPaper>('a4'), [picked, setPicked] = useState<string[]>([]);
   const [sheet, setSheet] = useState<Sheet | null>(null);

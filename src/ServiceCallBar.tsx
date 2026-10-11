@@ -3,6 +3,8 @@ import { BellRing, Check, ReceiptText, VolumeX } from 'lucide-react';
 import type { PublicServiceCall } from '../packages/domain/service-calls';
 import type { PublicOrder, Role, StaffSnapshot } from '../packages/domain/types';
 import { ringsHere } from '../packages/domain/assignments';
+import { reminderText, type TableReminder } from '../packages/domain/table-reminders';
+import { Footprints } from 'lucide-react';
 import { api } from './api';
 import { alertMemory, fromPlatform, newPlatformOrders, playEvents, useSoundChoices, type PlatformRef, type SoundEvent } from './sounds';
 import { useScreenAwake } from './wakeLock';
@@ -51,13 +53,20 @@ export function orderAlerts(orders: PublicOrder[], role: Role | undefined, seen:
   return events;
 }
 
-const none: PlatformRef[] = [];
+const none: PlatformRef[] = [], noReminders: TableReminder[] = [];
 /**
  * The floor's sounds (waiter, cashier, owner), mounted once for the whole workspace: they ring whichever view is open.
  * Browsers start sound only after a tap; until then a small "Ses kapalı · açmak için dokunun" asks for one (any tap does).
  * The waiter's phone stays awake while Mola is on screen and vibrates when an order is ready (`onReady` shows the note).
  */
-export function FloorAlerts({ calls, orders, external = none, role, memory, onReady, rings }: { calls: PublicServiceCall[]; orders: PublicOrder[]; external?: (PlatformRef & { stage?: string })[]; role: Role; memory: string; onReady?: (orders: PublicOrder[]) => void; rings?: Rings }) {
+/** Garson ataması: a waiter's own ready orders (and those of tables nobody has) first; another waiter's ones quietly apart. */
+export function splitReady(orders: PublicOrder[], role: Role, rings?: Rings) {
+  if (role !== 'waiter' || !rings) return { mine: orders, others: [] as PublicOrder[] };
+  const mine = orders.filter(o => rings(o.takeaway?.tableId, o.accountId));
+  return { mine, others: orders.filter(o => !mine.includes(o)) };
+}
+/** `ticket` (Fiş modu): "Mutfak fişi basılamadı" rings on the floor; in Ekran modu the kitchen screen has it. `reminders`: "uzun süredir sipariş yok", once each. */
+export function FloorAlerts({ calls, orders, external = none, role, memory, onReady, rings, ticket = false, reminders = noReminders }: { calls: PublicServiceCall[]; orders: PublicOrder[]; external?: (PlatformRef & { stage?: string })[]; role: Role; memory: string; onReady?: (orders: PublicOrder[]) => void; rings?: Rings; ticket?: boolean; reminders?: TableReminder[] }) {
   useSoundChoices();
   useScreenAwake(role === 'waiter');
   const audio = useRef<AudioContext | null>(null), [ready, setReady] = useState(true);
@@ -81,10 +90,13 @@ export function FloorAlerts({ calls, orders, external = none, role, memory, onRe
     const rings = ringFor.current;
     const fresh: SoundEvent[] = calls.filter(c => !calls$.seen.has(c.id) && (!rings || rings(c.tableId))).map(c => c.kind === 'bill' ? 'billRequest' : 'waiterCall');
     for (const c of calls) calls$.seen.add(c.id);
-    const done: PublicOrder[] = [], events = [...(calls$.first ? [] : fresh), ...orderAlerts(orders, role, orders$.seen, external, orders$.first, done, rings), ...printAlertEvents(orders, orders$.seen, orders$.first)];
+    // A long-open table's reminder rings once per quiet stretch (`since`), softly; "Gittim" starts a new one N minutes later.
+    const reminders$ = alertMemory(`${memory}:reminders`), quiet = reminders.filter(r => !reminders$.seen.has(`${r.tableId}:${r.since}`));
+    for (const r of reminders) reminders$.seen.add(`${r.tableId}:${r.since}`);
+    const done: PublicOrder[] = [], events = [...(calls$.first ? [] : fresh), ...orderAlerts(orders, role, orders$.seen, external, orders$.first, done, rings), ...(ticket ? printAlertEvents(orders, orders$.seen, orders$.first) : []), ...(!reminders$.first && quiet.length ? ['tableReminder' as const] : [])];
     if (done.length) { announce.current?.(done); try { navigator.vibrate?.([180, 90, 180]); } catch { /* not every device vibrates */ } }
     if (audio.current && events.length) playEvents(audio.current, events);
-  }, [calls, orders, external, role, memory]);
+  }, [calls, orders, external, role, memory, ticket, reminders]);
   if (ready) return null;
   return <button type="button" className="sound-unlock" onClick={() => { void audio.current?.resume().catch(() => {}); }}><VolumeX size={14} aria-hidden="true" />Ses kapalı · açmak için dokunun</button>;
 }
@@ -106,5 +118,24 @@ export function ServiceCallBar({ calls, onOpenTable, onAnswered, onError, compac
       <button type="button" className="service-call-open" onClick={() => onOpenTable(c.tableId)} title="Masayı aç">{c.kind === 'bill' ? <ReceiptText size={16} aria-hidden="true" /> : <BellRing size={16} aria-hidden="true" />}<strong>{c.tableName}</strong><span>{callLabel(c)}</span><small>{minutes(m)}</small></button>
       <button type="button" className="service-call-done" disabled={busy === c.id} onClick={() => void answer(c.id)} aria-label={`${c.tableName} çağrısını kapat`}><Check size={15} /><span className="service-call-done-label">Tamam</span></button>
     </div>; })}
+  </section>;
+}
+
+/**
+ * "Masa 5: 45 dakikadır yeni sipariş yok. Bir isteği var mı?" (packages/domain/table-reminders.ts): a soft card on the
+ * waiter's screens, with "Gittim" (the reminder waits N minutes again). The table name opens the table.
+ */
+export function TableReminders({ reminders, onOpenTable, onDone, onError, compact = false }: { reminders: TableReminder[]; onOpenTable: (tableId: string) => void; onDone: () => void; onError: (message: string) => void; compact?: boolean }) {
+  const [busy, setBusy] = useState('');
+  if (!reminders.length) return null;
+  async function went(r: TableReminder) {
+    setBusy(r.tableId);
+    try { await api('/api/staff/tables/checked', { tableId: r.tableId, epoch: r.epoch }); onDone(); } catch (e) { onError((e as Error).message); } finally { setBusy(''); }
+  }
+  return <section className={`table-reminders${compact ? ' compact' : ''}`} aria-label="Masa hatırlatmaları">
+    {reminders.map(r => <div className="table-reminder" key={r.tableId} role="status">
+      <button type="button" className="table-reminder-open" onClick={() => onOpenTable(r.tableId)} title="Masayı aç"><Footprints size={16} aria-hidden="true" /><span>{reminderText(r)}</span></button>
+      <button type="button" className="btn secondary small-btn table-reminder-done" disabled={busy === r.tableId} onClick={() => void went(r)} aria-label={`${r.tableName} · Gittim`}><Check size={15} aria-hidden="true" />Gittim</button>
+    </div>)}
   </section>;
 }

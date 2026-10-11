@@ -1,5 +1,5 @@
 import { lazy, useEffect, useId, useState } from 'react';
-import { Building2, Check, ClipboardCheck, CreditCard, DatabaseBackup, KeyRound, LayoutGrid, Info, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone } from 'lucide-react';
+import { Building2, Check, ClipboardCheck, CreditCard, DatabaseBackup, Footprints, KeyRound, LayoutGrid, Info, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone } from 'lucide-react';
 import { Moved, PlaceLink } from './Moved';
 import { PhonePairing } from './PhonePairing';
 import QRCode from 'qrcode';
@@ -23,7 +23,7 @@ import { OwnerLockSettings } from './OwnerLock';
 import { RemoteAdminSettings } from './RemoteAdminSettings';
 import { DeferredPanel } from './DeferredPanel';
 import { openRail } from './FirstSteps';
-import { areaName } from './TableAreaPicker';
+import { TableLayout } from './TableLayout';
 import { UpdateSettings } from './UpdateBanner';
 // "Mutfak nasıl çalışıyor?" (Ekran / Fiş; Sipariş ve mutfak → Mutfak): its own card, src/KitchenModeCard.tsx.
 import { KitchenModeCard } from './KitchenModeCard';
@@ -128,6 +128,7 @@ export function OrdersPage({ data, prefs, onSaved }: { data: StaffSnapshot; pref
       </Row>
       {autoError && <Notice tone="error">{autoError}</Notice>}
     </Card>
+    <ReminderCard data={data} onSaved={onSaved} />
     </>} right={<>
     {/* Kept as a list: tests/browser/takeaway.spec.ts reads "Masasız sipariş" here. */}
     <Card icon={<Info size={18} aria-hidden="true" />} title="Ayarı olmayanlar" className="settings-card-quiet settings-card-compact" tip="Bunlar her işletmede aynı çalışır; açıp kapatılacak bir ayarları yoktur.">
@@ -146,6 +147,32 @@ export function OrdersPage({ data, prefs, onSaved }: { data: StaffSnapshot; pref
       <Moved what="Vardiya ve bahşiş, garson ataması" where="Personel → Personel ayarları" to={{ view: 'users', tab: 'settings' }} />
     </div>
   </form>;
+}
+
+/**
+ * "Uzun süredir sipariş verilmeyen masa için garsona hatırlat" (11 Ekim, hafta sonu bulgusu 4; packages/domain/table-reminders.ts):
+ * on (45 dakika) by default; the minutes save when the box is left.
+ */
+function ReminderCard({ data, onSaved }: { data: StaffSnapshot; onSaved: () => void }) {
+  const id = useId(), saved = data.tableReminderMinutes ?? 45, on = saved > 0;
+  const [minutes, setMinutes] = useState(String(saved || 45)), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  useEffect(() => { if (!busy) setMinutes(String(saved || 45)); }, [saved]);
+  async function save(value: number) {
+    setBusy(true); setError('');
+    try { await api('/api/staff/table-reminder', { minutes: value }); onSaved(); }
+    catch (e) { setError((e as Error).message); setMinutes(String(saved || 45)); } finally { setBusy(false); }
+  }
+  const typed = Number(minutes), valid = Number.isInteger(typed) && typed >= 10 && typed <= 240;
+  return <Card icon={<Footprints size={18} aria-hidden="true" />} title="Garson hatırlatması" lead="Uzun süredir sipariş vermeyen masa unutulmasın." tip="Hesabı açık bir masada bu süre boyunca yeni sipariş, garson çağrısı ya da hesap isteği olmazsa garsonun ekranında “Masa 5: 45 dakikadır yeni sipariş yok. Bir isteği var mı?” notu çıkar ve bir kez yumuşak bir ses çalar. Garson “Gittim” deyince not kapanır; aynı masa için en erken yine bu süre sonra gelir. Garson ataması açıksa yalnız o masanın garsonuna gider. Mutfakta bekleyen siparişi olan ya da hesabı isteyen masa için çıkmaz.">
+    <Row id={`${id}-on`} label="Uzun süredir sipariş verilmeyen masa için garsona hatırlat" tip="Garson hatırlatması" line={on ? `Açık: ${saved} dakika boyunca yeni sipariş ya da çağrı yoksa garsona hatırlatılır.` : 'Kapalı: garsona hatırlatma gitmez.'} help="Hatırlatma garson ekranında çıkar; kasiyer, müdür ve sizin ekranınızda çıkmaz. Sesi Ayarlar → Cihazlar → Sesler'den değiştirebilirsiniz.">
+      <Toggle id={`${id}-on`} checked={on} disabled={busy} onChange={v => void save(v ? (valid ? typed : 45) : 0)} />
+    </Row>
+    {on && <Row id={`${id}-minutes`} label="Kaç dakika sonra?" tip="Hatırlatma süresi" line="10 ile 240 dakika arası. Önerilen 45 dakika." help="Masada son sipariş, çağrı ya da garsonun “Gittim” demesinden bu kadar dakika sonra hatırlatma çıkar.">
+      <div className="settings-number-control"><input id={`${id}-minutes`} type="number" min="10" max="240" inputMode="numeric" aria-describedby={`${id}-minutes-help`} value={minutes} disabled={busy} onChange={e => setMinutes(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} onBlur={() => { if (valid && typed !== saved) void save(typed); }} /><span aria-hidden="true">dakika</span></div>
+      {!valid && <small className="field-error" role="alert">10 ile 240 arasında bir sayı yazın.</small>}
+    </Row>}
+    {error && <Notice tone="error">{error}</Notice>}
+  </Card>;
 }
 
 /** Kasa ve giderler → Kasa ayarları → Kart ve yazar kasa: the POS rate (one of the business preferences), its own small form so Enter saves it. */
@@ -171,11 +198,11 @@ export function KitchenPage({ data, onSaved }: { data: StaffSnapshot; onSaved: (
  */
 export function TablesPage({ data, prefs, onSaved, onTables }: { data: StaffSnapshot; prefs: Preferences; onSaved: () => void; onTables?: (mode: 'add' | 'remove') => void }) {
   const id = useId(), pk = usePackage();
-  const areas = [...new Set(data.tables.map(t => t.area ?? ''))];
+  // 11 Ekim (hafta sonu bulgusu 6): sections and order are arranged right here (src/TableLayout.tsx), not only in a table's window.
   return <Columns left={
-    <Card icon={<LayoutGrid size={18} aria-hidden="true" />} title="Masalar ve bölümler" aside={<Count>{data.tables.length}</Count>} tip="Masa eklemek ya da çıkarmak için buradaki ya da Masalar ekranındaki “Masa ekle” ve “Masa çıkar” düğmelerini kullanın. Bir masanın bölümünü (iç, dış, bahçe…) o masanın penceresinden seçin." lead="Bir masanın bölümü (iç, dış, bahçe…) o masanın penceresinden seçilir.">
+    <Card icon={<LayoutGrid size={18} aria-hidden="true" />} title="Masalar ve bölümler" aside={<Count>{data.tables.length}</Count>} tip="Her masanın yanındaki seçimle bölümünü (İç, Dış, Üst kat…) değiştirin; listede olmayan bölüm için “Yeni bölüm…” seçin. Oklarla masaların ve bölümlerin sırasını değiştirin; Masalar ekranı bu sırayla gösterir. Kalemle bir bölümün adını değiştirirsiniz; garson atamaları yeni adla sürer." lead="Masanın bölümünü seçin, sırayı oklarla değiştirin.">
       {onTables && <div className="settings-actions"><button type="button" className="btn secondary" onClick={() => onTables('add')}><Plus size={16} aria-hidden="true" />Masa ekle</button><button type="button" className="btn secondary" onClick={() => onTables('remove')}><Minus size={16} aria-hidden="true" />Masa çıkar</button></div>}
-      <ul className="settings-area-list">{areas.map(a => <li key={a}><LayoutGrid size={15} aria-hidden="true" /><span>{a ? `${areaName(a)} masaları` : areas.length > 1 ? 'Bölümsüz masalar' : 'Bütün masalar'}</span><strong>{data.tables.filter(t => (t.area ?? '') === a).length} masa</strong></li>)}</ul>
+      <TableLayout data={data} onSaved={onSaved} />
       <Row id={`${id}-cleaning`} label="Masa temizliği takibi" tip="Masa temizliği" line="Boşalan masa, temizlendi olarak işaretlenince yeniden sipariş alır." help="Hesap kapandığında veya masa taşındığında boşalan masa temizlik bekler. Garson ya da işletme sahibi “Temizlendi” diyene kadar yeni sipariş alınmaz. Bu ayarı kapatmak bekleyen masaları da siparişe açar.">
         <Toggle id={`${id}-cleaning`} checked={prefs.cleaningEnabled} disabled={prefs.busy} onChange={on => void prefs.persist({ cleaningEnabled: on })} />
       </Row>

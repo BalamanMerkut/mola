@@ -1,5 +1,6 @@
 import { DomainError, once, requireRole } from './engine.js';
 import type { Actor, Context, State } from './types.js';
+import { checkTable } from './table-reminders.js';
 
 export type ServiceCallKind = 'waiter' | 'bill';
 /** `method`: how the guest said they will pay when asking for the bill ("Hesap · Kart": the waiter brings the POS); missing = not said. */
@@ -44,6 +45,8 @@ export function resolveServiceCall(s: State, actor: Actor, input: { callId: stri
   // Another device may have answered first; that is not an error for the second person.
   if (!call) return { ok: true, alreadyResolved: true };
   s.serviceCalls = activeCalls(s).filter(c => c.id !== call.id);
+  // Someone went to the table: its "uzun süredir sipariş yok" reminder waits again from now (table-reminders.ts).
+  checkTable(s, call.tableId, call.epoch, ctx.now.toISOString());
   s.audit.push({ action: `service-call.${call.kind}.answered`, actor: actor.id, target: call.tableId, at: ctx.now.toISOString() });
   return { ok: true, alreadyResolved: false };
 }

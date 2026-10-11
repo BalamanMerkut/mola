@@ -25,7 +25,7 @@ test('owner campaign applies to customer, preserves accepted price and hides fin
   await dialog.getByRole('button', { name: 'Kampanya kaydını yeniden kontrol et', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Açılışa özel · %20' })).toHaveCount(1);
   // A date-range campaign keeps its familiar label.
-  await expect(campaignCard).toContainText('Aktif · 1 ürün · Süresiz');
+  await expect(campaignCard.locator('.campaign-state')).toHaveText('Aktif'); await expect(campaignCard).toContainText('Şu an uygulanıyor'); await expect(campaignCard).toContainText('1 ürün ·'); await expect(campaignCard).toContainText('Süresiz');
   const customer = await browser.newContext(), kitchen = await browser.newContext();
   try {
     const guest = await customer.newPage(); await guest.goto(`/m/${initial.tables[0].token}`);

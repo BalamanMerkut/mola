@@ -2,6 +2,8 @@
 
 Üç denetimin (kurulum ve yaşam döngüsü, günlük işletme ekranları, Mola Yönetim ve güvenlik) birleşik listesi. Her dalga sonunda bütün testler ve gerçek paketle deneme kurulumu yapılır. [K] = sahibin kararı gerekiyor.
 
+> **Durum (11 Ekim, hafta sonu bulguları — garson ve yazıcı tarafı):** docs/HAFTA_SONU_BULGULARI.md 1, 4, 5, 6, 9 yapıldı (yazıcı durumu ve "Yazıcıda kâğıt yok" uyarısı; uzun süredir sipariş yok hatırlatması; garsonun sipariş değiştirmesi ve hazır ürün değişimi; garson ataması/"Servise hazır", masa bölümleri ve sıra; garsonun masa birleştirmesi). Birim ve tek tek tarayıcı testleri geçti; ortak tam e2e turu ve gerçek yazıcıyla (kâğıt bitmiş rulo, USB sürücüsü) deneme bekliyor (docs/GERCEK_CIHAZ_TESTI.md 6, 7, 8, 18).
+
 ## Dalga 1 — Kullanımı engelleyenler ve güvenlik
 
 **İşletme**
@@ -193,6 +195,7 @@
   - O5 sharp 0.35.5 (her platformun `@img` paketleri aynı sürümden), `npm audit --omit=dev` temiz.
   - O6 tek lisans (her zaman `features`), Merkez ilk açılışta bir kez yeniden imzalar; kafede `features`siz lisans yalnız 12 Ekim öncesi ve listeli lisans hiç görülmemişse "her şey".
   - Testler: typecheck temiz; `npm test` 807 test (806 geçti, 1 atlanan; ayrıca 12 Ekim sonrası tarihle bir kez denendi, aynı sonuç); `build`; `test:e2e` 118/118 (3500/3590; `guest-internet` ve `qr-ordering` önce tek tek 3400/3490); `installer` (her platformun sharp dosyaları 0.35.5 / libvips 1.3.4); `check-pilot-package` geçti; `test:paket` 25 denetim geçti. Yeni testler: `tests/guest-tunnel.test.ts` "menu host", `tests/feature-gate.test.ts` ve `tests/merkez-packages.test.ts` "O6".
+- **Durum (11 Ekim, hafta sonu bulguları: telefondan fotoğraf, KDV, yazdırma taşması, "her ayın N. günü", kampanya ve etkinlik pencereleri): yapıldı.** Ayrıntı `docs/HAFTA_SONU_BULGULARI.md` (ön not 1; 1. tur 2, 3, 7, 8). Fotoğraf telefonda küçültülür (asıl neden: iPhone Safari WebP yapamıyor, PNG gidiyordu); sade özette ve misafirin hesabında içindeki KDV; fişte yalnız bilgi ("BİLGİ FİŞİ" başlığı, yasal cümleler kaldırıldı); A4 rapor sayfasında yazılar sütunda kalır; aylık kampanya tekrarı ve "Tekrarlar" raporu; kampanya durumları Taslak/Planlandı/Aktif/Bitti (onay adımı yok); kampanya ve etkinlik pencereleri adım adım. Testler: typecheck temiz; `npm test` 824 (823 geçti, 1 atlanan); tarayıcıda tek tek (3500/3590): `phone-photo` (yeni), `report-print` (yeni), `campaign-schedule`, `campaigns`, `category-campaigns`, `quantity-campaigns`, `campaign-limits`, `campaign-ended`, `management-cards`, `events`, `report-simple`, `guest-experience`, `flows`, `photo-storage`. Tam e2e ve kurulu paket denemesi birleştirme turunda.
 
 ## En son (kullanıcı kararı, 5 Ekim)
 1. Önce bütün fonksiyonlarıyla "en üst sürüm" bitsin.

@@ -1,12 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Bell, BellRing, ChefHat, CheckCheck, HandPlatter, Play, Printer, ReceiptText, Store, Volume1, Volume2, XCircle, type LucideIcon } from 'lucide-react';
+import { Bell, BellRing, ChefHat, CheckCheck, Footprints, HandPlatter, Play, Printer, ReceiptText, Store, Volume1, Volume2, XCircle, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { Notice } from './components';
 import { deviceVolume, playSound, setDeviceVolume, setSoundChoices, soundEventNames, soundEventWhere, soundEvents, soundIds, soundLength, soundNames, useSoundChoices, type SoundEvent, type SoundId } from './sounds';
 import type { SoundChoice } from '../packages/domain/sound-settings';
 import { Card } from './SettingsKit';
 
-const icons: Record<SoundEvent, LucideIcon> = { waiterCall: BellRing, billRequest: ReceiptText, approval: CheckCheck, kitchen: ChefHat, ready: HandPlatter, externalOrder: Store, kitchenCancel: XCircle, printError: Printer, notification: Bell };
+const icons: Record<SoundEvent, LucideIcon> = { waiterCall: BellRing, billRequest: ReceiptText, approval: CheckCheck, kitchen: ChefHat, ready: HandPlatter, externalOrder: Store, kitchenCancel: XCircle, printError: Printer, notification: Bell, tableReminder: Footprints };
 const seconds = (id: SoundId) => `${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(soundLength(id))} sn`;
 
 /** One AudioContext for the previews on this page, opened by the first tap (browsers allow sound only after a tap). */

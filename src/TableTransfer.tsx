@@ -32,6 +32,7 @@ export function TableTransfer({ source, tables, canMerge, onClose, onDone }: { s
       {occupied.length > 0 && <optgroup label="Dolu masalar · hesaplar birleşir">{occupied.map(t => <option key={t.id} value={t.id}>{t.name} · {money(t.account!.balance)}</option>)}</optgroup>}
     </select></label>
     {!empty.length && !occupied.length && <Notice>Şu anda seçilebilecek masa yok.</Notice>}
+    {merge && <p className="muted small transfer-merge-note" role="status">{source.name} boşalır; iki masanın hesabı {target!.name} üzerinde tek hesap olur. Kalabalık grup için masaları böyle birleştirebilirsiniz; işlem kayda geçer.</p>}
     <div className="total-line"><span>{merge ? 'Birleşik kalan hesap' : 'Kalan hesap'}</span><strong>{money(source.account!.balance + (merge ? target!.account!.balance : 0))}</strong></div>
     {error && <Notice tone="error">{error}</Notice>}
     <button className="btn primary full" disabled={busy || (!uncertain && !target)}>{busy ? 'Kaydediliyor…' : uncertain ? 'Yeniden kontrol et' : !target ? 'Masa seçin' : merge ? `Hesapları birleştir · ${target.name}` : `Hesabı taşı · ${target.name}`}</button>{/* Table names already say "Masa 04"; "Masa 04 masasına" read twice. */}

@@ -40,7 +40,7 @@ export function staffOrders(s: State, role: Role, now: number) {
 
 function publicOrder(s: State, o: Order, x: { hiddenMoney: boolean; paid: boolean; pieces?: Map<string, number>; names: Map<string, string>; table?: State['tables'][number] }): PublicOrder {
   const { guestId: _g, menuRevision: _m, approvalRequired: _a, reviewedBy: _r, reservation: _v, stockQuestions: _q, statusUndo: _u, cancelPrinted: _c,
-    editableUntil, paymentBeforePreparation, cancelledBy, cancellations, lines, total, external, ...rest } = o;
+    editableUntil, paymentBeforePreparation, cancelledBy, cancellations, changes, lines, total, external, ...rest } = o;
   const table = x.table, tableName = table?.name ?? 'Masa';
   // Option ids are never read by staff screens; pricing rules (quantity offers, per-kg price) stay for the money screens.
   const line = (l: OrderLine): OrderLine => {
@@ -59,6 +59,9 @@ function publicOrder(s: State, o: Order, x: { hiddenMoney: boolean; paid: boolea
     ...(external ? { external: x.hiddenMoney ? { ...external, total: 0 } : external } : {}),
     ...(cancelledBy ? { cancelledBy, cancelledByName: x.names.get(cancelledBy) ?? 'Personel' } : {}),
     ...(cancellations ? { cancellations: cancellations.map(c => ({ ...c, byName: x.names.get(c.by) ?? 'Personel', lines: c.lines.map(line) })) } : {}),
+    // "Değişti: Kola → Ayran" on the kitchen card and the table window (no prices in a change).
+    // The kitchen: only what it prepares (a ready-made swap is the counter's business) and no money.
+    ...((k => k.length ? { changes: k.map(({ printTo: _p, delta, ...c }) => ({ ...c, ...(x.hiddenMoney || !delta ? {} : { delta }), byName: x.names.get(c.by) ?? 'Personel' })) } : {})((changes ?? []).filter(c => !x.hiddenMoney || !c.ready))),
     // Paid piece counts (not money) let every screen that cancels items tell which ones are paid; only lines with some paid.
     ...(pieces?.length ? { paidQuantities: Object.fromEntries(pieces) } : {}),
     ...(limits ? { cancelLimits: limits } : {}),

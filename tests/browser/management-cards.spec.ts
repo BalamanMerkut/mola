@@ -33,8 +33,8 @@ test('custom table areas, product/campaign removal and compact settings/employee
  await page.getByRole('button',{name:'Kampanyalar',exact:true}).click();
  // Finished campaigns are folded under "Biten kampanyalar" below the running and upcoming ones.
  await page.getByText('Biten kampanyalar (1)',{exact:true}).click();
- await expect(page.locator('.campaign-card')).toContainText('Sona erdi');
- await expect(page.locator('.campaign-card')).toContainText('Bitiş: 2 Oca 2020 03:00');
+ await expect(page.locator('.campaign-card')).toContainText('Bitti'); await expect(page.locator('.campaign-card')).toContainText('Süresi doldu');
+ await expect(page.locator('.campaign-card')).toContainText('– 2 Oca 2020 03:00');
  await page.getByRole('button',{name:'Kampanyayı düzenle',exact:true}).click();
  await page.getByRole('dialog',{name:'Kampanyayı düzenle'}).screenshot({path:info.outputPath('campaign-editor.png')});
  await page.setViewportSize({width:390,height:844});
@@ -46,7 +46,8 @@ test('custom table areas, product/campaign removal and compact settings/employee
  await expect(page.locator('.campaign-card')).toHaveCount(0);
  await openSettings(page,'Sipariş ve onay');
  // Ödeme sırası, the change window switch and its seconds, QR approval, automatic approval (POS commission: Kasa ve giderler → Kasa ayarları).
- await expect(page.locator('.settings-row')).toHaveCount(5); // garson ataması moved to Personel → Personel ayarları (10 Ekim)
+ // 11 Ekim: + "Garson hatırlatması" (switch and its minutes).
+ await expect(page.locator('.settings-row')).toHaveCount(7); // garson ataması moved to Personel → Personel ayarları (10 Ekim)
  await page.setViewportSize({width:1280,height:900});
  await openSettings(page,'Cihazlar');
  await page.locator('.photo-storage > summary').click();

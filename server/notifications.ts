@@ -13,7 +13,8 @@ import { endedCampaigns } from '../packages/domain/campaign-ends.js';
 /** 'expense': an "Otomatik gider" was recorded (server/recurring-expenses.ts). 'cash': a cash closing, an opening difference or
  * a cashier's cash expense above the owner's limit (server/cash-closing.ts). 'stock': an item went under its minimum (server/stock.ts).
  * 'report': a period report (gün sonu, hafta, ay, yıl; server/email-reports.ts). 'demo': "Tanıtım" reset (server/demo-reset.ts). */
-export type NotificationKind = 'reminder' | 'license' | 'backup' | 'merkez' | 'expense' | 'cash' | 'stock' | 'report' | 'demo' | 'campaign';
+/** 'printer': a ticket did not print ("Yazıcıda kâğıt yok · Mutfak") or the roll is nearly out (server/printing.ts PrintService). */
+export type NotificationKind = 'reminder' | 'license' | 'backup' | 'merkez' | 'expense' | 'cash' | 'stock' | 'report' | 'demo' | 'campaign' | 'printer';
 /** One message in the owner's Bildirimler (üst çubuktaki zil). `readBy`: owner ids that opened it (read state is per owner). */
 export type CafeNotification = { id: string; kind: NotificationKind; title: string; text: string; at: string; day?: string; readBy: string[]; /** 'campaign': the ended campaign ("Kampanya bitti", packages/domain/campaign-ends.ts). */ campaign?: { id: string; reportId: string; reason: 'time' | 'quota'; endedAt: string; uses?: number } };
 /** What the Müdür sees in Bildirimler: nothing about the drawer, licences or backups (K1 kör kasa), only these. */

@@ -304,3 +304,10 @@
   .reports-v2 .product-table tbody th small.expense-meta{display:block;margin-top:3px}
 }
 .reports-v2 .expense-table td .text-btn{min-height:44px;margin:0}
+/* Kampanyalar → "Tekrarlar" of a monthly campaign (her ayın 15'i): one row per day it ran (src/CampaignReports.tsx). */
+.campaign-occurrences{margin-top:20px;min-width:0}
+.campaign-occurrence-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.campaign-occurrence-table th,.campaign-occurrence-table td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;font-size:13px}
+.campaign-occurrence-table th:first-child{text-align:left;font-weight:600}
+.campaign-occurrence-table thead th{color:#5f6b62;font-size:12px;font-weight:600}
+@media(max-width:560px){.campaign-occurrence-table thead{display:none}.campaign-occurrence-table tr{display:grid;grid-template-columns:1fr 1fr;padding:8px 0;border-bottom:1px solid var(--line)}.campaign-occurrence-table th,.campaign-occurrence-table td{border:0;padding:2px 0;text-align:left}.campaign-occurrence-table tbody th{grid-column:1/-1}}

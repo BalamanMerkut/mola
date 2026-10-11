@@ -47,12 +47,41 @@ test('etkinlik: 25 temporary tables, reservation, walk-in, orders, closing only 
   await form.getByLabel(/^Gün/).fill(start.day);
   await form.getByLabel(/^Başlangıç/).fill(start.time);
   await expect(form.getByLabel(/Geçici masa sayısı/)).toHaveValue('25');
-  await form.getByLabel('Masa başı kişi', { exact: false }).fill('4');
-  await form.getByLabel('Etkinlik sırasında normal masaları gizle').check();
-  await expect(form).toContainText('D1, D2 … D25');
-  const sizes = await page.locator('.resv-form input:not([type=checkbox]), .resv-form textarea').evaluateAll(els => els.map(e => parseFloat(getComputedStyle(e).fontSize)));
+  await form.getByLabel(/Bir masada kaç kişi/).fill('4');
+  // Adım adım form (11 Ekim): every step says what it will do right under it.
+  await expect(form.getByRole('region', { name: 'Kaç masa?' })).toContainText('25 geçici masa · toplam 100 kişilik yer');
+  const chips = form.getByRole('list', { name: 'Açılacak masalar' });
+  await expect(chips.getByRole('listitem')).toHaveCount(13);
+  await expect(chips).toContainText('D1'); await expect(chips).toContainText('+ 13 masa daha (son: D25)');
+  await form.getByLabel(/^Bitiş saati/).fill('01:30');
+  // "(ertesi gün)" only when 01:30 is before the start (the start is now + 2 h, so after midnight it is the same day).
+  await expect(form.getByRole('region', { name: 'Ne zaman?' })).toContainText(`${start.time} – 01:30${'01:30' < start.time ? ' (ertesi gün)' : ''}`);
+  await form.getByLabel(/^Bitiş saati/).fill('');
+  // Own names: as many tables as names written, the count follows; a name written twice is refused before saving.
+  await form.getByRole('button', { name: 'Adları ben yazayım' }).click();
+  await form.getByLabel('Her satıra bir masa adı').fill('Sahne önü\nPencere 1\nsahne önü');
+  await expect(form).toContainText('“sahne önü” iki kez yazılmış');
+  await expect(form.getByRole('button', { name: 'Etkinliği oluştur' })).toBeDisabled();
+  await form.getByLabel('Her satıra bir masa adı').fill('Sahne önü\nPencere 1\nPencere 2');
+  await expect(form.locator('.step-fixed strong')).toHaveText('3');
+  await expect(chips.getByRole('listitem')).toHaveText(['Sahne önü', 'Pencere 1', 'Pencere 2']);
+  await form.getByRole('button', { name: 'Numaralı (D1, D2…)' }).click();
+  await expect(form.getByLabel(/Geçici masa sayısı/)).toHaveValue('25');
+  await form.getByLabel('Etkinlik sürerken yalnız etkinlik masalarını göster').check();
+  const sizes = await form.locator('input:not([type=checkbox]), textarea').evaluateAll(els => els.map(e => parseFloat(getComputedStyle(e).fontSize)));
   for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
+  // No sliding boxes: the fields of one row start and end on the same line, at every width, with no side scroll.
+  for (const [width, height] of VIEWPORTS) {
+    await page.setViewportSize({ width, height });
+    const rows = await form.locator('.step-row').evaluateAll(list => list.map(row => { const boxes = [...row.querySelectorAll('input:not([type=checkbox]), select, .step-fixed strong')].map(e => e.getBoundingClientRect()); const sameLine = boxes.filter(b => Math.abs(b.top - boxes[0].top) < 40); return sameLine.every(b => Math.abs(b.bottom - sameLine[0].bottom) <= 1); }));
+    expect(rows.every(Boolean), `fields line up at ${width}`).toBe(true);
+    expect(await noSideScroll(page), `no side scroll at ${width}`).toBe(true);
+  }
+  await page.setViewportSize({ width: 1280, height: 1400 });
   await shot(page, 'etkinlik-olustur.png', info.outputPath('etkinlik-olustur.png'), false);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await shot(page, 'etkinlik-olustur-telefon.png', info.outputPath('etkinlik-olustur-telefon.png'), false);
+  await page.setViewportSize({ width: 1280, height: 860 });
   await form.getByRole('button', { name: 'Etkinliği oluştur' }).click();
   const event = page.getByRole('article', { name: 'Elazığspor derbisi' });
   await expect(event.locator('.event-tables li')).toHaveCount(25);

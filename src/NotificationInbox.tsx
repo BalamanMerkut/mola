@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BellRing, CheckCheck, FileChartColumn, HardDrive, Inbox, Package, RotateCcw, ShieldAlert, Store } from 'lucide-react';
-import { Banknote, Tag } from 'lucide-react';
+import { Banknote, Printer, Tag } from 'lucide-react';
 import { api } from './api';
 import { Notice } from './components';
 import { notificationsChanged } from './notificationCount';
@@ -9,7 +9,7 @@ import { goTo } from './navigate';
 import { notificationActionOf as actionOf, type NotificationItem as Item } from './notificationActions';
 
 // 'report': a period report (gün sonu, hafta, ay, yıl; also e-mailed when set up); 'demo': a "Tanıtım" business was reset.
-const icons = { reminder: BellRing, license: ShieldAlert, backup: HardDrive, merkez: Store, stock: Package, cash: Banknote, expense: Banknote, report: FileChartColumn, demo: RotateCcw, campaign: Tag };
+const icons = { reminder: BellRing, license: ShieldAlert, backup: HardDrive, merkez: Store, stock: Package, cash: Banknote, expense: Banknote, report: FileChartColumn, demo: RotateCcw, campaign: Tag, printer: Printer };
 const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
 /**

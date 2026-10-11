@@ -30,7 +30,7 @@ test('"Tatlılarda %10" in one tap: a dessert added afterwards is discounted for
   await page.screenshot({ path: info.outputPath('category-campaign-editor-mobile.png') });
   await dialog.getByRole('button', { name: 'Kampanyayı kaydet', exact: true }).click();
   const card = page.locator('.campaign-card').filter({ hasText: 'Tatlılarda %10 indirim' });
-  await expect(card).toContainText('Aktif · Bölüm: Tatlılar · 2 ürün · Süresiz');
+  await expect(card.locator('.campaign-state')).toHaveText('Aktif'); await expect(card).toContainText('Bölüm: Tatlılar · 2 ürün ·'); await expect(card).toContainText('Süresiz');
   const saved = (await (await page.request.get('/api/staff/campaigns')).json()).campaigns.find((c: any) => c.name === 'Tatlılarda %10 indirim');
   expect(saved.categories).toEqual(['Tatlılar']); expect(saved.productIds).toEqual([]);
 

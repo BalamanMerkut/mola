@@ -21,6 +21,7 @@ import { LEDGER_MAX_LIMIT, LEDGER_PAGE, paymentDetail } from '../packages/domain
 import { drainSlowly, readyFor } from './history.js';
 import { cleanPhotos, restorePhotos, trashBatches } from './photo-trash.js';
 import { floorTables } from '../packages/domain/takeaway.js';
+import { cleanArea, sameArea } from '../packages/domain/table-sections.js';
 import { sectorHeroes, sectorOf, sectors } from '../packages/domain/sector.js';
 import { loadSectorMenu, untouchedStarterMenu } from './sector-templates.js';
 
@@ -100,9 +101,48 @@ export function managementRoutes(app: Express, store: Store, actorFor: (req: Req
       if ((s.businessRevision ?? 0) !== b.version) throw new DomainError('VERSION_CONFLICT', 'Masa düzeni değişti. Yenileyip tekrar deneyin.', 409);
       const table = floorTables(s).find(t => t.id === b.tableId);
       if (!table) throw new DomainError('NOT_FOUND', 'Masa bulunamadı.', 404);
-      table.area = b.area ?? undefined; s.businessRevision = b.version + 1;
+      // "üst kat" typed again is the existing "Üst kat", not a second section.
+      const known = [...new Set(floorTables(s).map(t => t.area ?? '').filter(Boolean))];
+      table.area = b.area ? sameArea(known, b.area) ?? b.area.replace(/\s+/g, ' ') : undefined; s.businessRevision = b.version + 1;
       s.audit.push({ actor: a.id, action: 'table.area_changed', target: table.id, at: now().toISOString() });
       return { ok: true };
+    })));
+  });
+  // Ayarlar → Masalar ve QR (11 Ekim): the order of the tables and of their sections, as the owner arranged them
+  // (packages/domain/table-sections.ts). Every floor table once; masasız tickets and event tables keep their place.
+  app.post('/api/staff/tables/layout', (req, res) => {
+    const a = tableEditor(req), b = z.object({ requestId: z.string(), version: z.number().int(), tables: z.array(z.string().min(1).max(100)).max(100), areas: z.array(z.string().max(40)).max(101) }).parse(req.body);
+    res.json(store.mutate(a.tenantId, s => once(s, a, 'table-layout', b.requestId, b, () => {
+      if ((s.businessRevision ?? 0) !== b.version) throw new DomainError('VERSION_CONFLICT', 'Masa düzeni değişti. Yenileyip tekrar deneyin.', 409);
+      const floor = floorTables(s), byId = new Map(floor.map(t => [t.id, t]));
+      if (b.tables.length !== floor.length || new Set(b.tables).size !== floor.length || b.tables.some(id => !byId.has(id))) throw new DomainError('VERSION_CONFLICT', 'Masa düzeni değişti. Yenileyip tekrar deneyin.', 409);
+      const used = new Set(floor.map(t => t.area ?? ''));
+      if (b.areas.some(x => !used.has(x)) || new Set(b.areas).size !== b.areas.length) throw new DomainError('VERSION_CONFLICT', 'Bölümler değişti. Yenileyip tekrar deneyin.', 409);
+      s.tables = [...b.tables.map(id => byId.get(id)!), ...s.tables.filter(t => !byId.has(t.id))];
+      if (b.areas.length) s.areaOrder = b.areas; else delete s.areaOrder;
+      s.businessRevision = b.version + 1;
+      s.audit.push({ actor: a.id, action: 'table.layout_changed', target: `${floor.length}`, at: now().toISOString() });
+      return { ok: true };
+    })));
+  });
+  // A section's new name for all its tables (İç → "Salon", "Bahçe" → "Teras"); a name another section has joins them.
+  // Garson ataması and the section order follow the new name.
+  app.post('/api/staff/tables/area-rename', (req, res) => {
+    const a = tableEditor(req), b = z.object({ requestId: z.string(), version: z.number().int(), from: z.string().trim().min(1).max(40), to: z.string().max(80) }).parse(req.body);
+    res.json(store.mutate(a.tenantId, s => once(s, a, 'table-area-rename', b.requestId, b, () => {
+      if ((s.businessRevision ?? 0) !== b.version) throw new DomainError('VERSION_CONFLICT', 'Masa düzeni değişti. Yenileyip tekrar deneyin.', 409);
+      const floor = floorTables(s), areas = [...new Set(floor.map(t => t.area ?? '').filter(Boolean))];
+      if (!areas.includes(b.from)) throw new DomainError('NOT_FOUND', 'Bölüm bulunamadı. Yenileyip tekrar deneyin.', 404);
+      const typed = cleanArea(b.to);
+      if (!typed) throw new DomainError('INVALID_AREA', '1–40 karakter arasında bir bölüm adı yazın.');
+      const to = sameArea(areas, typed) ?? typed;
+      if (to === b.from) throw new DomainError('NO_CHANGE', 'Bölümün adı zaten bu.');
+      for (const t of floor) if (t.area === b.from) t.area = to;
+      for (const w of Object.values(s.waiterAssignments?.waiters ?? {})) if (w.areas?.includes(b.from)) w.areas = [...new Set(w.areas.map(x => x === b.from ? to : x))];
+      if (s.areaOrder) s.areaOrder = [...new Set(s.areaOrder.map(x => x === b.from ? to : x))];
+      s.businessRevision = b.version + 1;
+      s.audit.push({ actor: a.id, action: 'table.area_renamed', target: `${b.from}->${to}`, at: now().toISOString() });
+      return { area: to, joined: areas.includes(to) };
     })));
   });
   app.post('/api/staff/tables/remove', (req, res) => {

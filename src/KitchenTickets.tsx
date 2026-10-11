@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check, Printer } from 'lucide-react';
 import type { PublicOrder, StaffSnapshot } from '../packages/domain/types';
 import { canHandOver, openProblems, ticketMode } from './printAlerts';
-import { causeText, type PrintProblem } from '../packages/domain/print-problems';
+import { causeAdvice, problemText, type PrintProblem } from '../packages/domain/print-problems';
 import { takeawayHeading } from '../packages/domain/takeaway';
 import { amountLabel } from '../packages/domain/lines';
 import { api, requestId } from './api';
@@ -11,7 +11,7 @@ import './kitchen-tickets.css';
 /*
  * Mutfak fişi modu (Ayarlar → Sipariş ve mutfak → Mutfak → "Mutfak nasıl çalışıyor?" → Fiş): the kitchen works from printed tickets.
  * - KitchenModeCard (src/KitchenModeCard.tsx): the owner's choice, Ekran / Fiş, with an example of each.
- * - PrintAlerts: the red "Masa 5 siparişi mutfağa basılamadı — Kâğıt bitti" warning on the counter and the waiters' phones,
+ * - PrintAlerts: the red "Masa 5 siparişi mutfağa basılamadı — Yazıcıda kâğıt yok · Mutfak" warning on the counter and the waiters' phones,
  *   with Tekrar bas / Elle iletildi; it stays until someone handles it (server/printing.ts). Tek mutfak: there is one
  *   kitchen printer, so no "Başka yazıcıya bas".
  * - DeliverOrder / DeliverAll: "Teslim edildi" on the table window (no kitchen says "Hazır" in this mode).
@@ -32,8 +32,8 @@ function ProblemCard({ order, problem, data, onDone, onError }: { order: PublicO
   return <article className="print-alert" aria-label={`${where} siparişi mutfağa basılamadı`}>
     <Printer size={20} aria-hidden="true" className="print-alert-icon" />
     <div className="print-alert-body">
-      <p className="print-alert-title"><strong>{where} siparişi mutfağa basılamadı</strong> — {causeText(problem.cause)}</p>
-      <p className="print-alert-items">#{order.number} · {order.lines.map(l => `${amountLabel(l)} ${l.name}`).join(', ')}</p>
+      <p className="print-alert-title"><strong>{where} siparişi mutfağa basılamadı</strong> — {problemText(problem.cause, problem.printer)}</p>
+      <p className="print-alert-items">#{order.number} · {order.lines.map(l => `${amountLabel(l)} ${l.name}`).join(', ')}</p>{problem.cause !== 'no_printer' && <p className="print-alert-items">{causeAdvice(problem.cause)}</p>}
       <div className="print-alert-actions">
         {kitchen && <button type="button" className="btn primary small-btn" disabled={!!busy} onClick={() => void run('retry', '/api/staff/print/kitchen', kitchen.id === problem.printerId ? body : { ...body, to: kitchen.id }, `${where} siparişi mutfağa basıldı.`)}>{busy === 'retry' ? 'Basılıyor…' : 'Tekrar bas'}</button>}
         <button type="button" className="btn secondary small-btn" disabled={!!busy} title="Siparişi mutfağa kendiniz ilettiniz: uyarı kapanır, kimin kapattığı kayda geçer." onClick={() => void run('manual', '/api/staff/print/handled', body, `${where} siparişi elle iletildi olarak işaretlendi.`)}>Elle iletildi</button>

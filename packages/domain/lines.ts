@@ -31,6 +31,8 @@ export function formatWeight(grams: number, en = false) {
 }
 /** What staff read before the product name: "500 g" for weighed lines, the piece count otherwise. */
 export const amountLabel = (line: Pick<CartLine, 'quantity' | 'grams'>, en = false) => line.grams ? formatWeight(line.grams, en) : String(line.quantity);
+/** "1 x Kola", "500 g Baklava (Fıstıklı)": one side of a waiter's line change, for the DEĞİŞİKLİK slip and the kitchen card. */
+export const changeSideText = (c: import('./types.js').ChangeSide) => `${c.grams ? `${formatWeight(c.grams)} ${c.name}` : `${c.quantity} x ${c.name}`}${c.optionNames.length ? ` (${c.optionNames.join(', ')})` : ''}`;
 
 /**
  * The option a required group starts with: the one without a price difference ("Standart"), so a cheaper size is never

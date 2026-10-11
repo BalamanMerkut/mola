@@ -1,12 +1,13 @@
 import { saleProducts, discountedPrice, productQuantity, repriceSavedLine, campaignUsage, campaignQuantities } from './campaigns.js';
-import { readCancelReason, readNote, repriceWeightLine, soldByWeight, validGrams, weightBase, weightOffers, withNote } from './lines.js';
+import { changeSideText, readCancelReason, readNote, repriceWeightLine, soldByWeight, validGrams, weightBase, weightOffers, withNote } from './lines.js';
+import { changeBlock, readyBlock, readyMade } from './order-change.js';
 import { isTakeaway, takeawayDay, takeawayLabel, takeawayName } from './takeaway.js';
 import { depositCredit } from './reservations.js';
 import { commissionOf } from './commission.js';
 import { selectionKey } from './stock.js';
 import { productVat, vatSettings, type VatSettings } from './vat.js';
 import { createHash, randomUUID } from 'node:crypto';
-import type { Account, Actor, CafeTable, CartLine, Context, Order, OrderLine, OrderStatus, Product, State, StockQuestion } from './types.js';
+import type { Account, Actor, CafeTable, CartLine, ChangeSide, Context, Order, OrderLine, OrderStatus, Product, State, StockQuestion } from './types.js';
 
 export class DomainError extends Error {
   constructor(public code: string, message: string, public status = 400) { super(message); }
@@ -227,6 +228,33 @@ export function undoStatus(s: State, actor: Actor, input: { requestId: string; o
     return { status: to, version: o.version };
   });
 }
+/**
+ * An order's lines after an edit (the guest's editOrder, the waiter's changeByStaff): a line that keeps its product and
+ * options keeps its saved price (quantity offers counted again, a weighed line repriced from its saved per-kg price; the
+ * note is just text); a new product or other options are priced from today's menu.
+ */
+function relined(s: State, o: Order, input: (CartLine & { existingId?: string })[], ctx: Context): OrderLine[] {
+  const seen = new Set<string>();
+  for (const line of input) assertInt(line.quantity, 1, 20);
+  const selectionKey = (l: CartLine) => JSON.stringify(l.selections.map(x => [x.groupId, x.optionId]).sort());
+  return input.map(l => {
+    assertInt(l.quantity, 1, 20);
+    const previous = l.existingId ? o.lines.find(p => p.id === l.existingId) : undefined;
+    if (l.existingId && (!previous || seen.has(l.existingId))) throw new DomainError('INVALID_LINE', 'Sipariş kalemi geçersiz.');
+    if (l.existingId) seen.add(l.existingId);
+    if (previous && previous.productId === l.productId && selectionKey(previous) === selectionKey(l) && (previous.grams === undefined) === (l.grams === undefined)) {
+      const available = s.products.some(p => p.id === l.productId && p.published !== false && !p.soldOut), note = lineNote(l.note);
+      if (previous.grams !== undefined) {
+        if (!validGrams(l.grams) || l.quantity !== 1) throw new DomainError('INVALID_WEIGHT', 'Ağırlığı 50 g ile 20 kg arasında, 50 g adımlarla seçin.');
+        if (l.grams > previous.grams && !available) throw new DomainError('ITEM_UNAVAILABLE', 'Tükenen ürünün miktarı artırılamaz.', 409);
+        return withNote(repriceWeightLine(structuredClone(previous), l.grams), note);
+      }
+      if (l.quantity > previous.quantity && !available) throw new DomainError('ITEM_UNAVAILABLE', 'Tükenen ürünün adedi artırılamaz.', 409);
+      return withNote(repriceSavedLine(structuredClone(previous), l.quantity, productQuantity(input, l.productId)), note);
+    }
+    return quote(saleProducts(s, ctx.now), [{ productId: l.productId, quantity: l.quantity, selections: l.selections, note: l.note, grams: l.grams }], ctx, input, vatSettings(s))[0];
+  });
+}
 export function editOrder(s: State, actor: Actor, input: { requestId: string; orderId: string; version: number; expectedTotal: number; packed?: boolean; lines: (CartLine & { existingId?: string })[] }, ctx: Context) {
   requireRole(s, actor, ['guest']);
   return once(s, actor, 'edit-order', input.requestId, input, () => {
@@ -242,27 +270,7 @@ export function editOrder(s: State, actor: Actor, input: { requestId: string; or
     if (!input.lines.length || input.lines.length > 30) throw new DomainError('INVALID_CART', 'En az bir ürün bırakın. Tamamı için siparişi iptal edin.');
     // Inside the edit window the guest may also change "Paketlensin"; the kitchen sees it as an ordinary edit.
     const packed = packedChoice(input.packed);
-    const seen = new Set<string>();
-    for (const line of input.lines) assertInt(line.quantity, 1, 20);
-    const selectionKey = (l: CartLine) => JSON.stringify(l.selections.map(x => [x.groupId, x.optionId]).sort());
-    const lines = input.lines.map(l => {
-      assertInt(l.quantity, 1, 20);
-      const previous = l.existingId ? o.lines.find(p => p.id === l.existingId) : undefined;
-      if (l.existingId && (!previous || seen.has(l.existingId))) throw new DomainError('INVALID_LINE', 'Sipariş kalemi geçersiz.');
-      if (l.existingId) seen.add(l.existingId);
-      // Same product and options keep the saved price; the note is just text and may change freely.
-      if (previous && previous.productId === l.productId && selectionKey(previous) === selectionKey(l) && (previous.grams === undefined) === (l.grams === undefined)) {
-        const available = s.products.some(p => p.id === l.productId && p.published !== false && !p.soldOut), note = lineNote(l.note);
-        if (previous.grams !== undefined) {
-          if (!validGrams(l.grams) || l.quantity !== 1) throw new DomainError('INVALID_WEIGHT', 'Ağırlığı 50 g ile 20 kg arasında, 50 g adımlarla seçin.');
-          if (l.grams > previous.grams && !available) throw new DomainError('ITEM_UNAVAILABLE', 'Tükenen ürünün miktarı artırılamaz.', 409);
-          return withNote(repriceWeightLine(structuredClone(previous), l.grams), note);
-        }
-        if (l.quantity > previous.quantity && !available) throw new DomainError('ITEM_UNAVAILABLE', 'Tükenen ürünün adedi artırılamaz.', 409);
-        return withNote(repriceSavedLine(structuredClone(previous), l.quantity, productQuantity(input.lines, l.productId)), note);
-      }
-      return quote(saleProducts(s, ctx.now), [{ productId: l.productId, quantity: l.quantity, selections: l.selections, note: l.note, grams: l.grams }], ctx, input.lines, vatSettings(s))[0];
-    });
+    const lines = relined(s, o, input.lines, ctx);
     checkCampaignLimits(s, lines, o.id);
     const total = lines.reduce((n, l) => n + l.total, 0);
     if (total !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Güncel toplamı kontrol edip tekrar deneyin.', 409);
@@ -392,6 +400,50 @@ export function cancelByStaff(s: State, actor: Actor, input: { requestId: string
     const after = balances(s, a.id), waitForService = s.orders.some(v => v.accountId === a.id && v.paymentBeforePreparation && !['served', 'cancelled'].includes(v.status));
     if (after.paid > 0 && after.balance === 0 && !waitForService) closePaidAccount(s, a, ctx);
     return { cancelled: whole ? 'order' as const : 'items' as const, total: whole ? 0 : o.total, closed: a.status === 'closed', ...(stockQuestion ? { stockQuestion } : {}), ...(refused.length ? { refused: refused.map(({ code: _, ...r }) => r) } : {}) };
+  });
+}
+/**
+ * Garson siparişi değiştirir (order-change.ts): one line becomes another product, quantity, options or note, while the
+ * kitchen has not started it and nothing of the order is paid. The price difference is the bill's (a new product is priced
+ * from today's menu, a kept one keeps its saved price); a bill that took money as an amount may not drop below it. The
+ * change is kept on the order (`changes`) for the kitchen card ("Değişti: Kola → Ayran") and, when the order already
+ * printed, owes a DEĞİŞİKLİK slip to those printers.
+ */
+export function changeByStaff(s: State, actor: Actor, input: { requestId: string; orderId: string; version: number; lineId: string; line: CartLine; expectedTotal: number }, ctx: Context) {
+  requireRole(s, actor, ['owner', 'manager', 'waiter']);
+  return once(s, actor, 'staff-change', input.requestId, input, () => {
+    const o = s.orders.find(o => o.id === input.orderId);
+    if (!o) throw new DomainError('NOT_FOUND', 'Sipariş bulunamadı.', 404);
+    if (s.accounts.find(x => x.id === o.accountId)?.status !== 'open') throw new DomainError('ACCOUNT_CLOSED', 'Bu siparişin hesabı kapandı; artık değiştirilemez.', 409);
+    const a = activeAccount(s, o.accountId);
+    if (o.version !== input.version) throw new DomainError('VERSION_CONFLICT', 'Sipariş başka bir ekranda değişti. Pencereyi kapatıp yeniden açın.', 409);
+    const old = o.lines.find(l => l.id === input.lineId);
+    if (!old) throw new DomainError('INVALID_LINE', 'Sipariş ürünleri değişti. Pencereyi yeniden açın.', 409);
+    const paid = { ...o, paidQuantities: Object.fromEntries(paidQuantities(s, o)) }, block = changeBlock(paid, s.kitchenMode === 'ticket');
+    // Hazır ürün (kutu kola ↔ ayran): any time until it is paid, without the kitchen, when the new product is ready-made too.
+    const product = (id: string) => s.products.find(p => p.id === id);
+    const ready = !!block && readyMade(product(old.productId)) && readyMade(product(input.line.productId));
+    if (block && !ready) throw new DomainError('CHANGE_CLOSED', readyMade(product(old.productId)) ? 'Mutfak başladı: hazır ürün yalnız başka bir hazır ürünle (kola, ayran, su…) değiştirilebilir; hazırlanacak ürün için yeni sipariş girin.' : block, 409);
+    const readyStop = ready ? readyBlock(paid, old.id) : null;
+    if (readyStop) throw new DomainError('CHANGE_CLOSED', readyStop, 409);
+    const keep = (l: OrderLine) => ({ productId: l.productId, quantity: l.quantity, selections: l.selections, ...(l.note ? { note: l.note } : {}), ...(l.grams !== undefined ? { grams: l.grams } : {}), existingId: l.id });
+    const lines = relined(s, o, o.lines.map(l => l.id === old.id ? { productId: input.line.productId, quantity: input.line.quantity, selections: input.line.selections, note: input.line.note, grams: input.line.grams, existingId: old.id } : keep(l)), ctx);
+    const fresh = lines[o.lines.indexOf(old)];
+    const side = (l: OrderLine): ChangeSide => ({ name: l.name, quantity: l.quantity, ...(l.grams !== undefined ? { grams: l.grams } : {}), optionNames: [...l.optionNames], ...(l.note ? { note: l.note } : {}) });
+    if (JSON.stringify(side(old)) === JSON.stringify(side(fresh))) throw new DomainError('NO_CHANGE', 'Bir değişiklik yapmadınız.');
+    checkCampaignLimits(s, lines, o.id);
+    const total = lines.reduce((n, l) => n + l.total, 0);
+    if (total !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Güncel tutarı kontrol edip tekrar deneyin.', 409);
+    const before = balances(s, a.id);
+    if (before.total - o.total + total < before.paid) throw new DomainError('PAID_ITEMS', 'Bu hesaba tutar olarak ödeme alındı; değişiklikle hesap ödenenin altına düşer. Önce işletme sahibi iadeyi yapmalı.', 409);
+    if ((o.changes?.length ?? 0) >= 30) throw new DomainError('TOO_MANY_CHANGES', 'Bu sipariş çok kez değişti. Ürünü iptal edip yeni sipariş girin.', 409);
+    const at = ctx.now.toISOString();
+    // A ready-made swap never involves the kitchen: no DEĞİŞİKLİK slip, no kitchen note.
+    const slip = !ready && !!o.printedTo?.length, delta = total - o.total;
+    o.changes = [...(o.changes ?? []), { id: ctx.id(), at, by: actor.id, from: side(old), to: side(fresh), ...(slip ? { printTo: [...o.printedTo!] } : {}), ...(ready ? { ready: true } : {}), ...(delta ? { delta } : {}) }];
+    o.lines = lines; o.total = total; o.version++; a.version++;
+    s.audit.push({ action: ready ? 'order.ready_item_changed' : 'order.line_changed', actor: actor.id, target: `${o.id}:${old.name}->${fresh.name}:${delta}`, at });
+    return { orderId: o.id, number: o.number, version: o.version, total, delta, from: changeSideText(side(old)), to: changeSideText(side(fresh)), slip, ready };
   });
 }
 /** What stays on the order after `cut`: remaining items keep their saved price; quantity offers ("4 al 3 öde") are counted again on what is left, like a guest edit. */

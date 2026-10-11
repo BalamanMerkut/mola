@@ -227,7 +227,7 @@ export class SupportDesk {
       role: 'support', username: SUPPORT_ID, displayName: SUPPORT_NAME, name: s.name, logo: s.logo, theme: s.theme, menuHero: s.menuHero, googleReviewUrl: s.googleReviewUrl, socialLinks: socialLinksOf(s), sector: sectorOf(s),
       // Campaign prices are left out (their sold counts would show); the menu screens price from the product itself.
       products: s.products.map(p => ({ ...p, discounts: [] })), productDrafts: s.productDrafts ?? [], categories: menuCategories(s), subcategories: menuSubcategories(s), categoryNamesEn: menuNamesEn(s),
-      tables: floorTables(s).map(t => ({ ...t, accountId: null, needsCleaning: false, account: null })), takeaways: [], orders: [], popularProductIds: [], newProductIds: newProductIds(s.products, now),
+      tables: floorTables(s).map(t => ({ ...t, accountId: null, needsCleaning: false, account: null })), ...(s.areaOrder?.length ? { areaOrder: s.areaOrder } : {}), takeaways: [], orders: [], popularProductIds: [], newProductIds: newProductIds(s.products, now),
       revision: s.menuRevision, businessRevision: s.businessRevision, setupCompleted: s.setupCompleted, changeSeconds: s.changeSeconds, commissionBps: null, paymentMode: s.paymentMode ?? 'after_service',
       cleaningEnabled: !!s.cleaningEnabled, waiterApproval: !!s.waiterApproval, autoApproveQr: !!s.autoApproveQr, approvalVersion: s.approvalVersion ?? 0, printing: { orders: printers.some(p => p.orders), bill: printers.some(p => p.bill) },
       ...(l ? { supportConnected: { since: new Date(l.startedAt).toISOString() } } : {}),
@@ -260,6 +260,8 @@ export function describe(path: string, b: Record<string, any>, before: State, af
     case '/api/staff/campaigns': return `Kampanya ${b.campaign?.id ? 'düzenlendi' : 'eklendi'}: ${b.campaign?.name ?? ''}.`;
     case '/api/staff/tables/add': return `Masa eklendi: ${a.name ?? ''}.`;
     case '/api/staff/tables/area': { const t = before.tables.find(x => x.id === b.tableId); return `Masa bölümü değişti${t ? `: ${t.name}` : ''}.`; }
+    case '/api/staff/tables/layout': return 'Masaların ve bölümlerin sırası değişti.';
+    case '/api/staff/tables/area-rename': return `Bölüm adı değişti: ${b.from} → ${a.area ?? b.to}.`;
     case '/api/staff/tables/remove': return `Masa çıkarıldı: ${a.name ?? ''}.`;
     case '/api/staff/tables/renew-qr': return `QR kodu yenilendi: ${a.tableName ?? ''}. Eski QR artık açılmaz; yenisini yazdırın.`;
     case '/api/staff/qr-printed': return 'Masa QR kodları yazdırıldı ya da indirildi.';

@@ -4,12 +4,16 @@ import { randomUUID } from 'node:crypto';
 import { DomainError, once, requireRole } from '../packages/domain/engine.js';
 import type { Actor } from '../packages/domain/types.js';
 import type { Store } from './store.js';
-import { campaignTimingError, campaignUsage, campaignViews, weightRuleMessage, type CampaignScope } from '../packages/domain/campaigns.js';
+import { campaignTimingError, campaignUsage, campaignViews, weightRuleMessage, type CampaignSchedule, type CampaignScope } from '../packages/domain/campaigns.js';
 import { soldByWeight } from '../packages/domain/lines.js';
 import { menuCategories } from '../packages/domain/categories.js';
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 // null clears a weekly schedule; leaving it out keeps the saved one, so an older open screen cannot drop it unseen.
-const schedule = z.object({ days: z.array(z.number().int().min(1).max(7)).min(1).max(7), from: hhmm.optional(), to: hhmm.optional() }).strict().nullable().optional();
+// Weekly (`days`) or monthly (`monthDay`, "her ayın 15. günü"; never both).
+const schedule = z.union([
+  z.object({ days: z.array(z.number().int().min(1).max(7)).min(1).max(7), from: hhmm.optional(), to: hhmm.optional() }).strict(),
+  z.object({ monthDay: z.number().int().min(1).max(31), from: hhmm.optional(), to: hhmm.optional() }).strict(),
+]).nullable().optional();
 const campaignBase = z.object({ schedule, maxQuantity: z.number().int().min(1).max(1_000_000).nullable().optional(), minQuantity: z.number().int().min(1).max(20).optional(), id: z.string().optional(), name: z.string().trim().min(2).max(80), productIds: z.array(z.string()).max(200), categories: z.array(z.string().max(80)).max(40).optional(), excludedProductIds: z.array(z.string()).max(200).optional(), startsAt: z.iso.datetime(), endsAt: z.iso.datetime().nullable(), enabled: z.boolean(), combine: z.boolean() });
 const campaignInput = z.union([
   campaignBase.extend({ kind: z.literal('percent').optional(), percent: z.number().int().min(1).max(90), amount: z.never().optional() }),
@@ -40,7 +44,8 @@ export function campaignRoutes(app: Express, store: Store, actor: (req: Request)
       if (!c.id && (s.campaigns?.length ?? 0) >= 100) throw new DomainError('LIMIT', 'En fazla 100 kampanya kaydı olabilir.');
       const at = now().toISOString(); const previous = s.campaigns?.find(v => v.id === c.id);
       const maxQuantity = c.maxQuantity === undefined ? previous?.maxQuantity : c.maxQuantity;
-      const weekly = c.schedule === undefined ? previous?.schedule : c.schedule ? { days: [...new Set(c.schedule.days)].sort((x, y) => x - y), ...(c.schedule.from ? { from: c.schedule.from } : {}), ...(c.schedule.to ? { to: c.schedule.to } : {}) } : undefined;
+      const window = c.schedule ? { ...(c.schedule.from ? { from: c.schedule.from } : {}), ...(c.schedule.to ? { to: c.schedule.to } : {}) } : {};
+      const weekly: CampaignSchedule | undefined = c.schedule === undefined ? previous?.schedule : !c.schedule ? undefined : 'monthDay' in c.schedule ? { monthDay: c.schedule.monthDay, ...window } : { days: [...new Set(c.schedule.days)].sort((x, y) => x - y), ...window };
       const timing = campaignTimingError({ startsAt: c.startsAt, endsAt: c.endsAt, schedule: weekly });
       if (timing) throw new DomainError('INVALID_SCHEDULE', timing);
       if (maxQuantity != null && maxQuantity < (c.minQuantity ?? 1)) throw new DomainError('INVALID_CAMPAIGN_LIMIT', 'Toplam adet sınırı, en az alım adedinden küçük olamaz.');
