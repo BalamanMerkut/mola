@@ -1,0 +1,58 @@
+/*
+ * Telefonda alt menü çubuğu (src/BottomNav.tsx). Up to 700 px wide the sidebar (a sliding top menu on phones until now)
+ * steps aside for a fixed bar at the bottom: four places and "Daha fazla" (a sheet with the rest). The bar keeps clear of
+ * the iPhone home indicator (safe area), and the page gets room at its bottom so nothing hides behind it. Wider screens
+ * do not show the bar at all.
+ */
+.bottom-nav,.bottom-sheet-layer,.topbar-business{display:none}
+@media(max-width:700px){
+  :root{--bottom-nav-h:calc(82px + env(safe-area-inset-bottom,0px))}
+  /* The shell: no sidebar, the business name in the slim top bar, room for the bar under the page. */
+  .workspace.has-bottom-nav{display:block}
+  .workspace.has-bottom-nav>.sidebar{display:none}
+  .workspace.has-bottom-nav>.main{margin-left:0;padding-bottom:var(--bottom-nav-h)}
+  .workspace.has-bottom-nav .main-content{padding-bottom:28px}
+  .workspace.has-bottom-nav .topbar{height:52px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));gap:10px}
+  .workspace.has-bottom-nav .topbar .breadcrumb{display:none}
+  .workspace.has-bottom-nav .topbar-business{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
+  .topbar-business .business-avatar{display:grid;flex:none;width:32px;height:32px;border-radius:9px;overflow:hidden}
+  .topbar-business .business-avatar img{width:32px!important;height:32px!important}
+  .topbar-business strong{font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .workspace.has-bottom-nav .topbar-right{flex:none;gap:10px}
+  .workspace.has-bottom-nav .connection{font-size:12px}
+  /* Floating things sit above the bar. */
+  .workspace.has-bottom-nav .toast{bottom:calc(var(--bottom-nav-h) + 12px);margin-bottom:0}
+  .workspace.has-bottom-nav .notification-banner{bottom:calc(var(--bottom-nav-h) + 12px)}
+  .workspace.has-bottom-nav .settings-profile .profile-save-bar.dirty{bottom:calc(var(--bottom-nav-h) + 10px)}
+
+  /* The bar. */
+  .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:stretch;gap:2px;padding:5px calc(6px + env(safe-area-inset-right,0px)) calc(5px + env(safe-area-inset-bottom,0px)) calc(6px + env(safe-area-inset-left,0px));background:#fffffff7;border-top:1px solid var(--line);box-shadow:0 -8px 22px -16px #1c2e2440;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .bottom-nav-item{position:relative;flex:1 1 auto;min-width:0;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin:0;padding:3px 1px;border:0;border-radius:12px;background:transparent;color:#677363;font:inherit;font-size:12px;font-weight:600;line-height:1.15;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .bottom-nav-icon{position:relative;display:grid;place-items:center;width:54px;max-width:100%;height:30px;border-radius:15px;transition:background .15s,color .15s}
+  .bottom-nav-label{display:block;max-width:100%;text-align:center;overflow-wrap:normal;word-break:normal;hyphens:none}
+  .bottom-nav-item.active{color:var(--green)}
+  .bottom-nav-item.active .bottom-nav-icon{background:var(--brand-soft,#e3eedd)}
+  .bottom-nav-item:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+  .bottom-nav-count{position:absolute;top:-5px;left:calc(50% + 4px);min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#c45a2c;color:#fff;font-size:11.5px;font-weight:700;line-height:19px;text-align:center;box-sizing:border-box;box-shadow:0 0 0 2px #fff}
+  .bottom-nav-dot{position:absolute;top:1px;left:calc(50% + 7px)}
+
+  /* "Daha fazla": a sheet from the bottom, over a dim layer; its own scroll if the list is long. */
+  .bottom-sheet-layer{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;background:#18261f66;animation:bottom-sheet-fade .15s ease-out}
+  .bottom-sheet{position:relative;width:100%;max-height:calc(100dvh - 56px);overflow-y:auto;overscroll-behavior:contain;padding:8px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px #12241b33;box-sizing:border-box;animation:bottom-sheet-up .2s ease-out}
+  .bottom-sheet-grip{display:block;width:40px;height:4px;margin:2px auto 6px;border-radius:2px;background:#d6ddd2}
+  .bottom-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 0 8px}
+  .bottom-sheet-head h2{margin:0;font-size:17px;font-weight:700;color:var(--ink)}
+  .bottom-sheet-head .icon-btn{width:44px;height:44px}
+  .bottom-sheet-list{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+  .bottom-sheet-list button{display:flex;align-items:center;gap:13px;width:100%;min-height:52px;padding:6px 8px;border:0;border-radius:12px;background:transparent;color:var(--ink);font:inherit;font-size:15.5px;font-weight:600;text-align:left;cursor:pointer}
+  .bottom-sheet-list button:hover,.bottom-sheet-list button:focus-visible{background:#f2f5ef}
+  .bottom-sheet-list button.active{background:var(--brand-soft,#e3eedd);color:var(--green)}
+  .bottom-sheet-icon{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#eef3ea;color:var(--green)}
+  .bottom-sheet-label{flex:1;min-width:0}
+  .bottom-sheet-list .nav-count{margin-left:0}
+  .bottom-sheet-chevron{flex:none;color:#a2ab9e}
+  .bottom-sheet-logout{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin:10px 0 0;border:1px solid #e6d3cc;border-radius:12px;background:#fff8f5;color:#9a4a3a;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+}
+@keyframes bottom-sheet-up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+@keyframes bottom-sheet-fade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.bottom-sheet,.bottom-sheet-layer{animation:none}.bottom-nav-icon{transition:none}}

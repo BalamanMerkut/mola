@@ -1,0 +1,47 @@
+/* "Taşındı → Git" signposts and place links (src/Moved.tsx). */
+.moved-sign{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:0 0 14px;padding:9px 12px;border:1px dashed #cfd8c9;border-radius:12px;background:#f7f9f4;color:#4f5c4b;font-size:13.5px;line-height:1.4}
+.moved-sign>svg{flex:none;color:var(--green)}
+.moved-sign>span{flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.moved-sign .text-btn,.place-link{display:inline-flex;align-items:center;gap:4px;min-height:32px}
+.moved-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.moved-list .moved-sign{margin:0}
+.moved-fold{margin-top:18px}
+.moved-fold>summary{cursor:pointer;color:#5d6a58;font-size:13.5px;font-weight:600;padding:8px 2px;list-style-position:inside}
+.moved-fold[open]>summary{margin-bottom:8px}
+.home-links{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:-4px 0 12px}
+/* The bell on the top bar (Bildirimler, owner). */
+.topbar-bell{position:relative;display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;flex:none}
+.topbar-bell:hover,.topbar-bell.active{background:var(--brand-soft,#e3eedd);color:var(--green)}
+/* 10 Ekim: unread ones turn the bell a soft coral with the ringing bell and the count ("9+" above nine); plain once all are read. */
+.topbar-bell.has-unread{background:#fdeceb;border-color:#f3c9c1;color:#b4412f}
+.topbar-bell.has-unread:hover,.topbar-bell.has-unread.active{background:#fbe1dd;color:#9f3624}
+.bell-count{position:absolute;top:-7px;right:-7px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#d9533f;color:#fff;font-size:11px;font-weight:700;line-height:19px;text-align:center;box-shadow:0 0 0 2px #fbfcf9}
+.bell-ring{transform-origin:50% 3px;animation:bell-ring .9s ease-in-out 1}
+@keyframes bell-ring{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}75%{transform:rotate(2deg)}}
+@media(prefers-reduced-motion:reduce){.bell-ring{animation:none}}
+/* Sidebar group labels (GÜNLÜK, İŞLETME) and the quiet line before the rarely used places. */
+.sidebar nav .nav-group-label{display:block;margin:8px 0 2px;padding:0 12px;font-size:9.5px;font-weight:700;letter-spacing:.1em;color:#8c9886}
+/* Grouped (owner, Müdür): a little tighter, so Ayarlar and Hesabım stay in view on a 768–850 px tall screen. */
+.sidebar nav.grouped button{padding-top:8px;padding-bottom:8px;min-height:38px}
+.sidebar nav .nav-group-label:first-child{margin-top:0}
+.sidebar nav .nav-group-rule{display:block;height:1px;margin:6px 12px;background:var(--line)}
+@media(max-width:700px){.topbar-bell{width:36px;height:36px}}
+/* The homes (src/Homes.tsx, src/HomeBooks.tsx): level 1 icon tabs, level 2 the quieter row, then the page. */
+.home{display:grid;gap:16px;min-width:0}
+.home>.pill-tabs-wrap,.home .home-parts-wrap{min-width:0}
+.home .home-parts-wrap{margin-top:-6px}
+.home .reports-workspace{min-width:0}
+.home-settings .settings-page{min-height:0;margin-inline:auto}
+.home-settings{min-width:0}
+.cash-today:empty{display:none}
+.campaign-card-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.report-period-actions{display:flex;flex-wrap:wrap;gap:8px}
+.report-owner-tools{margin-left:auto}
+.moved-panel h3{margin:0 0 6px}
+.moved-panel .moved-list{margin-top:12px}
+.support-license-line{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.vat-manage{display:inline-flex;margin-top:4px}
+.profit-limits-btn{margin-left:auto}
+.agenda-links{justify-content:flex-end;margin:0}
+.staff-tips-table td{text-align:right}
+@media(max-width:600px){.sidebar nav .nav-group-label,.sidebar nav .nav-group-rule{display:none}.report-owner-tools{margin-left:0}}

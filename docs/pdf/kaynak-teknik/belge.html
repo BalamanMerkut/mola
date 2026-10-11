@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mola Teknik Anlatım</title>
+<link rel="stylesheet" href="belge.css">
+</head>
+<body>
+
+<section class="kapak">
+  <div class="kapak-ust">
+    <div class="kapak-logo">
+      <svg viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="56" fill="#f3ebdd"/><g transform="translate(41.6 45.2) scale(7.2)" fill="none" stroke="#234c3e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/></g></svg>
+      <span>Mola</span>
+    </div>
+    <div class="kapak-etiket">Teknik anlatım</div>
+    <h1>Mola: bir adisyon ve QR menü sistemi nasıl çalışır</h1>
+    <p class="alt-baslik">Mimari, kullanılan diller ve araçlar, her işlevin arkasındaki algoritma, güvenlik modeli, testler ve yapay zekâ ile geliştirme deneyimi.</p>
+    <dl class="kapak-bilgi">
+      <dt>Hazırlayan</dt><dd>Emirhan İspir, Merkut Studios (bilgisayar programcılığı öğrencisi)</dd>
+      <dt>Kime</dt><dd>Yapay zekâ ve web tasarımı derslerindeki hocalarım</dd>
+      <dt>Tarih ve sürüm</dt><dd>7 Ekim 2026 · Mola 0.1.0</dd>
+      <dt>Kapsam</dt><dd>Ayrıntılı ama sade anlatım; kod yolları dipnot gibi verilmiştir</dd>
+    </dl>
+    <p class="kapak-not">Bu belgedeki her teknik bilgi projenin kaynak koduyla karşılaştırılarak yazıldı; dosya ve klasör adları verildi. Gerçek cihazda ya da gerçek sunucuda henüz denenmemiş konular "Doğrulanmadı" diye işaretlidir.</p>
+  </div>
+  <div class="kapak-alt">
+    <img src="../../../brand/merkut-studios/merkut-studios-logo.jpg" alt="Merkut Studios">
+    <div class="imza">Merkut Studios<br>Elazığ<br>molayazilim.com.tr</div>
+  </div>
+</section>
+
+<section class="icindekiler">
+  <h1 data-toc="no" style="break-before:auto">İçindekiler</h1>
+  <ol id="icindekiler-liste"></ol>
+</section>
+
+<main>
+
+<!-- ============================================================ 1 -->
+<h1 id="t1"><span class="no">1</span>Mola nedir?</h1>
+<p class="giris">Mola, kafe, restoran, pastane ve çay bahçeleri için yazdığım bir adisyon (masa ve sipariş takibi) ve QR menü sistemidir. Misafir masadaki QR kodu telefonuyla okutur, menüyü görür, sipariş verir, garson çağırır ve hesap ister. Garson, kasiyer, mutfak, müdür ve işletme sahibi aynı sistemi tablet, telefon ya da kasa bilgisayarından kullanır.</p>
+<h2 id="t1-1">Çözmeye çalıştığı sorunlar</h2>
+<ul>
+  <li><strong>İnternet kesilince iş durmamalı.</strong> Bu yüzden sistem bulutta değil, işletmenin kendi kasa bilgisayarında çalışır. Tabletler ona kafenin Wi-Fi'si üzerinden bağlanır.</li>
+  <li><strong>İşletmenin verisi işletmede kalmalı.</strong> Satışlar, misafir ve çalışan bilgileri yalnız işletmenin bilgisayarında, şifreli olarak durur. Bunun hem güvenlik hem de kişisel verilerin korunması (KVKK) açısından anlamı var.</li>
+  <li><strong>Yine de uzaktan hizmet verilebilmeli.</strong> Lisans, destek, güncelleme, sahibin telefonundan raporlar ve misafirin mobil veriyle menü açabilmesi için satıcı tarafında bir sunucu (Mola Merkez) var. Bu sunucu satış verisini görmeyecek şekilde tasarlandı.</li>
+  <li><strong>Ucuz bir kafe bilgisayarında 5 yıl hızlı çalışmalı.</strong> Bunun için ayrı bir yük testi yapıldı (bölüm 21).</li>
+</ul>
+<h2 id="t1-2">Rakamlarla proje</h2>
+<div class="sayilar">
+  <div><b>≈ 100.000</b><span>satır; bunun ≈ 36.000'i test kodu</span></div>
+  <div><b>744</b><span>birim testi (159 dosya)</span></div>
+  <div><b>241</b><span>tarayıcı testi (111 dosya)</span></div>
+  <div><b>5 rol</b><span>sahip, müdür, kasiyer, garson, mutfak</span></div>
+</div>
+<table class="dar">
+  <thead><tr><th>Alan</th><th>Klasör</th><th>Dosya</th><th>Satır</th></tr></thead>
+  <tbody>
+    <tr><td>Kafe sunucusu</td><td><code>server/</code></td><td>109</td><td>17.286</td></tr>
+    <tr><td>Mola Merkez sunucusu</td><td><code>server/merkez/</code></td><td>31</td><td>6.878</td></tr>
+    <tr><td>Ortak iş kuralları</td><td><code>packages/domain/</code></td><td>64</td><td>6.599</td></tr>
+    <tr><td>Ekranlar (React, TypeScript)</td><td><code>src/</code></td><td>215</td><td>17.458</td></tr>
+    <tr><td>Stiller (CSS)</td><td><code>src/</code></td><td>67</td><td>5.563</td></tr>
+    <tr><td>Testler</td><td><code>tests/</code></td><td>274</td><td>35.822</td></tr>
+    <tr><td>Betikler, kurulum programı (C#)</td><td><code>scripts/</code></td><td>55</td><td>9.193</td></tr>
+    <tr><td>Android kabuğu (Java)</td><td><code>mobile/android/</code></td><td>6</td><td>1.943</td></tr>
+  </tbody>
+</table>
+<p class="tablo-not">Satırlar 7 Ekim 2026'da sayıldı (boş satırlar dahil, <code>node_modules</code> ve arşiv hariç). Test kodu ürün kodundan fazladır; bu bilinçli bir tercihtir (bölüm 21).</p>
+
+<h2 id="t1-3">Kimler kullanır</h2>
+<table class="dar bolunmez">
+  <thead><tr><th style="width:18%">Kullanıcı</th><th style="width:28%">Cihaz</th><th>Yaptıkları</th></tr></thead>
+  <tbody>
+    <tr><td>Misafir</td><td>Kendi telefonu (tarayıcı)</td><td>Menü, sepet, sipariş, garson çağırma, hesap isteme. Hesap açmaz.</td></tr>
+    <tr><td>Garson</td><td>Telefon (tarayıcı ya da Android uygulaması)</td><td>Sipariş alır, QR siparişini onaylar, servis eder, masayı temizler.</td></tr>
+    <tr><td>Mutfak</td><td>Tablet ya da fiş yazıcısı</td><td>Siparişi görür, "Hazırlanıyor" ve "Hazır" der; stok sayımı.</td></tr>
+    <tr><td>Kasiyer</td><td>Kasa bilgisayarı ya da tablet</td><td>Ödeme, iade (sınırlı), gün sonu kasa sayımı.</td></tr>
+    <tr><td>Müdür ve sahip</td><td>Kasa bilgisayarı, tablet, kendi telefonu</td><td>Menü, raporlar, stok, rezervasyon, ayarlar; sahip ayrıca uzaktan rapor ve uzaktan yönetim.</td></tr>
+    <tr><td>Satıcı (ben)</td><td>Mola Yönetim paneli</td><td>Lisans, paket, destek, güncelleme yayını, duyurular.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ 2 -->
+<h1 id="t2"><span class="no">2</span>Büyük resim: mimari</h1>
+<p class="giris">Sistem iki sunucu ve onlara bağlanan tarayıcılardan oluşur. İki sunucu da aynı kod deposundan, aynı dilde (TypeScript) yazıldı; farklı giriş noktalarıyla başlarlar (<code>server/index.ts</code> ve <code>server/merkez/index.ts</code>).</p>
+<figure id="sema-mimari">
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6b57"/></marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f3b5c"/></marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8661f"/></marker>
+  </defs>
+  <rect x="8" y="8" width="318" height="544" rx="10" fill="#e7efe9" stroke="#2f6b57" stroke-dasharray="5 4"/>
+  <text x="22" y="30" font-size="13.5" font-weight="700" fill="#234c3e">Kafe binası · yerel ağ (Wi-Fi)</text>
+  <rect x="22" y="44" width="290" height="226" rx="8" fill="#fff" stroke="#234c3e" stroke-width="1.6"/>
+  <text x="34" y="66" font-size="12.5" font-weight="700" fill="#234c3e">Kasa bilgisayarı (Windows 10/11)</text>
+  <rect x="34" y="76" width="266" height="34" rx="5" fill="#f3ebdd"/>
+  <text x="44" y="97" font-size="11">Mola.exe (C#) → Edge/Chrome uygulama penceresi</text>
+  <rect x="34" y="116" width="266" height="34" rx="5" fill="#f3ebdd"/>
+  <text x="44" y="137" font-size="11">Nöbetçi (nobetci.mjs): çökerse yeniden başlatır</text>
+  <rect x="34" y="156" width="266" height="64" rx="5" fill="#dfeae3"/>
+  <text x="44" y="175" font-size="11" font-weight="600">Node.js 24 · Express 5 kafe sunucusu</text>
+  <text x="44" y="192" font-size="10.5">API + derlenmiş React ekranları</text>
+  <text x="44" y="208" font-size="10.5">ESC/POS yazdırma, yedek, güncelleme ajanı</text>
+  <rect x="34" y="226" width="266" height="34" rx="5" fill="#fff" stroke="#2f6b57"/>
+  <text x="44" y="247" font-size="11">node:sqlite · merchant.sqlite (AES-256-GCM)</text>
+  <rect x="22" y="298" width="140" height="70" rx="8" fill="#fff" stroke="#2f6b57"/>
+  <text x="34" y="319" font-size="11.5" font-weight="600">Tabletler</text>
+  <text x="34" y="337" font-size="10.5">kasa, mutfak ekranı</text>
+  <text x="34" y="353" font-size="10.5">(tarayıcı, PWA)</text>
+  <rect x="172" y="298" width="140" height="70" rx="8" fill="#fff" stroke="#2f6b57"/>
+  <text x="184" y="319" font-size="11.5" font-weight="600">Garson telefonu</text>
+  <text x="184" y="337" font-size="10.5">Android APK (Java,</text>
+  <text x="184" y="353" font-size="10.5">WebView kabuğu)</text>
+  <line x1="92" y1="296" x2="92" y2="272" stroke="#2f6b57" stroke-width="1.6" marker-end="url(#a1)" marker-start="url(#a1)"/>
+  <line x1="242" y1="296" x2="242" y2="272" stroke="#2f6b57" stroke-width="1.6" marker-end="url(#a1)" marker-start="url(#a1)"/>
+  <text x="167" y="288" font-size="10" fill="#2f6b57" text-anchor="middle">HTTP, yerel ağ, 2 sn'de bir</text>
+  <rect x="22" y="390" width="140" height="56" rx="8" fill="#fff" stroke="#2f6b57"/>
+  <text x="34" y="412" font-size="11.5" font-weight="600">Fiş yazıcısı</text>
+  <text x="34" y="430" font-size="10.5">ağ (9100) ya da USB</text>
+  <rect x="172" y="390" width="140" height="56" rx="8" fill="#fff" stroke="#2f6b57"/>
+  <text x="184" y="412" font-size="11.5" font-weight="600">Flash bellek</text>
+  <text x="184" y="430" font-size="10.5">ikinci yedek yeri</text>
+  <rect x="22" y="466" width="290" height="72" rx="8" fill="#fff" stroke="#2f6b57"/>
+  <text x="34" y="488" font-size="11.5" font-weight="600">Kafenin e-posta hesabı (SMTP)</text>
+  <text x="34" y="506" font-size="10.5">gün/hafta/ay/yıl raporları PDF ekiyle,</text>
+  <text x="34" y="522" font-size="10.5">doğrudan sahibin posta kutusuna</text>
+
+  <rect x="340" y="8" width="84" height="544" rx="10" fill="#f6f7f4" stroke="#d5dbd8"/>
+  <text x="382" y="30" font-size="12.5" font-weight="700" fill="#5d6763" text-anchor="middle">İnternet</text>
+
+  <rect x="438" y="8" width="314" height="330" rx="10" fill="#e8eef6" stroke="#1f3b5c" stroke-dasharray="5 4"/>
+  <text x="452" y="30" font-size="13.5" font-weight="700" fill="#1f3b5c">VDS (Ubuntu LTS) · İstanbul hedefi</text>
+  <rect x="452" y="42" width="286" height="44" rx="6" fill="#fff" stroke="#1f3b5c"/>
+  <text x="464" y="61" font-size="11.5" font-weight="600">Caddy: HTTPS (Let's Encrypt), ters vekil</text>
+  <text x="464" y="77" font-size="10.5">molayazilim.com.tr · merkez.molayazilim.com.tr</text>
+  <rect x="452" y="96" width="286" height="176" rx="6" fill="#fff" stroke="#1f3b5c" stroke-width="1.6"/>
+  <text x="464" y="116" font-size="12" font-weight="700" fill="#1f3b5c">Mola Merkez (Node.js · Express 5)</text>
+  <text x="464" y="136" font-size="10.5">• Lisans imzalama (Ed25519), kalp atışı</text>
+  <text x="464" y="153" font-size="10.5">• Destek talepleri ve ekleri</text>
+  <text x="464" y="170" font-size="10.5">• Misafir tüneli merkezi (WebSocket)</text>
+  <text x="464" y="187" font-size="10.5">• Köprü: uzaktan destek, Raporlarım</text>
+  <text x="464" y="204" font-size="10.5">• Şifreli yedek kasası, güncelleme dağıtımı</text>
+  <text x="464" y="221" font-size="10.5">• Mola Yönetim paneli (React)</text>
+  <text x="464" y="238" font-size="10.5">• İşlem kayıtları (hash zinciri)</text>
+  <text x="464" y="260" font-size="10.5" fill="#5d6763">merkez.sqlite · gece yedeği 03:45</text>
+  <rect x="452" y="282" width="286" height="44" rx="6" fill="#fff" stroke="#1f3b5c"/>
+  <text x="464" y="301" font-size="11.5" font-weight="600">Web sitesi: düz HTML/CSS (Caddy sunar)</text>
+  <text x="464" y="317" font-size="10.5">iletişim formu → Merkez /api/site</text>
+
+  <rect x="438" y="360" width="152" height="60" rx="8" fill="#fff" stroke="#b8661f"/>
+  <text x="450" y="382" font-size="11.5" font-weight="600">Misafirin telefonu</text>
+  <text x="450" y="400" font-size="10.5">QR → /q/kod/masa</text>
+  <rect x="600" y="360" width="152" height="60" rx="8" fill="#fff" stroke="#1f3b5c"/>
+  <text x="612" y="382" font-size="11.5" font-weight="600">Sahibin telefonu</text>
+  <text x="612" y="400" font-size="10.5">/raporlarim, /yonet</text>
+  <rect x="438" y="432" width="152" height="60" rx="8" fill="#fff" stroke="#1f3b5c"/>
+  <text x="450" y="454" font-size="11.5" font-weight="600">Satıcının tarayıcısı</text>
+  <text x="450" y="472" font-size="10.5">Mola Yönetim</text>
+  <rect x="600" y="432" width="152" height="60" rx="8" fill="#fff" stroke="#1f3b5c"/>
+  <text x="612" y="454" font-size="11.5" font-weight="600">Site ziyaretçisi</text>
+  <text x="612" y="472" font-size="10.5">tanıtım, form</text>
+  <line x1="514" y1="358" x2="514" y2="340" stroke="#b8661f" stroke-width="1.8" marker-end="url(#a3)"/>
+  <line x1="676" y1="358" x2="676" y2="340" stroke="#1f3b5c" stroke-width="1.6" marker-end="url(#a2)"/>
+  <text x="595" y="512" font-size="10.5" fill="#5d6763" text-anchor="middle">Bütün dış istemciler yalnız Caddy'nin 443 portuna (HTTPS) gelir.</text>
+  <text x="595" y="528" font-size="10.5" fill="#5d6763" text-anchor="middle">Merkez'in kendi portu (4000) dışarıya kapalıdır.</text>
+
+  <line x1="314" y1="64" x2="450" y2="64" stroke="#1f3b5c" stroke-width="1.8" marker-end="url(#a2)"/>
+  <text x="382" y="56" font-size="10" fill="#1f3b5c" text-anchor="middle">kalp atışı · 10 dk</text>
+  <text x="382" y="80" font-size="10" fill="#1f3b5c" text-anchor="middle">HMAC imzalı</text>
+  <line x1="314" y1="170" x2="450" y2="170" stroke="#b8661f" stroke-width="2.2" marker-end="url(#a3)"/>
+  <text x="382" y="162" font-size="10" fill="#b8661f" text-anchor="middle">misafir tüneli</text>
+  <text x="382" y="186" font-size="10" fill="#b8661f" text-anchor="middle">(WebSocket)</text>
+  <line x1="314" y1="232" x2="450" y2="232" stroke="#1f3b5c" stroke-width="1.4" stroke-dasharray="6 3" marker-end="url(#a2)"/>
+  <text x="382" y="224" font-size="10" fill="#1f3b5c" text-anchor="middle">köprü</text>
+  <text x="382" y="248" font-size="10" fill="#1f3b5c" text-anchor="middle">(gerekince)</text>
+</svg>
+<figcaption><b>Şema 1.</b> Mimari. Bütün bağlantıları kafe başlatır (dışa doğru); bu yüzden kafede modem ayarı ya da açık port gerekmez. Oklar bağlantıyı açan tarafı gösterir; veri iki yönde akar.</figcaption>
+</figure>
+<h2 id="t2-1">Parçalar</h2>
+<table class="dar">
+  <thead><tr><th style="width:22%">Parça</th><th style="width:48%">Görevi</th><th>Kod</th></tr></thead>
+  <tbody>
+    <tr><td>Kafe sunucusu</td><td>Bütün iş kuralları, veri, yazdırma, yedek. Tabletlere ekranları ve API'yi sunar.</td><td><code>server/app.ts</code>, <code>server/runtime.ts</code></td></tr>
+    <tr><td>Ekranlar</td><td>Tek sayfalı React uygulaması; rol ve ekran genişliğine göre düzen değiştirir (360 px telefondan 1280 px kasaya).</td><td><code>src/</code>, giriş <code>index.html</code></td></tr>
+    <tr><td>Misafir sayfası</td><td>Yalnız misafir menüsünü içeren ayrı, küçük paket (~150 kB sıkıştırılmış).</td><td><code>menu.html</code> → <code>src/guest-main.tsx</code></td></tr>
+    <tr><td>Mola Merkez</td><td>Lisans, destek, güncelleme, tünel, köprü, şifreli yedek, web formu.</td><td><code>server/merkez/</code></td></tr>
+    <tr><td>Mola Yönetim</td><td>Satıcının paneli (React).</td><td><code>merkez.html</code>, <code>src/Platform*.tsx</code></td></tr>
+    <tr><td>Raporlarım</td><td>Sahibin telefonundaki rapor ve uzaktan yönetim sayfası.</td><td><code>raporlarim.html</code>, <code>src/ReportsPhone.tsx</code>, <code>src/RemoteAdmin.tsx</code></td></tr>
+    <tr><td>Masaüstü başlatıcıları</td><td>Kurulum, başlatma, kaldırma, güvenlik duvarı kuralı (Windows); Mac ve Linux için kabuk betikleri.</td><td><code>scripts/desktop/*.cs</code>, <code>*.sh</code></td></tr>
+    <tr><td>Android uygulaması</td><td>Tam ekran WebView; kafe bilgisayarını ağda bulur, ekranı açık tutar, kütüphanesiz QR okur.</td><td><code>mobile/android/</code></td></tr>
+    <tr><td>Web sitesi</td><td>Statik tanıtım sitesi; derleme sırasında üretilir.</td><td><code>site/</code>, <code>scripts/site-build.ts</code></td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ 3 -->
+<h1 id="t3" class="akis"><span class="no">3</span>Diller, kütüphaneler ve araçlar</h1>
+<p class="giris">Bir kural koydum: mümkün olduğunca az dış bağımlılık. Üretimde kullanılan npm paketleri yalnız yedi tanedir (Express, React, React DOM, lucide-react simgeleri, qrcode, sharp, zod). Veritabanı, WebSocket, SMTP e-posta, Excel (.xlsx) üretimi ve QR çözme gibi işler kütüphanesiz, Node.js'in kendi modülleriyle yazıldı.</p>
+<table class="dar">
+  <thead><tr><th style="width:19%">Dil / araç</th><th style="width:47%">Nerede ve ne için</th><th>Dosya / klasör</th></tr></thead>
+  <tbody>
+    <tr><td colspan="3" class="grup">Diller</td></tr>
+    <tr><td>TypeScript 7.0</td><td>Bütün sunucu, ekran ve iş kuralı kodu. Tip denetimi <code>npm run typecheck</code>.</td><td><code>server/</code>, <code>src/</code>, <code>packages/domain/</code></td></tr>
+    <tr><td>HTML</td><td>Dört uygulama girişi (personel, misafir, Mola Yönetim, Raporlarım) ve web sitesi sayfaları; bu belgenin kendisi de HTML'den basıldı.</td><td><code>index.html</code>, <code>menu.html</code>, <code>merkez.html</code>, <code>raporlarim.html</code>, <code>site/src/pages/</code></td></tr>
+    <tr><td>CSS</td><td>Çatı (framework) yok; 67 elle yazılmış stil dosyası. Duyarlı düzen, telefonda alt menü, yazdırma stilleri (@page).</td><td><code>src/*.css</code>, <code>site/src/assets/site.css</code></td></tr>
+    <tr><td>SQL (SQLite)</td><td>Tablolar, dizinler, tetikleyiciler (değiştirilemez işlem kaydı), yıl paketlerinde <code>ATTACH</code> + <code>INSERT…SELECT</code>.</td><td><code>server/store.ts</code>, <code>server/history.ts</code>, <code>server/merkez/journal.ts</code></td></tr>
+    <tr><td>C# 5 (.NET Framework 4)</td><td>Windows kurulum programı, <code>Mola.exe</code> başlatıcısı ve kaldırıcı. Ayrı bir derleyici kurmamak için Windows'un içindeki <code>csc.exe</code> ile derlenir.</td><td><code>scripts/desktop/Kurulum.cs</code>, <code>Mola.cs</code>, <code>Kaldir.cs</code>, <code>Ortak.cs</code>, <code>Urun.cs</code></td></tr>
+    <tr><td>Java</td><td>Android kabuğu (6 dosya): WebView, ağda kafe arama, dosya indirme, kütüphanesiz QR çözücü (Reed-Solomon dahil).</td><td><code>mobile/android/src/com/merkutstudios/mola/</code></td></tr>
+    <tr><td>PowerShell</td><td>Windows anahtar kilidi (DPAPI) ve USB yazıcıya gönderim sunucudan <code>powershell.exe</code> ile; yerel HTTPS sertifikası betiği.</td><td><code>server/os-lock.ts</code>, <code>scripts/local-https-cert.ps1</code></td></tr>
+    <tr><td>Batch (.cmd)</td><td>Kurulum paketinde üretilen sunucu başlatma ve durdurma dosyaları; işletmenin kendi ayar dosyası <code>ayarlar.cmd</code>.</td><td><code>scripts/build-installer.mjs</code></td></tr>
+    <tr><td>Kabuk (sh)</td><td>Mac ve Linux başlatıcıları, Linux kurulum/kaldırma, VDS için <code>kur.sh</code>.</td><td><code>scripts/desktop/*.sh</code>, <code>scripts/merkez-linux-paket.mjs</code></td></tr>
+    <tr><td colspan="3" class="grup">Çalışma ortamı ve kütüphaneler</td></tr>
+    <tr><td>Node.js 24</td><td>İki sunucunun çalışma ortamı. Kurulum paketine kendi <code>node.exe</code>'si konur; kafede Node kurmak gerekmez.</td><td><code>package.json</code> <code>engines</code></td></tr>
+    <tr><td>Express 5.2</td><td>HTTP yönlendirme ve ara katmanlar.</td><td><code>server/app.ts</code>, <code>server/merkez/app.ts</code></td></tr>
+    <tr><td>node:sqlite</td><td>Node'un yerleşik SQLite modülü (<code>DatabaseSync</code>). Ayrı veritabanı sunucusu yok; tek dosya.</td><td><code>server/store.ts</code></td></tr>
+    <tr><td>node:crypto, WebCrypto</td><td>AES-256-GCM, Ed25519, X25519, HKDF, HMAC, scrypt, SHA-256. Tarayıcı tarafında aynı kod WebCrypto ile çalışır.</td><td><code>server/sealing.ts</code>, <code>packages/domain/remote-crypto.ts</code></td></tr>
+    <tr><td>WebSocket (RFC 6455)</td><td>Misafir tüneli için; çerçeveleme, maskeleme, ping/pong elle yazıldı.</td><td><code>server/ws-frames.ts</code></td></tr>
+    <tr><td>React 19</td><td>Bütün ekranlar.</td><td><code>src/*.tsx</code></td></tr>
+    <tr><td>zod 4</td><td>Kafe ile Merkez arasındaki mesajların katı şema denetimi (fazla alan reddedilir).</td><td><code>server/sync-protocol.ts</code></td></tr>
+    <tr><td>sharp</td><td>Ürün fotoğraflarını küçültme, destek eklerinden konum bilgisini silme.</td><td><code>server/merkez/attachments.ts</code></td></tr>
+    <tr><td>qrcode</td><td>Masa QR kodları, A6 masa standı, sosyal medya kartları.</td><td><code>src/SettingsQr.tsx</code>, <code>src/tableStand.ts</code></td></tr>
+    <tr><td colspan="3" class="grup">Derleme, test ve yayın</td></tr>
+    <tr><td>Vite 8</td><td>Ekranları derler; dört giriş noktası; misafir sayfası için göreli dosya adresleri.</td><td><code>vite.config.ts</code></td></tr>
+    <tr><td>esbuild</td><td>Sunucuyu kurulum paketi için tek dosyaya paketler; derleme anında Merkez'in açık anahtarını gömer, test şifrelerini çıkarır.</td><td><code>scripts/build-installer.mjs</code></td></tr>
+    <tr><td>tsx + node:test</td><td>Birim testleri (Node'un kendi test koşucusu).</td><td><code>tests/*.test.ts</code></td></tr>
+    <tr><td>Playwright 1.63</td><td>Gerçek Chrome'da tarayıcı testleri; site videolarının kaydı; bu belgenin PDF'e basılması.</td><td><code>tests/browser/</code>, <code>scripts/pdf-belgeler.mjs</code></td></tr>
+    <tr><td>Android SDK araçları</td><td>Gradle olmadan: <code>aapt2</code>, <code>javac</code>, <code>d8</code>, <code>zipalign</code>, <code>apksigner</code>. Çıktı yaklaşık 100 kB.</td><td><code>scripts/build-apk.mjs</code></td></tr>
+    <tr><td colspan="3" class="grup">Sunucu ortamı (hazırlandı, henüz kurulmadı)</td></tr>
+    <tr><td>Ubuntu LTS, systemd, ufw</td><td>VDS işletim sistemi, Merkez servisi (çökünce 5 sn'de yeniden başlar), güvenlik duvarı (yalnız 22, 80, 443).</td><td><code>docs/VDS_KURULUM.md</code></td></tr>
+    <tr><td>Caddy</td><td>HTTPS sertifikasını otomatik alır ve yeniler, istekleri Merkez'e iletir, siteyi sunar, WebSocket taşır.</td><td><code>Caddyfile.ornek</code></td></tr>
+  </tbody>
+</table>
+<p class="kucuk gri">Neden C# ve Java? Windows'ta bir masaüstü penceresi ve kurulum programı için tarayıcı dışında bir şey gerekiyordu; Windows'ta zaten bulunan C# derleyicisi ek kurulum istemedi. Android'de de ekranların kendisi web olduğu için yalnız ince bir Java kabuğu yetti.</p>
+
+<!-- ============================================================ 4 -->
+<h1 id="t4"><span class="no">4</span>Katmanlar ve kod düzeni</h1>
+<figure>
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
+  <rect x="20" y="16" width="330" height="70" rx="8" fill="#f3ebdd" stroke="#b39b72"/>
+  <text x="185" y="42" text-anchor="middle" font-size="13" font-weight="700">Ekranlar · src/ (React)</text>
+  <text x="185" y="64" text-anchor="middle" font-size="11">gösterir, kullanıcıya sade hata yazar</text>
+  <rect x="410" y="16" width="330" height="70" rx="8" fill="#e8eef6" stroke="#1f3b5c"/>
+  <text x="575" y="42" text-anchor="middle" font-size="13" font-weight="700">Sunucu · server/ (Express)</text>
+  <text x="575" y="64" text-anchor="middle" font-size="11">kimlik, yetki, sınırlar, kayıt, yazdırma</text>
+  <rect x="120" y="120" width="520" height="62" rx="8" fill="#e7efe9" stroke="#234c3e" stroke-width="1.6"/>
+  <text x="380" y="146" text-anchor="middle" font-size="13" font-weight="700" fill="#234c3e">İş kuralları · packages/domain/ (saf TypeScript)</text>
+  <text x="380" y="167" text-anchor="middle" font-size="11">fiyat, kampanya, sipariş durumu, kasa hesabı, KDV, iş günü, rol listeleri</text>
+  <rect x="470" y="200" width="270" height="40" rx="8" fill="#fff" stroke="#1f3b5c"/>
+  <text x="605" y="225" text-anchor="middle" font-size="11">Depolama: server/store.ts → SQLite (şifreli)</text>
+  <line x1="185" y1="88" x2="300" y2="118" stroke="#3a4642" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="575" y1="88" x2="460" y2="118" stroke="#3a4642" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="700" y1="88" x2="700" y2="198" stroke="#3a4642" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="350" y1="44" x2="408" y2="44" stroke="#3a4642" stroke-width="1.5" marker-end="url(#b1)"/>
+  <text x="379" y="36" text-anchor="middle" font-size="10">/api</text>
+  <text x="40" y="215" font-size="10.5" fill="#5d6763">Aynı kural iki yerde çalışır: ekran hemen</text>
+  <text x="40" y="231" font-size="10.5" fill="#5d6763">gösterir, sunucu yine de yeniden denetler.</text>
+</svg>
+<figcaption><b>Şema 2.</b> Katmanlar. <code>packages/domain</code> hiçbir şey içe aktarmaz (ne Node modülü ne Express); bu yüzden tarayıcıda ve sunucuda aynen çalışır. Bir test (<code>tests/browser-imports.test.ts</code>) ekranların sunucuya ait bir modülü yanlışlıkla içeri almadığını denetler.</figcaption>
+</figure>
+<ul>
+  <li><strong>Sunucuya asla güvenmeyen ekran, ekrana asla güvenmeyen sunucu.</strong> Örneğin misafirin sepetindeki fiyat sunucuda yeniden hesaplanır (<code>quote</code>); fark varsa sipariş <code>PRICE_CHANGED</code> ile geri döner. Her işlem rol listesiyle sunucuda ayrıca denetlenir; izinsiz istek 403 alır.</li>
+  <li><strong>Tekrar gönderime dayanıklı yazma.</strong> Her yazma isteği bir <code>requestId</code> taşır. Ağ koptu diye aynı istek iki kez gelirse ikincisi aynı sonucu döndürür, çift sipariş ya da çift ödeme oluşmaz. 5 yıllık testte sunucu yoğun anda iki kez zorla kapatıldı: onaylanan hiçbir kayıt kaybolmadı ya da ikilenmedi.</li>
+  <li><strong>Ekranlar sorarak güncellenir.</strong> Personel ve misafir ekranları 2 saniyede bir sunucuya sorar (<code>poll</code>); sunucu ekrandaki sürümün etiketini (ETag) karşılaştırır, değişiklik yoksa gövdesiz 204 döner. Arka plandaki sekme sormaz. Sunucunun gönderdiği anlık durum rol başına kırpılır: derbi günü örneğinde garsona giden veri 196 kB'tan 114 kB'a, mutfağa giden 179 kB'tan 48 kB'a indi.</li>
+</ul>
+
+<!-- ============================================================ 5 -->
+<h1 id="t5"><span class="no">5</span>Bir siparişin yolculuğu</h1>
+<figure>
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="s1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2321"/></marker></defs>
+  <g font-size="11.5" font-weight="700" text-anchor="middle">
+    <rect x="20" y="10" width="120" height="34" rx="6" fill="#fbefe3" stroke="#b8661f"/><text x="80" y="32">Misafir</text>
+    <rect x="190" y="10" width="140" height="34" rx="6" fill="#e7efe9" stroke="#234c3e"/><text x="260" y="32">Kafe sunucusu</text>
+    <rect x="370" y="10" width="110" height="34" rx="6" fill="#f6f7f4" stroke="#5d6763"/><text x="425" y="32">Garson</text>
+    <rect x="510" y="10" width="110" height="34" rx="6" fill="#f6f7f4" stroke="#5d6763"/><text x="565" y="32">Mutfak</text>
+    <rect x="640" y="10" width="110" height="34" rx="6" fill="#f6f7f4" stroke="#5d6763"/><text x="695" y="32">Kasiyer</text>
+  </g>
+  <g stroke="#b7c0bc" stroke-dasharray="4 4"><line x1="80" y1="46" x2="80" y2="550"/><line x1="260" y1="46" x2="260" y2="550"/><line x1="425" y1="46" x2="425" y2="550"/><line x1="565" y1="46" x2="565" y2="550"/><line x1="695" y1="46" x2="695" y2="550"/></g>
+  <g font-size="10.5" stroke-width="1.5">
+    <line x1="80" y1="74" x2="258" y2="74" stroke="#1d2321" marker-end="url(#s1)"/><text x="88" y="68">1. QR: oturum aç (masa kodu)</text>
+    <line x1="260" y1="102" x2="82" y2="102" stroke="#1d2321" marker-end="url(#s1)"/><text x="96" y="96">menü + oturum (çerez mola_browser)</text>
+    <line x1="80" y1="134" x2="258" y2="134" stroke="#1d2321" marker-end="url(#s1)"/><text x="88" y="128">2. sipariş + requestId</text>
+    <rect x="268" y="118" width="148" height="44" rx="4" fill="#fff" stroke="#d5dbd8"/>
+    <text x="274" y="136">fiyatı yeniden hesapla,</text><text x="274" y="152">değiştirme süresi başlar</text>
+    <line x1="260" y1="182" x2="423" y2="182" stroke="#1d2321" marker-end="url(#s1)"/><text x="268" y="176">3. "QR onayı" sesi (isteğe bağlı)</text>
+    <line x1="425" y1="206" x2="262" y2="206" stroke="#1d2321" marker-end="url(#s1)"/><text x="300" y="220">onayla</text>
+    <line x1="260" y1="244" x2="563" y2="244" stroke="#1d2321" marker-end="url(#s1)"/><text x="268" y="238">4. "Yeni" (ekran 2 sn'de bir sorar) ya da mutfak fişi basılır</text>
+    <line x1="565" y1="274" x2="262" y2="274" stroke="#1d2321" marker-end="url(#s1)"/><text x="440" y="288">Hazırlanıyor → Hazır</text>
+    <line x1="260" y1="312" x2="423" y2="312" stroke="#1d2321" marker-end="url(#s1)"/><text x="268" y="306">5. "Sipariş hazır" sesi</text>
+    <line x1="425" y1="340" x2="262" y2="340" stroke="#1d2321" marker-end="url(#s1)"/><text x="300" y="354">Teslim edildi</text>
+    <line x1="80" y1="380" x2="258" y2="380" stroke="#1d2321" marker-end="url(#s1)"/><text x="88" y="374">6. Hesabı iste (nakit/kart)</text>
+    <line x1="260" y1="410" x2="693" y2="410" stroke="#1d2321" marker-end="url(#s1)"/><text x="268" y="404">"Hesap · Kart" çağrısı</text>
+    <line x1="695" y1="440" x2="262" y2="440" stroke="#1d2321" marker-end="url(#s1)"/><text x="520" y="454">7. ödeme kaydı</text>
+    <line x1="260" y1="474" x2="82" y2="474" stroke="#1d2321" marker-end="url(#s1)"/><text x="96" y="468">"Hesabınız kapandı"</text>
+    <rect x="268" y="486" width="300" height="56" rx="4" fill="#e7efe9" stroke="#2f6b57"/>
+    <text x="276" y="504">8. masa kapanır; 6 saat sonra hesap sıkıştırılıp</text>
+    <text x="276" y="520">şifrelenerek geçmiş tablosuna taşınır, günün özeti</text>
+    <text x="276" y="536">güncellenir (raporlar özetten okunur)</text>
+  </g>
+</svg>
+<figcaption><b>Şema 3.</b> QR siparişinin akışı. Personel siparişi aynı yoldan geçer, yalnız onay ve değiştirme süresi yoktur.</figcaption>
+</figure>
+<ul>
+  <li><strong>Durumlar:</strong> <code>awaiting_approval</code> → <code>new</code> → <code>preparing</code> → <code>ready</code> → <code>served</code> (ya da <code>cancelled</code>). Kurallar tek dosyada: <code>packages/domain/engine.ts</code>.</li>
+  <li><strong>Değiştirme süresi:</strong> misafir siparişini süre dolana kadar değiştirebilir ya da iptal edebilir. Fiş yazıcısı ancak süre dolunca basar; böylece boşa fiş çıkmaz.</li>
+  <li><strong>Mutfak "Fiş" modu:</strong> mutfak ekran yerine yazıcı kullanıyorsa sipariş basılınca "Hazırlanıyor" olur. Yazıcı hatası (kâğıt bitti, kapalı, ağdan ulaşılamıyor) ESC/POS durum sorgusu ve ağ hata kodlarından ayırt edilip kasada kalıcı uyarı olarak gösterilir.</li>
+  <li><strong>"Geri al":</strong> mutfak yanlış bir düğmeye bastıysa 5 saniye içinde geri alabilir; sunucu yalnız son adımı, aynı sürümde ve süre içinde kabul eder.</li>
+  <li><strong>Hesap fişi</strong> yasal fiş değildir; yazar kasaya giriş için ödeme penceresinde KDV oranlarına bölünmüş bir "yazar kasa yardımcısı" kartı çıkar.</li>
+</ul>
+
+<!-- ============================================================ 6 -->
+<h1 id="t6"><span class="no">6</span>İş günü 05:00'te döner</h1>
+<p>Gece 01:30'da kapanan bir hesap "dün"ün değil "bu gecenin" satışıdır. Bu yüzden takvim günü yerine tek bir sabitle tanımlanan bir <strong>iş günü</strong> kullanılır: <code>DAY_START_HOUR = 5</code> (<code>packages/domain/business-day.ts</code>). Kasa günü, bütün raporlar, stok günü, rezervasyon günü, e-posta dönem raporları ve personel oturumlarının bitişi bu sabitten türer. Sabit değişirse hepsi birlikte kayar. Testler 23:00–02:00 gecesini, 04:59 ve 05:00'i, 29 Şubat 2028'i ve farklı saat dilimlerini ayrıca dener; tarayıcı test koşucusu 05:00'e 4 dakikadan az kala yeni test başlatmaz, çünkü o anda oturumlar gerçekten kapanır.</p>
+
+<!-- ============================================================ 7 -->
+<h1 id="t7" class="akis"><span class="no">7</span>Veri saklama: mühürlü satırlar</h1>
+<p class="giris">Veritabanı tek bir SQLite dosyasıdır (<code>merchant.sqlite</code>). Tabloların yalnız sorgu için gereken birkaç sütunu (tür, kimlik, gün, zaman) açıktır; asıl içerik her satırda şifreli bir "mühür" olarak durur.</p>
+<figure>
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="k1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
+  <rect x="20" y="20" width="200" height="56" rx="8" fill="#fbefe3" stroke="#b8661f"/>
+  <text x="120" y="44" text-anchor="middle" font-size="12" font-weight="700">Windows DPAPI</text>
+  <text x="120" y="62" text-anchor="middle" font-size="10.5">o kullanıcı + şifresi</text>
+  <rect x="20" y="96" width="200" height="56" rx="8" fill="#fbefe3" stroke="#b8661f"/>
+  <text x="120" y="120" text-anchor="middle" font-size="12" font-weight="700">Kurtarma kodu</text>
+  <text x="120" y="138" text-anchor="middle" font-size="10.5">24 hane · scrypt + AES-GCM</text>
+  <rect x="280" y="56" width="200" height="60" rx="8" fill="#e7efe9" stroke="#234c3e" stroke-width="1.8"/>
+  <text x="380" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#234c3e">Ana anahtar</text>
+  <text x="380" y="100" text-anchor="middle" font-size="10.5">anahtar.json'da iki kez kilitli</text>
+  <line x1="222" y1="48" x2="278" y2="76" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
+  <line x1="222" y1="124" x2="278" y2="98" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
+  <text x="246" y="90" text-anchor="middle" font-size="10" fill="#5d6763">biri yeter</text>
+  <rect x="540" y="20" width="200" height="56" rx="8" fill="#fff" stroke="#234c3e"/>
+  <text x="640" y="44" text-anchor="middle" font-size="12" font-weight="700">İşletme anahtarı</text>
+  <text x="640" y="62" text-anchor="middle" font-size="10.5">rastgele 256 bit, sarılı</text>
+  <rect x="540" y="96" width="200" height="56" rx="8" fill="#fff" stroke="#234c3e"/>
+  <text x="640" y="120" text-anchor="middle" font-size="12" font-weight="700">Türetilmiş anahtarlar</text>
+  <text x="640" y="138" text-anchor="middle" font-size="10.5">HKDF: yedek, yıl paketi…</text>
+  <line x1="482" y1="76" x2="538" y2="50" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
+  <line x1="482" y1="98" x2="538" y2="122" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
+  <rect x="20" y="196" width="720" height="92" rx="8" fill="#f6f7f4" stroke="#d5dbd8"/>
+  <text x="34" y="218" font-size="12" font-weight="700">Bir satır (ör. stock_records):</text>
+  <rect x="34" y="228" width="200" height="46" rx="4" fill="#fff" stroke="#5d6763"/>
+  <text x="44" y="246" font-size="10.5">açık sütunlar: tür, kimlik, zaman</text>
+  <text x="44" y="264" font-size="10.5">(sorgu ve dizin için)</text>
+  <rect x="244" y="228" width="482" height="46" rx="4" fill="#e7efe9" stroke="#234c3e"/>
+  <text x="254" y="246" font-size="10.5">mühür = AES-256-GCM( sıkıştırılmış JSON ) · 12 bayt rastgele IV · 16 bayt etiket</text>
+  <text x="254" y="264" font-size="10.5">ek veri (AAD) = "mola:v1:stock:&lt;işletme&gt;:&lt;tür&gt;:&lt;kimlik&gt;" → başka satıra taşınırsa açılmaz</text>
+  <line x1="640" y1="78" x2="640" y2="94" stroke="#3a4642" stroke-width="0"/>
+  <line x1="538" y1="66" x2="500" y2="226" stroke="#234c3e" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#k1)"/>
+</svg>
+<figcaption><b>Şema 4.</b> Anahtar düzeni ve bir satırın mührü (<code>server/sealing.ts</code>, <code>server/store.ts</code>, <code>server/key-vault.ts</code>).</figcaption>
+</figure>
+<ul>
+  <li><strong>AES-256-GCM</strong> hem gizlilik hem bütünlük sağlar: bir bayt değişirse satır açılmaz. AAD'ye satırın kapsamını yazmak, şifreli bir satırı başka bir kaydın yerine kopyalama saldırısını engeller.</li>
+  <li><strong>Sıkıştırma şifrelemeden önce</strong> yapılır (deflate-raw, sabit bir sözlükle; kapanan hesaplar yaklaşık 3,6 kat küçülür). Şifreli veri sıkışmadığı için sıra önemlidir (<code>server/packing.ts</code>).</li>
+  <li><strong>Anlık durum küçük tutulur:</strong> açık masalar, menü ve ayarlar işletme başına tek bir satırda (yaklaşık 20 kB) durur ve her işlemde yeniden yazılır. Kapanan hesaplar 6 saat sonra <code>history_*</code> tablolarına taşınır.</li>
+  <li><strong>Kurtarma kodu</strong> yalnız kasa bilgisayarının ekranında bir kez gösterilir; kaydedildiği, koddan rastgele iki parça sorularak doğrulanır. Kod hiçbir yerde saklanmaz; satıcı da bilmez. Windows şifresi unutulursa program "Veriler kilitli" açılır ve kâğıttaki kodla açılır.</li>
+</ul>
+
+<!-- ============================================================ 8 -->
+<h1 id="t8"><span class="no">8</span>Gün, ay ve yıl özetleri</h1>
+<p class="giris">5 yıllık bir kafede 1,6 milyon sipariş vardır. "Tümü" raporu her seferinde bunları tek tek açarsa yavaşlar. Çözüm, değişmeyen geçmişi özetleyip saklamak ve yalnız değişen parçayı yeniden hesaplamaktır.</p>
+<figure>
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg">
+  <g font-size="11.5" text-anchor="middle">
+    <rect x="300" y="10" width="160" height="40" rx="6" fill="#1f3b5c"/><text x="380" y="35" fill="#fff" font-weight="700">history_years · 5 satır</text>
+    <rect x="240" y="58" width="280" height="40" rx="6" fill="#2f5b86"/><text x="380" y="83" fill="#fff" font-weight="700">history_months · ~60 satır</text>
+    <rect x="170" y="106" width="420" height="40" rx="6" fill="#2f6b57"/><text x="380" y="131" fill="#fff" font-weight="700">history_days · ~1.800 günlük özet</text>
+    <rect x="90" y="154" width="580" height="40" rx="6" fill="#7fa694"/><text x="380" y="179" fill="#fff" font-weight="700">history_archives · kapanan hesaplar (1,2 milyon satır)</text>
+    <rect x="20" y="202" width="720" height="40" rx="6" fill="#e7efe9" stroke="#2f6b57"/><text x="380" y="227" font-weight="700" fill="#234c3e">Anlık durum: açık masalar ve bugünkü siparişler</text>
+  </g>
+  <text x="380" y="262" text-anchor="middle" font-size="10.5" fill="#5d6763">Kapanmış yıllar ayrıca yıl paketi dosyalarına taşınır (bölüm 9).</text>
+</svg>
+<figcaption><b>Şema 5.</b> Özet piramidi. Bir rapor dönemi, içine tam giren kapanmış yıllar ve aylar için özetten, kalan günler için günlük özetten, masadaki hesaplar için canlı veriden okunur (<code>History.reportSpan</code>).</figcaption>
+</figure>
+<ul>
+  <li><strong>Geçersiz kılma:</strong> geçmiş bir günü değiştiren her işlem (geç kapanan hesap, eski hesaba iade, yöntem düzeltmesi, geriye tarihli gider, kasa düzeltmesi, vardiya düzeltmesi) o ayın ve yılın özetini siler; sonraki rapor onu parça parça yeniden kurar. Doğruluk testi: iki 5 yıllık kafede "Tümü", her yıl ve 12 rastgele dönem için özetten okunan her rakam gün gün toplanan rakamla kuruşu kuruşuna aynı çıktı.</li>
+  <li><strong>Parça parça çalışma:</strong> Node.js tek iş parçacıklıdır; uzun bir hesap bütün tabletleri bekletir. Bu yüzden özetler 12–15 ms'lik dilimlerle kurulur (<code>drainSlowly</code>), arada tabletlerin istekleri yanıtlanır. Program başlatmak gibi işletim sistemini bekleten işler ayrı iş parçacığına taşındı (<code>server/programs.ts</code>).</li>
+  <li><strong>KDV satıldığı orandan:</strong> her sipariş satırı satıldığı andaki KDV oranını taşır; aylık ve yıllık özetler oranları dondurur. Bir ürünün oranı bugün değişse de geçmişin KDV dökümü değişmez.</li>
+  <li><strong>Sonuç (5 yıllık orta kafe):</strong> "Tümü" özeti 1,2 sn → 0,03 sn; Excel "Tümü" 3,2 sn → 0,2 sn; raporlar sırasında bir tabletin en uzun beklemesi 3,2 sn → 0,28 sn; bellek 919 → 371 MB.</li>
+</ul>
+
+<!-- ============================================================ 9 -->
+<h1 id="t9" class="akis"><span class="no">9</span>Yıl paketleri ve kişisel verinin silinmesi</h1>
+<p>Her takvim yılı, bir sonraki yılın 1 Şubat'ından sonra kafe boşken kendi dosyasına (<code>yil-2025.sqlite</code>) taşınır ve bir daha açılmaz. Günlük çalışılan dosya yalnız açık yılı tutar; böylece yedekler küçülür (yoğun kafede 5. yılda yedek başına 1,72 GB → 0,27 GB).</p>
+<h3>Adımlar (her biri işaretli; elektrik kesilirse kaldığı yerden sürer)</h3>
+<ol>
+  <li><strong>Hazırlık:</strong> doğrulanmış yedek; ilk pakette veri klasörünün kopyası (90 gün sonra kendiliğinden silinir).</li>
+  <li><strong>Kapatma:</strong> o yıla yazma kapanır; yılın günlük, aylık, yıllık özetleri kurulur; her malzemenin 1 Ocak 05:00'teki stoğu yeni yıla açılış sayımı olarak yazılır.</li>
+  <li><strong>Kopyalama:</strong> ayrı bir iş parçacığı satırları tek bir okuma anında geçici dosyaya kopyalar (<code>ATTACH</code> + <code>INSERT…SELECT</code>).</li>
+  <li><strong>Kişisel bilgilerin silinmesi:</strong> kopyada rezervasyon adı "Müşteri" olur, telefon ve not, satır notları, platform müşteri adı silinir; misafirin tarayıcı kimliği tek yönlü bir etikete çevrilir (raporlardaki "farklı misafir sayısı" aynı kalsın diye). Değişen satır aynı kapsamla yeniden mühürlenir ve okunarak denetlenir (<code>server/package-privacy.ts</code>).</li>
+  <li><strong>Doğrulama:</strong> ikinci bir iş parçacığı her tablonun satırlarını canlıdakiyle yan yana karşılaştırır: ya bayt bayt aynı, ya da değiştirilmiş satırın SHA-256'sı kaydedilen değerle aynı olmalı. Dosyanın SHA-256'sı kaydedilir.</li>
+  <li><strong>Mühürleme ve silme:</strong> paket tek işlemde kaydedilir; canlı dosyadan yalnız paketteki kopyasıyla eşleşen satırlar küçük partilerle silinir.</li>
+</ol>
+<p>Test: 10 farklı kesme noktası denendi. 5 yıllık deneme kafesinde paketlemeden önce ve sonra bütün rakamların SHA-256 özeti aynı; paketlerdeki 554.319 satırda silinmesi gereken kişisel bilgi 0. Haftada bir her paketin SHA-256'sı, ayda bir satırları denetlenir; bozuk paket yedekten kendiliğinden geri gelir.</p>
+
+<!-- ============================================================ 10 -->
+<h1 id="t10" class="akis"><span class="no">10</span>Yedekleme algoritması</h1>
+<figure>
+<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="y1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
+  <g font-size="11">
+  <rect x="20" y="14" width="320" height="52" rx="8" fill="#f3ebdd" stroke="#b39b72"/>
+  <text x="30" y="34" font-weight="700">Tetikleyiciler</text>
+  <text x="30" y="52">03:30 · açılış telafisi · gün sonu · "Şimdi yedekle" · güncelleme</text>
+  <polygon points="180,86 300,116 180,146 60,116" fill="#fff" stroke="#1f3b5c" stroke-width="1.5"/>
+  <text x="180" y="112" text-anchor="middle" font-weight="700">Değişiklik oldu mu?</text>
+  <text x="180" y="128" text-anchor="middle" font-size="10">(değişiklik işareti)</text>
+  <line x1="180" y1="68" x2="180" y2="84" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <rect x="400" y="92" width="340" height="48" rx="8" fill="#f6f7f4" stroke="#5d6763"/>
+  <text x="410" y="112">Hayır: gece yedeği atlanır ("Gece yedeği gerekmedi").</text>
+  <text x="410" y="128">Ama en yeni yedek 6½ günden eskiyse yine alınır.</text>
+  <line x1="302" y1="116" x2="398" y2="116" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <text x="350" y="108" text-anchor="middle" font-size="10">hayır</text>
+  <line x1="180" y1="148" x2="180" y2="170" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <text x="192" y="164" font-size="10">evet</text>
+  <rect x="20" y="172" width="320" height="48" rx="8" fill="#e7efe9" stroke="#234c3e"/>
+  <text x="30" y="192" font-weight="700">Tutarlı kopya, şifreli parçalar</text>
+  <text x="30" y="208">yedek anahtarı yedeğin içinde, kurtarma koduyla kilitli</text>
+  <line x1="180" y1="222" x2="180" y2="238" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <rect x="20" y="240" width="320" height="48" rx="8" fill="#e7efe9" stroke="#234c3e"/>
+  <text x="30" y="260" font-weight="700">Prova: ayrı klasöre geri yükle, denetle</text>
+  <text x="30" y="276">prova kopyası hemen silinir</text>
+  <line x1="180" y1="290" x2="180" y2="306" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <rect x="20" y="308" width="320" height="48" rx="8" fill="#e7efe9" stroke="#234c3e"/>
+  <text x="30" y="328" font-weight="700">İş günü başına tek yedek</text>
+  <text x="30" y="344">aynı günün yenisi eskisinin yerine geçer</text>
+  <line x1="180" y1="358" x2="180" y2="374" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <rect x="20" y="376" width="320" height="48" rx="8" fill="#e7efe9" stroke="#234c3e"/>
+  <text x="30" y="396" font-weight="700">Saklama: 7 günlük + 4 haftalık + 12 aylık</text>
+  <text x="30" y="412">en çok 23 yedek; yıl paketleri ayrı ve kalıcı</text>
+  <line x1="342" y1="332" x2="398" y2="232" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <line x1="342" y1="332" x2="398" y2="332" stroke="#3a4642" stroke-width="1.5" marker-end="url(#y1)"/>
+  <rect x="400" y="190" width="340" height="80" rx="8" fill="#fff" stroke="#2f6b57"/>
+  <text x="410" y="210" font-weight="700">İkinci yer (flash bellek, OneDrive klasörü)</text>
+  <text x="410" y="228">aynı şifreli dosyalar kopyalanır, SHA-256 ile</text>
+  <text x="410" y="244">karşılaştırılır; en yeni 3 kopya + yıl paketleri</text>
+  <text x="410" y="260">bir kez</text>
+  <rect x="400" y="290" width="340" height="134" rx="8" fill="#e8eef6" stroke="#1f3b5c"/>
+  <text x="410" y="310" font-weight="700">Mola Merkez (bulutta şifreli yedek hizmeti)</text>
+  <text x="410" y="328">1. begin: dosya adları, boyutlar, SHA-256'lar</text>
+  <text x="410" y="344">2. Merkez eksik dosyaları ve baytları söyler</text>
+  <text x="410" y="360">3. chunk-bin: 2 MB ham bayt parçalar, imzalı</text>
+  <text x="410" y="376">4. commit · kesilirse kaldığı bayttan devam</text>
+  <text x="410" y="396">Dosyalar içerik özetine göre tutulur: aynı dosya</text>
+  <text x="410" y="412">ikinci kez gönderilmez (yıl paketleri bir kez).</text>
+  </g>
+</svg>
+<figcaption><b>Şema 6.</b> Gece yedeğinin akışı (<code>server/backup-scheduler.ts</code>, <code>server/backup-retention.ts</code>, <code>server/change-marker.ts</code>, <code>server/cloud-backup.ts</code>, <code>server/merkez/backup-vault.ts</code>).</figcaption>
+</figure>
+<ul>
+  <li><strong>Değişiklik işareti:</strong> veritabanında tek bir sayaç satırı. Her başarılı yazma isteği sayaçı ilerletir (giriş, okundu işaretleri, yazdırma ve arka plan işleri sayılmaz). Yedek, veritabanını okumadan hemen önce sayacı "silahlar"; sayacı tutan doğrulanmış bir yedek varsa gece yedeği gereksizdir. Bir test, uygulamadaki her yazma yolunun iki listeden birinde (değişiklik / değişiklik değil) olduğunu denetler; listede olmayan yeni bir yol testi bozar.</li>
+  <li><strong>Saklama algoritması:</strong> önce iş günü başına en yeni yedek seçilir; sonra yedeği olan son 7 iş günü, bitmiş son 4 ISO haftasının ve son 12 ayın en yenisi tutulur. "Yedeği olan son günler" kuralı, haftalarca kapalı kalan bir bilgisayarda eski yedeklerin toptan silinmesini önler.</li>
+  <li><strong>Merkez'de yer hesabı:</strong> sabit kota yerine işletmenin kendi boyutundan: (kopya sayısı + 1) × en büyük kopya + her yıl paketi bir kez. Eski sabit 2 GB kuralı yoğun bir kafede yaklaşık 2,8. yılda yüklemeyi tamamen durdururdu; 5 yıllık test bunu ortaya çıkardı.</li>
+</ul>
+
+<!-- ============================================================ 11 -->
+<h1 id="t11" class="akis"><span class="no">11</span>Lisans, kalp atışı ve paketler</h1>
+<figure>
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="l1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2321"/></marker></defs>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="40" y="10" width="200" height="34" rx="6" fill="#e7efe9" stroke="#234c3e"/><text x="140" y="32">Kafe sunucusu</text>
+    <rect x="520" y="10" width="200" height="34" rx="6" fill="#e8eef6" stroke="#1f3b5c"/><text x="620" y="32">Mola Merkez</text>
+  </g>
+  <g stroke="#b7c0bc" stroke-dasharray="4 4"><line x1="140" y1="46" x2="140" y2="320"/><line x1="620" y1="46" x2="620" y2="320"/></g>
+  <g font-size="10.5">
+    <line x1="140" y1="84" x2="618" y2="84" stroke="#1d2321" stroke-width="1.5" marker-end="url(#l1)"/>
+    <text x="150" y="66">POST /api/merkez/v1/sync (10 dakikada bir)</text>
+    <text x="150" y="78" fill="#5d6763">imza = HMAC-SHA256(kurulum sırrı; yöntem, yol, zaman, nonce, gövde özeti)</text>
+    <rect x="456" y="96" width="292" height="62" rx="4" fill="#fff" stroke="#d5dbd8"/>
+    <text x="464" y="114">zaman ±5 dk mı? nonce yeni mi? gövde aynı mı?</text>
+    <text x="464" y="130">şema katı mı (zod)? kurulum dakikada ≤ 30 mu?</text>
+    <text x="464" y="146">lisansı gerekirse yeniden imzala (Ed25519)</text>
+    <line x1="618" y1="186" x2="142" y2="186" stroke="#1d2321" stroke-width="1.5" marker-end="url(#l1)"/>
+    <text x="220" y="178">yanıt (o da imzalı): lisanslar, nabız, destek yanıtları,</text>
+    <text x="220" y="202">duyurular, güncelleme teklifi, iletişim bilgisi</text>
+    <rect x="20" y="214" width="300" height="104" rx="4" fill="#fff" stroke="#d5dbd8"/>
+    <text x="28" y="232">gömülü açık anahtarla imzayı doğrula</text>
+    <text x="28" y="248">sıra no (serial) daha eski mi? → kullanma</text>
+    <text x="28" y="264">lisans izi: görülen en yüksek serial + en ileri</text>
+    <text x="28" y="280">zaman (veri klasörü dışında, mühürlü)</text>
+    <text x="28" y="296">lisans saati = max(saat, Merkez saati, nabız,</text>
+    <text x="28" y="312">son sipariş zamanı…) → saati geri almak işe yaramaz</text>
+  </g>
+</svg>
+<figcaption><b>Şema 7.</b> Kalp atışı (<code>server/kafe-link.ts</code>, <code>server/install-auth.ts</code>, <code>server/license.ts</code>).</figcaption>
+</figure>
+<ul>
+  <li><strong>İmza türleri ayrı:</strong> aynı Ed25519 anahtarı lisans, nabız (<code>mola-nabiz-1</code>), iletişim bilgisi, güncelleme, adres değişikliği, kapanış ve işlem kaydı mühürü için kullanılır; her birinin mesajı farklı bir amaç etiketiyle başlar. Böylece bir türün imzası başka bir tür yerine kullanılamaz.</li>
+  <li><strong>14 gün çevrimdışı:</strong> son imzalı nabızdan sonra 7. günde uyarı, 14. günde misafir menüsü ve yeni sipariş kapanır; bağlantı gelince açılır.</li>
+  <li><strong>Bir lisans, bir bilgisayar:</strong> kalp atışı bilgisayar kimliğinin (Windows MachineGuid) kurulum sırrıyla HMAC'ını taşır. Başka bilgisayardan bağlanılınca yeni bilgisayar etkin olur, eskisi imzalı "başka bilgisayar" yanıtı alır.</li>
+  <li><strong>Paketler (özellik kapıları):</strong> lisans <code>features</code> listesini taşır (14 hizmet kimliği, <code>packages/domain/features.ts</code>). Sunucu bütün personel ve misafir yollarından önce bir bekçi çalıştırır: kapalı hizmetin yolu <code>403 FEATURE_NOT_IN_PACKAGE</code> döner (<code>server/feature-guard.ts</code>). Ekran kapalı yeri soluk ve bulanık gösterir. Hiçbir veri silinmez; hizmet geri gelince kaldığı yerden döner.</li>
+  <li><strong>Geriye uyumluluk:</strong> eski kafe sürümleri bilmedikleri bir alanı olan lisansı reddeder. Bu yüzden Merkez her lisansı aynı sıra numarasıyla iki kez imzalar (özellik listeli ve listesiz); yeni kafe birincisini, eski kafe ikincisini alır. Kafe ve Merkez her yeni yetenek için birbirine <code>accepts</code> listesiyle haber verir; karşı taraf bilmiyorsa alan gönderilmez.</li>
+</ul>
+
+<!-- ============================================================ 12 -->
+<h1 id="t12" class="akis"><span class="no">12</span>Uzaktan raporlar: uçtan uca şifreleme</h1>
+<p class="giris">İşletme sahibi raporlarına telefonundan bakmak istiyor; ama raporlar Merkez'den geçerken Merkez'in onları okumaması gerekiyor. Çözüm, kafe bilgisayarı ile telefon arasında uçtan uca şifrelemedir (<code>packages/domain/remote-crypto.ts</code>; aynı kod sunucuda Node 24'ün, telefonda tarayıcının WebCrypto'suyla çalışır).</p>
+<figure>
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2321"/></marker></defs>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="20" y="10" width="190" height="34" rx="6" fill="#e7efe9" stroke="#234c3e"/><text x="115" y="32">Kafe bilgisayarı</text>
+    <rect x="285" y="10" width="190" height="34" rx="6" fill="#e8eef6" stroke="#1f3b5c"/><text x="380" y="32">Mola Merkez</text>
+    <rect x="550" y="10" width="190" height="34" rx="6" fill="#fbefe3" stroke="#b8661f"/><text x="645" y="32">Sahibin telefonu</text>
+  </g>
+  <g stroke="#b7c0bc" stroke-dasharray="4 4"><line x1="115" y1="46" x2="115" y2="350"/><line x1="380" y1="46" x2="380" y2="350"/><line x1="645" y1="46" x2="645" y2="350"/></g>
+  <g font-size="10.5">
+    <path d="M115,76 C300,60 470,60 643,76" fill="none" stroke="#1d2321" stroke-width="1.5" stroke-dasharray="2 3" marker-end="url(#e1)"/>
+    <text x="380" y="58" text-anchor="middle">1. ekrandaki QR: #e=eşleştirme kimliği . tek kullanımlık sır . kafenin açık anahtarı</text>
+    <text x="380" y="88" text-anchor="middle" fill="#5d6763">(# sonrası hiçbir sunucuya gitmez; QR Merkez'den geçmez)</text>
+    <rect x="520" y="98" width="230" height="44" rx="4" fill="#fff" stroke="#d5dbd8"/>
+    <text x="528" y="116">2. telefon kendi X25519 çiftini üretir;</text>
+    <text x="528" y="132">özel anahtar dışa aktarılamaz (IndexedDB)</text>
+    <line x1="645" y1="164" x2="117" y2="164" stroke="#1d2321" stroke-width="1.5" marker-end="url(#e1)"/>
+    <text x="150" y="158">3. telefonun açık anahtarı + adı, sırla doğrulanmış (HMAC) ve şifreli</text>
+    <line x1="115" y1="196" x2="643" y2="196" stroke="#1d2321" stroke-width="1.5" marker-end="url(#e1)"/>
+    <text x="150" y="190">4. "Eşleşti" onayı: yalnız sırrı bilen kafe üretebilir (Merkez sahte eşleştiremez)</text>
+    <line x1="645" y1="236" x2="117" y2="236" stroke="#1d2321" stroke-width="1.5" marker-end="url(#e1)"/>
+    <text x="150" y="230">5. canlı soru: HMAC(DH(telefon, kafe)), zaman ±5 dk, tek kullanımlık nonce</text>
+    <line x1="115" y1="276" x2="643" y2="276" stroke="#1d2321" stroke-width="1.5" marker-end="url(#e1)"/>
+    <text x="150" y="270">6. rapor kutusu: yeni geçici anahtar E; K = HKDF-SHA256(DH(E, telefon) ‖ DH(kafe, telefon))</text>
+    <text x="150" y="292">AES-256-GCM(K, rapor), ek veri = tür, telefon, zaman, sorunun nonce'u</text>
+    <rect x="285" y="306" width="190" height="40" rx="4" fill="#fff" stroke="#1f3b5c"/>
+    <text x="293" y="323">Merkez yalnız kutuyu taşır; kafe</text>
+    <text x="293" y="338">kapalıyken son kutu ≤ 7 gün bekler</text>
+  </g>
+</svg>
+<figcaption><b>Şema 8.</b> Telefon eşleştirme ve rapor kutusu. Kutu anahtarı iki Diffie-Hellman sonucundan türer: yalnız kafe (sabit anahtarıyla) telefonun kabul edeceği bir kutu yapabilir, yalnız telefon açabilir.</figcaption>
+</figure>
+<ul>
+  <li><strong>Yeniden oynatma koruması:</strong> canlı yanıt, sorunun nonce'unu taşır; eski bir yanıt yeni bir soruya verilemez. Telefon daha eski tarihli bir rapora geri dönmez.</li>
+  <li><strong>Test:</strong> <code>tests/remote-reports.test.ts</code> Merkez'in aldığı ve gönderdiği her baytı ve iki veritabanındaki her satırı ürün adı, tutar ve rapor alan adları için tarar; hiçbiri bulunmamalı.</li>
+</ul>
+
+<!-- ============================================================ 13 -->
+<h1 id="t13" class="akis"><span class="no">13</span>Uzaktan yönetim ve iki adımlı doğrulama</h1>
+<p>Sahip, eşleştirdiği cihazdan kafenin bütün ekranlarını uzaktan açabilir. Bu, raporlardan daha tehlikeli bir yetki olduğu için kurallar daha sıkıdır (<code>server/remote-admin.ts</code>, <code>packages/domain/remote-admin-crypto.ts</code>):</p>
+<ol>
+  <li><strong>Giriş:</strong> cihaz yeni bir geçici X25519 anahtarı E<sub>d</sub> üretir. k1 = HKDF(DH(E<sub>d</sub>, C) ‖ DH(P, C)); C kafenin sabit anahtarı, P cihazın dışa aktarılamaz anahtarı. Şifre ve telefondaki 6 haneli kod (TOTP) k1 altında AES-256-GCM ile gönderilir. k1'i yalnız bu cihaz ve bu kafe hesaplayabilir; Merkez için doğru ve yanlış şifre aynı görünür.</li>
+  <li><strong>Oturum anahtarı:</strong> kafe kendi geçici anahtarı E<sub>c</sub>'yi verir; K = HKDF(DH(E<sub>c</sub>, E<sub>d</sub>) ‖ k1). Geçici anahtarlar atıldığı için ileriye dönük gizlilik sağlanır: kalıcı anahtarlar sonradan çalınsa bile eski oturumlar açılamaz.</li>
+  <li><strong>Her istek:</strong> K ile AES-GCM; ek veri oturum, sekme, sıra numarası ve zamandır. Kafe sekme başına görülen sıra numaralarını tutar; aynı numara ya da 512 geride kalan numara reddedilir. Büyük yanıtlar (Excel, PDF) 4 MB'lık şifreli parçalarla gelir.</li>
+  <li><strong>Oturum gerçek bir personel oturumudur:</strong> aynı 05:00 sonu, aynı 10 dakikalık otomatik kilit. Jeton kafeden hiç çıkmaz; çözülen istek kafenin içinde, yalnız bu sürecin rastgele sırrını taşıyan bir işaretle yeniden oynatılır.</li>
+  <li><strong>Uzaktan yapılamayanlar:</strong> yedekten geri yükleme, kurtarma kodu, cihaz eşleştirme, uzaktan erişim izinlerini açmak, güncelleme kurmak (403 <code>REMOTE_FORBIDDEN</code>).</li>
+</ol>
+<h3>TOTP ve "adım onayı"</h3>
+<p>Doğrulama kodları RFC 6238 TOTP'dir: HMAC-SHA1, 30 saniyelik adım, 6 hane, ±1 adım tolerans ve aynı adımın ikinci kez kullanılmasının reddi (<code>server/totp.ts</code>). Mola Yönetim'de fiyat, paket, ödeme, duyuru ve güncelleme yayını gibi işlemler oturum açık olsa bile ayrıca güncel bir kod ister; doğru kod o oturuma 10 dakikalık bir "yetki penceresi" açar (<code>server/merkez/step-up.ts</code>). Yanlış denemeler adres başına iki katına çıkan bekleme süresiyle sınırlanır.</p>
+
+<!-- ============================================================ 14 -->
+<h1 id="t14" class="akis"><span class="no">14</span>Uzaktan destek köprüsü</h1>
+<p>Kafe modemin arkasında olduğu için Merkez kafeye bağlanamaz. Kafe, yalnız gerektiğinde (uzaktan destek izni açık, eşleşmiş bir telefon var ya da eşleştirme QR'ı ekranda) Merkez'e tek bir uzun bekleyen istek (long-poll, en çok 25 sn) açık tutar; Merkez beklettiği istekleri bu cevaba koyar, kafe sonuçları ayrı imzalı bir istekle geri yollar (<code>server/relay.ts</code>, <code>server/merkez/relay.ts</code>). "Mola destek" rolü sunucuda bir izin listesiyle sınırlanır: menü, masa, yazıcı gibi ekranlar açık; satış, ödeme, kasa, çalışan şifreleri, misafir telefonları kapalıdır (403). Oturum açıkken bütün personel ekranlarında "Mola ekibi bağlı" bandı görünür ve her değişiklik sahibin kaydına düz Türkçe yazılır.</p>
+
+<!-- ============================================================ 15 -->
+<h1 id="t15"><span class="no">15</span>İnternetten menü: misafir tüneli</h1>
+<p class="giris">Misafir masadaki QR'ı kendi mobil verisiyle açabilmeli. Ama kafe bilgisayarı internete açık değil ve açılmamalı. Çözüm: kafe, Merkez'e dışa doğru <strong>tek bir WebSocket</strong> bağlantısı açık tutar; Merkez misafirin isteklerini bu bağlantının içinden kafeye taşır.</p>
+<figure>
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="w1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2321"/></marker></defs>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="20" y="10" width="170" height="34" rx="6" fill="#fbefe3" stroke="#b8661f"/><text x="105" y="32">Misafir</text>
+    <rect x="295" y="10" width="170" height="34" rx="6" fill="#e8eef6" stroke="#1f3b5c"/><text x="380" y="32">Caddy + Merkez</text>
+    <rect x="570" y="10" width="170" height="34" rx="6" fill="#e7efe9" stroke="#234c3e"/><text x="655" y="32">Kafe sunucusu</text>
+  </g>
+  <g stroke="#b7c0bc" stroke-dasharray="4 4"><line x1="105" y1="46" x2="105" y2="320"/><line x1="380" y1="46" x2="380" y2="320"/><line x1="655" y1="46" x2="655" y2="320"/></g>
+  <g font-size="10.5">
+    <line x1="655" y1="74" x2="382" y2="74" stroke="#b8661f" stroke-width="2" marker-end="url(#w1)"/>
+    <text x="420" y="68">0. GET /api/merkez/v1/tunnel (HMAC imzalı) → 101</text>
+    <text x="420" y="90" fill="#5d6763">hello: misafir sayfası dosyalarının SHA-256'ları</text>
+    <line x1="105" y1="120" x2="378" y2="120" stroke="#1d2321" stroke-width="1.5" marker-end="url(#w1)"/>
+    <text x="113" y="114">1. HTTPS GET /q/kod/masa</text>
+    <rect x="300" y="128" width="160" height="44" rx="4" fill="#fff" stroke="#d5dbd8"/>
+    <text x="306" y="146">lisans açık mı? yol izinli mi?</text>
+    <text x="306" y="162">sayfa önbellekte mi (SHA-256)?</text>
+    <line x1="380" y1="194" x2="653" y2="194" stroke="#1d2321" stroke-width="1.5" marker-end="url(#w1)"/>
+    <text x="388" y="188">2. req {id, yöntem, yol, misafir IP, mac}</text>
+    <rect x="530" y="202" width="220" height="44" rx="4" fill="#fff" stroke="#d5dbd8"/>
+    <text x="536" y="220">aynı izin listesi bir kez daha;</text>
+    <text x="536" y="236">iç dinleyicide yeniden oynat</text>
+    <line x1="655" y1="268" x2="382" y2="268" stroke="#1d2321" stroke-width="1.5" marker-end="url(#w1)"/>
+    <text x="420" y="262">3. res {durum, başlıklar} + 64 kB'lık data parçaları</text>
+    <line x1="380" y1="300" x2="107" y2="300" stroke="#1d2321" stroke-width="1.5" marker-end="url(#w1)"/>
+    <text x="113" y="294">4. yanıt (içerik saklanmaz)</text>
+  </g>
+</svg>
+<figcaption><b>Şema 9.</b> Tünel (<code>server/guest-tunnel.ts</code>, <code>server/merkez/guest-tunnel.ts</code>, <code>server/tunnel-protocol.ts</code>, <code>server/ws-frames.ts</code>).</figcaption>
+</figure>
+<h3>Tasarım kararları</h3>
+<ul>
+  <li><strong>Neden WebSocket, neden kendi yazdığım?</strong> Kalıcı, çift yönlü ve çoklanmış tek bir bağlantı; uzun bekleyen istek (köprü) 30 misafirde sıraya girerdi. Yalnız ikili mesajlar, ping/pong ve kapanış gerektiği için RFC 6455'in bu kısmı 200 satırın altında yazıldı.</li>
+  <li><strong>Mesaj biçimi:</strong> her mesaj <code>[4 bayt başlık uzunluğu][başlık JSON][gövde]</code>. Türler: <code>hello</code>, <code>req</code>, <code>res</code>, <code>data</code>, <code>cancel</code>. Kafe büyük bir fotoğrafın parçalarını istekler arasında sırayla gönderir; büyük yanıt küçükleri bekletmez.</li>
+  <li><strong>İmza:</strong> bağlantı anahtarı = HMAC(kurulum anahtarı, bu bağlantının nonce'u); her istek bu anahtarla imzalanır (kimlik, yöntem, yol, misafir adresi, işletme, gövde özeti). Kafe misafirin IP adresine yalnız bu imzayla inanır; böylece hız sınırları Merkez'in tek adresine değil her misafire ayrı çalışır.</li>
+  <li><strong>İki uçta izin listesi:</strong> yalnız misafir sayfası, onun dosyaları, <code>/api/guest/*</code> ve ürün fotoğrafları. Personel yolları, giriş, masaüstü araçları Merkez'de 404'tür ve kafeye hiç gitmez; kafe aynı listeyi kendi koduyla bir kez daha denetler.</li>
+  <li><strong>Adalet:</strong> kafe başına aynı anda en çok 48 istek, fazlası o kafenin kendi sırasında (300) bekler; yanıt vermeyen bir kafe diğerlerini etkilemez. 20 saniyede yanıt gelmezse misafire "Menü şu anda açılamıyor" sayfası.</li>
+  <li><strong>İçerikle adreslenen önbellek:</strong> misafir sayfası ve dosyaları SHA-256'larıyla tanınır; Merkez bunları bir kez alır, bütün kafeler için ortak tutar, tarayıcıya "immutable" önbellek başlığıyla verir. Kafenin yüklemesi çoğunlukla yalnız küçük JSON'lardır.</li>
+  <li><strong>Web tasarımı tarafı:</strong> misafir sayfası ayrı bir Vite girişidir (<code>menu.html</code>): personel ekranları, giriş ve şerit içinde yoktur (~505 kB ham, ~150 kB sıkıştırılmış). Sayfa <code>/q/&lt;kod&gt;/</code> alt yolunda çalıştığı için betik ve stil adresleri göreli üretilir (<code>vite.config.ts</code> <code>renderBuiltUrl</code>), API adreslerine önek eklenir (<code>src/basePath.ts</code>). Çerezin yolu da Merkez'de <code>/q/&lt;kod&gt;/</code>'a daraltılır; aynı sitedeki iki kafe çerez paylaşmaz.</li>
+</ul>
+<h3>Kafe kapalıyken: menünün kopyası (8 Ekim)</h3>
+<p>Kafe bilgisayarı kapalıyken QR'ı okutan misafir eskiden yalnız "Menü şu anda açılamıyor" görürdü. Artık Merkez menünün <strong>herkese açık bir kopyasını</strong> tutar ve onu gösterir; sipariş verilemez (<code>server/menu-mirror.ts</code>, <code>server/merkez/menu-mirror.ts</code>, <code>packages/domain/menu-mirror.ts</code>).</p>
+<ul>
+  <li><strong>Ne gider:</strong> misafirin göreceği her şey ve fazlası değil: işletme adı, logo, tema, kategoriler, ürünler, seçenekler, "tükendi", kampanyalar (zaman pencereleri ve kota için satılan <em>adet</em>), masa adları. Masa kodunun kendisi değil, yalnız tek yönlü özeti (<code>SHA-256("mola-masa:v1:" + kod)</code>, 160 bit) gider; Merkez kopyayı gösterirken adresteki kodu özetleyip listede arar. Satış, sipariş, misafir, çalışan bilgisi kopyada yoktur.</li>
+  <li><strong>Ne zaman:</strong> veritabanına her yazmadan sonra (3 sn birleştirerek), tünel her yeniden bağlandığında ve 10 dakikada bir. Kopya değişmediyse Merkez "aynı" der. Fotoğraflar SHA-256'larıyla adreslenir: Merkez eksik olanları ister, kafe yalnız onları gönderir; menüden çıkan fotoğraf Merkez'den hemen silinir.</li>
+  <li><strong>Uyumluluk:</strong> kafe kopyayı yalnız Merkez'in yetenek listesinde <code>menu.mirror</code> varsa gönderir. Eski Merkez'e eski davranış, eski kafeye eski sayfa.</li>
+  <li><strong>Saklama:</strong> kopya ve fotoğraflar AES-256-GCM ile mühürlü; işletme başına 64 MB, toplam 1 GB sınırı; işletme silinince hemen silinir. Menü metni <code>merkez.sqlite</code>'ta olduğu için Merkez'in gece yedeğine girer, fotoğraf dosyaları girmez; geri yüklemeden sonra Merkez eksik fotoğrafları kafeden yeniden ister.</li>
+  <li><strong>Gösterim:</strong> kopyadan açılan sayfaya imzalı, durumsuz bir oturum verilir (<code>mirror</code> + kimlik + HMAC). Kafe dönünce bu oturumla gelen istek <code>409 SESSION_RENEW</code> alır; sayfa gerçek oturum açar, misafirin sepeti sekme deposunda taşınır. Kafe siparişi her zaman kendi verisiyle yeniden doğrular; ürün bu arada tükendiyse "Bu ürün az önce tükendi" der.</li>
+</ul>
+<h3>QR siparişleri açık mı? (8 Ekim)</h3>
+<p>Menü hep görünür; telefondan sipariş yalnız üç koşul birlikte sağlanırsa açıktır (<code>server/qr-ordering.ts</code>, <code>packages/domain/qr-ordering.ts</code>):</p>
+<ol>
+  <li><strong>Bir personel ekranı bağlı:</strong> son 90 saniyede bir personel ekranı sunucuya sormuş olmalı (her ekran birkaç saniyede bir sorar). Kimse yokken gelen sipariş görülmezdi.</li>
+  <li><strong>Gün sonu yapılmamış:</strong> gün sonu bitince QR siparişleri kendiliğinden durur; ertesi iş günü (05:00), kasa açılışı ya da "Aç" ile yeniden açılır.</li>
+  <li><strong>Elle durdurulmamış:</strong> sahip, müdür ya da kasiyer "QR siparişlerini durdur" diyebilir; 30 dakika sonra ekranlarda hatırlatma çıkar.</li>
+</ol>
+<p>Kapalıyken misafir "Şu an sipariş almıyoruz, lütfen garsonunuza sorun." görür; sunucu da siparişi <code>409 ORDERING_CLOSED</code> ile reddeder. "Garson çağır" yalnız 1. koşula bağlıdır. Kafe durumu tünelden Merkez'e bildirir; tünel koptuysa Merkez "Şu an sipariş alınamıyor" der. Kapanış saati ayarı bilerek yok: her kafede farklı ve unutulur; gün sonu zaten "kapandık" demektir. Platform siparişleri bu kuraldan etkilenmez.</p>
+<h3>Ölçüm (yerel bilgisayar, 7 Ekim)</h3>
+<table class="dar bolunmez">
+  <thead><tr><th>Deney</th><th>Sonuç</th></tr></thead>
+  <tbody>
+    <tr><td>Tek misafir, art arda 400 istek</td><td>Doğrudan kafe p95 0,7 ms; Merkez üzerinden p95 1,3 ms (eklenen +0,6 ms)</td></tr>
+    <tr><td>50 kafe × 30 misafir (≈ 740 istek/sn, 1.500 bağlantı)</td><td>p50 4–5 ms, p95 44–57 ms, hata 0; Merkez belleği 124 → ~200 MB</td></tr>
+    <tr><td>Aynı yük, bir kafe hiç yanıt vermiyor</td><td>Diğer kafeler p95 40 ms, hata 0</td></tr>
+  </tbody>
+</table>
+<p class="kucuk"><span class="rozet dogrulanmadi">Doğrulanmadı</span> Gerçek VDS'te ve gerçek telefonla henüz denenmedi; gerçek internette misafir → VDS → kafe gidiş-dönüşleri (Türkiye içinde tipik 10–40 ms) eklenecek.</p>
+
+<!-- ============================================================ 16 -->
+<h1 id="t16" class="akis"><span class="no">16</span>Sosyal medya kısa adresleri</h1>
+<p>Kafenin "Bizi Instagram'da takip edin" QR kartı bağlantının kendisini değil, Merkez'deki kalıcı bir kısa adresi taşır: <code>/s/&lt;kod&gt;/&lt;platform&gt;</code>. Kod 62 harfli alfabeden 10 karakterdir (≈ 59 bit, sırasız, tahmin edilemez) ve hiç değişmez; sahip bağlantıyı değiştirse de basılı QR yeni bağlantıyı açar. Lisans etkin ve paket bu hizmeti içeriyorsa 302 yönlendirmesi, değilse "Bu işletmenin bu hizmeti şu anda kullanılamıyor." sayfası döner; ziyaretçiden hiçbir şey kaydedilmez (<code>server/merkez/social.ts</code>). Bağlantılar ayrıca her platformun kendi alan adına göre denetlenir (yalnız https; <code>javascript:</code> gibi şemalar reddedilir).</p>
+
+<!-- ============================================================ 17 -->
+<h1 id="t17" class="akis"><span class="no">17</span>Program dosyası denetimi</h1>
+<p>Kurulum paketi her dosyanın SHA-256'sını <code>app/butunluk.json</code>'a yazar. Bu listenin kendisi, Merkez'in güncelleme paketine attığı Ed25519 imzanın içindedir; yani listeyi değiştiren de yakalanır. Kafe açılıştan 20 saniye sonra ve günde bir dosyaları özetleyip karşılaştırır; fark varsa yalnız dosya adlarını Merkez'e bildirir (<code>server/integrity.ts</code>). Kasıtlı olarak hiçbir şeyi kilitlemez: virüs programının karantinaya aldığı bir dosya yüzünden bir kafenin işi durmamalı.</p>
+
+<!-- ============================================================ 18 -->
+<h1 id="t18" class="akis"><span class="no">18</span>Otomatik güncelleme</h1>
+<figure>
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="u1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
+  <g font-size="11" text-anchor="middle">
+    <rect x="10" y="20" width="130" height="58" rx="8" fill="#e8eef6" stroke="#1f3b5c"/><text x="75" y="44" font-weight="700">Yayın</text><text x="75" y="62">imzalı sürüm bilgisi</text>
+    <rect x="160" y="20" width="130" height="58" rx="8" fill="#fff" stroke="#1f3b5c"/><text x="225" y="44" font-weight="700">İndirme</text><text x="225" y="62">Range ile devam</text>
+    <rect x="310" y="20" width="130" height="58" rx="8" fill="#fff" stroke="#1f3b5c"/><text x="375" y="44" font-weight="700">Doğrulama</text><text x="375" y="62">imza + dosya SHA-256</text>
+    <rect x="460" y="20" width="130" height="58" rx="8" fill="#fff" stroke="#234c3e"/><text x="525" y="44" font-weight="700">Bekleme</text><text x="525" y="62">kapanış · açılış · boşta</text>
+    <rect x="610" y="20" width="140" height="58" rx="8" fill="#e7efe9" stroke="#234c3e"/><text x="680" y="44" font-weight="700">Yedek</text><text x="680" y="62">doğrulanmış kopya</text>
+    <rect x="160" y="130" width="160" height="58" rx="8" fill="#fff" stroke="#234c3e"/><text x="240" y="154" font-weight="700">Değiştir (atomik)</text><text x="240" y="172">app → onceki/app</text>
+    <rect x="360" y="130" width="160" height="58" rx="8" fill="#fff" stroke="#234c3e"/><text x="440" y="154" font-weight="700">Sağlık denetimi</text><text x="440" y="172">90 sn içinde /api/health</text>
+    <rect x="560" y="110" width="170" height="44" rx="8" fill="#e7efe9" stroke="#234c3e"/><text x="645" y="137" font-weight="700">Tamam: yeni sürüm</text>
+    <rect x="560" y="170" width="170" height="64" rx="8" fill="#f8e6e3" stroke="#a33a2e"/><text x="645" y="194" font-weight="700">Geri dönüş</text><text x="645" y="212">program + veri eski hâline</text><text x="645" y="226">(yeni veri kenara alınır)</text>
+  </g>
+  <g stroke="#3a4642" stroke-width="1.5">
+    <line x1="142" y1="49" x2="158" y2="49" marker-end="url(#u1)"/><line x1="292" y1="49" x2="308" y2="49" marker-end="url(#u1)"/>
+    <line x1="442" y1="49" x2="458" y2="49" marker-end="url(#u1)"/><line x1="592" y1="49" x2="608" y2="49" marker-end="url(#u1)"/>
+    <path d="M680,80 L680,104 L120,104 L120,159 L158,159" fill="none" marker-end="url(#u1)"/>
+    <line x1="322" y1="159" x2="358" y2="159" marker-end="url(#u1)"/>
+    <line x1="522" y1="150" x2="558" y2="134" marker-end="url(#u1)"/><line x1="522" y1="168" x2="558" y2="196" marker-end="url(#u1)"/>
+  </g>
+</svg>
+<figcaption><b>Şema 10.</b> Güncellemenin yaşam döngüsü (<code>server/update-agent.ts</code>, <code>scripts/desktop/nobetci.mjs</code>, <code>scripts/desktop/guncelleyici.mjs</code>).</figcaption>
+</figure>
+<ul>
+  <li><strong>Çalışan program kendini değiştiremez</strong> (Windows açık dosyayı taşıtmaz). Bu yüzden sunucu, kuruluma hazır olunca özel bir çıkış koduyla (75) kapanır; onu izleyen "nöbetçi" süreç işi ayrı bir "uygulayıcı" sürece devreder.</li>
+  <li><strong>Günlük önce yazılır:</strong> uygulayıcı her adımı önce <code>gunluk.json</code>'a yazıp diske zorlar (fsync), sonra yapar. Elektrik kesilirse sonraki açılış kaldığı adımdan devam eder; testler her adımda kesintiyi dener.</li>
+  <li><strong>Geri sürüme inme yoktur;</strong> yalnız daha yeni sürüm kabul edilir. Satıcı tarafında yayın, iki adımlı doğrulama kodu ister; önce pilot işletmelere, sonra herkese yayınlanır.</li>
+  <li>Gerçek kurulumla uçtan uca denendi: bilerek bozulmuş bir sürüm 90 saniye sonra kendiliğinden geri alındı, veri her adımda yerindeydi.</li>
+</ul>
+
+<!-- ============================================================ 19 -->
+<h1 id="t19" class="akis"><span class="no">19</span>Web sitesi ve iletişim formu</h1>
+<ul>
+  <li><strong>Statik site:</strong> sayfalar düz HTML parçalarıdır; <code>scripts/site-build.ts</code> ortak üst ve alt bölümü ekler, simgeleri derleme anında React'in sunucu tarafı çizimiyle SVG'ye çevirir, hizmet listesini programın kendi katalogundan alır (fiyat asla yazılmaz), site haritası ve iç bağlantı denetimi yapar. Tarayıcıya giden tek betik yaklaşık 9 kB'tır.</li>
+  <li><strong>Gizlilik tasarımı:</strong> çerez yok, analiz aracı yok, dış yazı tipi ya da CDN yok. Caddy'nin içerik güvenlik politikası (<code>default-src 'self'</code>) dışarıdan yüklemeyi zaten engeller.</li>
+  <li><strong>Tanıtım videoları:</strong> gerçek programdan, örnek bir kafeyle, Chrome'un ekran yayını (DevTools protokolü) ve ffmpeg ile otomatik kaydedilir (<code>npm run site:videos</code>).</li>
+  <li><strong>Form ve robotlar:</strong> form önce kısa ömürlü, saklanmayan bir anahtar (HMAC) alır; 4 saniyeden hızlı gönderim, gizli "website" alanını dolduran gönderim ve adres başına sınırı aşan gönderim kaydedilmez. Kayıt Merkez'de mühürlü durur, kapandıktan 2 yıl sonra silinir.</li>
+</ul>
+
+<!-- ============================================================ 20 -->
+<h1 id="t20" class="akis"><span class="no">20</span>Güvenlik modeli</h1>
+<table class="dar">
+  <thead><tr><th style="width:26%">Tehdit</th><th>Önlem</th></tr></thead>
+  <tbody>
+    <tr><td>Kasa bilgisayarı ya da diski çalınır</td><td>Satırlar AES-256-GCM ile şifreli; anahtar Windows kullanıcısına (DPAPI) kilitli. Disk şifrelemesi (BitLocker) ayrıca önerilir.</td></tr>
+    <tr><td>Kafe Wi-Fi'sindeki biri başka masanın siparişini görmek ister</td><td>Masa kodları 144 bit rastgele; misafir yalnız kendi masasına ve kendi işletmesine erişir. Kurtarma kodu ağdan hiç gösterilmez.</td></tr>
+    <tr><td>Kaba kuvvet şifre denemesi</td><td>scrypt ile saklanan şifreler; cihaz ve hesap başına deneme sınırı; yalnız yanlış denemeler sayılır, gerçek kullanıcı kilitlenmez.</td></tr>
+    <tr><td>DNS rebinding, başka siteden istek (CSRF)</td><td>Host başlığı denetimi; çerezler SameSite=Strict ve HttpOnly; sıkı CSP; "yalnız bu bilgisayar" işlemleri ayrıca loopback ister.</td></tr>
+    <tr><td>Ağda dinleme, tekrar oynatma</td><td>Kafe–Merkez HTTPS; her istek HMAC, ±5 dk zaman ve tek kullanımlık nonce.</td></tr>
+    <tr><td>Sahte lisans, eski yedekten eski lisans</td><td>Ed25519 imza ve gömülü açık anahtar; sıra numarası ve "lisans izi" dosyası; saati geri almak işe yaramaz.</td></tr>
+    <tr><td>Satıcının sunucusu ele geçirilir</td><td>Satış verisi orada yok; yedekler kafenin anahtarıyla şifreli; raporlar uçtan uca şifreli. Misafir menü trafiği orada açık hâlde görünür (bilinen sınır).</td></tr>
+    <tr><td>Satıcı kayıtlarının sessizce değiştirilmesi</td><td>İşlem kayıtları hash zinciri + saatlik Ed25519 mühür; bağımsız denetleyici <code>scripts/islem-dogrula.mjs</code>. IP adresleri 1 yıl sonra silinir ama zincir bozulmaz: kayıt adresin kendisini değil tuzlu bir özetini (<code>SHA-256("mola-islem-adres-1" + tuz + adres)</code>) taşır, adres ayrı tabloda durur. 8 Ekim'den önceki kayıtlar zincire eklenen bir "IP adresleri silindi" kaydıyla, eski özetleri listelenerek temizlenir; denetleyici ikisini de doğrular.</td></tr>
+    <tr><td>Program dosyasının değiştirilmesi (lisans denetimini kaldırmak)</td><td>İmzalı SHA-256 listesiyle günlük denetim; satıcıya bildirim.</td></tr>
+  </tbody>
+</table>
+<p class="kucuk gri">Bilinen sınırlar: kafe içi ağ düz HTTP'dir (yerel ağda TLS sertifikası dağıtmak kafeler için pratik değil). Program dosyaları kod imzalama sertifikasıyla imzalı değil. Bilgisayarda yönetici yetkisi olan biri programı değiştirebilir; denetim yalnız bunu görünür kılar.</p>
+
+<!-- ============================================================ 21 -->
+<h1 id="t21"><span class="no">21</span>Performans ve testler</h1>
+<h2 id="t21-1">21.1 Test türleri</h2>
+<table class="dar">
+  <thead><tr><th style="width:22%">Tür</th><th style="width:14%">Sayı</th><th>Ne denetler</th></tr></thead>
+  <tbody>
+    <tr><td>Birim ve entegrasyon testleri (node:test)</td><td>744 test, 159 dosya</td><td>İş kuralları, şifreleme, yedek ve geri yükleme, lisans, kalp atışı, tünel, yıl paketleri, rol × işlem tabloları. Çoğu gerçek bir sunucuyu geçici klasörde başlatıp HTTP ile konuşur. 8 Ekim'deki koşu: 743 geçti, 1 atlandı (PowerShell 7 gerektiren yerel HTTPS denetimi), süre yaklaşık 3 dakika. Tarayıcı testlerinin 8 Ekim'deki tam turu: 111 dosyadan 110'u ilk koşuda geçti; kalan 1 dosya (yük altında zamanlama) tek başına yeniden koşulunca geçti.</td></tr>
+    <tr><td>Tarayıcı testleri (Playwright, gerçek Chrome)</td><td>241 test, 111 dosya</td><td>Kullanıcı gibi tıklar: QR siparişi → mutfak → ödeme, gün sonu, iade, rezervasyon, uzaktan yönetim, Mola Yönetim. 360, 390, 768, 820, 1024, 1280 px genişliklerde yana taşma olmadığını ve dokunma hedeflerinin en az 44 px olduğunu ölçer. Her dosya kendi temiz sunucusuyla çalışır; tam tur yaklaşık 30–50 dakika.</td></tr>
+    <tr><td>Gizlilik testleri</td><td>(yukarıdakilerin içinde)</td><td>"Kafeden asla satış verisi çıkmaz": Merkez'in gördüğü her bayt ve veritabanı satırı ürün adı, tutar, şifre için taranır.</td></tr>
+    <tr><td>5 yıllık yük testi</td><td>ayrı betikler</td><td>Aşağıda.</td></tr>
+  </tbody>
+</table>
+<h2 id="t21-2">21.2 5 yıllık hız ve doğruluk testi</h2>
+<p><strong>Yöntem:</strong> iki sahte kafenin 5 yılı (1.826 gün) programın kendi kurallarıyla gün gün üretildi: orta kafe günde 160 hesap, yoğun kafe 640 hesap (Elazığ'da hafta sonu ve maç akşamları dolu). Her gün menü değişiklikleri, fiyat artışları, kampanyalar, iptaller, masa taşıma, bölünmüş ödemeler, iadeler, rezervasyonlar, etkinlikler, kasa sayımları, vardiyalar, stok alışları üretildi. Rastgelelik gün başına sabit tohumla yapıldı (aynı komut aynı sayıları verir). Yanında senaryonun kendi "defteri" tutuldu. Sonra gerçek sunucu bu veriyle açıldı ve yoğun bir akşam taklit edildi: 10 personel tableti, mutfak ekranı, 20 misafir telefonu, raporlara bakan sahip, saatin 4 katı hızda sipariş.</p>
+<table class="dar">
+  <thead><tr><th></th><th>Orta kafe</th><th>Yoğun kafe</th></tr></thead>
+  <tbody>
+    <tr><td>5 yılda hesap / sipariş / ürün satırı</td><td>293 bin / 428 bin / 1,3 milyon</td><td>1,16 milyon / 1,6 milyon / 4,7 milyon</td></tr>
+    <tr><td>Veritabanı (yıl paketlerinden önce)</td><td>0,55 GB</td><td>1,8 GB</td></tr>
+    <tr><td>Açılış</td><td>2–2,5 sn</td><td>2 sn</td></tr>
+    <tr><td>Sipariş gönderme / ödeme</td><td>0,02 sn</td><td>0,04 sn (en yavaş %5'i 0,15 sn)</td></tr>
+    <tr><td>Bugün, hafta, ay raporu</td><td>0,02–0,2 sn</td><td>0,03–0,25 sn</td></tr>
+    <tr><td>"Tümü" (5 yıl) özet, özetlerden sonra</td><td>0,01–0,15 sn</td><td>0,02–0,3 sn</td></tr>
+    <tr><td>Gece yedeği, yıl paketlerinden sonra</td><td>13 sn, 77 MB</td><td>24 sn, 0,27 GB</td></tr>
+    <tr><td>Doğruluk</td><td colspan="2">1.826 günün her birinde tahsilat, iade, gider defterle kuruşu kuruşuna aynı; KDV, kasa, stok, geri yükleme hatasız. Sunucu yoğun anda iki kez zorla kapatıldı: kayıp ve çift kayıt yok.</td></tr>
+  </tbody>
+</table>
+<p>Test sırasında 10 yavaşlık bulunup düzeltildi. En büyüğü: her raporda, okunan her satır için işletmenin anahtarı yeniden açılıyordu; işlemci profili rapor süresinin %46'sının buradan geldiğini gösterdi. Anahtar bir kez açılınca raporlar yaklaşık iki kat hızlandı.</p>
+<h2 id="t21-3">21.3 Zayıf bilgisayar son kontrolü</h2>
+<p>Ucuz kafe bilgisayarlarını (Celeron, 4–8 GB RAM) taklit etmek için sunucu yalnız 2 mantıksal çekirdek ve düşük öncelikle çalıştırıldı. Kural: yılda bir yapılan yıl paketleme dışında hiçbir tablet 0,5 saniyeden uzun beklememeli. Ölçüm, her 0,25–0,5 saniyede bir sunucuya sorulan boş bir isteğin yanıt süresiyle yapıldı.</p>
+<table class="dar">
+  <thead><tr><th>Aşama (zayıf mod)</th><th>p50</th><th>p95</th><th>p99</th><th>En uzun</th></tr></thead>
+  <tbody>
+    <tr><td>Açılış ve yoğun servis (6 dk)</td><td>0,8 ms</td><td>4 ms</td><td>48 ms</td><td>421 ms</td></tr>
+    <tr><td>Gece yedeği sırasında</td><td>8 ms</td><td>58 ms</td><td>89 ms</td><td>89 ms</td></tr>
+    <tr><td>Bütün raporlar (Tümü dahil)</td><td>11 ms</td><td>82 ms</td><td>194 ms</td><td>193 ms</td></tr>
+    <tr><td>Excel, yazdırılabilir sayfa, PDF</td><td>1 ms</td><td>109 ms</td><td>191 ms</td><td>191 ms</td></tr>
+    <tr><td>Yıl paketleme (yılda bir, kural dışı)</td><td>10 ms</td><td>65 ms</td><td>104 ms</td><td>647 ms</td></tr>
+  </tbody>
+</table>
+<p>Bu turda iki sorun bulundu: kampanya raporu bütün tabletleri 3,6 sn bekletiyordu (parçalara bölündü, 0,19 sn); Windows'un bir program başlatması zayıf bilgisayarda sunucuyu yarım saniyeden fazla durduruyordu (işlemci profiliyle bulundu; program başlatmalar ayrı iş parçacığına taşındı). Öneri: kafe bilgisayarında SSD şart, 8 GB RAM.</p>
+<p class="kucuk gri">Ölçüm makinesi: AMD Ryzen 5 5600X, 32 GB RAM, NVMe disk, Windows 11, Node 24. Ayrıntılar: <code>docs/HIZ_TESTI_5_YIL.md</code>.</p>
+
+<!-- ============================================================ 22 -->
+<h1 id="t22"><span class="no">22</span>Yapay zekâ ile geliştirme</h1>
+<p class="giris">Bu bölümü abartmadan, olduğu gibi yazmak istedim. Mola'nın kodunun, testlerinin ve belgelerinin büyük bölümünü yapay zekâ yazdı. Ürünü, kararları ve sorumluluğu ise ben taşıdım.</p>
+<h2 id="t22-1">22.1 Nasıl başladı, nasıl sürdü</h2>
+<ul>
+  <li><strong>Eylül 2026:</strong> proje OpenAI'ın Codex aracıyla başladı. Sipariş, menü, şifreli yedek, raporlar ve rapor güvenliği gibi ilk parçalar bu dönemde yazıldı (proje arşivindeki teslim notları 21 Eylül'den başlıyor).</li>
+  <li><strong>2 Ekim 2026'dan beri:</strong> geliştirme Anthropic'in Claude modeliyle, Claude Code aracı üzerinden sürüyor. Bu dönemde mimari iki sunucuya ayrıldı (kafe ve Mola Merkez), masaüstü kurulum paketi, anahtar koruması, otomatik güncelleme, uzaktan raporlar, paketler, 5 yıllık test, yıl paketleri, internetten menü ve web sitesi eklendi. Bu belge de Claude'un hazırladığı ve kodla karşılaştırdığı bir metindir.</li>
+</ul>
+<h2 id="t22-2">22.2 İş bölümü</h2>
+<div class="iki-sutun">
+  <div class="kutu">
+    <span class="kutu-baslik">Benim yaptıklarım</span>
+    <ul>
+      <li>Ürünün yönünü belirledim: kimin için, ne sorunu çözüyor, neyi yapmayacak.</li>
+      <li>Her ürün ve iş kararını ben verdim. Örnekler: verinin kafede kalması; iş gününün 05:00'te dönmesi; 14 gün internetsizlik kuralı; kendi kendine deneme yerine başvuru; yıl paketlenirken müşteri bilgilerinin silinmesi; sosyal medya kartlarının ücretli olması; fiyatlar.</li>
+      <li>Kendi cihazlarımda denedim ve ekran görüntüleriyle geri bildirim verdim (ör. iPhone 13'te giriş ekranının kendiliğinden yakınlaşması böyle bulundu ve düzeltildi).</li>
+      <li>Ücretli her şeye (alan adı, sunucu) ve hukuki konulara ben karar veriyorum.</li>
+    </ul>
+  </div>
+  <div class="kutu">
+    <span class="kutu-baslik">Yapay zekânın yaptıkları</span>
+    <ul>
+      <li>Kodun büyük bölümünü, testleri ve belgeleri yazdı.</li>
+      <li>Rakip fiyat araştırması, rol rol denetimler (müşteri, garson, mutfak, kasiyer, sahip, satıcı gözüyle gece boyu test), güvenlik denetimleri yaptı.</li>
+      <li>Birbirinden bağımsız işleri paralel alt ajanlara (sub-agent) böldü; örneğin 5 Ekim'de dört düzeltme turu aynı anda yürüdü, bu belgenin teknik iddiaları da iki ayrı alt ajana kodda tek tek doğrulatıldı.</li>
+      <li>Her turu otomatik testler, 5 yıllık yük testi ve gerçek kurulum denemesiyle doğruladı; sonuçları tarih ve sayılarla <code>docs/</code> klasörüne yazdı.</li>
+    </ul>
+  </div>
+</div>
+<h2 id="t22-3">22.3 Çalışma yöntemi</h2>
+<ul>
+  <li><strong>Kararlar yazılı:</strong> her karar ve "durum" notu <code>docs/TOPARLAMA_PLANI.md</code> ve <code>docs/GELISTIRICI_REHBERI.md</code>'ye işlendi. Yapay zekâ her oturumda baştan başlamadığı için bu belgeler ortak hafızadır.</li>
+  <li><strong>Küçük turlar:</strong> bir özellik, testleri, belgesi ve ekran görüntüleriyle birlikte biter; sonra bir sonrakine geçilir.</li>
+  <li><strong>Test bir güvenlik ağıdır:</strong> test kodu ürün kodundan fazla. Yapay zekânın bir değişikliği başka bir yeri bozduğunda bunu hemen görmemizi sağlayan şey testler oldu.</li>
+  <li><strong>Ölç, sonra düzelt:</strong> yavaşlıklar tahminle değil işlemci profili ve ölçümle bulundu (bölüm 21).</li>
+</ul>
+<h2 id="t22-4">22.4 İyi çalışanlar</h2>
+<ul>
+  <li><strong>Hız:</strong> tek bir öğrencinin aylar sürecek işi haftalar içinde ilerledi; ama bu hız ancak testler ve yazılı kararlarla güvenli oldu.</li>
+  <li><strong>Gerçek hatalar testlerle bulundu.</strong> Bir örnek: bir test yalnız Türkiye saatiyle 18:00'den sonra başarısız oluyordu. İncelenince gerçek bir hata çıktı: teslim edilen bir platform siparişi, hesap aynı anda geçmişe taşınırsa platforma hiç "teslim edildi" diye bildirilmiyordu. Düzeltildi ve saatten bağımsız yeni bir test eklendi.</li>
+  <li><strong>Denetim turları:</strong> "derbi günü" gibi senaryolar ve rol rol denetimler, tek başıma düşünemeyeceğim kadar çok kenar durumu ortaya çıkardı (bir turda 40'tan fazla hata).</li>
+  <li><strong>Belgeler:</strong> her şeyin nerede olduğunu anlatan geliştirici rehberi sayesinde sahada bir sorun çıkınca nereye bakacağımı biliyorum.</li>
+</ul>
+<h2 id="t22-5">22.5 Sınırlar ve dikkat edilmesi gerekenler</h2>
+<ul>
+  <li><strong>Açık gereksinim şart.</strong> Kısa sorular yanlış anlaşıldı: bir gün üç karar ("menü" hangi ekran, ayarlar solda mı üstte mi, kira aya yayılsın mı) kısa sorulduğu için yanlış verildi ve geri alındı. O günden sonra her soru "şu an nasıl, her seçenek günlük kullanımda ne demek, önerim ne" biçiminde soruluyor.</li>
+  <li><strong>Daha önce verilmiş kararı yeniden sormak güveni sarsıyor.</strong> Yapay zekâ bir kez, en baştan kararlaştırılmış bir konuyu (misafirin menüyü mobil veriyle açması) yeniden sordu; bu, programın doğru çalışıp çalışmadığından şüphe etmeme yol açtı. Çözüm yine yazılı kararlar oldu.</li>
+  <li><strong>Gerçek cihaz testinin yerini tutmaz.</strong> Bugün hâlâ denenmemiş olanlar: Android uygulaması gerçek telefonda, gerçek fiş yazıcısı, Mac ve Linux paketleri gerçek bilgisayarda, Mola Merkez gerçek VDS'te, iPhone'da Safari'nin kendisi. Yapay zekâ bunları "derleme düzeyinde doğrulandı" diye açıkça ayırdı; ben de bunları ayrı bir aşama olarak planladım.</li>
+  <li><strong>İnsan incelemesi gerekir.</strong> Örneğin lisans sözleşmesi ve web sitesinin yasal sayfaları yapay zekânın taslağıdır ve avukata gidiyor. Bu belge için yapılan kod doğrulaması da iki yerde taslakla programın uyuşmadığını buldu (gizlilik taslağı sunucunun IP kaydı tuttuğunu söylüyor, sunucu ayarı tutmuyor; satıcı tarafındaki işlem kayıtları ise IP adresi tutuyor). Yapay zekâ kendinden emin ama yanlış bir cümle kurabilir; kodla karşılaştırmak gerekir.</li>
+  <li><strong>Paralel çalışmanın riski:</strong> iki alt ajan aynı dosyalara dokunurken başlatılan bir test, yarım düzenlenmiş kodu yükleyip hata verdi; sorun koddaydı sanıldı, aslında zamanlamadaydı. Bu belge hazırlanırken de birim testlerinin ilk koşusunda, aynı bilgisayarda başka işler sürerken bir test dosyası zaman aşımına uğradı; ikinci koşuda hepsi geçti. Kararsız testler ayrıca incelenmeli.</li>
+</ul>
+<h2 id="t22-6">22.6 Öğrenciler için çıkardığım dersler</h2>
+<ol>
+  <li>Yapay zekâ bir yazılım ekibi gibi çalışabiliyor, ama ürün sahibi siz olmalısınız: neyi istemediğinizi de yazın.</li>
+  <li>Kararları ve durumu bir belgede tutun; yapay zekânın hafızası o belgedir.</li>
+  <li>Testsiz değişiklik kabul etmeyin; mümkünse kullanıcı gibi tıklayan tarayıcı testleri de yazdırın.</li>
+  <li>"Çalışıyor" ile "gerçek cihazda denendi"yi ayırın.</li>
+  <li>Hukuk, güvenlik, para gibi konularda yapay zekânın çıktısı bir taslaktır; uzmana gösterin.</li>
+  <li>Sorulara uzun ve somut cevap verin; belirsiz bir kelime bir günü boşa harcatabilir.</li>
+</ol>
+
+<!-- ============================================================ 23 -->
+<h1 id="t23"><span class="no">23</span>Ekran görüntüleri</h1>
+<figure><img src="../../ekran/kafe/masalar-sahip.png" alt="Masalar ekranı"><figcaption><b>Kasa bilgisayarı:</b> işletme sahibinin Masalar ekranı.</figcaption></figure>
+<div class="uc-sutun">
+  <figure><img src="../../ekran/misafir/internetten-menu.png" alt="Misafir menüsü"><figcaption><b>Misafir:</b> internetten açılan QR menü.</figcaption></figure>
+  <figure><img src="../../ekran/kafe/garson-siparis.png" alt="Garson telefonu"><figcaption><b>Garson telefonu:</b> sipariş alma.</figcaption></figure>
+  <figure><img src="../../ekran/yonetim/telefon-bugun.png" alt="Mola Yönetim telefonda"><figcaption><b>Mola Yönetim:</b> telefonda "Bugün".</figcaption></figure>
+</div>
+<figure><img src="../../ekran/kafe/mutfak-modu.png" alt="Mutfak ekranı"><figcaption><b>Mutfak modu:</b> Yeni, Hazırlanıyor, Hazır sütunları; gecikmeler renkle.</figcaption></figure>
+
+<!-- ============================================================ 24 -->
+<h1 id="t24"><span class="no">24</span>Sözlük</h1>
+<dl class="sozluk">
+  <dt>Adisyon</dt><dd>Masanın sipariş ve hesap kaydı.</dd>
+  <dt>API</dt><dd>Ekranların sunucuyla konuştuğu adresler (ör. <code>POST /api/staff/payments</code>).</dd>
+  <dt>AES-256-GCM</dt><dd>Hem gizlilik hem bütünlük sağlayan simetrik şifreleme; AAD (ek veri) şifrelenmeyen ama doğrulanan bağlamdır.</dd>
+  <dt>Diffie-Hellman (X25519)</dt><dd>İki tarafın, gizli bilgiyi ağdan göndermeden ortak bir anahtar hesaplamasını sağlayan yöntem.</dd>
+  <dt>Ed25519</dt><dd>Dijital imza algoritması; Merkez imzalar, kafe açık anahtarla doğrular.</dd>
+  <dt>ETag / 204</dt><dd>Sunucunun "ekrandaki veri hâlâ güncel" demesi; gereksiz veri gönderilmez.</dd>
+  <dt>HKDF</dt><dd>Bir ortak sırdan amaç başına farklı anahtarlar türeten fonksiyon.</dd>
+  <dt>HMAC</dt><dd>Gizli anahtarla üretilen doğrulama kodu.</dd>
+  <dt>İleriye dönük gizlilik</dt><dd>Kalıcı anahtarlar sonradan çalınsa bile geçmiş oturumların açılamaması.</dd>
+  <dt>İş günü</dt><dd>05:00'ten ertesi 05:00'e kadar süren gün.</dd>
+  <dt>Kalp atışı</dt><dd>Kafenin Merkez'e 10 dakikada bir gönderdiği imzalı durum mesajı.</dd>
+  <dt>Köprü (long-poll)</dt><dd>İstemcinin açık tuttuğu, sunucunun iş geldiğinde yanıtladığı uzun bekleyen istek.</dd>
+  <dt>Nonce</dt><dd>Bir kez kullanılan rastgele sayı; tekrar oynatmayı engeller.</dd>
+  <dt>p50 / p95 / p99</dt><dd>Ölçümlerin yüzde 50, 95, 99'unun altında kaldığı değer.</dd>
+  <dt>PWA</dt><dd>Ana ekrana eklenebilen web uygulaması.</dd>
+  <dt>scrypt</dt><dd>Şifreleri bilerek yavaş ve bellek isteyen biçimde özetleyen fonksiyon; kaba kuvveti pahalılaştırır.</dd>
+  <dt>SHA-256</dt><dd>Veri parmak izi; içerik değişirse özet değişir.</dd>
+  <dt>TLS / HTTPS</dt><dd>İnternet bağlantısını şifreleyen standart.</dd>
+  <dt>TOTP</dt><dd>Zamana bağlı tek kullanımlık kod (Authenticator uygulaması).</dd>
+  <dt>Tünel</dt><dd>Kafenin Merkez'e açtığı, içinden misafir isteklerinin geçtiği kalıcı bağlantı.</dd>
+  <dt>VDS</dt><dd>İnternette kiralanan sanal sunucu.</dd>
+  <dt>WebSocket</dt><dd>Tarayıcı ve sunucu arasında kalıcı, çift yönlü bağlantı protokolü (RFC 6455).</dd>
+  <dt>Yıl paketi</dt><dd>Kapanan bir yılın, kişisel bilgileri silinmiş, değiştirilemez dosyası.</dd>
+</dl>
+
+</main>
+</body>
+</html>

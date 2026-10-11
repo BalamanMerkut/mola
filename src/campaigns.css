@@ -1,0 +1,32 @@
+/* Kampanyalar → "Kampanya neye uygulansın?" → Bütün bir bölüm: category chips and the optional "Hariç tut" list.
+   Same look as the weekday buttons of a weekly campaign (style.css .campaign-weekdays). */
+.campaign-categories { border:0; padding:0; margin:0 0 12px; min-width:0; }
+.campaign-categories legend { padding:0; margin-bottom:8px; font-size:12px; font-weight:600; }
+.campaign-categories > div { display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:8px; }
+.campaign-categories button,.campaign-exclude [role=group] button { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px; min-width:0; min-height:48px; padding:8px 11px; border:1px solid #dfe4d9; border-radius:10px; background:white; color:var(--ink); font:inherit; font-size:13px; font-weight:600; text-align:left; cursor:pointer; }
+.campaign-categories button span,.campaign-exclude [role=group] button span { max-width:100%; overflow-wrap:anywhere; line-height:1.3; }
+.campaign-categories button small,.campaign-exclude [role=group] button small { font-size:11px; font-weight:400; color:var(--muted); }
+.campaign-categories button.selected { background:var(--green); border-color:var(--green); color:white; }
+.campaign-categories button.selected small { color:#e3eee6; }
+.campaign-categories button:focus-visible,.campaign-exclude [role=group] button:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+.campaign-exclude { margin:12px 0 0; padding:12px; border-radius:10px; background:#f3f6f0; border:1px solid #dce5d9; min-width:0; }
+.campaign-exclude summary { cursor:pointer; font-weight:600; font-size:13px; min-height:28px; }
+.campaign-exclude p { margin:8px 0; }
+.campaign-exclude [role=group] { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
+.campaign-exclude [role=group] button { font-weight:500; }
+.campaign-exclude [role=group] button.excluded { background:#f6eeec; border-color:#d9b9b1; color:#7a3b2e; }
+.campaign-exclude [role=group] button.excluded span { text-decoration:line-through; }
+.campaign-exclude [role=group] button.excluded small { color:#7a3b2e; font-weight:600; }
+@media(max-width:420px) { .campaign-categories > div,.campaign-exclude [role=group] { grid-template-columns:1fr 1fr; } }
+/* "Kampanya bitti" (src/CampaignEnded.tsx): the owner's one-time window. */
+.campaign-ended-body{display:grid;gap:14px}
+.campaign-ended-lead{display:flex;gap:8px;align-items:flex-start;margin:0;color:#45524a}
+.campaign-ended-lead svg{flex:none;margin-top:2px;color:var(--green,#2f7d4f)}
+.campaign-ended-figures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.campaign-ended-figures>div{padding:10px 12px;border:1px solid #e1e7dd;border-radius:10px;background:#f8faf6}
+.campaign-ended-figures dt{font-size:12.5px;color:#5d6a60}
+.campaign-ended-figures dd{margin:2px 0 0;font-size:17px;font-weight:700;color:var(--ink,#1f2a22)}
+.campaign-ended-figures .campaign-ended-compare{grid-column:1/-1}
+.campaign-ended-figures .campaign-ended-compare dd{font-size:15px}
+.campaign-ended-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+@media(max-width:520px){.campaign-ended-figures{grid-template-columns:1fr}.campaign-ended-actions .btn{flex:1 1 100%}}

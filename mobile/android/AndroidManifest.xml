@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mola Android uygulaması: ince bir kabuk. Ekranlar kafe bilgisayarındaki Mola sunucusundan gelir (WebView), bu yüzden
+  Mola güncellenince uygulamayı yeniden kurmak gerekmez. Sürüm (versionCode/versionName) ve SDK düzeyleri
+  scripts/build-apk.mjs tarafından package.json'dan verilir.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.merkutstudios.mola">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Kafe bilgisayarını aynı Wi-Fi ağında aramak ve Wi-Fi gelince yeniden bağlanmak için. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Yalnız "QR okut" (vardiya kodu) için; ilk okutmada sorulur, verilmezse kod elle yazılır. Kamerasız cihazlara da kurulur. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- Fotoğraf çekmek için kamera uygulamasını bulabilmek (Android 11+ paket görünürlüğü). Uygulama CAMERA iznini
+         tanımladığı için Android kamera uygulamasını da yalnız izin verilince açar: ilk fotoğrafta bir kez sorulur, verilmezse galeri. -->
+    <queries>
+        <intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent>
+    </queries>
+
+    <!--
+      usesCleartextTraffic + network_security_config: kafe bilgisayarı yerel ağda düz HTTP ile çalışır
+      (http://192.168.x.x:3000); kafede TLS sertifikası yoktur. Uygulama HTTP'ye yalnız özel ağ adreslerinde izin verir,
+      başka her yer için HTTPS ister (Adres.java).
+    -->
+    <application
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:theme="@style/MolaTema"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density|fontScale"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- mola://baglan?u=http%3A%2F%2F192.168.1.20%3A3000 : /uygulama sayfasındaki "Uygulamada aç" düğmesi. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="mola" android:host="baglan" />
+            </intent-filter>
+        </activity>
+
+        <!-- "QR okut": kasadaki vardiya kodunu kamerayla okur (kütüphanesiz QrCozucu). -->
+        <activity
+            android:name=".QrOkuyucu"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+
+        <!-- Kameranın çektiği fotoğrafı uygulamaya bırakacağı geçici dosyalar (androidx FileProvider yerine). -->
+        <provider
+            android:name=".DosyaSaglayici"
+            android:authorities="com.merkutstudios.mola.dosya"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>

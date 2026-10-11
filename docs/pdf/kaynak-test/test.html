@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+  Mola Gerçek Cihaz Testi: yazdırılabilir A4 test listesinin kalıbı.
+  İçerik buraya yazılmaz: scripts/pdf-test-listesi.mjs docs/GERCEK_CIHAZ_TESTI.md'yi okuyup kapağı (#kapak-baslik, #kapak-giris)
+  ve #icerik'i doldurur, içindekileri sayfa numaralarıyla kurar ve docs/pdf/Mola-Gercek-Cihaz-Testi.pdf'i basar.
+  Üretmek: npm.cmd run pdf:test-listesi
+-->
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mola Gerçek Cihaz Testi</title>
+<link rel="stylesheet" href="test.css">
+</head>
+<body>
+<section class="kapak">
+  <div class="kapak-ust">
+    <div class="kapak-marka">Mola</div>
+    <div class="kapak-etiket">Yerel deneme · VDS öncesi</div>
+    <h1 id="kapak-baslik" data-toc="no">Gerçek Cihaz Testi</h1>
+    <p class="kapak-giris" id="kapak-giris"></p>
+  </div>
+  <div class="kapak-alt">
+    <dl class="kapak-form">
+      <dt>Test eden</dt><dd></dd>
+      <dt>Başlangıç (gün, saat)</dt><dd></dd>
+      <dt>Bitiş (gün, saat)</dt><dd></dd>
+      <dt>Mola sürümü</dt><dd class="dolu">0.1.0</dd>
+    </dl>
+    <div class="kapak-isaretler">
+      <strong>Kutulara nasıl işaret konur?</strong>
+      <p><span class="kutucuk dolu-isaret">✓</span> Ekranda gördüğünüz "Ne olmalı" ile aynı.</p>
+      <p><span class="kutucuk dolu-isaret">X</span> Farklı: "Not" sütununa yazın, ekran görüntüsü alın (Bölüm 30).</p>
+      <p><span class="kutucuk dolu-isaret">~</span> Kısmen doğru: nedenini "Not" sütununa yazın.</p>
+    </div>
+    <p class="kapak-imza">Merkut Studios · Hazırlayan: Claude · 8 Ekim 2026</p>
+  </div>
+</section>
+
+<section class="icindekiler">
+  <h1 class="icindekiler-baslik" data-toc="no">İçindekiler</h1>
+  <ol id="icindekiler-liste"></ol>
+</section>
+
+<main id="icerik"></main>
+</body>
+</html>

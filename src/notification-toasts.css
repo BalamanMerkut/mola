@@ -1,0 +1,15 @@
+/* A new notification while Mola is open (src/NotificationToasts.tsx, 10 Ekim): small cards in the top corner, under the bell. */
+.note-toasts{position:fixed;top:84px;right:20px;z-index:60;display:grid;gap:10px;width:min(370px,calc(100vw - 32px));pointer-events:none}
+.note-toasts:empty{display:none}
+.note-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:10px;padding:11px 8px 11px 12px;background:#fff;border:1px solid #f0d6cf;border-left:4px solid #e48b78;border-radius:12px;box-shadow:0 12px 32px #183b2f26;animation:note-toast-in .22s ease-out}
+.note-toast.important{border-left-color:#c8553f;background:#fffaf8}
+.note-toast-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#fdeceb;color:#b4412f;flex:none}
+.note-toast-text{flex:1;min-width:0;display:grid;gap:2px;padding-top:1px}
+.note-toast-text strong{font-size:13px;line-height:1.35;color:var(--ink);overflow-wrap:anywhere}
+.note-toast-text span{font-size:12.5px;line-height:1.4;color:#5b685e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-toast-actions{display:flex;align-items:center;gap:2px;flex:none}
+.note-toast .btn{min-height:34px;padding:5px 14px;font-size:12.5px}
+.note-toast .icon-btn{width:34px;height:34px;color:#6a756d}
+@keyframes note-toast-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(max-width:700px){.note-toasts{top:calc(60px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));width:auto}}
+@media(prefers-reduced-motion:reduce){.note-toast{animation:none}}

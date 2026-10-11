@@ -1,0 +1,82 @@
+/* Daily screens (Dalga 2): steady dialogs, folded table sections, waiting times, plain warnings. */
+
+/* Dialogs whose content grows (payment, printer, table, expense) keep their top edge; only the bottom moves. */
+.modal.modal-steady{margin:max(16px,6vh) auto auto;max-height:calc(100dvh - max(16px,6vh) - 16px)}
+@media(max-width:600px){.modal.modal-steady{margin-top:10px;max-height:calc(100dvh - 20px)}}
+
+/* Owner's table window: the section picker is folded at the bottom. */
+.area-fold{margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+.area-fold>summary{cursor:pointer;font-size:13px;color:#5f6b5c;list-style:none;display:flex;align-items:center;gap:6px}
+.area-fold>summary::-webkit-details-marker{display:none}
+.area-fold>summary::before{content:'›';display:inline-block;transition:transform .15s;font-size:16px;line-height:1}
+.area-fold[open]>summary::before{transform:rotate(90deg)}
+.area-fold .area-picker{margin-top:12px}
+.part-paid{display:block;margin-top:4px;color:#8a5f0e;font-size:12px}
+
+/* Paid lines: green when done, amber while only part is paid; never the error red. */
+.paid-label.paid-full{color:#3d6b4b!important}
+.paid-label.paid-part{color:#94650f!important}
+.payment-item select{width:auto;min-width:90px;max-width:55%}
+.payment-bill-row{display:flex;justify-content:center;margin:-8px 0 16px}
+
+/* Field errors: said under the field itself. */
+.field-error{display:block;color:#a3401f;font-size:12px;font-weight:500;margin-top:5px;line-height:1.4}
+input[aria-invalid=true],select[aria-invalid=true]{border-color:#c9694a!important}
+
+/* Kitchen: waiting time per order, highlighted from 10 minutes. */
+.waiting-time{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.waiting-time.late{color:#9b3d18;background:#fde8dc;border-radius:99px;padding:2px 8px;font-weight:700}
+.kitchen-awake{flex-wrap:wrap}
+.kitchen-awake-note{flex-basis:100%;max-width:280px;margin:2px 0 0;font-size:12px;line-height:1.4;color:#8a5f0e}
+
+/* Waiter calls stay until answered; after 5 minutes they stand out. */
+.service-call-chip.late{border-color:#e2a07f;background:#fdeee6}
+.service-call-chip.late .service-call-open small{color:#9b3d18;font-weight:700}
+
+/* Campaigns: finished ones folded at the bottom. */
+.campaign-ended{margin-top:22px}
+.campaign-ended>summary{cursor:pointer;font-size:14px;color:#5f6b5c;padding:8px 0}
+.campaign-ended .campaign-card{opacity:.8}
+.picker-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.picker-topbar p{margin:0}
+
+.expense-table td .text-btn{padding:0;font-size:13px}
+.expense-table th small{display:block;color:#8a5f0e;font-weight:400;font-size:11px;margin-top:3px}
+.expense-deleted{margin-top:14px;font-size:13px}
+.expense-deleted>summary{cursor:pointer;color:#5f6b5c}
+.expense-deleted ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+.expense-deleted li{border-left:3px solid #e3d2b8;padding:4px 10px}
+.expense-deleted li small{display:block;color:#7a8577;margin-top:2px}
+.expense-form .expense-when{margin-bottom:0}
+/* "Para nereden çıktı?": Kasadan / Kasa dışından, two plain cards, nothing chosen beforehand. */
+.expense-source{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}
+.expense-source-label{grid-column:1/-1;font-size:13.5px;font-weight:600;color:var(--ink)}
+.expense-source-option{display:grid;gap:3px;text-align:left;padding:10px 12px;border:1.5px solid #d9e1d5;border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;font:inherit}
+.expense-source-option small{color:#5f6b5c;font-size:12px;line-height:1.35}
+.expense-source-option.selected{border-color:#2f6b3a;background:#eef6ea;box-shadow:0 0 0 1px #2f6b3a inset}
+.expense-source-option:focus-visible{outline:2px solid #2f6b3a;outline-offset:2px}
+@media (max-width:480px){.expense-source{grid-template-columns:1fr}}
+.expense-delete{margin-top:14px;color:#a3401f}
+.expense-delete-confirm,.refund-confirm{margin-top:14px;padding:12px 14px;border:1px solid #ecd39a;background:#fff7e6;border-radius:10px;color:#5c4512}
+.expense-delete-confirm p,.refund-confirm p{margin:0 0 10px}
+.expense-delete-confirm .actions,.refund-confirm .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Navigation: Destek belongs to the sidebar bottom; on phones it is the last top-menu item instead of a floating button. */
+.sidebar nav .nav-support-phone{display:none}
+@media(max-width:600px){
+  .sidebar{overflow:hidden}
+  .sidebar nav{min-width:0;flex:1 1 auto;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);padding-right:18px}
+  .sidebar nav::-webkit-scrollbar{display:none}
+  .sidebar nav button{flex:none}
+  .sidebar nav .nav-support-phone{display:flex}
+  .sidebar-bottom.with-support{display:none!important}
+  .main-content{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+}
+
+/* Guest: the Google review question after the bill is paid. */
+.review-prompt{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;border:1px solid var(--line);background:#fff;border-radius:18px;padding:16px 16px 18px;margin-bottom:18px;min-width:0}
+.review-prompt p{margin:0;font-size:14px}
+/* The owner's "Kasadan nakit" below the drawer (src/ExpenseForm.tsx BelowZeroNote): a short amber note under "Ödeme yöntemi", no extra buttons. */
+.cash-below-note{display:block;margin-top:6px;padding:8px 10px;border-radius:8px;background:#fff6e0;border:1px solid #ecd28f;color:#6b4b0c;font-size:13px;line-height:1.4}
+.cash-open-bills{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:#fff6e0;border:1px solid #ecd28f;color:#6b4b0c;font-size:13px;line-height:1.4}
+.bill-method-note{display:inline-block;margin-top:6px;padding:4px 9px;border-radius:8px;background:#eef4f9;color:#2f557c;font-size:12.5px;font-weight:600}

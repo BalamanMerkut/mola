@@ -1,0 +1,19 @@
+/* Mola Lisans Sözleşmesi (src/LicenseAgreement.tsx): the box on the activation screen, the reading window, the owner's window. */
+.agreement-check{display:grid;gap:4px;margin:2px 0}
+.agreement-check-row{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.45}
+.agreement-check-row input{margin-top:2px;flex:none;width:18px;height:18px}
+.agreement-check-row label{display:block;font-weight:600;margin:0}
+.agreement-link{justify-self:start;display:inline-flex;align-items:center;gap:6px;margin-left:28px;font-size:13px;min-height:32px}
+.agreement-check .field-error{margin-left:28px}
+.agreement-dialog.modal[open]{display:flex;flex-direction:column;max-height:calc(100dvh - 32px)}
+.agreement-dialog .agreement-body{overflow:auto;flex:1 1 auto;min-height:0}
+.agreement-dialog .agreement-actions{flex:none;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin:0;padding:12px 22px 18px;border-top:1px solid var(--line, #e4e8e1)}
+.agreement-dialog .agreement-error{flex:1 1 100%;margin:0;padding:8px 12px;border-radius:10px;background:#fbeceb;color:#8d2a22;font-size:14px;line-height:1.45}
+.agreement-lead{background:var(--soft, #f3f6f1);border-radius:10px;padding:10px 12px;margin:0 0 12px;line-height:1.5}
+.agreement-text{font-size:14px;line-height:1.6;max-width:68ch}
+.agreement-text h2{font-family:Georgia,serif;font-weight:400;font-size:22px;margin:4px 0 10px}
+.agreement-text h3{font-size:15px;margin:18px 0 6px}
+.agreement-text p{margin:0 0 10px}
+.agreement-text ul,.agreement-text ol{margin:0 0 10px;padding-left:22px}
+.agreement-text li{margin:0 0 4px}
+@media(max-width:600px){.agreement-dialog.modal[open]{max-height:calc(100dvh - 16px)}.agreement-dialog .agreement-actions .btn{flex:1 1 auto}}

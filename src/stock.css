@@ -1,0 +1,363 @@
+/*
+ * Stok (src/Stock.tsx, StockRecipes.tsx, StockEntries.tsx) and Satış ve Raporlar → Kârlılık (src/ProfitReport.tsx).
+ * Same family as Ayarlar and the reports: white cards on the soft page, pill tabs, quiet grey for what is not tracked,
+ * a warm orange only for what needs a look (low stock, low margin). Spacing 4 · 8 · 12 · 16 · 20 · 24.
+ */
+.stock-workspace,.stock-modal,.stock-recipe-inline{--stk-soft:#f4f7f1;--stk-tile:#eaf1e5;--stk-line:#edf0e9;--stk-field:#d9e1d5;--stk-muted:#6e7b6c;--stk-warn:#b0573e;--stk-warn-soft:#fbf1eb;--stk-warn-line:#efcdb9}
+.stock-workspace{display:flex;flex-direction:column;gap:16px;min-width:0;max-width:1100px;margin-inline:auto;width:100%}
+.stock-workspace>.pill-tabs-wrap{margin:2px 0}
+.stock-workspace .notice{margin:0;border-radius:12px}
+.stock-loading{padding:24px 0;color:var(--stk-muted)}
+.stock-section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.stock-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;min-width:0}
+.stock-section-head h2{display:flex;align-items:center;gap:8px;margin:0;font-size:17px;font-weight:650;color:var(--ink);letter-spacing:-.2px;flex-wrap:wrap}
+.stock-section-head p{margin:3px 0 0}
+.stock-section-head .btn{margin:0;min-height:44px;border-radius:10px}
+.stock-count{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:24px;padding:0 8px;border-radius:8px;background:#eef3ea;color:#4f6b4a;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums}
+.stock-subhead{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:14px;color:var(--ink)}
+
+/* Fields: the Ayarlar look (scoped, so the global form styles do not leak in). */
+.stock-workspace input:not([type=checkbox]):not([type=radio]),.stock-workspace select,.stock-modal input:not([type=checkbox]):not([type=radio]),.stock-modal select,.stock-recipe-inline input:not([type=checkbox]):not([type=radio]),.stock-recipe-inline select{width:100%;min-width:0;min-height:44px;margin:0;padding:10px 13px;box-sizing:border-box;border:1px solid var(--stk-field);border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:14px;line-height:1.4}
+.stock-workspace select,.stock-modal select,.stock-recipe-inline select{padding-right:30px}
+/* Field focus: the one global style (style.css). */
+.stock-modal [aria-invalid=true],.stock-recipe-inline [aria-invalid=true]{border-color:#d29a86!important}
+.stock-modal label,.stock-workspace label,.stock-recipe-inline label{margin:0;font-weight:400}
+.stock-field{display:grid;gap:7px;min-width:0;margin:0}
+.stock-field>label{display:grid;gap:7px}
+.stock-label{display:block;font-size:12.5px;font-weight:650;color:var(--ink)}
+.stock-label small{font-weight:400;color:var(--stk-muted);margin-left:4px}
+.stock-hint{display:block;margin:0;font-size:12px;line-height:1.55;color:var(--stk-muted)}
+.stock-amount{display:grid;gap:7px;min-width:0}
+.stock-amount-row{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:6px;min-width:0}
+.stock-amount-row select{padding-inline:10px 24px!important}
+.stock-unit-fixed{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;background:var(--stk-soft);color:var(--stk-muted);font-size:13px}
+
+/* Stat tiles, guide and toolbar. */
+.stock-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stock-stats>div{display:flex;flex-direction:column;gap:2px;min-width:0;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.stock-stats span{font-size:12px;color:var(--stk-muted)}
+.stock-stats strong{font-size:24px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2}
+.stock-stats small{font-size:11.5px;color:#8a9487}
+.stock-stats .warn{border-color:var(--stk-warn-line);background:var(--stk-warn-soft)}
+.stock-stats .warn strong{color:var(--stk-warn)}
+.stock-guide{display:flex;gap:16px;align-items:flex-start;padding:20px 22px;border:1px solid #d9e6d2;border-radius:16px;background:linear-gradient(135deg,#f6faf2,#fff)}
+.stock-guide-icon{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--stk-tile);color:var(--green)}
+.stock-guide h3{margin:2px 0 8px;font-size:16px;color:var(--ink)}
+.stock-guide ol{margin:0 0 10px;padding-left:20px;display:grid;gap:5px;font-size:13px;line-height:1.55;color:#40523f}
+.stock-guide p{margin:0 0 12px}
+.stock-guide .btn{margin:0;min-height:44px;border-radius:10px}
+.stock-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.stock-search{flex:1 1 220px;max-width:340px;display:flex!important;align-items:center;gap:8px;padding:0 6px 0 12px;border:1px solid var(--stk-field);border-radius:12px;background:#fff;color:#7c8877;min-height:46px}
+.stock-search input{border:0!important;box-shadow:none!important;padding:10px 0!important;min-height:42px!important;background:transparent!important}
+.stock-search .icon-btn{margin:0;padding:8px}
+.stock-filter-wrap{flex:1 1 360px;min-width:0}
+.stock-empty-line{margin:4px 0;padding:18px;border:1px dashed #d3dccf;border-radius:14px;background:var(--stk-soft);color:var(--stk-muted);font-size:13px;text-align:center}
+.stock-empty{display:grid;justify-items:center;gap:6px;padding:28px 18px;border:1px dashed #d3dccf;border-radius:14px;background:var(--stk-soft);text-align:center;color:var(--stk-muted);font-size:13px}
+.stock-empty>svg{color:var(--green)}
+.stock-empty strong{color:var(--ink);font-size:14.5px}
+.stock-empty .btn{margin:8px 0 0;min-height:44px;border-radius:10px}
+.stock-footnote{margin:0;font-size:12px;line-height:1.6;color:var(--stk-muted)}
+.stock-footnote .text-btn{margin:0;padding:4px 2px;min-height:32px;font-size:12px}
+
+/* Product rows grouped by category (Ürünler, Reçeteler). */
+.stock-group{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;min-width:0}
+.stock-group>h3{display:flex;align-items:center;gap:8px;margin:0;padding:12px 18px;font-size:13.5px;font-weight:650;color:var(--ink);background:#fafbf8;border-bottom:1px solid var(--stk-line)}
+.stock-group>h3 span{font-size:11.5px;font-weight:600;color:#7d8a79;background:#eef2ea;border-radius:99px;padding:1px 8px}
+.stock-list{list-style:none;margin:0;padding:0}
+.stock-row{border-top:1px solid var(--stk-line)}
+.stock-row:first-child{border-top:0}
+.stock-row-main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;width:100%;min-height:60px;margin:0;padding:12px 18px;border:0;background:transparent;text-align:left;color:inherit;font:inherit;border-radius:0}
+button.stock-row-main{cursor:pointer;transition:background .12s}
+button.stock-row-main:hover{background:#f8faf5}
+button.stock-row-main:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+.stock-row-name{display:flex;flex-direction:column;gap:3px;min-width:0}
+.stock-row-name strong{font-size:14px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.stock-row-name small{font-size:12px;color:#7d8a79;line-height:1.45;overflow-wrap:anywhere}
+.stock-row-status{display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right;min-width:0}
+.stock-row-figure{font-size:12.5px;color:#5d6a5b;white-space:nowrap}
+.stock-row-figure strong{font-size:17px;font-weight:650;color:var(--green);font-variant-numeric:tabular-nums}
+.stock-row-status small{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;font-size:11.5px;color:#7d8a79}
+.stock-quiet{font-size:12.5px;color:#9aa395;display:flex;align-items:center;gap:10px}
+.stock-quiet em{font-style:normal;display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;border:1px solid #d9e4d3;background:#fff;color:#3f6a4b;font-size:11.5px;font-weight:600}
+button.stock-row-main:hover .stock-quiet em{border-color:#9fbf99;background:#f2f8ee}
+.stock-row.untracked .stock-row-name strong{color:#566352;font-weight:500}
+.stock-row.low{background:linear-gradient(90deg,var(--stk-warn-soft),#fff 70%)}
+.stock-row.low button.stock-row-main:hover{background:#fbebe2}
+.stock-row.low .stock-row-figure strong{color:var(--stk-warn)}
+.stock-row.low .stock-row-main{box-shadow:inset 3px 0 0 #d98a63}
+.stock-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;background:#eef2ea;color:#4f6b4a;font-size:11px;font-weight:650;white-space:nowrap}
+.stock-chip.warn{background:#f8e2d6;color:#9a4a2f}
+.stock-chip.ok{background:#e4f0de;color:#2f6b3a}
+.stock-missing{color:var(--stk-warn)!important;max-width:240px;text-align:right}
+
+/* Malzemeler: one card per item. */
+.stock-items{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
+.stock-item{min-width:0;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 1px 2px #1c2e240a}
+.stock-item.low{border-color:var(--stk-warn-line);background:linear-gradient(180deg,var(--stk-warn-soft),#fff 60%)}
+.stock-item-main{position:relative;display:flex;flex-direction:column;gap:8px;width:100%;height:100%;margin:0;padding:16px 18px;border:0;background:transparent;text-align:left;color:inherit;font:inherit;border-radius:16px}
+button.stock-item-main{cursor:pointer}
+button.stock-item-main:hover{background:#f8faf5}
+.stock-item.low button.stock-item-main:hover{background:#fbebe2}
+button.stock-item-main:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.stock-item-head{display:flex;align-items:center;gap:8px;padding-right:22px;min-width:0}
+.stock-item-head strong{font-size:14.5px;font-weight:650;color:var(--ink);overflow-wrap:anywhere}
+.stock-item-amount{font-size:26px;font-weight:650;letter-spacing:-.5px;color:var(--green);font-variant-numeric:tabular-nums;line-height:1.15}
+.stock-item.low .stock-item-amount{color:var(--stk-warn)}
+.stock-item-edit{position:absolute;top:16px;right:16px;color:#9aa395}
+.stock-meter{position:relative;height:7px;border-radius:99px;background:#eef2ea;overflow:hidden}
+.stock-meter i{display:block;height:100%;border-radius:99px;background:#7fb89c}
+.stock-meter.low i{background:#d98a63}
+.stock-meter span{position:absolute;top:0;bottom:0;width:2px;background:#ffffffcc}
+.stock-item-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:2px 0 0}
+.stock-item-facts div{min-width:0}
+.stock-item-facts dt{font-size:11px;color:#8a9487}
+.stock-item-facts dd{margin:2px 0 0;font-size:12.5px;font-weight:600;color:#40523f;overflow-wrap:anywhere}
+.stock-hints{margin:2px 0 0;padding-top:8px;border-top:1px solid var(--stk-line);font-size:12px;color:#5d6a5b;line-height:1.5}
+
+/* Forms in windows. */
+.stock-modal.modal{width:520px}
+.stock-modal.modal-wide{width:760px}
+.stock-form{display:grid;gap:16px;min-width:0}
+.stock-form>p{margin:0;font-size:13px;line-height:1.6}
+.stock-form-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.stock-actions{margin-top:4px!important;align-items:center}
+.stock-actions .btn{min-height:44px;margin:0;border-radius:10px}
+.stock-delete{margin-right:auto!important;color:#a33131!important;background:none;border:0}
+.stock-confirm{padding:14px 16px;border:1px solid #e7bebe;border-radius:12px;background:#fff8f6;font-size:13px}
+.stock-confirm p{margin:0 0 10px}
+.stock-confirm .actions{display:flex;gap:8px;flex-wrap:wrap}
+.stock-confirm .btn{margin:0;min-height:44px}
+/* Alış kaydet → "Para nereden çıktı?" (K-K): three answers side by side, one per row on a phone. */
+.expense-source.stock-paid{grid-template-columns:repeat(3,minmax(0,1fr));margin:0}
+.expense-source.stock-paid .expense-source-option{min-height:44px;align-content:start}
+.stock-paid-line{display:block;margin-top:-6px;font-size:12.5px}
+@media (max-width:560px){.expense-source.stock-paid{grid-template-columns:1fr}}
+.stock-calc{margin:-6px 0 0!important;font-size:12.5px!important;color:#40523f}
+.stock-ready-note{display:flex;gap:10px;align-items:flex-start;margin:0;padding:12px 14px;border-radius:12px;background:var(--stk-tile);font-size:13px;color:#2f4a36}
+.stock-ready-note svg{flex:none;margin-top:2px}
+
+/* Recipe editor. */
+.stock-recipe{display:grid;gap:14px;min-width:0}
+/* "Bu ürün nasıl takip edilsin?": equal segments in one row on every width, icon and label centred (like the pill tabs). */
+.stock-recipe .settings-segmented.wide{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:minmax(0,1fr)}
+.stock-recipe .settings-segmented button{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center}
+.stock-recipe .settings-segmented button svg{flex:none}
+.stock-mode-note{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--stk-tile);color:#2f4a36}
+.stock-mode-note p{margin:0;font-size:13px;line-height:1.6}
+.stock-mode-note svg{flex:none;margin-top:1px}
+.stock-mode-note.quiet{background:var(--stk-soft);color:#5d6a5b}
+.stock-recipe-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid var(--stk-line);padding-bottom:6px}
+.stock-recipe-head h4{margin:0;font-size:13.5px;color:var(--ink)}
+.stock-recipe-rows{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.stock-recipe-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 44px;gap:8px;align-items:center}
+.stock-row-remove{margin:0!important;width:44px;height:44px;color:#8a9487}
+.stock-row-remove:hover:not(:disabled){background:#fff1ed;color:#a33131}
+.stock-add-row{justify-self:start;display:inline-flex!important;align-items:center;gap:6px;margin:0!important;min-height:40px;font-size:13px!important;text-decoration:none!important;font-weight:600}
+.stock-options{border:1px solid var(--stk-line);border-radius:12px;background:#fafbf8;padding:0 14px}
+.stock-options>summary{cursor:pointer;padding:12px 0;font-size:13px;font-weight:650;color:var(--green);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.stock-options>summary small{font-weight:400;color:var(--stk-muted)}
+.stock-options[open]{padding-bottom:14px}
+.stock-options .stock-hint{margin-bottom:10px}
+.stock-option-group{border:0;margin:0;padding:10px 0 0;border-top:1px solid var(--stk-line);min-width:0}
+.stock-option-group legend{font-size:12.5px;font-weight:650;color:var(--ink);padding:0;float:left;width:100%;margin-bottom:8px}
+.stock-option-group legend+*{clear:both}
+.stock-option-row{display:grid;grid-template-columns:minmax(90px,.7fr) minmax(0,1.1fr) minmax(0,1.6fr);gap:8px;align-items:center;margin-bottom:8px}
+.stock-option-name{font-size:13px;color:#40523f;overflow-wrap:anywhere}
+.stock-option-percent{display:flex!important;align-items:center;gap:6px;max-width:150px;color:var(--stk-muted)}
+.stock-option-inputs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;min-width:0;align-items:center}
+.stock-option-inputs.replace{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+.stock-arrow{color:#8a9487;font-size:15px}
+.stock-cost-preview{display:flex;flex-wrap:wrap;gap:6px 18px;padding:12px 14px;border-radius:12px;background:var(--stk-soft);font-size:13px;color:#40523f}
+.stock-cost-preview b{color:var(--ink)}
+/* 8 Ekim: options' stock effect under each row, and the per-option cost table. */
+.stock-option-effect{grid-column:1/-1;margin:-2px 0 4px;font-size:12px;line-height:1.45;color:#5d6a5b}
+.stock-options>summary .help-tip{align-self:center}
+.stock-cost-preview.options{display:block;padding:10px 12px}
+.stock-cost-table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.stock-cost-table th,.stock-cost-table td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--stk-line);white-space:nowrap}
+.stock-cost-table th[scope=row],.stock-cost-table thead th:first-child{text-align:left;white-space:normal;overflow-wrap:anywhere;font-weight:600;color:var(--ink)}
+.stock-cost-table thead th{font-size:11.5px;font-weight:600;color:var(--stk-muted)}
+.stock-cost-table th small{font-weight:400;color:var(--stk-muted)}
+.stock-cost-table tbody tr:last-child>*{border-bottom:0}
+.stock-cost-preview.options .stock-hint{margin-top:6px}
+.stock-cost-preview b.warn{color:var(--stk-warn)}
+.stock-recipe-inline{display:grid;gap:12px}
+.stock-recipe-inline .notice{margin:0}
+
+/* Alış ve sayım. */
+.stock-actions-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stock-actions-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.stock-action{display:flex;align-items:flex-start;gap:12px;min-height:84px;margin:0;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff;text-align:left;color:inherit;font:inherit;cursor:pointer;box-shadow:0 1px 2px #1c2e240a;transition:border-color .12s,background .12s}
+.stock-action:hover:not(:disabled){border-color:#b5c6ad;background:#fafcf8}
+.stock-action:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.stock-action-icon{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--stk-tile);color:var(--green)}
+.stock-action strong{display:block;font-size:14.5px;color:var(--ink);margin-bottom:3px}
+.stock-action small{display:block;font-size:12px;line-height:1.5;color:var(--stk-muted)}
+.stock-return-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0;font-size:12.5px;color:var(--stk-muted)}
+.stock-return-line .text-btn{margin:0;padding:4px 2px;min-height:32px;font-size:12.5px}
+.stock-panel{display:flex;flex-direction:column;gap:12px;padding:20px;border:1px solid var(--line);border-radius:16px;background:#fff;min-width:0}
+.stock-entries{list-style:none;margin:0;padding:0}
+.stock-entry{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--stk-line)}
+.stock-entry:first-child{border-top:0}
+.stock-kind{display:inline-flex;justify-content:center;min-width:76px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:650;background:#eef2ea;color:#4f6b4a}
+.stock-kind.purchase{background:#e4f0de;color:#2f6b3a}
+.stock-kind.count{background:#e5eef5;color:#365c7a}
+.stock-kind.waste{background:#f8e2d6;color:#9a4a2f}
+.stock-kind.return{background:#efe9f6;color:#5d4a7a}
+.stock-entry-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stock-entry-text strong{font-size:13.5px;color:var(--ink);overflow-wrap:anywhere}
+.stock-entry-text small{font-size:11.5px;color:#7d8a79;line-height:1.45;overflow-wrap:anywhere}
+.stock-entry-figure{font-size:14px;font-weight:650;color:var(--green);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stock-entry-figure.warn{color:var(--stk-warn)}
+/* The row's ⋯ with "Bu kaydı geri al" (8 Ekim: no undo link on every row). */
+.stock-row-menu{position:relative;display:inline-flex;justify-content:flex-end;min-width:44px}
+.stock-row-more{width:44px;height:44px;margin:0!important;color:#6a756d}
+.stock-row-more[aria-expanded=true]{background:#eef2ea;color:var(--ink)}
+.stock-row-popup{position:absolute;right:0;top:calc(100% + 2px);z-index:5;display:flex;flex-direction:column;min-width:190px;padding:6px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 8px 24px #1d2b2322}
+.stock-row-popup button{display:flex;align-items:center;gap:8px;min-height:44px;margin:0;padding:8px 12px;border:0;border-radius:8px;background:transparent;color:#8d2a22;font:inherit;font-size:14px;text-align:left;white-space:nowrap;cursor:pointer}
+.stock-row-popup button:hover,.stock-row-popup button:focus-visible{background:#fbeceb}
+.stock-undone{border-top:1px solid var(--stk-line);padding-top:10px}
+.stock-undone summary{cursor:pointer;min-height:36px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#5d6a5b}
+.stock-undone ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
+.stock-undone li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;opacity:.8}
+.stock-undone li>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:13px;overflow-wrap:anywhere}
+.stock-undone small{font-size:11.5px;color:#7d8a79}
+.stock-undo-what{display:flex;align-items:flex-start;gap:10px;margin:0}
+.stock-undo-what>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
+.stock-undo-what small{font-size:12px;color:var(--stk-muted)}
+.stock-undo-effect{padding:12px 14px;border-radius:12px;background:#fdf3ee;border:1px solid #f3d9cb;font-size:14px;line-height:1.5}
+.stock-undo-effect p{margin:0}
+.stock-undo-effect ul{margin:6px 0 0;padding-left:20px}
+/* A field's name with its ⓘ (src/StockInputs.tsx LabelWithHelp). */
+.stock-label-row{display:flex;align-items:center;gap:6px;min-width:0}
+.stock-label-row .help-tip{margin-left:0}
+/* Ürünler: "Sınırlayan malzeme: Süt ⓘ" under the row's figure (outside its button). */
+.stock-row-limit{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin:-8px 0 0;padding:0 18px 10px;font-size:12px;color:#5d6a5b}
+.stock-row-limit b{font-weight:650;color:var(--ink)}
+.stock-row-limit .help-tip{margin-left:2px}
+.stock-row.low .stock-row-limit{box-shadow:inset 3px 0 0 #d98a63}
+/* Son hareketler → "Tümü" (K-L): opens İşlem geçmişi. */
+.stock-recent-all{min-height:44px;padding:0 6px;font-weight:600}
+.stock-count-list{list-style:none;margin:0;padding:0;display:grid;gap:0;max-height:min(56vh,520px);overflow:auto;border:1px solid var(--stk-line);border-radius:12px}
+.stock-count-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,210px) 92px;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--stk-line)}
+.stock-count-row:first-child{border-top:0}
+.stock-count-name{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stock-count-name strong{font-size:13.5px;color:var(--ink);overflow-wrap:anywhere}
+.stock-count-name small{font-size:11.5px;color:#7d8a79}
+.stock-count-diff{font-size:12.5px;font-weight:650;color:#2f6b3a;text-align:right;font-variant-numeric:tabular-nums}
+.stock-count-diff.warn{color:var(--stk-warn)}
+
+/* Kârlılık (inside .reports-v2). */
+.reports-v2 .profit-categories{display:flex;flex-direction:column}
+.reports-v2 .profit-category{display:grid;grid-template-columns:minmax(0,1fr) minmax(60px,180px) 52px 100px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid #f0f2ec;font-size:13px}
+.reports-v2 .profit-category:last-child{border-bottom:0}
+.reports-v2 .profit-category small{color:#9aa395}
+.reports-v2 .profit-category b{font-weight:650;color:#2f6b3a;text-align:right;font-variant-numeric:tabular-nums}
+.reports-v2 .profit-category strong{font-weight:500;text-align:right;white-space:nowrap}
+.reports-v2 .profit-bar,.reports-v2 .profit-mini{display:block;height:7px;border-radius:4px;background:#eef2ea;overflow:hidden}
+.reports-v2 .profit-bar i,.reports-v2 .profit-mini i{display:block;height:100%;border-radius:4px;background:#7fb89c}
+.reports-v2 .profit-bar i.low,.reports-v2 .profit-mini i.low{background:#d98a63}
+.reports-v2 .warn{color:var(--accent,#b96844)!important}
+.reports-v2 .profit-table table{table-layout:auto}
+.reports-v2 .profit-table th.profit-num,.reports-v2 .profit-table td.profit-num{text-align:right;font-variant-numeric:tabular-nums}
+.reports-v2 .profit-table tbody th{white-space:normal;overflow-wrap:anywhere}
+.reports-v2 .profit-table td b{font-weight:650;color:#2f6b3a}
+.reports-v2 .profit-cell{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end}
+.reports-v2 .profit-mini{width:56px}
+.reports-v2 .profit-low{background:#fdf5f0}
+.reports-v2 .profit-low>th{box-shadow:inset 3px 0 0 #d98a63;padding-left:10px!important}
+.reports-v2 .profit-missing td{color:#9aa395}
+.reports-v2 .profit-missing-note{color:#9a6a52!important;display:block}
+.reports-v2 .profit-missing-note .text-btn{margin:0;padding:2px;min-height:28px;font-size:11.5px}
+.reports-v2 .report-section-heading .stock-chip{font-size:11.5px}
+
+@media (max-width:900px){
+  .stock-actions-grid,.stock-actions-grid.two{grid-template-columns:minmax(0,1fr)}
+  .stock-action{min-height:0}
+  .stock-option-row{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}
+  .stock-option-row>.stock-option-inputs,.stock-option-row>.stock-option-percent{grid-column:1/-1}
+  .reports-v2 .profit-mini{display:none}
+}
+@media (max-width:640px){
+  .stock-stats{gap:8px}
+  .stock-stats>div{padding:10px 12px}
+  .stock-stats strong{font-size:20px}
+  .stock-guide{flex-direction:column;padding:16px}
+  .stock-search{max-width:none;flex-basis:100%}
+  .stock-row-main{grid-template-columns:minmax(0,1fr);gap:6px;padding:12px 14px}
+  .stock-row-status{align-items:flex-start;text-align:left}
+  .stock-row-status small{justify-content:flex-start}
+  .stock-missing{text-align:left}
+  .stock-group>h3{padding:10px 14px}
+  .stock-items{grid-template-columns:minmax(0,1fr)}
+  .stock-form-pair{grid-template-columns:minmax(0,1fr)}
+  .stock-recipe-row{grid-template-columns:minmax(0,1fr) 44px;grid-template-areas:'item remove' 'amount amount'}
+  .stock-recipe-row>.stock-field{grid-area:item}
+  .stock-recipe-row>.stock-amount{grid-area:amount}
+  .stock-recipe-row>.stock-row-remove{grid-area:remove}
+  .stock-option-row{grid-template-columns:minmax(0,1fr)}
+  .stock-option-inputs,.stock-option-inputs.replace{grid-template-columns:minmax(0,1fr)}
+  .stock-arrow{display:none}
+  .stock-entry{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:'kind figure menu' 'text text text';gap:6px 10px}
+  .stock-entry>.stock-kind{grid-area:kind;justify-self:start}
+  .stock-entry>.stock-entry-text{grid-area:text}
+  .stock-entry>.stock-entry-figure{grid-area:figure}
+  .stock-entry>.stock-row-menu{grid-area:menu}
+  .stock-row-limit{justify-content:flex-start;margin-top:-6px;padding:0 14px 10px}
+  .stock-panel{padding:14px}
+  .stock-count-row{grid-template-columns:minmax(0,1fr) 80px;grid-template-areas:'name diff' 'amount amount'}
+  .stock-count-row>.stock-count-name{grid-area:name}
+  .stock-count-row>.stock-amount{grid-area:amount}
+  .stock-count-row>.stock-count-diff{grid-area:diff}
+  .stock-delete{margin-right:0!important}
+  .reports-v2 .profit-category{grid-template-columns:minmax(0,1fr) 48px 88px}
+  .reports-v2 .profit-bar{display:none}
+  .reports-v2 .profit-table .profit-cost{display:none}
+  /* The product table's phone rule hides its second column (pieces); here that column is the revenue. */
+  .reports-v2 .product-table.profit-table thead th:nth-child(2),.reports-v2 .product-table.profit-table td:nth-child(2){display:table-cell}
+  .reports-v2 .profit-table th,.reports-v2 .profit-table td{padding-inline:4px}
+}
+
+/* Kârlılık: which prices the cost uses. */
+.profit-basis{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 14px}
+.profit-basis .period-pills{margin:0}
+.profit-basis p{flex-basis:100%;margin:0}
+.profit-basis-label{font-size:.95rem}
+.profit-low-chip{margin-left:6px;vertical-align:middle;cursor:help}
+.stock-unit-check{border:1px solid #e7c79a;background:#fffaf2;border-radius:12px;padding:12px 14px;margin-top:4px}.stock-unit-check p{margin:0;font-size:13.5px;line-height:1.5;color:#6b4515}.stock-unit-check .modal-actions{margin-top:10px}
+
+/* 8 Ekim: Stok → İşlem geçmişi (src/StockHistory.tsx). */
+.stock-top{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;min-width:0}
+.stock-top>.pill-tabs-wrap{flex:1 1 320px;min-width:0;margin:2px 0}
+.stock-history-btn{margin:0;min-height:40px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.stock-item-history{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin:0}
+.stock-history{display:flex;flex-direction:column;gap:12px;min-width:0}
+.stock-history-lead{display:flex;align-items:center;gap:6px;margin:0}
+.stock-history-filters{display:grid;gap:8px;min-width:0}
+.stock-history-selects{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;min-width:0}
+.stock-history-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stock-history-list[aria-busy=true]{opacity:.6}
+.stock-history-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:start;padding:10px 12px;border:1px solid var(--stk-line);border-radius:12px;background:#fff;min-width:0}
+.stock-history-kind{display:inline-block;padding:3px 8px;border-radius:8px;background:#eef3ea;color:#4f6b4a;font-size:11.5px;font-weight:650;white-space:nowrap}
+.stock-history-kind.in{background:#e6f2e2;color:#2f6b35}
+.stock-history-kind.out,.stock-history-kind.warn{background:var(--stk-warn-soft);color:var(--stk-warn)}
+.stock-history-kind.info{background:#eef1f6;color:#4a5a78}
+.stock-history-main{min-width:0}
+.stock-history-main p{margin:0;font-size:13.5px;line-height:1.45;overflow-wrap:anywhere}
+.stock-history-main strong{color:var(--ink);font-weight:650}
+.stock-history-amount{margin-left:8px;font-weight:650;font-variant-numeric:tabular-nums;color:#40523f}
+.stock-history-change{color:#40523f;font-variant-numeric:tabular-nums}
+.stock-history-main .stock-history-note{font-size:12px;color:var(--stk-muted)}
+.stock-history-meta{margin:0;display:grid;justify-items:end;gap:2px;font-size:12px;color:var(--stk-muted);text-align:right}
+.stock-history-meta .stock-history-who{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px 6px;color:#40523f}
+.stock-history-meta .stock-history-who b{font-weight:650}
+.stock-history-meta .stock-history-role{padding:1px 7px;border-radius:999px;background:var(--stk-tile, #eef3ec);color:#5d6a60;font-size:11px;font-weight:600;line-height:1.5}
+.stock-history-pager{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--stk-muted)}
+.stock-history-pager .btn{margin:0}
+@media (max-width:599.98px){
+  .stock-history-row{grid-template-columns:minmax(0,1fr)}
+  .stock-history-kind{justify-self:start}
+  .stock-history-meta{justify-items:start;text-align:left;display:flex;flex-wrap:wrap;gap:2px 10px}
+  .stock-history-meta .stock-history-who{justify-content:flex-start}
+  .stock-history-btn{flex:1 1 100%;justify-content:center}
+}

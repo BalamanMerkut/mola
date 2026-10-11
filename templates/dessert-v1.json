@@ -1,0 +1,536 @@
+{
+  "format": 1,
+  "name": "Tatlıcı / pastane başlangıç şablonu",
+  "categories": [
+    "Baklavalar",
+    "Sütlü Tatlılar",
+    "Pastalar",
+    "Kurabiyeler",
+    "Lokumlar",
+    "İçecekler"
+  ],
+  "subcategories": [
+    {
+      "category": "Baklavalar",
+      "names": [
+        "Kiloyla",
+        "Porsiyon"
+      ]
+    },
+    {
+      "category": "Sütlü Tatlılar",
+      "names": []
+    },
+    {
+      "category": "Pastalar",
+      "names": [
+        "Dilim pastalar",
+        "Yaş pastalar"
+      ]
+    },
+    {
+      "category": "Kurabiyeler",
+      "names": []
+    },
+    {
+      "category": "Lokumlar",
+      "names": []
+    },
+    {
+      "category": "İçecekler",
+      "names": []
+    }
+  ],
+  "products": [
+    {
+      "id": "d-fistikli",
+      "code": "101",
+      "name": "Fıstıklı Baklava",
+      "nameEn": "Pistachio Baklava",
+      "category": "Baklavalar",
+      "subtype": "Kiloyla",
+      "unit": "kg",
+      "price": 120000,
+      "art": "sweet",
+      "descriptionEn": "Layers of hand-rolled pastry with plenty of Antep pistachios.",
+      "ingredients": "Yufka, Antep fıstığı, tereyağı, şerbet",
+      "ingredientsEn": "Filo pastry, Antep pistachios, butter, syrup",
+      "description": "Kat kat el açması yufka, bol Antep fıstığı.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-cevizli",
+      "code": "102",
+      "name": "Cevizli Baklava",
+      "nameEn": "Walnut Baklava",
+      "category": "Baklavalar",
+      "subtype": "Kiloyla",
+      "unit": "kg",
+      "price": 90000,
+      "art": "sweet",
+      "descriptionEn": "Thin pastry with large walnut pieces.",
+      "ingredients": "Yufka, ceviz, tereyağı, şerbet",
+      "ingredientsEn": "Filo pastry, walnuts, butter, syrup",
+      "description": "İnce yufka, iri ceviz içi.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-sobiyet",
+      "code": "103",
+      "name": "Şöbiyet",
+      "nameEn": "Şöbiyet",
+      "category": "Baklavalar",
+      "subtype": "Kiloyla",
+      "unit": "kg",
+      "price": 130000,
+      "art": "sweet",
+      "descriptionEn": "Triangles with clotted cream and pistachios.",
+      "ingredients": "Yufka, kaymak, Antep fıstığı, şerbet",
+      "ingredientsEn": "Filo pastry, clotted cream, Antep pistachios, syrup",
+      "description": "Kaymaklı, fıstıklı üçgen dilimler.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-porsiyon",
+      "code": "104",
+      "name": "Fıstıklı Baklava (porsiyon)",
+      "nameEn": "Pistachio Baklava (portion)",
+      "category": "Baklavalar",
+      "subtype": "Porsiyon",
+      "price": 18000,
+      "art": "sweet",
+      "descriptionEn": "Four pieces, served here.",
+      "ingredients": "Yufka, Antep fıstığı, tereyağı, şerbet",
+      "ingredientsEn": "Filo pastry, Antep pistachios, butter, syrup",
+      "description": "Dört dilim, burada servis.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "service",
+          "id": "service",
+          "name": "Servis tercihi",
+          "required": false,
+          "options": [
+            {
+              "id": "plain",
+              "name": "Sade",
+              "extra": 0
+            },
+            {
+              "id": "icecream",
+              "name": "Dondurmalı",
+              "extra": 3500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-kazandibi",
+      "code": "201",
+      "name": "Kazandibi",
+      "nameEn": "Kazandibi",
+      "category": "Sütlü Tatlılar",
+      "price": 11000,
+      "art": "cake",
+      "descriptionEn": "Caramelised base, with cinnamon.",
+      "ingredients": "Süt, pirinç unu, şeker",
+      "ingredientsEn": "Milk, rice flour, sugar",
+      "description": "Altı karamelize, tarçınlı.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "d-sutlac",
+      "code": "202",
+      "name": "Fırın Sütlaç",
+      "nameEn": "Baked Rice Pudding",
+      "category": "Sütlü Tatlılar",
+      "price": 11000,
+      "art": "cake",
+      "descriptionEn": "Fresh milk, browned in the oven.",
+      "ingredients": "Süt, pirinç, şeker",
+      "ingredientsEn": "Milk, rice, sugar",
+      "description": "Günlük süt, üzeri fırında kızarmış.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "d-profiterol",
+      "code": "203",
+      "name": "Profiterol",
+      "nameEn": "Profiteroles",
+      "category": "Sütlü Tatlılar",
+      "price": 14000,
+      "art": "cake",
+      "descriptionEn": "Cream-filled choux with plenty of chocolate sauce.",
+      "ingredients": "Hamur, krema, bitter çikolata",
+      "ingredientsEn": "Choux pastry, cream, dark chocolate",
+      "description": "Kremalı top hamur, bol çikolata sos.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "d-dilim-pasta",
+      "code": "301",
+      "name": "Çikolatalı Dilim Pasta",
+      "nameEn": "Chocolate Cake Slice",
+      "category": "Pastalar",
+      "subtype": "Dilim pastalar",
+      "price": 16000,
+      "art": "cake",
+      "descriptionEn": "Moist sponge with a ganache coating.",
+      "ingredients": "Kakao, krema, bitter çikolata",
+      "ingredientsEn": "Cocoa, cream, dark chocolate",
+      "description": "Islak kek, ganaj kaplama.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "d-cheesecake",
+      "code": "302",
+      "name": "Frambuazlı Cheesecake",
+      "nameEn": "Raspberry Cheesecake",
+      "category": "Pastalar",
+      "subtype": "Dilim pastalar",
+      "price": 18000,
+      "art": "cake",
+      "descriptionEn": "Baked, with raspberry sauce.",
+      "ingredients": "Krem peynir, bisküvi, frambuaz",
+      "ingredientsEn": "Cream cheese, biscuit, raspberries",
+      "description": "Fırında pişer, frambuaz soslu.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "d-yas-pasta",
+      "code": "303",
+      "name": "Yaş Pasta (8 kişilik)",
+      "nameEn": "Celebration Cake (serves 8)",
+      "category": "Pastalar",
+      "subtype": "Yaş pastalar",
+      "price": 95000,
+      "art": "cake",
+      "descriptionEn": "Write the message for the cake in the product note.",
+      "ingredients": "Pandispanya, krema, meyve veya çikolata",
+      "ingredientsEn": "Sponge cake, cream, fruit or chocolate",
+      "description": "Pasta üstü yazıyı ürün notuna yazabilirsiniz.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "flavour",
+          "name": "Çeşit",
+          "required": true,
+          "options": [
+            {
+              "id": "chocolate",
+              "name": "Çikolatalı",
+              "extra": 0
+            },
+            {
+              "id": "fruit",
+              "name": "Meyveli",
+              "extra": 0
+            },
+            {
+              "id": "raspberry",
+              "name": "Frambuazlı",
+              "extra": 5000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-tuzlu-kurabiye",
+      "code": "401",
+      "name": "Tuzlu Kurabiye",
+      "nameEn": "Savoury Cookies",
+      "category": "Kurabiyeler",
+      "unit": "kg",
+      "price": 48000,
+      "art": "sweet",
+      "descriptionEn": "A mix with nigella seeds and sesame.",
+      "ingredients": "Un, tereyağı, çörek otu, susam",
+      "ingredientsEn": "Flour, butter, nigella seeds, sesame",
+      "description": "Çörek otlu ve susamlı karışık.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-un-kurabiyesi",
+      "code": "402",
+      "name": "Un Kurabiyesi",
+      "nameEn": "Shortbread Cookies",
+      "category": "Kurabiyeler",
+      "unit": "kg",
+      "price": 52000,
+      "art": "sweet",
+      "descriptionEn": "Melt-in-the-mouth, dusted with icing sugar.",
+      "ingredients": "Un, tereyağı, pudra şekeri",
+      "ingredientsEn": "Flour, butter, icing sugar",
+      "description": "Ağızda dağılan, pudra şekerli.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-acibadem",
+      "code": "403",
+      "name": "Acıbadem Kurabiyesi",
+      "nameEn": "Almond Cookies",
+      "category": "Kurabiyeler",
+      "unit": "kg",
+      "price": 60000,
+      "art": "sweet",
+      "descriptionEn": "Almond cookies, gluten-free.",
+      "ingredients": "Badem, yumurta akı, şeker",
+      "ingredientsEn": "Almonds, egg white, sugar",
+      "description": "Bademli, glutensiz.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-gullu-lokum",
+      "code": "501",
+      "name": "Güllü Lokum",
+      "nameEn": "Rose Turkish Delight",
+      "category": "Lokumlar",
+      "unit": "kg",
+      "price": 40000,
+      "art": "sweet",
+      "descriptionEn": "Rose-flavoured, dusted with powdered sugar.",
+      "ingredients": "Şeker, nişasta, gül suyu",
+      "ingredientsEn": "Sugar, starch, rose water",
+      "description": "Gül aromalı, pudralı.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-fistikli-lokum",
+      "code": "502",
+      "name": "Fıstıklı Lokum",
+      "nameEn": "Pistachio Turkish Delight",
+      "category": "Lokumlar",
+      "unit": "kg",
+      "price": 70000,
+      "art": "sweet",
+      "descriptionEn": "Packed with Antep pistachios, double-roasted.",
+      "ingredients": "Şeker, nişasta, Antep fıstığı",
+      "ingredientsEn": "Sugar, starch, Antep pistachios",
+      "description": "Bol Antep fıstıklı, çifte kavrulmuş.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "box",
+          "name": "Paketleme",
+          "required": false,
+          "options": [
+            {
+              "id": "gift",
+              "name": "Hediye kutusu",
+              "extra": 7500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-cay",
+      "code": "601",
+      "name": "Çay",
+      "nameEn": "Turkish Tea",
+      "category": "İçecekler",
+      "price": 3000,
+      "art": "tea",
+      "descriptionEn": "Freshly brewed.",
+      "description": "Taze demlenmiş.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "d-turk-kahvesi",
+      "code": "602",
+      "name": "Türk Kahvesi",
+      "nameEn": "Turkish Coffee",
+      "category": "İçecekler",
+      "price": 8500,
+      "art": "coffee",
+      "descriptionEn": "With Turkish delight on the side.",
+      "description": "Yanında lokumla.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "sugar",
+          "name": "Şeker tercihi",
+          "required": true,
+          "options": [
+            {
+              "id": "none",
+              "name": "Sade",
+              "extra": 0
+            },
+            {
+              "id": "medium",
+              "name": "Orta",
+              "extra": 0
+            },
+            {
+              "id": "sweet",
+              "name": "Şekerli",
+              "extra": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d-limonata",
+      "code": "603",
+      "name": "Limonata",
+      "nameEn": "Lemonade",
+      "category": "İçecekler",
+      "price": 9000,
+      "art": "cold",
+      "descriptionEn": "Homemade, with mint.",
+      "description": "Ev yapımı, naneli.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "d-su",
+      "code": "604",
+      "name": "Su",
+      "nameEn": "Water",
+      "category": "İçecekler",
+      "price": 2000,
+      "art": "cold",
+      "descriptionEn": "500 ml.",
+      "description": "500 ml.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    }
+  ]
+}

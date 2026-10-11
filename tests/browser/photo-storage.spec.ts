@@ -1,0 +1,23 @@
+import { test, expect } from '@playwright/test';
+import sharp from 'sharp';
+import { ensureSetup, openSettings } from './helpers';
+test('owner checks photo usage on mobile without losing unsaved settings or deleting files', async ({ page }, info) => {
+  expect((await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } })).ok()).toBe(true); await ensureSetup(page.request);
+  const bytes = await sharp({ create: { width: 100, height: 100, channels: 3, background: '#264e3e' } }).png().toBuffer();
+  const saved = await (await page.request.post('/api/staff/photos', { data: { data: `data:image/png;base64,${bytes.toString('base64')}` } })).json();
+  expect(saved.photo).toBeTruthy();
+  await page.setViewportSize({ width: 390, height: 844 }); await page.goto('/');
+  await openSettings(page, 'Sipariş ve onay');
+  await page.getByLabel('Sipariş değişiklik süresi (saniye)', { exact: true }).fill('17');
+  await openSettings(page, 'Cihazlar');
+  await page.locator('.photo-storage summary').click();
+  const panel = page.locator('.photo-storage'); await expect(panel).toContainText('Kullanılan alan');
+  await expect(panel.locator('.photo-storage-counts > div').filter({ hasText: 'Yeni yüklenen' })).toContainText('1 fotoğraf');
+  await expect(panel).toContainText('dosya silmez');
+  await panel.getByRole('button', { name: 'Alanı yeniden kontrol et' }).click();
+  expect((await page.request.get(saved.photo)).ok()).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await panel.screenshot({ path: info.outputPath('photo-storage-mobile.png') });
+  await openSettings(page, 'Sipariş ve onay');
+  await expect(page.getByLabel('Sipariş değişiklik süresi (saniye)', { exact: true })).toHaveValue('17');
+});

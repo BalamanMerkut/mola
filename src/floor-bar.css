@@ -1,0 +1,83 @@
+/* Masalar, compact (src/FloorBar.tsx): one thin line instead of four number cards, filter chips, small table tiles. */
+.floor-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0 0 12px;font-size:14px;color:#5d6a5a}
+.floor-line strong{color:var(--ink);font-weight:700}
+.floor-line>span+span::before,.floor-line>strong+span::before{content:'·';margin-right:14px;color:#b4bcaf}
+.floor-line.counter{margin:0;font-size:14.5px}
+.floor-line-ready{color:#8a5a12}
+.floor-line-ready strong{color:#8a5a12}
+
+.floor-filters{display:flex;gap:5px;margin:0 0 12px;overflow-x:auto;scrollbar-width:none}
+.floor-filters::-webkit-scrollbar{display:none}
+.floor-filters button{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 9px;border:1px solid #d9e0d4;border-radius:22px;background:#fff;color:#4f5c4c;font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+.floor-filters button span{min-width:20px;padding:1px 6px;border-radius:10px;background:#eef2ea;font-size:12.5px;text-align:center}
+.floor-filters button.selected{background:var(--green);border-color:var(--green);color:#fff}
+.floor-filters button.selected span{background:#ffffff2e;color:#fff}
+.floor-filters button.attention:not(.selected){border-color:#e0b25a;background:#fff6e2;color:#7a4f0c}
+.floor-filters button.attention:not(.selected) span{background:#f3dfb2}
+
+.floor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.floor-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:88px;padding:9px 10px;border:1.5px solid #e1e7da;border-radius:12px;background:#fff;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0}
+.floor-tile-top{display:flex;align-items:center;justify-content:space-between;width:100%}
+.floor-tile-top strong{font-size:22px;font-weight:700;line-height:1.1}
+.floor-tile-call{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#b3261e;color:#fff}
+.floor-tile-amount{font-size:14px;font-weight:600;color:#3d4b3a}
+.floor-tile.empty .floor-tile-amount{color:#9aa395;font-weight:500}
+.floor-tile-state{display:inline-flex;align-items:center;gap:3px;margin-top:auto;font-size:12px;font-weight:700;color:#5d6a5a;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.floor-tile.open{background:#f5f8f2;border-color:#cddcc4}
+.floor-tile.ready{border-color:#d9a03a;background:#fff7e6}
+.floor-tile.ready .floor-tile-state{color:#8a5a12}
+.floor-tile.reserved{border-color:var(--accent,#b96844);background:#fdf3ee}
+.floor-tile.reserved .floor-tile-state,.floor-tile.asking .floor-tile-state{color:#9a4f2c}
+.floor-tile.asking{border-color:var(--accent,#b96844);border-style:dashed;background:#fdf3ee}
+.floor-tile.cleaning{border-color:#c9cfc4;background:#f1f2ee}
+.floor-tile:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.floor-area-title{margin:14px 0 8px;font-size:13px;font-weight:700;color:#6b7768}
+.floor-takeaways{margin-top:14px}
+
+/* The counter head: the day's line, the cash chip and the table actions in one row above the tables. */
+.floor-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 16px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.floor-head>.floor-line{flex:1 1 320px}
+.floor-head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.floor-head-actions .btn{min-height:40px;padding:8px 14px}
+.floor-head>.floor-head-wide{flex-basis:100%;order:10}
+
+/* The cash chip (src/CashDay.tsx, compact): the strip folded into one chip; its menu holds every action of the strip. */
+.floor-head .cash-day.compact{display:contents}
+.floor-head .cash-day.compact>:not(.cash-chip-wrap){flex-basis:100%;order:10;margin:0}
+.cash-chip-wrap{position:relative}
+.cash-chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px 0 14px;border:1px solid #cfe0c6;border-radius:20px;background:#eef6ea;color:#2f5a3e;font:inherit;font-size:13.5px;font-weight:650;white-space:nowrap;cursor:pointer;max-width:100%}
+.cash-chip span{overflow:hidden;text-overflow:ellipsis}
+.cash-chip.warn{border-color:#e4c27f;background:#fff5df;color:#7a4f0c}
+.cash-chip[aria-expanded=true]{box-shadow:0 0 0 3px #23574326}
+.cash-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:25;display:grid;gap:6px;min-width:230px;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 14px 34px #1c2e2433}
+.cash-menu .btn{display:flex;justify-content:flex-start;gap:9px;width:100%;min-height:44px;margin:0}
+
+/* The waiter's phone: the tile grid right under the filters, three columns, area names small. */
+.tables-section.floor-compact .table-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tables-section.floor-compact .table-area-section h3{margin:10px 0 6px;font-size:12.5px;font-weight:700;color:#6b7768;letter-spacing:.2px}
+.tables-section.floor-compact .table-area-section:first-child h3{margin-top:0}
+@media(max-width:700px){
+  .workspace.has-bottom-nav .main-content:has(.floor-compact){padding-top:14px}
+}
+
+/* The counter: smaller table cards so 12–24 tables fit 1280×800; the morning opening as one compact row. */
+.tables-section.floor-counter .section-heading{margin-bottom:10px}
+.tables-section.floor-counter .table-grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.tables-section.floor-counter .table-card{padding:10px 12px 0}
+.tables-section.floor-counter .table-card h3{font-size:17px;margin:4px 0 6px}
+.tables-section.floor-counter .table-meta{min-height:30px}
+.floor-head .floor-line{gap:4px 10px}
+.floor-head .floor-line>span+span::before{margin-right:10px}
+.floor-head .cash-opening{grid-template-columns:auto minmax(0,1fr) minmax(0,1.3fr);padding:10px 14px;gap:8px 14px;align-items:center;border-radius:12px}
+.floor-head .cash-opening-icon{width:34px;height:34px;border-radius:10px}
+.floor-head .cash-opening-copy h2{margin:0;font-size:15px}
+.floor-head .cash-opening-copy p{font-size:12.5px}
+.floor-head .cash-opening-form{grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:6px 10px}
+.floor-head .cash-opening-form>:not(label):not(.cash-opening-actions){grid-column:1/-1}
+.floor-head .cash-opening-actions{grid-column:2;grid-row:1}
+.floor-line>span{white-space:nowrap}
+.tables-section.floor-counter .table-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tables-section.floor-counter .table-card{min-height:0;padding:9px 12px 0}
+.tables-section.floor-counter .table-card h3{margin:2px 0 4px}
+.tables-section.floor-counter .table-meta{min-height:26px;margin:0}
+.floor-head>.floor-head-cash{display:contents}

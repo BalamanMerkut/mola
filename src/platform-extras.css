@@ -1,0 +1,102 @@
+/* Mola Yönetim: notification centre, e-mail settings, backup card, renewal list, machines, notes. Same plain card style. */
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.alert-bell { position:relative; display:inline-grid; place-items:center; width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--green); }
+.alert-bell:hover { background:#f1f5ee; }
+.alert-bell-count { position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#b96844; color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; }
+.alert-list { list-style:none; margin:12px 0 0; padding:0; display:grid; gap:8px; }
+.alert-list li { display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:12px; align-items:start; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+.alert-list li.unread { background:#f7faf3; border-color:#cddfc7; }
+.alert-list li p { margin:2px 0; overflow-wrap:anywhere; }
+.alert-list li small { color:var(--muted); }
+.alert-dot { width:8px; height:8px; border-radius:50%; margin-top:7px; background:transparent; }
+.alert-list li.unread .alert-dot { background:#b96844; }
+.alert-actions { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.checkbox-line { display:flex !important; align-items:center; gap:8px; }
+.checkbox-line input { width:auto; margin:0; }
+.mail-queue { list-style:none; padding:0; margin:6px 0 0; display:grid; gap:6px; }
+.mail-queue li { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 12px; font-size:13px; border-bottom:1px solid #f0f2ec; padding-bottom:6px; }
+.ok { color:#366046; } .warn { color:#7c520f; } .bad { color:#9d442e; }
+.merkez-backup .detail-facts.compact { margin:10px 0; }
+.merkez-backup .path { overflow-wrap:anywhere; font-family:Consolas,monospace; font-size:12px; }
+.second-place { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px; margin:14px 0; }
+.second-place label { flex:1; min-width:220px; margin:0; }
+.second-place small { flex-basis:100%; }
+.recovery-reveal { display:grid; gap:10px; }
+.contact-links { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; margin:6px 0; }
+.contact-links span { display:inline-flex; align-items:center; }
+.contact-links a.text-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 2px; }
+.contact-links .icon-btn { padding:5px; }
+.ticket-business { display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; padding:12px 16px; }
+.detail-notes textarea { width:100%; }
+.detail-owner-reset h4 { display:flex; align-items:center; gap:6px; margin:0 0 8px; }
+.detail-owner-reset .activation-code { margin:4px 0 6px; overflow-wrap:anywhere; }
+.owner-reset-issued { display:grid; gap:6px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; }
+.detail-machines ul { list-style:none; margin:8px 0 0; padding:0; display:grid; gap:8px; }
+.detail-machines li { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; }
+.license-delivery { font-size:13px; margin:4px 0 10px; }
+.suspend-form { margin-top:12px; padding:12px; border:1px solid #eed8cf; border-radius:10px; background:#fff8f5; }
+.plan-choice { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0; }
+.plan-choice button { display:grid; gap:4px; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); }
+.plan-choice button.selected { border:2px solid var(--green); background:#f3f8f1; }
+.plan-choice button small { color:var(--muted); font-size:12px; line-height:1.4; }
+.plan-choice button:disabled { opacity:1; cursor:default; }
+.application-flags .flag-warn { background:#fff6e5; border:1px solid #f0dcae; border-radius:8px; padding:8px 10px; color:#6b4a0e; }
+.audit-detail { color:var(--muted); }
+.failure-table { width:100%; border-collapse:collapse; font-size:12px; margin:10px 0; }
+.failure-table th, .failure-table td { text-align:left; padding:6px 8px; border-bottom:1px solid #f0f2ec; vertical-align:top; overflow-wrap:anywhere; }
+.failure-table th { color:#8a9487; font-weight:600; }
+.platform-first-password { max-width:640px; }
+/* Soft repeat note (only the name and two weak fields match) and low-priority alerts: grey, quieter than the rest. */
+.platform-v2 .detail-duplicates li.soft, .platform-v2 .detail-duplicates li.soft .text-btn { color:var(--muted); }
+.alert-list li.low { background:#fafaf8; }
+.alert-list li.low strong { color:#5f6b63; }
+.alert-priority { margin-left:6px; font-size:10px; padding:1px 6px; border-radius:8px; background:#eef1ec; color:#5f6b63; font-weight:600; }
+.contact-settings form { display:grid; gap:12px; }
+@media (max-width: 760px) {
+  .alert-list li { grid-template-columns:10px minmax(0,1fr); }
+  .alert-actions { grid-column:2; flex-direction:row; align-items:center; }
+  .failure-table thead { display:none; } .failure-table tr { display:grid; padding:6px 0; border-bottom:1px solid #f0f2ec; } .failure-table td { border:0; padding:2px 0; }
+}
+/* Calmer sizes inside the new layout. */
+.yonetim .alert-bell { width:44px; height:44px; }
+.yonetim .alert-bell-count { font-size:11px; min-width:20px; height:20px; border-radius:10px; }
+.yonetim .alert-center { padding:20px; gap:12px; }
+.yonetim .alert-list li small, .yonetim .mail-queue li { font-size:14px; }
+.yonetim .alert-priority { font-size:12px; }
+.yonetim .plan-choice button small { font-size:13px; }
+.yonetim .failure-table { font-size:13px; }
+.yonetim .contact-links .muted { font-size:14px; }
+.yonetim .detail-machines ul { margin:0; }
+.yonetim .owner-reset-issued .activation-code { margin:0; }
+/* Why a field or a button cannot go on yet, right next to it (weak password, test e-mail, sender address). */
+.field-hint { margin:4px 0; font-size:14px; color:#7c520f; }
+.button-why { font-size:13px; color:var(--muted); align-self:center; }
+.plan-change { margin-top:6px; }
+.plan-change .current-plan:disabled { opacity:1; border-color:var(--green); color:var(--green); }
+/* "Olası tekrar (3)": one line that opens; each record and its reasons in two aligned columns. */
+.application-repeats { margin:0; }
+.application-repeats summary { cursor:pointer; font-weight:600; min-height:32px; display:flex; align-items:center; gap:6px; }
+.application-repeats ul { list-style:none; margin:6px 0 0; padding:0; display:grid; grid-template-columns:minmax(120px, max-content) minmax(0, 1fr); gap:4px 14px; align-items:baseline; }
+.application-repeats li { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; align-items:baseline; }
+.application-repeats li .text-btn { justify-self:start; overflow-wrap:anywhere; text-align:left; }
+.application-repeats li small { overflow-wrap:anywhere; }
+@media (max-width: 560px) { .application-repeats ul { grid-template-columns:minmax(0, 1fr); } .application-repeats li small { margin:0 0 6px 2px; } }
+.release-warning { margin:4px 0 0; font-size:14px; color:#7c520f; }
+/* "Şifremi unuttum": code or e-mail, two equal halves of one pill (44 px each); the e-mail half greys out without SMTP. */
+.auth-card .reset-methods { display:flex; gap:4px; padding:4px; background:#e8ece5; border-radius:999px; }
+.auth-card .reset-methods button { flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:0 12px; border:0; border-radius:999px; background:transparent; color:#5d6a60; font:inherit; font-size:14px; font-weight:500; cursor:pointer; text-align:center; }
+.auth-card .reset-methods button.active { background:var(--y-card); color:var(--y-text); font-weight:600; box-shadow:0 1px 3px #1c2e2420; }
+.auth-card .reset-methods button:disabled { cursor:default; opacity:.55; }
+.auth-card .reset-email-off { margin:-6px 0 0; }
+.auth-locked h1 { display:flex; align-items:center; gap:10px; }
+/* Ayarlar → Hesap güvenliği: the advice while two-step login is off. */
+.mfa-advice { display:flex; gap:10px; align-items:flex-start; margin:10px 0; padding:12px 14px; border-radius:12px; background:var(--warn-bg); color:var(--warn-fg); font-size:14px; line-height:1.5; }
+.mfa-advice svg { flex:none; margin-top:2px; }
+.mfa-advice p { margin:0; }
+/* "Önce kurtarma kodunuzu kaydedin" and Ayarlar → Yedek → Veri anahtarı. */
+.key-card { padding:16px 22px 22px; }
+.key-card p { margin:0 0 12px; line-height:1.55; }
+.key-card .application-actions { margin-top:16px; }
+.key-card p svg { vertical-align:-3px; margin-right:4px; color:var(--green); }
+.key-protection-line { margin:0 0 8px; }
+.key-protection-line.warn { font-size:14px; color:var(--warn-fg); }

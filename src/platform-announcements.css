@@ -1,0 +1,143 @@
+/* Mola Yönetim → Duyurular (src/PlatformAnnouncements.tsx) and "Yeni mesaj" (src/PlatformNewMessage.tsx). Same tokens as
+   platform-workspace.css: white sheets, one green accent, 44px targets, nothing wider than the screen. */
+.yonetim .ann-empty { display:grid; justify-items:center; gap:8px; padding:48px 24px; text-align:center; background:var(--y-card); border:1px dashed #d6ded2; border-radius:var(--y-radius); color:var(--y-muted); }
+.yonetim .ann-empty h2 { color:var(--y-text); }
+.yonetim .ann-empty p { margin:0; max-width:520px; }
+
+/* ---------- The sent ones ---------- */
+.yonetim .ann-list { list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.yonetim .ann-row { background:var(--y-card); border:1px solid var(--y-line); border-radius:var(--y-radius-sm); box-shadow:var(--y-shadow); min-width:0; overflow:hidden; }
+.yonetim .ann-row.withdrawn { background:#fafbf8; }
+.yonetim .ann-row.withdrawn .ann-row-title { color:var(--y-muted); text-decoration:line-through; text-decoration-color:#b7bfb5; }
+.yonetim .ann-row-head { display:grid; grid-template-columns:40px minmax(0,1fr) auto 20px; align-items:center; gap:14px; width:100%; min-height:72px; padding:16px 18px; border:0; background:none; text-align:left; font:inherit; color:inherit; cursor:pointer; }
+.yonetim .ann-row-head:hover { background:var(--y-soft); }
+.yonetim .ann-row-head:focus-visible { outline:2px solid var(--green); outline-offset:-2px; }
+.yonetim .ann-row-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:50%; background:#e7efe3; color:var(--green); }
+.yonetim .ann-row-icon.important { background:#fdeee4; color:#b04a1c; }
+.yonetim .ann-row-main { display:grid; gap:4px; min-width:0; }
+.yonetim .ann-row-title { font-size:16px; line-height:1.35; overflow-wrap:anywhere; }
+.yonetim .ann-row-meta { font-size:13px; color:var(--y-muted); overflow-wrap:anywhere; }
+.yonetim .ann-row-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.yonetim .ann-row-chips:empty { display:none; }
+.yonetim .ann-chip { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:650; border-radius:999px; padding:2px 10px; white-space:nowrap; }
+.yonetim .ann-chip.important { background:#fde9dd; color:#a3401a; }
+.yonetim .ann-chip.withdrawn { background:var(--idle-bg); color:var(--idle-fg); }
+.yonetim .ann-chip.mail { background:var(--info-bg); color:var(--info-fg); }
+.yonetim .ann-row-reads { display:grid; justify-items:end; gap:3px; min-width:120px; font-size:14px; }
+.yonetim .ann-row-reads strong { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.yonetim .ann-row-reads small { font-size:12px; color:var(--y-muted); white-space:nowrap; }
+.yonetim .ann-bar { display:block; width:120px; height:6px; border-radius:3px; background:#e7ebe4; overflow:hidden; }
+.yonetim .ann-bar span { display:block; height:100%; border-radius:3px; background:var(--ok-dot); }
+.yonetim .ann-row-chevron { color:var(--y-faint); transition:transform .15s; }
+.yonetim .ann-row.open .ann-row-chevron { transform:rotate(180deg); }
+.yonetim .ann-row-body { display:grid; gap:16px; padding:4px 18px 18px 72px; min-width:0; }
+.yonetim .ann-row-body .announcement-text { font-size:15px; }
+.yonetim .ann-email { display:flex; align-items:center; gap:6px; margin:0; }
+.yonetim .ann-readers { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; }
+.yonetim .ann-readers section { padding:14px 16px; border-radius:12px; background:var(--y-soft); min-width:0; }
+.yonetim .ann-readers h3 { display:flex; align-items:center; gap:8px; font-size:14px; margin:0 0 8px; }
+.yonetim .ann-readers h3 span { font-size:12px; font-weight:700; background:#fff; border-radius:999px; padding:1px 8px; color:var(--y-muted); }
+.yonetim .ann-readers ul { list-style:none; margin:0; padding:0; display:grid; gap:6px; max-height:240px; overflow-y:auto; }
+.yonetim .ann-readers li { display:grid; font-size:14px; overflow-wrap:anywhere; }
+.yonetim .ann-readers li small { font-size:12px; color:var(--y-muted); }
+.yonetim .ann-readers p { margin:0; }
+.yonetim .ann-row-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
+.yonetim .ann-row-actions .btn { margin:0; gap:6px; }
+.yonetim .danger-text { color:var(--bad-fg); }
+.yonetim .ann-confirm { display:grid; gap:10px; flex:1 1 320px; padding:14px 16px; border-radius:12px; background:var(--bad-bg); }
+.yonetim .ann-confirm p { margin:0; font-size:14px; }
+.yonetim .ann-confirm>div { display:flex; flex-wrap:wrap; gap:8px; }
+.yonetim .ann-confirm .btn { margin:0; }
+
+/* ---------- Composer ---------- */
+.yonetim .ann-composer { display:grid; gap:20px; min-width:0; }
+.yonetim .ann-compose-grid { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:24px; align-items:start; }
+.yonetim .ann-form { display:grid; gap:18px; padding:24px; background:var(--y-card); border:1px solid var(--y-line); border-radius:var(--y-radius); box-shadow:var(--y-shadow); min-width:0; }
+.yonetim .ann-form>label { margin:0; font-weight:600; }
+.yonetim .ann-form textarea { min-height:180px; line-height:1.55; }
+.yonetim .ann-count { display:block; margin-top:6px; font-size:12px; font-weight:500; color:var(--warn-fg); }
+.yonetim .ann-target { margin:0; padding:0; border:0; min-width:0; display:grid; gap:12px; }
+.yonetim .ann-target legend { padding:0; margin-bottom:10px; font-size:14px; font-weight:600; }
+.yonetim .ann-target-choices { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.yonetim .ann-target-choices button { display:grid; gap:2px; min-height:64px; padding:10px 14px; border:1.5px solid var(--y-line); border-radius:12px; background:#fff; text-align:left; font:inherit; color:inherit; cursor:pointer; min-width:0; }
+.yonetim .ann-target-choices button strong { font-size:14px; line-height:1.3; }
+.yonetim .ann-target-choices button small { font-size:12px; color:var(--y-muted); }
+.yonetim .ann-target-choices button.selected { border-color:var(--green); background:#f2f7ef; box-shadow:0 0 0 1px var(--green) inset; }
+.yonetim .ann-target-choices button:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+.yonetim .ann-fixed { display:flex; align-items:center; gap:8px; margin:0; padding:12px 14px; border-radius:12px; background:var(--y-soft); font-size:14px; }
+.yonetim .ann-packages { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px; }
+.yonetim .ann-check { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; column-gap:10px; min-height:48px; margin:0; padding:8px 12px; border:1px solid var(--y-line); border-radius:10px; background:#fff; font-weight:500; cursor:pointer; }
+.yonetim .ann-check.on { border-color:#9fbe95; background:#f3f8f0; }
+.yonetim .ann-check input { grid-row:1 / span 2; margin:0; }
+.yonetim .ann-check span { font-size:14px; overflow-wrap:anywhere; }
+.yonetim .ann-check small { grid-column:2; font-size:12px; color:var(--y-muted); font-weight:400; overflow-wrap:anywhere; }
+.yonetim .ann-pick { display:grid; gap:8px; min-width:0; }
+.yonetim .ann-pick-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.yonetim .ann-search { position:relative; flex:1 1 220px; margin:0; min-width:0; }
+.yonetim .ann-search svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--y-faint); }
+.yonetim .ann-search input { margin:0; padding-left:36px; }
+.yonetim .ann-pick-tools { display:flex; gap:8px; }
+.yonetim .ann-pick-list { list-style:none; margin:0; padding:2px; display:grid; gap:6px; max-height:320px; overflow-y:auto; }
+.yonetim .ann-pick-none { padding:8px 4px; }
+.yonetim .ann-toggle { display:grid; grid-template-columns:auto minmax(0,1fr); gap:12px; align-items:flex-start; margin:0; padding:14px 16px; border:1px solid var(--y-line); border-radius:12px; cursor:pointer; }
+.yonetim .ann-toggle.on { border-color:#9fbe95; background:#f3f8f0; }
+.yonetim .ann-toggle input { margin:2px 0 0; }
+.yonetim .ann-toggle span { display:grid; gap:2px; }
+.yonetim .ann-toggle strong { font-size:14px; }
+.yonetim .ann-toggle small { font-size:13px; font-weight:400; color:var(--y-muted); line-height:1.5; }
+.yonetim .ann-form-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
+.yonetim .ann-form-actions .btn { margin:0; gap:6px; }
+.yonetim .ann-summary { display:flex; align-items:center; gap:6px; margin:0 auto 0 0; font-size:14px; color:var(--y-muted); }
+.yonetim .ann-summary strong { color:var(--y-text); }
+.yonetim .ann-form>p { margin:0; }
+.yonetim .ann-preview { position:sticky; top:24px; display:grid; gap:12px; min-width:0; }
+.yonetim .ann-preview h2 { font-size:15px; color:var(--y-muted); font-weight:600; }
+.yonetim .ann-preview-frame { display:grid; gap:10px; padding:16px; border-radius:var(--y-radius); background:#f6f7f4; border:1px solid var(--y-line); }
+.yonetim .ann-preview-crumb { font-size:12px; font-weight:600; color:var(--y-faint); letter-spacing:.2px; }
+.yonetim .ann-preview p { margin:0; }
+
+/* ---------- "Yeni mesaj" ---------- */
+.yonetim .detail-section-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.yonetim .detail-section-actions .btn { margin:0; gap:6px; }
+.new-message-form .modal-body { display:grid; gap:4px; }
+.new-message-lead { margin:0 0 12px; font-size:14px; color:#4d5c51; }
+.new-message-form label { margin-bottom:12px; }
+.new-message-form .modal-actions { flex-wrap:wrap; align-items:center; gap:8px; }
+.new-message-form .modal-actions .btn { gap:6px; }
+.new-message-why { margin:0 auto 0 0; }
+
+/* ---------- Menu: the seventh place (Duyurular) ----------
+   Tablets (600–899 px): seven equal parts of the top strip, icon above the label under 820 px so no label is cut.
+   Phones (under 600 px): the strip keeps its six parts; Duyurular is the megaphone beside the bell. */
+.yonetim-topbar-announce { display:none; }
+@media(max-width:899.98px) {
+  .platform-page.yonetim .yonetim-nav { grid-template-columns:repeat(7,minmax(0,1fr)); }
+}
+@media(min-width:600px) and (max-width:819.98px) {
+  .platform-page.yonetim .yonetim-nav button { flex-direction:column; gap:2px; min-height:54px; padding:6px 2px; font-size:12px; line-height:1.2; }
+  .platform-page.yonetim .yonetim-nav button>span:not(.nav-badge) { max-width:100%; }
+  .platform-page.yonetim .nav-badge { position:absolute; top:3px; left:calc(50% + 6px); min-width:18px; height:18px; padding:0 5px; font-size:11px; }
+}
+@media(max-width:599.98px) {
+  .platform-page.yonetim .yonetim-nav { grid-template-columns:repeat(6,minmax(0,1fr)); }
+  .platform-page.yonetim .yonetim-nav button.nav-announcements { display:none; }
+  .yonetim .yonetim-topbar-announce { display:inline-grid; place-items:center; width:44px; height:44px; padding:0; border-radius:12px; color:var(--y-muted); }
+  .yonetim .yonetim-topbar-announce.active { background:#e6efe3; color:var(--green); }
+}
+@media(max-width:1099.98px) {
+  .yonetim .ann-compose-grid { grid-template-columns:minmax(0,1fr); }
+  .yonetim .ann-preview { position:static; }
+}
+@media(max-width:699.98px) {
+  .yonetim .ann-row-head { grid-template-columns:36px minmax(0,1fr) 20px; padding:14px; gap:12px; }
+  .yonetim .ann-row-icon { width:36px; height:36px; }
+  .yonetim .ann-row-reads { grid-column:2; grid-row:2; justify-items:start; min-width:0; }
+  .yonetim .ann-row-chevron { grid-column:3; grid-row:1; }
+  .yonetim .ann-row-body { padding:0 14px 16px; }
+  .yonetim .ann-target-choices { grid-template-columns:minmax(0,1fr); }
+  .yonetim .ann-target-choices button { min-height:56px; }
+  .yonetim .ann-form { padding:18px 16px; border-radius:16px; }
+  .yonetim .ann-form-actions .btn { flex:1 1 auto; justify-content:center; }
+  .yonetim .ann-summary { flex-basis:100%; }
+  .yonetim .ann-row-actions .btn { flex:1 1 auto; justify-content:center; }
+}

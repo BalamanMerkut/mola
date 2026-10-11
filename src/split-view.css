@@ -1,0 +1,28 @@
+/* İki ekran (src/SplitView.tsx): two Mola screens side by side beside the café computer's rail. */
+.split-view{--split-divider:22px;--split-strip:46px;position:fixed;top:0;bottom:0;left:68px;right:0;display:flex;background:#17342a;z-index:1}
+.split-view.split-error{flex-direction:column;align-items:flex-start;gap:12px;padding:32px;background:var(--bg,#f6f1e8)}
+.split-pane{position:relative;flex:1 1 0;min-width:0;overflow:hidden;background:var(--bg,#f6f1e8)}
+.split-pane iframe{display:block;width:100%;height:100%;border:0;background:var(--bg,#f6f1e8)}
+/* The side that has the keyboard: a thin bar on top. */
+.split-pane::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:transparent;pointer-events:none}
+.split-pane.focused::after{background:#e0a458}
+/* Folded: a strip that brings it back. The frame keeps running (sounds, kitchen board) at a usable width, out of sight. */
+.split-pane.folded{flex:0 0 var(--split-strip)}
+.split-pane.folded iframe{position:absolute;top:0;left:0;width:960px;visibility:hidden;pointer-events:none}
+.split-strip{position:absolute;inset:0;width:100%;border:0;background:#20453a;color:#f3ebdd;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;padding:16px 0;cursor:pointer;font:inherit;font-size:13px}
+.split-strip:hover{background:#285446}
+.split-strip:focus-visible{outline:2px solid #f3ebdd;outline-offset:-4px}
+.split-strip span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;letter-spacing:.02em}
+.split-divider{position:relative;flex:0 0 var(--split-divider);background:#17342a;cursor:col-resize;touch-action:none;display:flex;align-items:center;justify-content:center}
+.split-grip{position:absolute;inset:0}
+.split-grip:focus-visible{outline:2px solid #f3ebdd;outline-offset:-3px}
+.split-grip::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:#ffffff22}
+.split-tools{position:relative;display:flex;flex-direction:column;gap:6px;z-index:1}
+.split-tools button{width:20px;height:44px;border:0;border-radius:6px;background:#2b5a4b;color:#f3ebdd;display:grid;place-items:center;padding:0;cursor:pointer}
+.split-tools button:hover:not(:disabled){background:#3a6f5d}
+.split-tools button:disabled{opacity:.35;cursor:default}
+.split-tools button:focus-visible{outline:2px solid #f3ebdd;outline-offset:1px}
+/* While dragging, the frames do not swallow the pointer. */
+.split-view.dragging iframe{pointer-events:none}
+.split-view.dragging{cursor:col-resize;user-select:none}
+@media (max-width:700px){.split-view{left:0}}

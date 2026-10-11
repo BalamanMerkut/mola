@@ -1,0 +1,51 @@
+[
+  {
+    "name": "qr-siparis",
+    "seconds": 14.435082912445068,
+    "kb": 227,
+    "caption": "Müşteri masadaki QR kodu okutur, menü açılır, siparişini verir.",
+    "kind": "phone"
+  },
+  {
+    "name": "mutfak",
+    "seconds": 14.320822954177856,
+    "kb": 170,
+    "caption": "Sipariş mutfak ekranına düşer; aşçı hazırlar ve “Hazır” der.",
+    "kind": "desktop"
+  },
+  {
+    "name": "garson",
+    "seconds": 18.628216981887817,
+    "kb": 423,
+    "caption": "Garson masaları telefonundan izler, siparişi birkaç dokunuşla alır.",
+    "kind": "phone"
+  },
+  {
+    "name": "kasa",
+    "seconds": 12.824782133102417,
+    "kb": 227,
+    "caption": "Kasada hesap kapanır: nakit ya da kart, para üstü ve yazar kasaya girilecek tutar.",
+    "kind": "desktop"
+  },
+  {
+    "name": "sahip-rapor",
+    "seconds": 15.801707029342651,
+    "kb": 412,
+    "caption": "İşletme sahibi bugünün satışını ve raporları telefonundan görür.",
+    "kind": "phone"
+  },
+  {
+    "name": "rapor-yil",
+    "seconds": 12.008018970489502,
+    "kb": 563,
+    "caption": "Raporlar: bugün, 7 gün, 30 gün ya da yıl seçin; ayrıntı, KDV dökümü, Excel ve PDF.",
+    "kind": "desktop"
+  },
+  {
+    "name": "qr-kartlari",
+    "seconds": 11.770027875900269,
+    "kb": 240,
+    "caption": "Masa QR kartları ve “Bizi takip edin” kartı: indirin, yazdırın, masaya koyun.",
+    "kind": "desktop"
+  }
+]

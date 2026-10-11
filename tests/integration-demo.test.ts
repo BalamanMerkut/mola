@@ -1,0 +1,32 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { seed } from '../server/seed.js';
+import { demoAction } from '../packages/domain/integration-demo.js';
+test('integration sandbox is isolated, idempotent and versioned with owner-only transitions', () => {
+  const s = seed('one'), actor = { tenantId: 'one', id: 'owner', role: 'owner' as const }, ctx = { now: new Date(), id: randomUUID };
+  const before = JSON.stringify({ orders: s.orders, payments: s.payments, accounts: s.accounts, tables: s.tables });
+  const b = { requestId: randomUUID(), action: 'create' as const };
+  const first = structuredClone(demoAction(s, actor, b, ctx));
+  assert.deepEqual(demoAction(s, actor, b, ctx), first); assert.equal(s.integrationDemo?.length, 1);
+  const move = (action: 'preparing' | 'ready' | 'delivered' | 'cancelled', version: number) => ({ requestId: randomUUID(), action, id: first.id, version });
+  assert.throws(() => demoAction(s, { ...actor, role: 'waiter' }, b, ctx));
+  assert.throws(() => demoAction(s, { ...actor, tenantId: 'other' }, b, ctx));
+  assert.throws(() => demoAction(s, actor, move('delivered', 1), ctx));
+  demoAction(s, actor, move('preparing', 1), ctx);
+  assert.throws(() => demoAction(s, actor, move('ready', 1), ctx));
+  demoAction(s, actor, move('ready', 2), ctx); demoAction(s, actor, move('delivered', 3), ctx);
+  assert.throws(() => demoAction(s, actor, move('cancelled', 4), ctx));
+  assert.equal(JSON.stringify({ orders: s.orders, payments: s.payments, accounts: s.accounts, tables: s.tables }), before);
+  assert.deepEqual(s.integrationDemo![0].history!.map(e => e.status), ['new', 'preparing', 'ready', 'delivered']);
+});
+test('cancellation requires a reason and lost response retry adds only one history event', () => {
+  const s = seed('one'), actor = { tenantId: 'one', id: 'owner', role: 'owner' as const }, ctx = { now: new Date(), id: randomUUID };
+  const o = demoAction(s, actor, { requestId: randomUUID(), action: 'create' }, ctx);
+  const b = { requestId: randomUUID(), id: o.id, version: 1, action: 'cancelled' as const };
+  assert.throws(() => demoAction(s, actor, b, ctx), { code: 'REASON_REQUIRED' });
+  assert.equal(o.status, 'new'); assert.equal(o.history?.length, 1);
+  const body = { ...b, reason: '  Ürün kalmadı  ' };
+  demoAction(s, actor, body, ctx); demoAction(s, actor, body, ctx);
+  assert.equal(o.history?.length, 2); assert.equal(o.history?.[1].reason, 'Ürün kalmadı');
+});

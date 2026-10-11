@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.local/
+.local_*/
+.npm-cache/
+test-results/
+playwright-report/
+.env
+*.log
+.docwork/
+_arsiv/

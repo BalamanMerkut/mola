@@ -1,0 +1,21 @@
+/* Merkut Studios açılışı (src/StudioSplash.tsx): a modal <dialog> filling the window (top layer), so nothing beneath moves. */
+.studio-splash {
+  position: fixed; inset: 0; z-index: 2147483000;
+  width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; outline: none; color: #fff;
+  place-items: center;
+  background: #000; cursor: default; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  opacity: 1; transition: opacity 150ms linear;
+}
+.studio-splash[open] { display: grid; }
+.studio-splash::backdrop { background: transparent; }
+.studio-splash picture { display: block; line-height: 0; }
+.studio-splash img {
+  display: block; width: min(300px, 62vw); max-height: 66vh; height: auto; object-fit: contain;
+  opacity: 0; transition: opacity 600ms ease-in-out; will-change: opacity;
+}
+.studio-splash.phase-in img, .studio-splash.phase-hold img { opacity: 1; }
+.studio-splash.phase-out img, .studio-splash.phase-leave img { opacity: 0; }
+.studio-splash.phase-leave { opacity: 0; }
+/* Reduce motion: shown still, no fades. */
+.studio-splash.reduced, .studio-splash.reduced img { transition: none; }
+@media (prefers-reduced-motion: reduce) { .studio-splash, .studio-splash img { transition: none; } }

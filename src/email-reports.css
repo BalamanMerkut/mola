@@ -1,0 +1,24 @@
+/* Ayarlar → İşletme → Raporlar ve e-posta (src/EmailReports.tsx); the rest comes from the settings kit. */
+.email-reports-form{display:grid;gap:16px;min-width:0}
+.email-reports-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;min-width:0}
+.email-reports-fields .wide{grid-column:1/-1}
+.email-reports-fields input,.email-reports-fields select{width:100%;box-sizing:border-box;min-height:44px}
+.email-reports-status{display:grid;gap:6px;margin-top:14px;padding:12px 14px;border-radius:12px;background:#f3f6f1;font-size:13px;line-height:1.55}
+.email-reports-status p{margin:0}
+.email-reports-status .btn{justify-self:start;margin-top:4px}
+.email-reports-error{color:#8a2c2c}
+.email-reports-recent{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.email-reports-recent li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:8px 0;border-bottom:1px solid #e6ebe3;font-size:13px}
+.email-reports-recent li:last-child{border-bottom:0}
+.email-reports-recent small{color:var(--set-muted, #5d6b59);overflow-wrap:anywhere}
+.email-reports-recent small.ok{color:#2f6b45}
+.email-reports-recent small.bad{color:#a33131}
+@media (max-width:620px){.email-reports-fields{grid-template-columns:minmax(0,1fr)}}
+/* Ayarlar → Güvenlik ve diğer → "Tanıtım işletmesi" (src/DemoResetCard.tsx). */
+.demo-reset-form{display:grid;gap:14px;min-width:0}
+.demo-reset-form input[type=text]{max-width:240px;min-height:44px;box-sizing:border-box;letter-spacing:.08em}
+.demo-reset-list{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13px;line-height:1.55;color:#4d5a49}
+.demo-reset-check{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:1.5;min-height:44px}
+.demo-reset-check input{width:20px;height:20px;margin:2px 0 0;flex:none}
+.btn.demo-reset-button{background:#a8584a;border-color:#a8584a;color:#fff}
+.btn.demo-reset-button:disabled{opacity:.5;cursor:not-allowed}

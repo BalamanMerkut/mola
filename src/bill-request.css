@@ -1,0 +1,11 @@
+/* "Hesabı iste" → "Nasıl ödeyeceksiniz? Nakit / Kart" on the guest menu (src/ServiceCallButtons.tsx). */
+.service-call.asking{background:#f3f7ef;border-color:#9fbf8c}
+.bill-pay-choice{display:grid;gap:8px;margin-top:8px;padding:12px;border:1px solid #cfe0c7;border-radius:16px;background:#fbfdf9}
+.bill-pay-choice p{margin:0;font-size:14px;font-weight:600;color:var(--ink);text-align:center}
+.bill-pay-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bill-pay-options button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--green);font-size:15px;font-weight:650}
+.bill-pay-options button:not(:disabled):active{transform:scale(.98)}
+.bill-pay-options button:disabled,.bill-pay-skip:disabled{opacity:.55}
+.bill-pay-skip{justify-self:center;min-height:40px;padding:0 12px;border:0;background:none;color:#5d6a60;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+/* Staff: "Hesap · Kart" on a waiting call. */
+.service-call-chip .call-pay{font-weight:700}

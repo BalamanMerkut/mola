@@ -1,0 +1,3 @@
+/* "Tanıtım" label of a demo business (src/DemoBadge.tsx): small, calm, never covering anything. */
+.demo-badge{display:inline-flex;align-items:center;flex:none;min-height:24px;padding:0 10px;border-radius:999px;background:#fff1d6;color:#7a4b06;border:1px solid #f0cf8f;font-size:12px;font-weight:650;letter-spacing:.02em;line-height:1;white-space:nowrap}
+.customer-header .demo-badge{margin-left:8px}

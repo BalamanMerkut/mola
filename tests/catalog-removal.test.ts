@@ -1,0 +1,23 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { seed } from '../server/seed.js';
+import { removeCatalogItem } from '../packages/domain/catalog-removal.js';
+import type { Actor } from '../packages/domain/types.js';
+const actor: Actor = { tenantId: 'mola-demo', id: 'owner', role: 'owner' };
+const ctx = { now: new Date('2026-09-28T10:00:00Z'), id: () => 'unused' };
+test('catalog removal requires owner, checks revision, preserves history and safely replays', () => {
+ const s = seed('mola-demo'), p = s.products[0];
+ s.productDrafts = [{ ...p, name: 'Draft' }];
+ const history = JSON.stringify({ orders:s.orders, archives:s.archives, payments:s.payments });
+ const input = { kind:'product' as const, id:p.id, revision:s.menuRevision, requestId:'delete-product' };
+ assert.throws(() => removeCatalogItem(s, { ...actor, role:'waiter' }, input, ctx));
+ assert.throws(() => removeCatalogItem(s, actor, { ...input, revision:-1 }, ctx));
+ assert.deepEqual(removeCatalogItem(s, actor, input, ctx), { removed:true });
+ assert.equal(s.products.some(x=>x.id===p.id),false); assert.equal(s.productDrafts.length,0);
+ const revision=s.menuRevision; removeCatalogItem(s,actor,input,ctx); assert.equal(s.menuRevision,revision);
+ assert.equal(JSON.stringify({ orders:s.orders, archives:s.archives, payments:s.payments }),history);
+ s.campaigns=[{id:'campaign',reportId:'report',name:'Test',percent:10,productIds:[p.id],enabled:true,combine:false,startsAt:'2026-09-20T00:00:00Z',endsAt:null}];
+ removeCatalogItem(s,actor,{kind:'campaign',id:'campaign',revision:s.menuRevision,requestId:'delete-campaign'},ctx);
+ assert.equal(s.campaigns.length,0); assert.equal(s.campaignHistory?.[0].reportId,'report');
+ assert.equal(s.campaignHistory?.[0].supersededAt,ctx.now.toISOString());
+});

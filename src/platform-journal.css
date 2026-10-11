@@ -1,0 +1,53 @@
+/* Mola Yönetim → Ayarlar: İşlem kayıtları (src/PlatformJournal.tsx), Çalışma klasörü, Geliştirici erişimi, sürüm satırı,
+   and the Güncellemeler drop zone (src/PlatformReleases.tsx). Same plain card style as the other settings. */
+.journal-panel { display:grid; gap:12px; min-width:0; }
+.journal-verify { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px 12px; align-items:center; padding:12px 14px; border-radius:12px; }
+.journal-verify.ok { background:var(--ok-bg, #e6f1e3); color:var(--ok-fg, #2c6436); }
+.journal-verify.bad { background:var(--bad-bg, #f8e6e0); color:var(--bad-fg, #983f28); }
+.journal-verify div { display:grid; gap:2px; min-width:0; } .journal-verify span { font-size:13px; overflow-wrap:anywhere; }
+.journal-verify .btn { min-height:44px; }
+.journal-filters { display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:10px 12px; align-items:end; }
+.journal-filters label { display:grid; gap:4px; margin:0; font-size:13px; min-width:0; }
+.journal-filters input, .journal-filters select { width:100%; height:44px; min-height:44px; margin:0; box-sizing:border-box; }
+/* Eight Ayarlar sections: they wrap onto a second row instead of hiding behind a sideways scroll. */
+.yonetim .segmented.settings-tabs { flex-wrap:wrap; border-radius:24px; overflow:visible; }
+.journal-filters .journal-search { grid-column:span 2; }
+.journal-bar { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; justify-content:space-between; }
+.journal-bar .platform-count { margin:0; } .journal-bar .btn { min-height:44px; }
+.journal-report { display:grid; gap:8px; padding:12px 14px; border:1px solid var(--y-line, #e3e8df); border-radius:12px; background:#fafbf8; }
+.journal-report p { margin:0; } .journal-report .application-actions { display:flex; flex-wrap:wrap; gap:8px; } .journal-report .btn { min-height:44px; }
+.yonetim .journal-list article small, .journal-list article small { white-space:normal; }
+.journal-list article.journal-bad strong { color:var(--bad-fg, #983f28); }
+.journal-result { color:var(--bad-fg, #983f28); font-weight:600; }
+.journal-retention { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:end; padding-top:8px; border-top:1px solid var(--y-line, #e3e8df); }
+.journal-retention label { display:grid; gap:4px; margin:0; font-size:13px; } .journal-retention input { width:110px; min-height:44px; margin:0; }
+.journal-retention .btn { min-height:44px; } .journal-retention p { flex-basis:100%; margin:0; }
+@media (max-width: 560px) { .journal-filters .journal-search { grid-column:auto; } .journal-verify { grid-template-columns:auto minmax(0,1fr); } .journal-verify .btn { grid-column:1 / -1; } }
+
+.workfolder-panel, .devaccess-panel { display:grid; gap:12px; min-width:0; }
+.workfolder-form, .devaccess-form { display:grid; gap:10px; }
+.workfolder-form label, .devaccess-form label { display:grid; gap:4px; margin:0; } .workfolder-form input, .devaccess-form input { width:100%; min-height:44px; margin:0; }
+.workfolder-form .application-actions, .devaccess-panel .application-actions { display:flex; flex-wrap:wrap; gap:8px; } .workfolder-panel .btn, .devaccess-panel .btn { min-height:44px; }
+.workfolder-parts { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+.workfolder-parts li { display:grid; grid-template-columns:minmax(150px, auto) minmax(0,1fr); gap:4px 12px; font-size:14px; }
+.workfolder-parts code, .devaccess-panel code { overflow-wrap:anywhere; }
+@media (max-width: 560px) { .workfolder-parts li { grid-template-columns:1fr; } }
+.token-once { display:grid; gap:8px; padding:12px 14px; border-radius:12px; background:var(--warn-bg, #f8edd5); color:var(--warn-fg, #7d520e); }
+.token-once p, .token-once pre { margin:0; } .token-once pre { white-space:pre-wrap; }
+.token-text { display:block; padding:8px 10px; border-radius:8px; background:#fff; color:#22362b; font-size:13px; overflow-wrap:anywhere; user-select:all; }
+.token-list { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.token-list li { display:grid; gap:4px; padding:12px 14px; border:1px solid var(--y-line, #e3e8df); border-radius:10px; background:#fff; }
+.token-list li.revoked { opacity:.6; } .token-list p { margin:0; overflow-wrap:anywhere; } .token-list .btn { justify-self:start; }
+
+.platform-version { margin:24px 0 8px; text-align:center; font-size:13px; color:var(--y-faint, #868f87); }
+.version-chip { display:inline-flex; align-items:center; padding:4px 12px; border-radius:999px; font-size:13px; font-weight:600; background:var(--info-bg, #e6eef7); color:var(--info-fg, #2d5579); }
+
+.release-steps { margin:0; padding-left:20px; display:grid; gap:4px; } .release-steps code { overflow-wrap:anywhere; }
+.release-safety { margin:0; padding:10px 12px; border-radius:10px; background:var(--ok-bg, #e6f1e3); color:var(--ok-fg, #2c6436); font-size:14px; }
+.release-drop { position:relative; display:grid; justify-items:center; gap:6px; padding:26px 16px; border:2px dashed #b9c8bd; border-radius:14px; background:#fafbf8; text-align:center; color:#22362b; }
+.release-drop strong { font-size:16px; overflow-wrap:anywhere; } .release-drop.dragging { border-color:#3f8a4c; background:#eef6ec; } .release-drop.chosen { border-style:solid; border-color:#3f8a4c; }
+.release-drop .btn { min-height:44px; }
+.release-upload .release-file { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); border:0; }
+.release-progress { position:relative; height:22px; border-radius:11px; background:#eef1ec; overflow:hidden; }
+.release-progress span { position:absolute; inset:0 auto 0 0; background:#3f8a4c; transition:width .2s; } .release-progress b { position:relative; display:block; text-align:center; font-size:12px; line-height:22px; color:#22362b; mix-blend-mode:multiply; }
+.release-folder { display:grid; gap:8px; } .release-folder p { margin:0; } .release-folder code { overflow-wrap:anywhere; }

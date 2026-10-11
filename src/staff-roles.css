@@ -1,0 +1,46 @@
+/*
+ * Roles and floor duties: the Müdür permission list (Çalışanlar), garson ataması (Ayarlar card and the line in Çalışanlar),
+ * vardiya per role (Ayarlar → Sipariş ve kasa → Vardiya ve bahşiş) and the one-time "Vardiya başlamadan N sipariş geldi" note.
+ * Spacing scale 4 · 8 · 12 · 16; every control at least 44 px tall on touch screens.
+ */
+.manager-permissions{display:grid;gap:12px;margin:4px 0 0;padding:14px 16px;border-radius:14px;background:#f4f7f1;border:1px solid #e4eadf}
+.manager-permissions>p{margin:0}
+.manager-permissions h4{margin:0 0 6px;font-size:13px;font-weight:650;color:var(--ink,#1f2a1d)}
+.manager-permissions ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.manager-permissions li{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.5;color:#3f4b3d}
+.manager-permissions li svg{flex:none;margin-top:3px}
+.manager-permissions div:first-of-type li svg{color:var(--green,#2f6b3a)}
+.manager-permissions div:last-of-type li svg{color:#b5482f}
+
+.assignment-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 0 6px;font-size:13px;line-height:1.5;color:#3f4b3d}
+.assignment-line svg{color:var(--green,#2f6b3a)}
+.assignment-line small{flex-basis:100%;color:#6e7b6c;font-size:12px}
+
+.assignment-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:8px}
+.assignment-list>li{border:1px solid #edf0e9;border-radius:14px;padding:12px 14px;background:#fff}
+.assignment-list>li.open{border-color:#cfdcc8;background:#fbfcfa}
+.assignment-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.assignment-head>div{min-width:0}
+.assignment-head strong{font-size:14px}
+.assignment-summary{display:block;font-size:12.5px;line-height:1.5;color:#6e7b6c;overflow-wrap:anywhere}
+.assignment-head .btn{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.assignment-editor{display:grid;gap:12px;margin-top:12px}
+.assignment-editor fieldset{border:0;margin:0;padding:0;min-width:0}
+.assignment-editor legend{padding:0;margin-bottom:8px;font-size:12.5px;font-weight:650;color:#4f5c4c}
+.assignment-chips{display:flex;flex-wrap:wrap;gap:8px}
+.assignment-chips button{min-height:40px;min-width:44px;padding:8px 14px;border-radius:999px;border:1px solid #d9e1d5;background:#fff;color:#2c3a2a;font:inherit;font-size:13px;cursor:pointer}
+.assignment-chips button.selected{background:var(--green,#2f6b3a);border-color:var(--green,#2f6b3a);color:#fff}
+.assignment-chips button:disabled{cursor:default;opacity:.75}
+.assignment-chips.tables{max-height:260px;overflow:auto;padding:2px}
+.assignment-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.shift-roles{display:flex;flex-wrap:wrap;gap:8px}
+.shift-roles label{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid #d9e1d5;background:#fff;font-size:13.5px;cursor:pointer}
+.shift-roles label:has(input:checked){border-color:var(--green,#2f6b3a);background:#eef5ea}
+.shift-roles input{width:18px;height:18px;margin:0;accent-color:var(--green,#2f6b3a)}
+
+.preshift-notice{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:12px 16px;border-radius:14px;background:#fff7e6;border:1px solid #f2d9a4;color:#5c4512}
+.preshift-notice svg{flex:none}
+.preshift-notice p{margin:0;flex:1;font-size:14px;line-height:1.5}
+.preshift-notice button{flex:none;min-height:40px}
+@media (max-width:480px){.assignment-head{flex-wrap:wrap}.assignment-head .btn{width:100%;justify-content:center}}

@@ -1,0 +1,306 @@
+/* Reports use a shared period bar and a consistent, compact card rhythm. */
+.reports-workspace{min-width:0;--report-gap:16px;--report-soft:#f3f6f0;--report-muted:#6e7b6c}
+.reports-workspace .sales-tabs{width:fit-content;max-width:100%;margin:0 0 20px;padding:4px;gap:4px;border-radius:10px;background:#eaf0e7}
+.reports-workspace .sales-tabs .btn{flex:0 1 auto;min-height:39px;padding:10px 18px;font-size:12px;border-radius:7px;white-space:nowrap}
+.reports-workspace .report-period{padding:0 0 18px;margin:0 0 18px;border-bottom:1px solid var(--line)}
+.reports-workspace .report-period-heading,.reports-workspace .report-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.reports-workspace .report-period-heading{margin-bottom:12px;flex-wrap:wrap}
+.reports-workspace .report-period-heading h2{margin:0;font-size:18px;letter-spacing:-.25px}
+.reports-workspace .report-date-label{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--report-muted);flex-wrap:wrap}
+.reports-workspace .report-period-controls{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px}
+.reports-workspace .report-presets{display:flex;flex-wrap:wrap;gap:5px;margin:0}
+.reports-workspace .report-presets .btn{min-height:36px;padding:9px 12px;font-size:12px}
+.reports-workspace .report-custom-period{min-width:0}
+.reports-workspace .report-custom-period>summary{list-style:none;display:flex;align-items:center;gap:7px;width:fit-content;cursor:pointer;min-height:36px;padding:8px 12px;border:1px solid #dce3d9;border-radius:8px;background:white;font-size:12px;font-weight:600;color:var(--green)}
+.reports-workspace .report-custom-period>summary::-webkit-details-marker{display:none}
+.reports-workspace .report-custom-period>summary.is-selected,.reports-workspace .report-custom-period[open]>summary{background:#eaf2e6;border-color:#b5c6ad}
+.reports-workspace .report-custom-period[open]{flex-basis:100%}
+.reports-workspace .report-filters{display:grid;grid-template-columns:repeat(2,minmax(0,190px)) auto;align-items:end;gap:12px;background:#fff;border:1px solid var(--line);padding:16px;border-radius:10px;margin:10px 0 0;max-width:680px}
+.reports-workspace .report-filters label{min-width:0;margin:0;font-size:12px}
+.reports-workspace .report-filters input{min-width:0}
+.reports-workspace .report-filters .btn{white-space:nowrap}
+.reports-workspace .report-filters>p{grid-column:1/-1;margin:0;font-size:11px}
+.reports-workspace .report-loading{padding:24px 0;color:var(--report-muted)}
+.reports-workspace .panel{padding:20px;border-radius:12px;min-width:0;margin:0}
+.reports-workspace .report-section-heading{margin:0 0 16px;flex-wrap:wrap}
+.reports-workspace .report-section-heading h2,.reports-workspace .report-section-heading h3,.reports-workspace .panel>h2{font-size:15px;line-height:1.45;margin:0;letter-spacing:-.2px}
+.reports-workspace .report-section-heading h2,.reports-workspace .report-section-heading h3{min-width:0;overflow-wrap:anywhere}
+.reports-workspace .help-tip{vertical-align:middle;margin-left:4px}
+.reports-workspace .help-dot{font-weight:600}
+.reports-workspace .finance-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 var(--report-gap)}
+.reports-workspace .finance-kpis article{display:flex;flex-direction:column;align-items:flex-start;min-width:0;padding:18px}
+.reports-workspace .finance-kpis article>span{color:var(--report-muted);font-size:12px}
+.reports-workspace .finance-kpis strong{font-size:26px;line-height:1.2;letter-spacing:-.65px;margin:11px 0 9px;font-weight:600;font-variant-numeric:tabular-nums}
+.reports-workspace .finance-kpis small{color:var(--report-muted);font-size:10px;line-height:1.5;margin-top:auto}
+.reports-workspace .finance-kpis .report-kpi-highlight{background:#eaf2e6;border-color:#cbdcc0}
+.reports-workspace .report-kpi-highlight strong{color:var(--green)}
+.reports-workspace .finance-charts{grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:var(--report-gap);align-items:stretch}
+.reports-workspace .finance-trend{display:flex;flex-direction:column}
+.reports-workspace .finance-trend>.collection-chart{margin:auto 0;min-height:0}
+.reports-workspace .finance-trend svg{max-height:220px;margin:0 0 10px}
+.reports-workspace .chart-readout{min-height:46px;margin:0 0 8px;align-items:center}
+.reports-workspace .chart-readout [role=tooltip]{padding:8px 10px;font-size:12px;gap:3px}
+.reports-workspace .chart-readout .small{font-size:11px}
+.reports-workspace .report-row{padding-top:13px;font-size:12px}
+.reports-workspace .report-row-title{align-items:center;gap:8px}
+.reports-workspace .report-row-title>strong{font-size:12px}
+.reports-workspace .report-track{height:8px;margin:10px 0 8px}
+.reports-workspace .finance-charts>.panel>h2{margin-bottom:16px}
+.reports-workspace .finance-charts>.panel>.report-row{margin-bottom:12px}
+.reports-workspace .finance-charts>.panel>.report-row:last-child{margin-bottom:0}
+.reports-workspace .commission-legend{gap:6px;margin-top:8px;font-size:10px;line-height:1.5}
+.reports-workspace .commission-legend i{width:8px;height:8px}
+.reports-workspace .financial-summary-grid,.reports-workspace .financial-detail-grid,.reports-workspace .employee-chart-grid,.reports-workspace .campaign-report-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--report-gap);margin:var(--report-gap) 0 0;align-items:stretch}
+.reports-workspace .financial-summary-grid>.panel,.reports-workspace .financial-detail-grid>.panel{padding:20px;height:auto;display:flex;flex-direction:column}
+.reports-workspace .finance-receipt dl,.reports-workspace .summary-ledger{display:block;margin:0}
+.reports-workspace .finance-receipt dl>div,.reports-workspace .summary-ledger>div{display:flex;justify-content:space-between;align-items:baseline;gap:14px;border-bottom:1px solid #edf0e9;padding:11px 0;margin:0;font-size:12px;grid-column:auto}
+.reports-workspace .finance-receipt dl>div:first-child{font-size:12px}
+.reports-workspace .finance-receipt dl>div:last-child,.reports-workspace .summary-ledger>div:last-child{border-bottom:0}
+.reports-workspace dt{color:var(--report-muted);line-height:1.5;min-width:0}
+.reports-workspace dd{margin:0;text-align:right;line-height:1.5;min-width:0;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.reports-workspace .finance-receipt .receipt-part{padding-left:0;font-size:12px}
+.reports-workspace .finance-receipt .receipt-subtotal{padding-bottom:13px;margin-bottom:2px;border-top:1px solid #ced9c7;border-bottom:0;font-weight:600}
+.reports-workspace .receipt-subtotal dt{color:var(--ink)}
+.reports-workspace .financial-summary-grid .receipt-total{border:0;margin-top:8px!important;padding:14px!important;background:#eaf2e6;border-radius:8px;align-items:center}
+.reports-workspace .receipt-total dt{font-size:14px;font-weight:600}
+.reports-workspace .receipt-total dd{font-size:23px;line-height:1.25}
+.reports-workspace .report-featured-number{padding:16px;background:var(--report-soft);border-radius:9px;margin:0 0 12px;display:flex;flex-direction:column;gap:9px}
+.reports-workspace .report-featured-number>span{font-size:12px;color:var(--report-muted)}
+.reports-workspace .report-featured-number>strong{font-size:27px;line-height:1.2;color:var(--green);letter-spacing:-.6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.reports-workspace .finance-details{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;font-size:12px}
+.reports-workspace .finance-details summary{cursor:pointer;font-weight:600;color:var(--green);line-height:1.5}
+.reports-workspace .finance-details p{margin:12px 0 0;font-size:12px;line-height:1.6}
+.reports-workspace .campaign-income>.finance-details{margin-top:auto}
+.reports-workspace .campaign-income>dl{margin-bottom:18px}
+.reports-workspace .finance-table-wrap{margin-top:12px}
+.reports-workspace .finance-table-wrap th,.reports-workspace .finance-table-wrap td{font-size:12px;padding:10px 8px}
+.reports-workspace .report-empty-note{font-size:12px;color:var(--report-muted);line-height:1.6;margin:14px 0 0}
+.reports-workspace .summary-muted dt,.reports-workspace .summary-muted dd{color:var(--report-muted);font-size:11px;font-weight:400}
+.reports-workspace .report-product-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-top:0}
+.reports-workspace .report-product-card .product-art{height:135px}
+.reports-workspace .report-product-card>div:last-child{padding:12px;gap:7px}
+.reports-workspace .report-product-card h3{line-height:1.35;font-size:13px}
+.reports-workspace .report-product-card strong{font-size:21px}
+.reports-workspace .report-product-card span{font-size:12px}
+.reports-workspace .report-product-card small{font-size:10px}
+.reports-workspace .employee-chart-grid{margin-top:0}
+.reports-workspace .employee-chart-grid .employee-distribution{padding:20px;margin:0;min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px}
+.reports-workspace .employee-chart-grid .employee-distribution>h3{font-size:15px;line-height:1.4;min-height:42px}
+.reports-workspace .employee-chart-grid .donut-layout{order:0;margin:16px 0 0;gap:18px;flex:1;justify-content:flex-start}
+.reports-workspace .employee-donut{width:178px;height:178px}
+.reports-workspace .employee-donut>div{width:128px;height:128px;background:white}
+.reports-workspace .employee-donut strong{font-size:29px}
+.reports-workspace .employee-donut span{font-size:11px}
+.reports-workspace .employee-chart-grid .donut-legend{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:14px;flex:0 1 auto}
+.reports-workspace .donut-legend-row{font-size:12px;gap:4px 7px;grid-template-columns:9px minmax(0,1fr)}
+.reports-workspace .donut-key{width:9px;height:9px}
+.reports-workspace .donut-legend-row>span:last-child{font-size:11px}
+.reports-workspace .employee-chart-grid .employee-distribution>.report-chart-caption{border-top:1px solid var(--line);padding-top:12px;margin-top:16px;line-height:1.6;font-size:11px}
+.reports-workspace .employee-accounts{margin-top:var(--report-gap)}
+.reports-workspace .employee-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.reports-workspace .employee-detail-grid .report-row{padding:14px;border-radius:9px;background:#fafbf8}
+.reports-workspace .employee-detail-grid .report-row-title>div{min-width:0;overflow-wrap:anywhere}
+.reports-workspace .employee-detail-grid .report-row-title>div strong{font-size:13px}
+.reports-workspace .employee-detail-grid .report-row-title small{display:block;margin-top:5px;color:var(--report-muted);font-size:10px;font-weight:400}
+.reports-workspace .employee-order-count{font-size:25px;line-height:1;text-align:right;font-weight:600;color:var(--green);flex-shrink:0}
+.reports-workspace .employee-order-count small{font-size:10px!important}
+.reports-workspace .employee-detail-grid .report-metrics{justify-content:flex-start;gap:7px 14px;font-size:11px;margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.reports-workspace .report-campaign-select{max-width:560px;margin:0}
+.reports-workspace .report-campaign-select select{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.reports-workspace .campaign-report-grid{margin-top:0}
+.reports-workspace .report-status{font-size:10px;line-height:1.4;padding:5px 8px;color:#55764c;background:#eaf2e6;border-radius:5px}
+.reports-workspace .campaign-comparison-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+.reports-workspace .campaign-comparison-summary>div{display:flex;flex-direction:column;gap:7px;min-width:0}
+.reports-workspace .campaign-comparison-summary span{font-size:11px;line-height:1.5;color:var(--report-muted)}
+.reports-workspace .campaign-comparison-summary strong{font-size:20px;font-variant-numeric:tabular-nums}
+.reports-workspace .campaign-report-grid .report-featured-number>strong{font-size:25px}
+.reports-workspace .campaign-product-report{margin-top:var(--report-gap)}
+.reports-workspace .campaign-product-rows{display:grid;gap:10px}
+.reports-workspace .campaign-product-rows article{padding:14px;border:1px solid var(--line);border-radius:8px;background:#fafbf8}
+.reports-workspace .campaign-product-rows h4{font-size:13px;line-height:1.4;margin:0 0 12px;overflow-wrap:anywhere}
+.reports-workspace .campaign-product-rows dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0}
+.reports-workspace .campaign-product-rows dt{font-size:11px}
+.reports-workspace .campaign-product-rows dd{font-size:13px;text-align:left;margin-top:5px}
+@media(max-width:1179px){
+  .reports-workspace .finance-charts{grid-template-columns:1fr}
+  .reports-workspace .finance-kpis strong{font-size:23px}
+  .reports-workspace .finance-kpis article{padding:15px}
+  .reports-workspace .employee-chart-grid .donut-legend{grid-template-columns:1fr}
+}
+@media(max-width:900px){
+  .reports-workspace .finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .reports-workspace .financial-summary-grid,.reports-workspace .financial-detail-grid,.reports-workspace .employee-chart-grid,.reports-workspace .campaign-report-grid{grid-template-columns:1fr}
+  .reports-workspace .campaign-income>.finance-details{margin-top:0}
+  .reports-workspace .employee-chart-grid .employee-distribution>h3{min-height:0}
+  .reports-workspace .employee-chart-grid .donut-layout{flex-direction:row;gap:24px}
+  .reports-workspace .employee-chart-grid .donut-legend{flex:1;grid-template-columns:1fr}
+  .reports-workspace .employee-detail-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .reports-workspace{--report-gap:12px}
+  .reports-workspace .sales-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-bottom:18px}
+  .reports-workspace .sales-tabs .btn{font-size:12px;padding:10px 9px;min-height:39px}
+  .reports-workspace .report-period{padding-bottom:16px;margin-bottom:16px}
+  .reports-workspace .report-period-heading{align-items:flex-start;gap:6px}
+  .reports-workspace .report-period-heading h2{font-size:17px}
+  .reports-workspace .report-date-label{font-size:11px;width:100%}
+  .reports-workspace .report-presets .btn{font-size:11px;padding:8px 10px;min-height:38px}
+  .reports-workspace .report-custom-period>summary{min-height:38px}
+  .reports-workspace .report-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:13px}
+  .reports-workspace .report-filters button{grid-column:1/-1;width:100%}
+  .reports-workspace .report-filters input{padding:10px 6px;font-size:12px}
+  .reports-workspace .panel,.reports-workspace .financial-summary-grid>.panel,.reports-workspace .financial-detail-grid>.panel,.reports-workspace .employee-chart-grid .employee-distribution{padding:16px}
+  .reports-workspace .finance-kpis{gap:10px}
+  .reports-workspace .finance-kpis article{padding:15px}
+  .reports-workspace .finance-kpis strong{font-size:24px;margin:10px 0 8px}
+  .reports-workspace .finance-kpis article>span{font-size:11px}
+  .reports-workspace .finance-kpis small{font-size:10px}
+  .reports-workspace .report-section-heading{margin-bottom:13px}
+  .reports-workspace .finance-trend svg{min-height:130px;margin-bottom:10px}
+  .reports-workspace .chart-readout{min-height:46px}
+  .reports-workspace .report-featured-number>strong{font-size:25px}
+  .reports-workspace .receipt-total dd{font-size:22px}
+  .reports-workspace .report-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .reports-workspace .report-product-card .product-art{height:115px}
+  .reports-workspace .report-product-card>div:last-child{padding:11px;gap:7px}
+  .reports-workspace .report-product-card strong{font-size:20px}
+  .reports-workspace .employee-chart-grid .donut-layout{flex-direction:column;gap:18px}
+  .reports-workspace .employee-chart-grid .donut-legend{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .reports-workspace .campaign-product-rows dl{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+}
+
+.report-refresh-status { position:fixed; top:12px; right:16px; z-index:110; max-width:calc(100vw - 32px); border:1px solid #dce5d5; border-radius:10px; padding:10px 14px; background:#f4f8ef; color:#204b3f; box-shadow:0 3px 14px #183b2620; pointer-events:none; font-size:12px; }
+/* Satış ve raporlar, yeni düzen: tek dönem, sade sekmeler, üç ana rakam. */
+.reports-v2{display:flex;flex-direction:column;gap:14px}
+.reports-v2 .panel{margin:0}
+.reports-v2 .period-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.reports-v2 .period-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.reports-v2 .period-pills>button,.reports-v2 .period-custom>summary{min-height:34px;padding:6px 14px;border-radius:999px;border:1px solid #d9e1d5;background:#fff;color:#4f5e4d;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;list-style:none}
+.reports-v2 .period-custom>summary::-webkit-details-marker{display:none}
+.reports-v2 .period-pills>button.active,.reports-v2 .period-custom>summary.active{background:var(--green);border-color:var(--green);color:#fff}
+.reports-v2 .period-custom{position:relative}
+.reports-v2 .period-custom form{position:absolute;z-index:20;top:42px;left:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;box-shadow:0 10px 30px #183b2f1a;width:max-content;max-width:min(92vw,420px)}
+/* Tablets: "Tarih seç" sits near the right edge, so its box opens from the bar's left edge, just under the button (it ran off the iPad screen). */
+@media(max-width:1180px){.reports-v2 .period-bar{position:relative}.reports-v2 .period-custom{position:static}.reports-v2 .period-custom form{top:auto;left:0;margin-top:8px}}
+.reports-v2 .period-custom label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6e7b6c}
+.reports-v2 .period-label{font-size:12px;color:#6e7b6c;display:flex;align-items:center;gap:6px}
+/* Section tabs (src/PillTabs.tsx): the four groups in the shared centred pill bar, the group's reports in the quieter row under it. */
+.reports-v2>.report-nav{display:flex;flex-direction:column;gap:6px;min-width:0;margin:2px 0}
+.reports-v2 .kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.reports-v2 .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.reports-v2 .kpi>span{font-size:12px;color:#6e7b6c;display:flex;align-items:center;gap:5px}
+.reports-v2 .kpi>strong{font-size:26px;font-weight:600;color:var(--ink);letter-spacing:-.5px;overflow-wrap:anywhere}
+.reports-v2 .kpi>small{font-size:11px;color:#8a9487;display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.reports-v2 .kpi>small b{font-weight:400;white-space:nowrap}
+.reports-v2 .kpi small.up{color:#3b7a3a}.reports-v2 .kpi small.down{color:#b0573e}
+.reports-v2 .kpi-main{border:1.5px solid #9cc39a;background:#fbfdf9}.reports-v2 .kpi-main>strong{color:#2f6b3a}
+.reports-v2 .kpi>small.kpi-bulk-note{display:block;color:#8a5a1f;line-height:1.35;margin-top:2px}
+.reports-v2 .split-card{padding:14px 18px}
+.reports-v2 .split-legend{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:8px}
+.reports-v2 .split-legend b{font-weight:600}
+.reports-v2 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.reports-v2 .dot.cash,.reports-v2 .split-bar .cash{background:#8fbf6a}.reports-v2 .dot.card,.reports-v2 .split-bar .card{background:#5f8fbf}
+.reports-v2 .split-bar{display:flex;height:9px;border-radius:5px;overflow:hidden;background:#eef2ea}.reports-v2 .split-bar .empty{flex:1}
+.reports-v2 .daily-bars{display:flex;align-items:flex-end;gap:3px;height:120px;margin:4px 0 8px;min-width:0}
+.reports-v2 .daily-bars button{flex:1 1 0;min-width:0;border:0;padding:0;border-radius:3px 3px 0 0;background:#9fcbb5;cursor:pointer}
+.reports-v2 .daily-bars.dense{gap:1px}
+.reports-v2 .daily-bars.dense button{border-radius:2px 2px 0 0}
+/* Week, month and year bars: wider bars with a short label under some of them. */
+.reports-v2 .bars-week .daily-bars,.reports-v2 .bars-month .daily-bars,.reports-v2 .bars-year .daily-bars{gap:6px}
+.reports-v2 .bars-week .daily-bars button,.reports-v2 .bars-month .daily-bars button,.reports-v2 .bars-year .daily-bars button{border-radius:5px 5px 0 0;background:#8fc0a6}
+.reports-v2 .bars-week .daily-bars button.focus,.reports-v2 .bars-month .daily-bars button.focus,.reports-v2 .bars-year .daily-bars button.focus{background:#b96844}
+/* A first or last week/month the period covers only partly: striped, so a short bar does not read as a bad month. */
+.reports-v2 .daily-bars button.partial:not(.focus):not(.open){background:repeating-linear-gradient(135deg,#8fc0a6 0 5px,#b9d9c7 5px 9px)}
+.reports-v2 .dot.partial{background:repeating-linear-gradient(135deg,#8fc0a6 0 2px,#b9d9c7 2px 4px);border-radius:2px}
+.reports-v2 .chart-ticks{display:flex;gap:6px;min-width:0;margin:-2px 0 6px;font-size:10.5px;line-height:1.3;font-variant-numeric:tabular-nums}
+.reports-v2 .chart-ticks>span{flex:1 1 0;min-width:0;text-align:center;white-space:nowrap;overflow:visible;display:flex;justify-content:center}
+.reports-v2 .chart-ticks>span:first-child{justify-content:flex-start}
+.reports-v2 .chart-ticks>span:last-child{justify-content:flex-end}
+.reports-v2 .daily-card{container-type:inline-size;min-width:0;overflow:hidden}
+@container (max-width:520px){.reports-v2 .chart-ticks>span.alt{visibility:hidden}.reports-v2 .bars-week .daily-bars,.reports-v2 .bars-month .daily-bars{gap:3px}.reports-v2 .chart-ticks{gap:3px}}
+.reports-v2 .daily-bars button.weekend{background:#2f7a5f}.reports-v2 .daily-bars button.focus{background:#b96844}
+.reports-v2 .daily-axis{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.reports-v2 .dot.weekend{background:#2f7a5f;border-radius:2px}
+.reports-v2 .report-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.reports-v2 .report-pair h3,.reports-v2 .daily-card h3,.reports-v2 .product-table h3{font-size:14px;margin:0}
+.reports-v2 .rank-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f2ec;font-size:13px}
+.reports-v2 .rank-row:last-child{border-bottom:0}
+.reports-v2 .rank-row small{color:#8a9487;margin-left:4px;white-space:nowrap}
+.reports-v2 .rank-value{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.reports-v2 .rank-value i{display:inline-block;height:6px;border-radius:3px;background:#7fb89c}
+.reports-v2 .hour-heat{display:grid;gap:3px;margin:6px 0 8px}
+.reports-v2 .hour-heat span{height:34px;border-radius:4px;background:#1f7a5c}
+.reports-v2 .mini-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.reports-v2 .mini-stats>div{background:#f1f4ed;border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+.reports-v2 .mini-stats span{font-size:11px;color:#6e7b6c}.reports-v2 .mini-stats strong{font-size:17px;font-weight:600}
+.reports-v2 .category-pills{margin-bottom:12px}
+.reports-v2 .product-table table{width:100%;border-collapse:collapse;font-size:13px}
+.reports-v2 .product-table th,.reports-v2 .product-table td{text-align:left;padding:9px 6px;border-bottom:1px solid #f0f2ec;font-weight:400}
+.reports-v2 .product-table thead th{font-size:11px;color:#8a9487;text-transform:none}
+.reports-v2 .product-table tbody th{font-weight:500}
+.reports-v2 .product-table tbody th small{display:block;color:#9aa395;font-size:11px;font-weight:400}
+.reports-v2 .product-table td{white-space:nowrap}
+.reports-v2 .share-col{width:34%}
+.reports-v2 .share{display:inline-block;width:calc(100% - 44px);height:7px;border-radius:4px;background:#eef2ea;margin-right:8px;vertical-align:middle;overflow:hidden}
+.reports-v2 .share i{display:block;height:100%;background:#7fb89c;border-radius:4px}
+@media (max-width:900px){.reports-v2 .kpi-row,.reports-v2 .report-pair{grid-template-columns:minmax(0,1fr)}.reports-v2 .share-col{width:auto}.reports-v2 .share{display:none}}
+@media (max-width:560px){.reports-v2 .mini-stats{grid-template-columns:minmax(0,1fr)}.reports-v2 .kpi>strong{font-size:22px}.reports-v2 .product-table thead th:nth-child(2),.reports-v2 .product-table td:nth-child(2){display:none}}
+.reports-workspace .role-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#eef2ea;color:#5b6a58;font-size:10px;font-weight:500;vertical-align:1px}
+
+/* Instant tooltips on the charts, fixed columns for best sellers. */
+.reports-v2 .chart-area{position:relative}
+.reports-v2 .chart-tip{position:absolute;transform:translateX(-50%);background:#24382e;color:#fff;padding:6px 10px;border-radius:8px;font-size:11px;line-height:1.35;white-space:nowrap;pointer-events:none;display:flex;flex-direction:column;align-items:center;box-shadow:0 6px 16px #183b2f33;z-index:5}
+.reports-v2 .chart-tip.start{transform:none;align-items:flex-start}.reports-v2 .chart-tip.end{transform:translateX(-100%);align-items:flex-end}
+.reports-v2 .chart-tip span{opacity:.8}.reports-v2 .chart-tip strong{font-size:13px;font-weight:600}.reports-v2 .chart-tip .chart-tip-part{font-size:11px;font-weight:500;opacity:.9}
+.reports-v2 .hour-heat button{height:34px;border:0;padding:0;border-radius:4px;background:#1f7a5c;cursor:pointer}
+.reports-v2 .hour-heat button.focus{outline:2px solid #b96844;outline-offset:1px}
+.reports-v2 .rank-row{display:grid;grid-template-columns:minmax(0,1fr) 62px minmax(40px,72px) 88px;gap:10px}
+.reports-v2 .rank-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reports-v2 .rank-row small{margin:0;text-align:right}
+.reports-v2 .rank-bar{height:6px;background:#eef2ea;border-radius:3px;overflow:hidden}.reports-v2 .rank-bar i{display:block;height:100%;background:#7fb89c;border-radius:3px}
+.reports-v2 .rank-row strong{text-align:right;font-weight:500;white-space:nowrap}
+@media (max-width:560px){.reports-v2 .rank-row{grid-template-columns:minmax(0,1fr) 56px 84px}.reports-v2 .rank-bar{display:none}}
+/* Top sellers never cut a name to "K…": in a narrow card the name gets its own line, amounts and the bar go below it. */
+.reports-v2 .report-pair>.panel{container-type:inline-size;min-width:0}
+@container (max-width:460px){
+  .reports-v2 .rank-row{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
+  .reports-v2 .rank-name{grid-column:1/-1;white-space:normal;overflow:visible;overflow-wrap:anywhere}
+  .reports-v2 .rank-row small{text-align:left;grid-column:1;grid-row:2}
+  .reports-v2 .rank-row strong{grid-column:2;grid-row:2}
+  .reports-v2 .rank-bar{display:block;grid-column:1/-1;grid-row:3}
+}
+/* Day notes on the daily sales chart: a small dot above a noted day; tapping a day opens its notes under the chart. */
+.reports-v2 .daily-bars button{position:relative}
+.reports-v2 .daily-bars button.noted::after{content:'';position:absolute;left:50%;top:-9px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#b96844}
+.reports-v2 .daily-bars button.open{background:#b96844}
+.reports-v2 .daily-card .daily-bars{margin-top:14px}
+.reports-v2 .dot.noted{background:#b96844}
+.reports-v2 .daily-legend{display:inline-flex;flex-wrap:wrap;gap:4px 14px;justify-content:center}
+.reports-v2 .chart-tip .chart-tip-note{font-style:normal;font-size:11px;max-width:220px;white-space:normal;margin-top:3px;opacity:.95;border-top:1px solid #ffffff33;padding-top:3px}
+.reports-v2 .day-note-hint{margin:10px 0 0}
+.reports-v2 .day-notes{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:grid;gap:12px;min-width:0}
+.reports-v2 .day-note-card .day-notes{margin:0;padding:0;border:0}
+.reports-v2 .day-notes-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.reports-v2 .day-notes-head h4{margin:0;font-size:14px;color:var(--ink)}
+.reports-v2 .day-notes-head .text-btn{min-height:44px;margin:0}
+.reports-v2 .day-notes .agenda-form{margin:0}
+.reports-v2 .day-note-add{justify-self:start;min-height:44px}
+.reports-v2 .day-note-empty{margin:0}
+@media(max-width:600px){.reports-v2 .day-note-add{justify-self:stretch}}
+.reports-v2 .bucket-notes .day-notes{margin:0;padding-top:12px}
+.reports-v2 .daily-axis{flex-wrap:wrap;min-width:0}
+.reports-v2 .daily-axis.legend-only{justify-content:center}
+.reports-v2 .daily-axis>span{min-width:0}
+
+/* Giderler: automatic expenses ("Otomatik", with the rule they came from); on a phone date, method and recorder go under the description. */
+.reports-v2 .expense-auto{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:4px;font-size:11.5px;font-weight:400}
+.reports-v2 .expense-auto-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;background:#e8f1e4;color:#2f6b3a;font-size:11px;font-weight:650}
+.reports-v2 .expense-auto .text-btn{margin:0;padding:6px 2px;min-height:32px;font-size:11.5px}
+.reports-v2 .product-table tbody th small.expense-meta{display:none}
+.reports-v2 .expense-table table{table-layout:auto}
+.reports-v2 .expense-table th:first-child{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:700px){
+  .reports-v2 .expense-table .expense-col-method,.reports-v2 .expense-table .expense-col-by,.reports-v2 .expense-table .expense-col-date{display:none}
+  .reports-v2 .product-table tbody th small.expense-meta{display:block;margin-top:3px}
+}
+.reports-v2 .expense-table td .text-btn{min-height:44px;margin:0}

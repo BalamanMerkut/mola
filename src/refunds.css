@@ -1,0 +1,91 @@
+/* İade: the refund form (İade ve düzeltme and the counter's "İade" window), the counter's payment list, the owner's requests. */
+.refund-form{display:grid;gap:14px;min-width:0}
+.refund-head{display:flex;justify-content:space-between;align-items:flex-end;gap:6px 14px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.refund-head div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.refund-head strong{font-size:16px;overflow-wrap:anywhere}
+.refund-head span{color:var(--muted);font-size:13px}
+.refund-head p{margin:0;font-size:13px;font-weight:600;color:#3b6a2a}
+.refund-form .refund-mode{margin:0}
+.refund-items{display:grid;gap:0;border:1px solid var(--line);border-radius:12px;padding:2px 12px;background:#fff}
+.refund-items>p{margin:8px 0 4px}
+.refund-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #f0f2ec}
+.refund-item:first-of-type{border-top:0}
+.refund-item.done{opacity:.55}
+.refund-item-name{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-weight:600;overflow-wrap:anywhere}
+.refund-item-name small{font-weight:400;color:var(--muted);font-size:12px}
+.refund-stepper{display:flex;align-items:center;gap:4px;flex:none}
+.refund-stepper button{display:grid;place-items:center;width:44px;height:44px;border:1px solid #d7e0d2;border-radius:10px;background:#fff;color:var(--green);cursor:pointer}
+.refund-stepper button:disabled{opacity:.35;cursor:default}
+.refund-stepper output{min-width:46px;text-align:center;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.refund-stepper output small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+.refund-whole{display:flex;align-items:center;gap:8px;margin:0;flex:none;min-height:44px;font-weight:600}
+.refund-whole input{width:22px;height:22px}
+.refund-total{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px;padding:12px 0 10px;border-top:1px dashed #d7e0d2}
+.refund-total span{color:#4f5e4d;font-weight:600}
+.refund-total strong{font-size:22px;color:var(--green);font-variant-numeric:tabular-nums}
+.refund-total small{flex-basis:100%;color:#855c25;font-size:12px}
+.refund-amount{display:flex;flex-direction:column;gap:6px;font-weight:600;margin:0}
+.refund-amount input{max-width:220px}
+.refund-reasons{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+.refund-reasons legend{padding:0;margin-bottom:8px;font-weight:600}
+.refund-reasons label{display:flex;flex-direction:column;gap:4px;margin:0;font-size:13px;color:#4f5e4d}
+.refund-chips{display:flex;flex-wrap:wrap;gap:6px}
+.refund-chips button{min-height:42px;padding:0 16px;border-radius:999px;border:1px solid #d7e0d2;background:#fff;color:#4f5e4d;font-size:13.5px;cursor:pointer}
+.refund-chips button.selected{background:#eaf3e2;border-color:#9fbf8c;color:var(--green);font-weight:650}
+.refund-chips button:disabled{opacity:.6;cursor:default}
+.refund-method{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.refund-method>span{font-weight:600}
+.refund-method .cash-segment{margin:0}
+.refund-method small{flex-basis:100%}
+.refund-restock{display:flex;align-items:center;gap:10px;min-height:44px;margin:0;font-weight:600}
+.refund-restock input{width:20px;height:20px;flex:none}
+.refund-restock-note{margin:-8px 0 0}
+.refund-form .restock-fields{display:grid;gap:8px;padding:10px 12px;border-radius:12px;background:#f6f8f4}
+.refund-form .restock-fields p{margin:0}
+.refund-hint{margin:0;color:#6e7b6c;font-size:13px}
+.refund-actions{display:flex;flex-wrap:wrap;gap:8px}
+.refund-actions .btn{display:inline-flex;align-items:center;gap:6px}
+.refund-confirm{display:grid;gap:10px;padding:12px 14px;border-radius:12px;background:#f6f8f3;border:1px solid #dfe7d8}
+.refund-confirm p,.refund-owner p{margin:0}
+.refund-owner{display:grid;gap:10px;padding:12px 14px;border-radius:12px;background:#fbf0e2;border:1px solid #f0d9b8;color:#5f4214}
+/* The counter's window: today's payments as large rows. */
+.refund-window .modal-body{display:grid;gap:12px}
+.refund-limits{margin:0;padding:10px 12px;border-radius:10px;background:#f6f8f3;font-size:13px;color:#4f5e4d}
+.refund-search{display:flex;align-items:center;gap:8px;margin:0;padding:0 12px;border:1px solid #d9e1d5;border-radius:10px;background:#fff;color:var(--muted)}
+.refund-search input{flex:1;min-width:0;min-height:44px;border:0;outline:0;background:transparent;color:var(--ink);padding:0}
+.refund-payments{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;max-height:min(55vh,520px);overflow-y:auto}
+.refund-payments li+li{border-top:1px solid #f0f2ec}
+.refund-payments button{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;background:none;color:inherit;text-align:left;cursor:pointer}
+.refund-payments button:hover:not(:disabled){background:#fbfcf9}
+.refund-payments button:disabled{cursor:default;opacity:.55}
+.refund-payments time{font-variant-numeric:tabular-nums;color:#6e7b6c;font-size:13px}
+.refund-payment-table{font-weight:600;overflow-wrap:anywhere}
+.refund-payment-amount{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.refund-payment-amount small{color:var(--muted);font-size:11.5px}
+.refund-my-requests h3{margin:4px 0 8px;font-size:13px;color:#4f5e4d}
+.refund-my-requests ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.refund-my-requests li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;padding:8px 10px;border-radius:10px;background:#f6f8f3;font-size:13px}
+.refund-my-requests li.pending strong{color:#855c25}
+.refund-my-requests li.done strong{color:#3b6a2a}
+.refund-my-requests li.declined strong{color:#a33a2b}
+.refund-my-requests small{flex-basis:100%;color:var(--muted)}
+/* İade ve düzeltme: the owner's waiting requests above the statement. */
+.refund-requests{display:grid;gap:8px;padding:12px 14px;border:1px solid #f0d9b8;border-radius:12px;background:#fffaf2}
+.refund-requests h3{margin:0;font-size:14px;color:#5f4214}
+.refund-requests ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.refund-request{display:grid;gap:8px;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #f3e4cc}
+.refund-request-line{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
+.refund-request-line strong{overflow-wrap:anywhere}
+.refund-request p{margin:0;font-size:13px;color:#4f5e4d;overflow-wrap:anywhere}
+.refund-request .refund-actions .btn{min-height:40px}
+.refund-request .refund-form{padding-top:8px;border-top:1px solid #f3e4cc}
+@media (max-width:560px){.refund-payments button{grid-template-columns:auto minmax(0,1fr) auto;gap:8px}.refund-payments button>svg{display:none}.refund-item{gap:8px}.refund-stepper button{width:40px;height:44px}.refund-stepper output{min-width:38px}}
+.ledger-corrections .ledger-refund-items{font-size:13px;color:#4f5e4d;overflow-wrap:anywhere}
+
+/* K-A (9 Ekim): "Sahip iadeyi yaptı: Masa 02 · ₺190 nakit. Parayı müşteriye verin." on the cashier's Masalar (src/TillNotices.tsx). */
+.till-notices{display:grid;gap:8px;margin:0 0 12px}
+.till-notice{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 8px 8px 14px;border:1px solid #cddfc7;border-radius:12px;background:#edf6ec;color:#2f5a3f}
+.till-notice>svg{flex:none;color:var(--green)}
+.till-notice p{flex:1;min-width:0;margin:0;font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.till-notice small{display:block;font-weight:400;font-size:12px;color:#5d6a60}
+.till-notice .icon-btn{flex:none}

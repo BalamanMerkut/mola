@@ -1,0 +1,3 @@
+export function CropControl({ label, value, initial, min, max, step = 1, disabled = false, onChange }: { label: string; value: number; initial: number; min: number; max: number; step?: number; disabled?: boolean; onChange: (value: number) => void }) {
+ return <div className="crop-control"><label>{label}<input aria-label={label} type="range" min={min} max={max} step={step} value={value} disabled={disabled} onChange={e => onChange(Number(e.target.value))} /></label><button type="button" className="text-btn crop-reset" aria-label={`${label} sıfırla`} disabled={disabled || value === initial} onClick={() => onChange(initial)}>Sıfırla</button></div>;
+}

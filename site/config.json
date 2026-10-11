@@ -1,0 +1,18 @@
+{
+  "_aciklama": "Web sitesinin iletişim bilgileri. Yalnız bu dosyayı değiştirin, sonra npm.cmd run site:build. 'X' içeren telefon/WhatsApp henüz doldurulmamış sayılır: site derlenir ama uyarı verir ve o düğmeler 'yakında' görünür.",
+  "siteUrl": "https://molayazilim.com.tr",
+  "phone": "+90 5XX XXX XX XX",
+  "whatsapp": "+90 5XX XXX XX XX",
+  "email": "destek@molayazilim.com.tr",
+  "address": "Elazığ",
+  "hours": "Hafta içi 09:00–18:00, cumartesi 10:00–16:00",
+  "company": "Merkut Studios",
+  "legalDraft": true,
+  "legalUpdated": "2026-10-07",
+  "_indirAciklama": "Uygulamayı indir (/indir/). 'files' bölümünü npm.cmd run site:indir doldurur (dosya adı, boyut, SHA-256) ve dosyaları site/dist/indir'e kopyalar. 'enabled' false iken her platform 'Yakında' görünür; VDS için hazırlanmış kurulum dosyaları olunca true yapın ve npm.cmd run site:build (docs/VDS_KURULUM.md bölüm 13).",
+  "downloads": {
+    "enabled": false,
+    "version": "0.1.0",
+    "files": {}
+  }
+}

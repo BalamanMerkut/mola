@@ -1,0 +1,92 @@
+import { DatabaseSync } from 'node:sqlite';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { resolve, join, dirname } from 'node:path';
+import { createHash } from 'node:crypto';
+import { createServer } from 'node:net';
+import type { AddressInfo } from 'node:net';
+import { pilotReadiness } from '../server/pilot-readiness.js';
+
+test('pilot checks reject damaged package, busy port, unsafe data and disclose backup verification limits', async () => {
+  mkdirSync('.local/tests', { recursive: true });
+  const root = mkdtempSync(resolve('.local/tests/preflight-')), data = join(root, 'data'), backups = join(root, 'backups');
+  const files = ['dist/index.html', 'templates/cafe-v1.json', 'server/index.ts', 'package.json'];
+  for (const file of files) { mkdirSync(dirname(join(root, file)), { recursive: true }); writeFileSync(join(root, file), '{}'); }
+  const manifest = { mode: 'local-pilot', files: files.map(file => ({ file, sha256: createHash('sha256').update(readFileSync(join(root, file))).digest('hex') })) };
+  writeFileSync(join(root, 'manifest.json'), JSON.stringify(manifest));
+  const server = createServer(); await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
+  const port = (server.address() as AddressInfo).port;
+  try {
+    const busy = await pilotReadiness(root, data, port);
+    assert.equal(busy.packageIntegrity, 'verified'); assert.equal(busy.ready, false);
+    assert.ok(busy.failures.some(f => f.includes('portu')));
+  } finally { await new Promise<void>(done => server.close(() => done())); }
+  assert.equal((await pilotReadiness(root, data, port)).ready, true);
+  const critical = await pilotReadiness(root, data, port, undefined, async () => ({ status: 'critical', availableMiB: 10, totalMiB: 10000, message: 'Test disk kritik.' }));
+  assert.equal(critical.ready, false); assert.ok(critical.failures.includes('Test disk kritik.'));
+  const low = await pilotReadiness(root, data, port, undefined, async () => ({ status: 'low', availableMiB: 1000, totalMiB: 10000, message: 'Test disk az.' }));
+  assert.equal(low.ready, true); assert.ok(low.warnings.includes('Test disk az.'));
+  const unknown = await pilotReadiness(root, data, port, undefined, async () => ({ status: 'unknown', availableMiB: null, totalMiB: null, message: 'Test disk ölçülemedi.' }));
+  assert.equal(unknown.ready, true); assert.ok(unknown.warnings.includes('Test disk ölçülemedi.'));
+  writeFileSync(join(root, 'dist/index.html'), 'broken');
+  assert.equal((await pilotReadiness(root, data, port)).packageIntegrity, 'failed');
+  writeFileSync(join(root, 'dist/index.html'), '{}');
+  writeFileSync(join(data, 'merchant.sqlite'), 'fixture');
+  writeFileSync(join(data, '.mola-operation.lock'), 'fixture');
+  writeFileSync(join(data, 'RESTORE_IN_PROGRESS.txt'), 'fixture');
+  const unsafe = await pilotReadiness(root, data, port);
+  assert.ok(unsafe.failures.some(f => f.includes('anahtarı eksik')));
+  assert.ok(unsafe.failures.some(f => f.includes('kilidi')));
+  assert.ok(unsafe.failures.some(f => f.includes('geri yüklemesi')));
+  writeFileSync(join(data, 'development.key'), 'bad');
+  assert.ok((await pilotReadiness(root, data, port)).failures.some(f => f.includes('boyutu')));
+  mkdirSync(join(backups, 'backup-valid'), { recursive: true });
+  writeFileSync(join(backups, 'backup-valid', 'complete.json'), JSON.stringify({ format: 1, createdAt: '2026-09-26T12:00:00Z' }));
+  mkdirSync(join(backups, 'backup-failed'), { recursive: true });
+  writeFileSync(join(backups, 'backup-failed', 'complete.json'), JSON.stringify({ format: 1, createdAt: '2026-09-27T12:00:00Z' }));
+  writeFileSync(join(backups, 'backup-failed', 'BACKUP_FAILED.txt'), 'test');
+  const result = await pilotReadiness(root, data, port, backups);
+  assert.equal(result.latestBackup, '2026-09-26T12:00:00Z');
+  assert.ok(result.warnings.some(w => w.includes('yerine geçmez')));
+  mkdirSync(join(backups, 'backup-future'), { recursive: true });
+  writeFileSync(join(backups, 'backup-future', 'complete.json'), JSON.stringify({ format: 1, createdAt: '2099-01-01T00:00:00Z' }));
+  const checkedPaths: string[] = [];
+  const withBackup = await pilotReadiness(root, data, port, backups, async path => {
+    checkedPaths.push(path);
+    return { status: path === resolve(backups) ? 'critical' : 'ok', availableMiB: 100, totalMiB: 10000, message: 'Disk test sonucu.' };
+  });
+  assert.equal(withBackup.latestBackup, '2026-09-26T12:00:00Z');
+  assert.ok(withBackup.warnings.some(w => w.includes('Gelecek tarihli')));
+  assert.ok(withBackup.warnings.some(w => w.includes('Yedek hedefi:')));
+  assert.ok(!withBackup.failures.some(w => w.includes('Disk test sonucu')));
+  assert.deepEqual(checkedPaths, [resolve(data), resolve(backups)]);
+  assert.ok((await pilotReadiness(root, data, 0)).failures.some(f => f.includes('tam sayı')));
+  manifest.files[0].file = '../escape';
+  writeFileSync(join(root, 'manifest.json'), JSON.stringify(manifest));
+  assert.equal((await pilotReadiness(root, data, port)).packageIntegrity, 'failed');
+});
+
+test('pilot checks database version and integrity read-only without upgrading legacy data', async () => {
+  mkdirSync('.local/tests', { recursive: true });
+  const root = mkdtempSync(resolve('.local/tests/preflight-db-')), data = join(root, 'data');
+  mkdirSync(data); const file = join(data, 'merchant.sqlite');
+  const database = new DatabaseSync(file); database.exec('CREATE TABLE sample (id INTEGER); PRAGMA user_version=0'); database.close();
+  writeFileSync(join(data, 'development.key'), Buffer.alloc(32));
+  const bytes = readFileSync(file);
+  let result = await pilotReadiness(root, data, 0);
+  assert.deepEqual(result.databaseCheck, { status: 'verified', version: 0 });
+  assert.deepEqual(readFileSync(file), bytes);
+  const newer = new DatabaseSync(file); newer.exec('PRAGMA user_version=99'); newer.close();
+  const futureBytes = readFileSync(file);
+  result = await pilotReadiness(root, data, 0);
+  assert.equal(result.databaseCheck.status, 'failed'); assert.ok(result.failures.some(f => f.includes('Veri biçimi')));
+  assert.deepEqual(readFileSync(file), futureBytes);
+  writeFileSync(file, 'damaged');
+  result = await pilotReadiness(root, data, 0);
+  assert.equal(result.databaseCheck.status, 'failed'); assert.ok(result.failures.some(f => f.includes('Veritabanı okunamadı')));
+  writeFileSync(join(data, '.mola-operation.lock'), 'leave this lock');
+  result = await pilotReadiness(root, data, 0);
+  assert.equal(result.databaseCheck.status, 'skipped');
+  assert.equal(readFileSync(join(data, '.mola-operation.lock'), 'utf8'), 'leave this lock');
+});

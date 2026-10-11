@@ -1,0 +1,195 @@
+/* Ajanda ve rezervasyon: Masalar marks and questions, the Rezervasyonlar / Etkinlikler parts, the report. One warm accent
+   (reservation amber) beside the app's green; every control at least 44 px, every text field 16 px (no zoom on phones). */
+:root{--resv:#b06a1f;--resv-ink:#7a4510;--resv-soft:#fcf1e2;--resv-line:#efd2ab}
+
+/* ---- Masalar ---- */
+.table-resv-lines{display:grid;gap:3px;margin:6px 0 2px;min-width:0}
+.table-guest,.table-resv{display:flex;align-items:center;gap:5px;font-size:12px;line-height:1.35;min-width:0;overflow-wrap:anywhere;text-align:left}
+.table-guest{color:#2e5444;font-weight:600}
+.table-resv{color:var(--resv-ink)}
+.table-resv.ask{font-weight:700;color:#8a3d0c}
+.table-card.reserved{border-color:var(--resv-line);box-shadow:inset 3px 0 0 var(--resv)}
+.table-card.asking{background:var(--resv-soft)}
+.resv-asks{display:grid;gap:10px;margin:0 0 18px}
+.resv-ask{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--resv-line);border-left:4px solid var(--resv);border-radius:12px;background:var(--resv-soft);min-width:0}
+.resv-ask-copy{display:grid;gap:2px;min-width:0}
+.resv-ask-copy strong{color:#5d330b;font-size:15px;overflow-wrap:anywhere}
+.resv-ask-copy span{color:#7b6244;font-size:12px}
+.resv-ask-actions{display:flex;flex-wrap:wrap;gap:8px}
+.resv-ask-actions .btn,.resv-panel .btn,.resv-choice .btn,.resv-dialog-actions .btn,.resv-toolbar .btn,.event-actions .btn,.event-close-btn{min-height:44px}
+.btn.ghost{background:transparent;border:1px solid #d9c7b0;color:#6b4b2a}
+.btn.danger-soft{background:#a8584a;border:1px solid #a8584a;color:#fff}
+.event-section{padding:14px;border:1px solid var(--resv-line);border-radius:14px;background:#fffaf3}
+.table-area-section.event-section+.table-area-section{margin-top:28px}
+.event-section-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--resv-line)}
+.event-section-head h3{margin:0;font-size:16px;color:var(--resv-ink)}
+.event-overdue{font-size:12px;font-weight:700;color:#8a3d0c;background:#fde3c6;border-radius:999px;padding:4px 10px}
+.event-close-btn{margin-left:auto}
+.event-normal-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0;padding:10px 14px;border:1px dashed #d6ded2;border-radius:12px;color:var(--muted);font-size:13px}
+.event-normal-toggle .text-btn{min-height:44px}
+.resv-panel{display:grid;gap:10px;margin:0 0 16px}
+.resv-panel-row,.resv-panel-next{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fbfcfa;min-width:0}
+.resv-panel-row>div,.resv-panel-next>div:first-child{display:grid;gap:2px;flex:1;min-width:160px}
+.resv-panel-row span,.resv-panel-next span{font-size:12px;color:var(--muted)}
+.resv-panel-row.deposit{background:#f6f9f3}
+.resv-panel-next{border-color:var(--resv-line);background:var(--resv-soft)}
+.resv-panel-next.ask strong{color:#8a3d0c}
+.resv-panel .text-btn{min-height:44px}
+.resv-name-form{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:10px;align-items:end;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;box-sizing:border-box}
+.resv-name-form label{display:grid;gap:6px;margin:0;font-size:12px;min-width:0}
+.resv-name-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}
+.resv-name-actions .btn{min-height:44px}
+.resv-form input,.resv-form select,.resv-form textarea,.resv-name-form input,.resv-daynav input{font-size:16px;min-height:44px;box-sizing:border-box;width:100%;min-width:0}
+.resv-dialog p{margin:0 0 10px;line-height:1.5}
+.resv-dialog-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:6px}
+
+/* ---- Ajanda ve rezervasyon ---- */
+.agenda-hub{display:grid;gap:18px;min-width:0}
+.agenda-cell.has-resv .agenda-resv-mark{position:absolute;right:calc(50% - 20px);top:5px;width:7px;height:7px;border-radius:50%;background:var(--resv);box-shadow:0 0 0 2px #fff}
+.agenda-legend .legend-resv{background:#fff;box-shadow:inset 0 0 0 1.5px var(--line)}
+.agenda-legend .legend-resv::after{content:'';position:absolute;right:-1px;top:-1px;left:auto;bottom:auto;margin:0;width:7px;height:7px;border-radius:50%;background:var(--resv)}
+.agenda-resv{margin:0 0 14px;padding:12px 14px;border:1px solid var(--resv-line);border-radius:12px;background:var(--resv-soft)}
+.agenda-resv ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.agenda-resv li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;min-width:0}
+.agenda-resv li>span:nth-child(2){flex:1;min-width:140px;overflow-wrap:anywhere}
+.agenda-resv-event{margin:0 0 8px;font-size:13px;color:var(--resv-ink)}
+.resv-tab{display:grid;gap:16px;min-width:0}
+.resv-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.resv-daynav{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+.resv-daynav input{width:auto;max-width:180px}
+.resv-daynav .icon-btn{width:44px;height:44px}
+.resv-lead{display:flex;align-items:center;gap:8px;margin:0;flex:1;min-width:220px}
+.resv-pending{margin:0;border-color:var(--resv-line);background:var(--resv-soft)}
+.resv-pending h3{margin:0 0 4px;font-size:15px;color:#5d330b}
+.resv-pending ul{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.resv-pending-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid var(--resv-line)}
+.resv-pending-row>div:first-child{display:grid;gap:2px;min-width:0}
+.resv-pending-row span{font-size:12px;color:#7b6244}
+.resv-choice{display:flex;gap:8px;flex-wrap:wrap}
+.resv-day{margin:0;min-width:0}
+.resv-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.resv-day-head h2{margin:0;font-size:17px;color:var(--ink)}
+.resv-empty{margin:0;padding:22px 18px;border:1px dashed #d6ded2;border-radius:12px;color:var(--muted);line-height:1.6;font-size:13px}
+.resv-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.resv-card{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fbfcfa;min-width:0}
+.resv-card.status-booked{border-left:4px solid var(--resv)}
+.resv-card.status-cancelled,.resv-card.status-no_show{opacity:.78}
+.resv-time{font-weight:700;font-size:17px;color:var(--ink);min-width:52px}
+.resv-time.small{font-size:13px;min-width:40px}
+.resv-body{display:grid;gap:3px;flex:1;min-width:0}
+.resv-body strong{font-size:15px;overflow-wrap:anywhere}
+.resv-body>span{font-size:13px;color:#4d5c51}
+.resv-body p{margin:2px 0 0;font-size:13px;color:#4d5c51;overflow-wrap:anywhere}
+.resv-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.resv-status,.resv-tag{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:#eef2ec;color:#46604f;overflow-wrap:anywhere}
+.resv-status.booked{background:var(--resv-soft);color:var(--resv-ink)}
+.resv-status.seated{background:#e2efe3;color:#245a3c}
+.resv-status.no_show{background:#f8e4df;color:#8c3b2c}
+.resv-status.cancelled{background:#eceeea;color:#5c6b60}
+.resv-phone{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#285447;min-height:32px}
+.resv-actions{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.resv-actions .text-btn{min-height:44px}
+.resv-form{display:grid;gap:14px}
+.resv-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.resv-form-grid label,.resv-remind,.resv-deposit-row label{display:grid;gap:6px;margin:0;font-size:12px;min-width:0}
+.resv-form-grid .wide{grid-column:1/-1}
+.resv-form small{color:var(--muted);font-weight:400;font-size:12px;line-height:1.45}
+.resv-deposit{margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;display:grid;gap:10px;min-width:0}
+.resv-deposit legend{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;padding:0 4px}
+.resv-deposit p{margin:0;font-size:13px}
+.resv-check{display:flex !important;align-items:center;gap:10px;min-height:44px;font-size:14px !important}
+.resv-check input{width:20px !important;min-height:0 !important;height:20px}
+.resv-deposit-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}
+.resv-deposit-row label{flex:1;min-width:140px}
+.resv-method{display:inline-flex;background:#eef1ea;border-radius:12px;padding:3px;gap:3px;flex-wrap:wrap}
+.resv-method button{min-height:40px;min-width:76px;border:0;border-radius:9px;background:transparent;font:inherit;color:#4d5c51;cursor:pointer;padding:0 14px}
+.resv-method button.selected{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px #1d3a2b22}
+.resv-naming{display:grid;gap:8px}
+.resv-label{font-size:12px}
+.event-card{margin:0;display:grid;gap:14px;min-width:0}
+.event-card.closed{background:#fafbf8}
+.event-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.event-card-head h3{margin:0 0 4px;font-size:17px;color:var(--ink);overflow-wrap:anywhere}
+.event-state{font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;background:#eef2ec;color:#46604f}
+.event-state.running{background:#e2efe3;color:#245a3c}
+.event-state.overdue{background:#fde3c6;color:#8a3d0c}
+.event-actions{display:flex;flex-wrap:wrap;gap:8px}
+/* ---- Masa planı (Rezervasyonlar and each event): tap a table. Boş · Rezerve 20:00 · Dolu ---- */
+.resv-plan-bar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;min-width:0}
+.resv-plan-time{display:grid;gap:4px;margin:0;font-size:12px;color:var(--muted);min-width:0}
+.resv-plan-bar .resv-plan-time input.time-field{margin:0;width:96px;font-size:16px;min-height:44px;text-align:center;box-sizing:border-box}
+.resv-plan-new{margin-left:auto;min-height:44px}
+.resv-plan{margin:0;display:grid;gap:12px;min-width:0}
+.resv-plan-head{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap}
+.resv-plan-head h2{margin:0;font-size:17px;color:var(--ink)}
+.resv-plan-hint{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;margin:0;font-size:13px;color:#5d6a60}
+.resv-plan-hint>svg{flex:none}
+.resv-plan-hint>span{flex:1 1 220px;min-width:0}
+.resv-plan-hint .plan-legend{margin-left:auto}
+.resv-form-grid label>span small{display:inline}
+.plan-legend{display:flex;flex-wrap:wrap;gap:4px 12px;list-style:none;margin:0;padding:0;font-size:12px;color:#5d6a60}
+.plan-legend li{display:inline-flex;align-items:center;gap:5px}
+.plan-legend i{width:12px;height:12px;border-radius:4px;border:1px solid #cfd8cb;background:#fff}
+.plan-legend i.reserved{background:var(--resv-soft);border-color:var(--resv)}
+.plan-legend i.busy{background:#e3ece0;border-color:#9fb89a}
+.plan-group{display:grid;gap:8px;min-width:0}
+.plan-group h3{margin:4px 0 0;font-size:13px;font-weight:650;color:#4d5c51}
+.plan-group.event h3{color:var(--resv-ink)}
+.plan-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;min-width:0}
+.plan-cell{position:relative;min-width:0}
+.plan-tile{display:grid;align-content:start;gap:2px;width:100%;min-height:74px;padding:10px 10px 9px;border:1px solid #d9e1d5;border-radius:12px;background:#fff;color:var(--ink);font:inherit;text-align:left;cursor:pointer;box-sizing:border-box;-webkit-tap-highlight-color:transparent;transition:border-color .15s,box-shadow .15s}
+.plan-tile:hover:not(:disabled){border-color:var(--green);box-shadow:0 1px 4px #1c2e2418}
+.plan-tile:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.plan-tile:disabled{cursor:default;opacity:.75}
+.plan-tile strong{font-size:14px;overflow-wrap:anywhere}
+.event-tables .plan-tile strong{padding-right:26px}
+.plan-state{font-size:12.5px;font-weight:650;color:#3f6b4c}
+.plan-sub{font-size:11.5px;color:#6b776d;overflow-wrap:anywhere;line-height:1.35}
+.plan-cell.reserved .plan-tile{background:var(--resv-soft);border-color:var(--resv-line);box-shadow:inset 3px 0 0 var(--resv)}
+.plan-cell.reserved .plan-state{color:var(--resv-ink)}
+.plan-cell.busy .plan-tile{background:#eef4ec;border-color:#cfe0c9}
+.plan-cell.busy .plan-state{color:#2e5444}
+.plan-rename{position:absolute;top:4px;right:4px;width:32px!important;height:32px!important;min-height:0!important;display:grid;place-items:center;padding:0;border:0;border-radius:8px;background:transparent;color:#7b877d}
+.plan-rename:hover{background:#eef2ea;color:var(--ink)}
+.resv-sheet-where{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:#f4f7f1;font-size:14px}
+.resv-sheet-where .text-btn{min-height:36px}
+.resv-sheet-taken{display:flex;align-items:center;gap:6px;margin:0;font-size:12.5px;color:var(--resv-ink)}
+.resv-privacy{display:flex;align-items:center;gap:4px;margin:-4px 0 0}
+.resv-deposit legend small{font-weight:400;color:var(--muted)}
+.resv-table-sheet{display:grid;gap:12px}
+.resv-seat{min-height:40px;padding:0 14px}
+.event-resv summary,.event-past summary{cursor:pointer;display:flex;align-items:center;gap:6px;min-height:44px;font-weight:600;color:#285447}
+.event-resv ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.event-resv li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+.event-resv li>span:nth-child(2){flex:1;min-width:160px;overflow-wrap:anywhere}
+.event-past{margin:0;display:grid;gap:12px}
+
+/* ---- Satış ve Raporlar ---- */
+.resv-report{display:grid;gap:16px;min-width:0}
+.resv-report .panel,.resv-report .kpi-row{margin:0}
+.daily-bars button{position:relative}
+.daily-bars .bar-resv{position:absolute;left:0;right:0;bottom:0;background:var(--resv);opacity:.85;border-radius:inherit;pointer-events:none}
+.dot.resv{background:var(--resv)}
+.resv-money dl,.resv-event-rows dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:0}
+.resv-money dl>div,.resv-event-rows dl>div{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fbfcfa;min-width:0}
+.resv-money dl>div.warn{background:var(--resv-soft);border-color:var(--resv-line)}
+.resv-money dt,.resv-event-rows dt{font-size:12px;color:var(--muted)}
+.resv-money dt small{display:block;font-size:11px}
+.resv-money dd,.resv-event-rows dd{margin:0;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+.resv-event-rows dd small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.resv-event-rows{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.resv-event-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+
+@media (max-width:600px){
+  .resv-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.resv-form-grid>*:not(.half){grid-column:1/-1}
+  .resv-card{flex-wrap:wrap;gap:8px 12px}
+  .resv-actions{flex-direction:row;width:100%;justify-content:flex-end}
+  .resv-ask-actions,.resv-choice,.event-actions{width:100%}
+  .resv-ask-actions .btn,.resv-choice .btn,.event-actions .btn{flex:1 1 auto}
+  .resv-toolbar>.btn{width:100%}
+  .resv-plan-new{margin-left:0;flex:1 1 100%}.resv-plan-time{flex:0 0 auto}
+  .plan-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+  .resv-daynav{width:100%;flex-wrap:wrap}.resv-daynav input{flex:1 1 140px;max-width:none}
+  .event-close-btn{margin-left:0;width:100%}
+  .resv-name-form{grid-template-columns:minmax(0,1fr) 80px}
+}

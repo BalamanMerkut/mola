@@ -1,0 +1,15 @@
+/* "Mola ekibine ulaşın": the vendor's contact on the café's screens (activation, Destek, locked screens, Şifremi unuttum). */
+.mola-contact{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0;background:#fbfcfa;text-align:left}
+.mola-contact h3{font-size:14px;margin:0 0 6px}
+.mola-contact p{margin:0 0 6px}
+.mola-contact ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px}
+.mola-contact li{display:flex;align-items:center;min-width:0}
+.mola-contact a{display:inline-flex;align-items:center;gap:6px;color:var(--green);text-decoration:underline;text-underline-offset:3px;padding:6px 0;overflow-wrap:anywhere}
+.mola-contact-hours{gap:6px;color:var(--muted);font-size:13px;padding:6px 0}
+@media(max-width:600px){.mola-contact ul{flex-direction:column}}
+/* ContactButtons: phone, WhatsApp, e-mail as small round buttons (Paketiniz, "Deneme süreniz bitti", the "paketinizde yok" card). */
+.contact-buttons{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.contact-button{display:inline-flex;align-items:center;gap:7px;min-height:40px;max-width:100%;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--green);font-size:13px;font-weight:600;line-height:1.2;overflow-wrap:anywhere;transition:border-color .15s,background .15s}
+.contact-button:hover{border-color:color-mix(in srgb,var(--green) 35%,var(--line));background:color-mix(in srgb,var(--green) 5%,var(--paper))}
+.contact-button svg{flex:none}
+.contact-button.whatsapp svg{color:#1f8f55}

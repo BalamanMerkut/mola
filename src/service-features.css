@@ -1,0 +1,183 @@
+/* Garson çağır / Hesabı iste (müşteri) */
+.service-calls{display:flex;gap:8px;margin:-6px 0 16px;flex-wrap:wrap}
+.service-call{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--green);font-size:13px;font-weight:600;min-height:42px}
+.service-call span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.service-call:not(:disabled):active{transform:scale(.98)}
+.service-call.waiting,.service-call.waiting:disabled{background:#f3f7ef;border-color:#cfe0c7;color:#3f6b4a;opacity:1}
+.service-call:disabled:not(.waiting){opacity:.55}
+
+/* Çağrı şeridi (garson / kasiyer) */
+.service-call-bar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.service-call-chip{display:flex;align-items:stretch;border:1px solid #ecd9a8;background:#fdf8ea;border-radius:10px;overflow:hidden;min-width:0;max-width:100%}
+.service-call-chip.bill{border-color:#d6e3cf;background:#f2f7ee}
+.service-call-open{display:flex;align-items:center;gap:8px;border:0;background:none;padding:9px 12px;color:var(--ink);font-size:13px;min-width:0;text-align:left}
+.service-call-open span{color:#6c6450;white-space:nowrap}
+.service-call-chip.bill .service-call-open span{color:#4f6b52}
+.service-call-open small{color:var(--muted);white-space:nowrap}
+.service-call-done{display:flex;align-items:center;gap:5px;border:0;border-left:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.65);color:var(--green);font-weight:600;font-size:12px;padding:0 12px}
+.service-call-done:disabled{opacity:.6}
+.table-call-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fdf1d2;color:#9a6a12;margin-left:6px;animation:call-pulse 2.4s ease-in-out infinite}
+@keyframes call-pulse{0%,100%{box-shadow:0 0 0 0 rgba(222,170,60,.35)}50%{box-shadow:0 0 0 5px rgba(222,170,60,0)}}
+@media (prefers-reduced-motion:reduce){.table-call-badge{animation:none}}
+
+/* Mutfak fişi */
+.kitchen-card-tools{display:inline-flex;align-items:center;gap:2px}
+.ticket-reprint{padding:5px;color:var(--muted);margin-left:0}
+.ticket-reprint:hover{color:var(--green);background:#f1f5ee}
+.print-failed{margin:6px 0 4px;font-size:12px;color:#9a4a2a;background:#fbf0ea;border-radius:6px;padding:6px 8px;line-height:1.45}
+
+/* Sadece menü modu */
+.browse-only-price{display:flex;flex-direction:column;gap:4px;padding-top:12px;border-top:1px solid var(--line)}
+.browse-only-price strong{font-size:20px;color:var(--green)}
+
+/* Fiş yazıcıları (ayarlar) */
+.printer-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.printer-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--paper);display:flex;flex-direction:column;gap:6px;min-width:0}
+.printer-card p{margin:0;overflow-wrap:anywhere;font-size:13px}
+.printer-card.off{opacity:.65}
+.printer-card-head{display:flex;align-items:center;gap:8px;color:var(--green)}
+.printer-card-head strong{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.printer-off{margin-left:auto;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 8px}
+.printer-card-actions{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px}
+.printer-card-actions .btn{margin:0}
+.printer-card-actions .icon-btn{margin-left:0}
+.printer-card.add{align-items:center;justify-content:center;text-align:center;border:1px dashed #c9d6c2;background:#f7faf5;color:var(--green);min-height:132px;cursor:pointer}
+.printer-editor{display:grid;gap:14px}
+.printer-editor label{display:grid;gap:6px}
+.printer-editor .check-row{display:flex;align-items:center;gap:8px;font-size:14px}
+.printer-choice{border:0;padding:0;margin:0;display:grid;gap:8px;min-width:0}
+.printer-choice legend{padding:0;margin-bottom:8px;font-weight:600;font-size:13px;display:flex;align-items:center}
+.printer-choice .segmented{width:max-content;max-width:100%}
+.printer-choice .segmented button{font-size:12px}
+.printer-network{display:grid;grid-template-columns:1fr 90px;gap:10px}
+.printer-windows{display:grid;gap:6px;justify-items:start}
+.printer-windows label{width:100%}
+/* Tek mutfak: "Mutfak fişleri" moves from another printer (note under the box) and the one-time notice after old routing. */
+.printer-move-note{margin:0 0 4px 26px;padding:8px 10px;border-radius:8px;background:#fff8ec;color:#7a5a20;font-size:12.5px;line-height:1.5}
+.printer-notice{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;font-size:13px;line-height:1.55}
+.printer-notice>svg{flex:none;margin-top:3px}
+.printer-notice>span{flex:1 1 220px;min-width:0}
+.printer-editor-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.printer-editor-actions .grow{flex:1}
+@media (max-width:520px){.printer-network{grid-template-columns:1fr 80px}.service-call{font-size:12px;padding:9px 10px}}
+
+/* Bildirim sesleri (ayarlar) */
+.sound-list{display:grid;gap:8px}
+.sound-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);color:var(--green)}
+.sound-row:last-child{border-bottom:0}
+.sound-row>div{display:grid;gap:2px;flex:1;min-width:0;color:var(--ink)}
+.sound-row strong{font-size:14px}
+.sound-row .btn{margin:0}
+
+/* Kasada fiş */
+.payment-balance{position:relative}
+.payment-bill-print{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:5px;border:1px solid #d6e3cf;background:#fff;color:var(--green);border-radius:99px;padding:5px 10px;font-size:11px;font-weight:600}
+.payment-bill-print:disabled{opacity:.6}
+.payment-print-after{margin:4px 0 10px;font-size:13px;color:var(--ink)}
+@media (max-width:420px){.payment-bill-print{position:static;margin:12px auto 0}}
+
+/* Masa penceresi düğmeleri: telefonda taşmasın, ana işlem kendi satırında */
+.table-detail-actions{flex-wrap:wrap;justify-content:flex-start}
+.table-detail-actions>.btn.primary{flex-basis:100%;justify-content:center}
+.table-detail-actions>.btn,.table-detail-actions>.notice{margin:0}
+.account-logout{margin-top:16px}
+.text-btn.cancel-confirm{color:#a33131;font-weight:600;text-decoration:none}
+.service-call-error{margin:-8px 0 14px;font-size:12px;color:#a33131}
+/* Müşteri: iPhone odaklanınca sayfayı büyütmesin (16px altı yazı tipi) */
+@media (max-width:600px){.customer input,.customer select,.customer textarea,.customer .search input:not([type]){font-size:16px}.customer-order .customer-order-status .status{font-size:13px}}
+
+/* 1) Telefonda karşılama alanı küçük: ürünler ilk ekranda görünsün */
+@media (max-width:600px){
+  .customer-hero{min-height:0;padding:16px 18px;gap:12px;align-items:center}
+  .customer-hero .eyebrow{display:none}
+  .customer-hero h1{font-size:23px;line-height:1.2;margin:0 0 6px;letter-spacing:-.4px}
+  .customer-hero p{font-size:12px;line-height:1.5;margin:0}
+  .customer-hero .hero-coffee{width:54px;height:54px;min-width:54px;border:0;border-radius:50%;transform:none;margin:0;align-self:center;opacity:.85;background:rgba(255,255,255,.55)}
+  .customer-hero .hero-coffee svg{width:30px;height:30px}
+}
+/* 2) Ürün penceresi: fotoğraf kare ve büyük kalır, "Sepete ekle" altta hep görünür */
+.modal .product-actions,.modal .browse-only-price{position:sticky;bottom:0;background:#fff;padding-bottom:14px;margin-bottom:-23px;z-index:2}
+.modal .stepper button{min-width:40px;min-height:40px}
+/* 3) Dil düğmesi parmakla rahat basılsın */
+.language-btn{min-width:42px;min-height:40px;font-size:12px;font-weight:600}
+
+/* 5) Masa kartı: durum uzaktan okunsun */
+.table-card .table-status,.table-card .table-status.open{font-size:12px;font-weight:600;letter-spacing:0}
+@media (max-width:600px){.table-card .table-status,.table-card .table-status.open{font-size:11px}}
+.table-card .table-top{min-height:24px}
+
+/* 6) Personel sipariş ekranı: sıkışık ürün kartları */
+.product-grid.staff-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.product-card.staff-card{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;min-height:84px;text-align:left;border-radius:10px}
+.staff-card .product-code{font-size:11px;color:var(--muted)}
+.staff-card-name{font-size:14px;line-height:1.3;color:var(--ink);font-weight:600}
+.staff-card-price{margin-top:auto;font-size:13px;color:var(--green);font-weight:600}
+.product-card.staff-card.sold-out .staff-card-price{color:#a33131}
+@media (max-width:600px){.product-grid.staff-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* 7) Mutfak: 1-2 metreden okunacak yazılar */
+.kitchen-board .order-head h3{font-size:22px}
+.kitchen-board .column-heading .status{font-size:14px}
+.kitchen-board .column-heading>span:last-child{font-size:16px;font-weight:700}
+.kitchen-board .order-line strong{font-size:17px}
+.kitchen-board .order-line small{font-size:14px}
+.kitchen-board .qty-badge{min-width:30px;height:30px;font-size:16px;font-weight:700;color:#fff;background:var(--green)}
+.kitchen-board .kitchen-card .btn{font-size:15px;min-height:52px}
+.kitchen-board .order-meta{font-size:13px}
+/* 8) Mutfak: iptal talebi kartın ana işi */
+.kitchen-cancellation{border-color:#ecc9b8;background:#fbf0ea}
+.kitchen-cancellation .kitchen-cancel-title{font-size:14px;color:#9a4a2a}
+.kitchen-cancel-actions{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:10px}
+.kitchen-cancel-actions .btn{margin:0;justify-content:center;min-height:48px}
+
+/* 10) Ödeme: Tamamı / Bir kısmı / Ürün seç */
+.payment-scope{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px;border-radius:10px;background:#eef3ea;margin:4px 0 14px}
+.payment-scope button{border:0;background:none;border-radius:7px;padding:10px 6px;font-size:13px;font-weight:600;color:#6f7d68;min-height:42px}
+.payment-scope button.selected{background:#fff;color:var(--green);box-shadow:0 1px 3px #263b2014}
+
+/* 13) Ayarlar kendiliğinden kaydedilir */
+.settings-autosave{display:flex;align-items:center;gap:6px;margin:0;padding:14px 24px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+
+.settings-autosave.backup-warn{color:#9a4a2a}
+
+/* Desktop app side rail: only in the café computer's own Mola window. */
+body.desktop-shell #root{margin-left:68px}
+.desktop-rail{position:fixed;left:0;top:0;bottom:0;width:68px;z-index:40;background:#17342a;border-right:1px solid #0f251d;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 0 12px}
+.desktop-rail-logo{width:38px;height:38px;border-radius:50%;background:#f3ebdd;color:var(--green);display:grid;place-items:center;margin-bottom:14px}
+.desktop-rail a,.desktop-rail button{width:58px;min-height:54px;border:0;border-radius:10px;background:transparent;color:#d8e2d6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:10px;text-decoration:none;cursor:pointer;padding:6px 2px}
+.desktop-rail a:hover,.desktop-rail button:hover{background:#ffffff14;color:#fff}
+.desktop-rail a.active{background:#ffffff1f;color:#fff}
+.desktop-rail a:focus-visible,.desktop-rail button:focus-visible{outline:2px solid #f3ebdd;outline-offset:-2px}
+.desktop-rail .desktop-rail-off{margin-top:auto;color:#f0c9b8}
+.desktop-dialog .desktop-big{font-size:16px;margin:0 0 6px}
+.desktop-dialog .modal-actions{margin:16px 0 12px}
+.backup-kept{margin:6px 0 4px;font-size:13px}
+.backup-kept summary{cursor:pointer;color:var(--muted)}
+.backup-kept ul{list-style:none;margin:6px 0 0;padding:0;max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.backup-kept li{display:flex;justify-content:space-between;gap:12px;padding:5px 10px;border-top:1px solid var(--line)}
+.backup-kept li:first-child{border-top:0}
+.backup-kept .tier{color:var(--muted)}
+.backup-kept .year-package{background:var(--soft,rgba(0,0,0,.03))}
+.backup-kept .year-package small{color:var(--muted);margin-left:4px}
+.backup-kept .tier.bad{color:var(--danger,#b42318);font-weight:600}
+.desktop-qr{display:block;margin:12px auto;border:1px solid var(--line);border-radius:10px}
+.desktop-address{display:flex;flex-direction:column;align-items:center;gap:4px}
+.desktop-address code{font-size:15px;color:var(--green)}
+.desktop-stopped{position:fixed;inset:0;z-index:200;background:#f6f7f4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:var(--ink)}
+.desktop-stopped h1{font-family:Georgia,serif;font-weight:400;font-size:30px;margin:6px 0 0}
+.desktop-stopped p{color:var(--muted);max-width:380px}
+.customer-footer .made-by{font-size:10px;letter-spacing:.4px;color:#b3baa9}
+@media (max-width:700px){body.desktop-shell #root{margin-left:0}.desktop-rail{display:none}}
+.printer-kind{display:flex;flex-direction:column;gap:6px;margin-top:10px}.printer-kind>span{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+
+/* Garson telefonu, Masalar (8 Ekim): çağrılar tek satır küçük çipler, yana kayar; onaylar tek satır "Göster" (masa ızgarası ilk ekranda kalır). */
+.service-call-bar.compact{position:relative;flex-wrap:nowrap;overflow-x:auto;min-width:0;max-width:100%;gap:6px;margin:0 0 8px;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.service-call-bar.compact::-webkit-scrollbar{display:none}
+.service-call-bar.compact .service-call-chip{flex:none;border-radius:999px}
+.service-call-bar.compact .service-call-open{padding:6px 4px 6px 10px;gap:6px;font-size:12.5px;min-height:40px}
+.service-call-bar.compact .service-call-open small{font-size:11px}
+.service-call-bar.compact .service-call-done{padding:0 11px;min-width:40px;justify-content:center}
+.service-call-bar.compact .service-call-done-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.approval-compact{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;border:1px solid #d6e3cf;background:#f2f7ee;color:var(--ink);border-radius:10px;padding:6px 12px;margin:0 0 8px;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
+.approval-compact-count{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:12px;background:var(--green);color:#fff;font-size:12px;font-weight:700}
+.approval-compact-show{margin-left:auto;display:inline-flex;align-items:center;gap:3px;color:var(--green);font-weight:700}.approval-auto-line{margin:0 0 12px;font-size:13px}

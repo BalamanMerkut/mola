@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Neden düz HTTP'ye izin var: Mola'nın kafe sunucusu kafenin kendi bilgisayarında, yerel ağda çalışır
+  (http://192.168.x.x:3000). Yerel ağdaki bir IP adresi için güvenilir TLS sertifikası alınamaz; kafede HTTPS yoktur.
+  Android'in ağ güvenliği ayarı IP aralığına göre izin veremediği için burada genel izin verilir, sınır uygulamanın
+  kendi kodundadır (Adres.java): HTTP yalnız özel ağ adreslerine (10.x, 172.16-31.x, 192.168.x, .local, tek parçalı
+  bilgisayar adı) açılır; internetteki her adres HTTPS olmak zorundadır. Kullanıcının eklediği sertifikalara güvenilmez.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

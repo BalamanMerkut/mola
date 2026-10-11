@@ -1,0 +1,12 @@
+/* 24-hour time fields (src/TimeField.tsx): the same look as every text field, numbers lined up. */
+input.time-field{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+input.time-field[aria-invalid=true]{border-color:#c98a6a;background:#fff8f4}
+.datetime-field{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(88px,1fr);gap:8px;min-width:0}
+.datetime-field>input{min-width:0}
+/* gün.ay.yıl fields (src/DateField.tsx): a text field, the calendar button inside its right edge, the browser's picker hidden under it. */
+.date-field{position:relative;display:block;min-width:0}
+.date-field>input[type=text]{width:100%;box-sizing:border-box;padding-right:40px;font-variant-numeric:tabular-nums}
+.date-field>input[aria-invalid=true]{border-color:#c98a6a;background:#fff8f4}
+.date-field-pick{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:var(--muted,#6b7a6c);cursor:pointer}
+.date-field-pick:hover{background:#eef2ea}
+.date-field-native{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}

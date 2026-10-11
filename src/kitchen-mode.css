@@ -1,0 +1,117 @@
+/*
+ * Mutfak modu (src/KitchenMode.tsx): the board on the whole screen. A slim white bar on top, then the notices, then the
+ * board filling the rest of the screen: three columns that each scroll on their own under a sticky heading (landscape),
+ * one stage at a time with tabs (portrait, ≤ 900 px). Type is about one and a half times the normal board's, for reading
+ * from a few steps away; buttons are at least 56 px tall. Late orders colour the whole card.
+ */
+.kitchen-mode{--km-line:#e1e7d8;--km-soft:#eef1e9;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;background:#f4f6f1;color:var(--ink);box-sizing:border-box}
+.kitchen-mode.on-board{height:100vh;height:100dvh;overflow:hidden}
+.workspace.kitchen-mode-root{display:block}
+.kitchen-mode-root>.kitchen-mode{width:100%}
+
+/* The bar: place and clock · counts · tools. Wraps to two rows on a narrow screen, never wider than the screen. */
+.kitchen-bar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;min-height:64px;padding:8px calc(18px + env(safe-area-inset-right,0px)) 8px calc(18px + env(safe-area-inset-left,0px));padding-top:calc(8px + env(safe-area-inset-top,0px));background:#fff;border-bottom:1px solid var(--km-line);box-sizing:border-box;position:relative;z-index:5}
+.kitchen-bar-place{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 220px}
+.kitchen-bar-avatar{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#e6efe2;color:var(--green);overflow:hidden}
+.kitchen-bar-avatar img{width:40px;height:40px;object-fit:contain}
+.kitchen-bar-place>div{display:flex;flex-direction:column;min-width:0}
+.kitchen-bar-place strong{font-size:17px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kitchen-bar-place small{font-size:12.5px;color:#6e7b6c;line-height:1.3}
+.kitchen-bar-clock{flex:none;margin-left:6px;padding:4px 12px;border-radius:10px;background:var(--km-soft);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.5px;color:#22392f}
+.kitchen-bar-counts{display:flex;gap:6px;margin:0;padding:0;list-style:none}
+.kitchen-bar-counts li{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap}
+.kitchen-bar-counts strong{font-size:20px;font-variant-numeric:tabular-nums}
+.kitchen-bar-counts .count-new{background:#f6ead6;color:#7b5b20}
+.kitchen-bar-counts .count-preparing{background:#e8edf5;color:#41618c}
+.kitchen-bar-counts .count-ready{background:#e6efe0;color:#456b30}
+.kitchen-bar-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 10px;margin-left:auto}
+.kitchen-bar-tools .kitchen-tools{gap:8px}
+.kitchen-bar-tools .kitchen-awake-note{max-width:220px;font-size:12px}
+.kitchen-bar-online{display:inline-flex;color:#5c8a5c}
+.kitchen-bar-tools .connection{font-size:13px}
+.kitchen-bar-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 15px;border:1px solid #d6dfd2;border-radius:12px;background:#fff;color:var(--green);font:inherit;font-size:14.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.kitchen-bar-btn:hover{background:#f1f5ee}
+.kitchen-bar-btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+.kitchen-bar-btn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.kitchen-bar-btn:disabled{opacity:.55;cursor:default}
+
+/* Below the bar. On the board the body does not scroll: notices on top (scrolling if many), the board fills the rest. */
+.kitchen-mode-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px calc(18px + env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) calc(18px + env(safe-area-inset-left,0px));box-sizing:border-box}
+.kitchen-mode-body>.notice{flex:none;margin:0 0 12px}
+.kitchen-notices{flex:none;max-height:42%;overflow-y:auto;overscroll-behavior:contain}
+.kitchen-notices:empty{display:none}
+.kitchen-notices>*{margin:0 0 12px}
+.kitchen-notices>:last-child{margin-bottom:14px}
+.kitchen-mode .kitchen-cancel-strip p{font-size:18px;padding:13px 16px}
+.kitchen-mode .kitchen-cancel-strip small{font-size:16px}
+.kitchen-mode-page{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:1400px;margin:0 auto}
+.kitchen-mode:not(.on-board) .kitchen-mode-body{overflow:visible}
+
+/* The board: columns as tall as the screen allows, each with its own scroll and a sticky heading. */
+.kitchen-mode .kitchen-board{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.kitchen-mode .kitchen-column{align-self:stretch;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 12px 12px;border-radius:14px;background:var(--km-soft);border:1px solid #e2e8da}
+.kitchen-mode .column-heading{position:sticky;top:0;z-index:2;margin:0 -12px 12px;padding:12px 14px;background:var(--km-soft);border-bottom:1px solid #dfe6d6;border-radius:14px 14px 0 0}
+.kitchen-mode .column-heading .status{font-size:18px;font-weight:700;padding:6px 12px;border-radius:8px}
+.kitchen-mode .column-heading>span:last-child{font-size:22px;font-weight:800;color:#3e5236}
+.kitchen-mode .column-empty{font-size:17px;padding:40px 8px}
+
+/* A card, ~1.5× the normal board: table ≥ 28 px, product ≥ 22 px, options ≥ 18 px, waiting time ≥ 18 px, buttons ≥ 56 px. */
+.kitchen-mode .kitchen-card{padding:18px 18px 14px;margin-bottom:14px;border-radius:14px;border:1px solid var(--km-line);border-left-width:6px;border-left-color:#d7dfcf;transition:background .3s,border-color .3s}
+.kitchen-mode .kitchen-card .order-head{align-items:flex-start}
+.kitchen-mode .kitchen-card .order-head h3{font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.3px;overflow-wrap:anywhere}
+.kitchen-mode .kitchen-card .order-head h3 svg{width:26px;height:26px}
+.kitchen-mode .kitchen-card .platform-heading{font-size:24px}
+.kitchen-mode .kitchen-card-tools{font-size:18px;font-weight:600;color:#6c7867}
+.kitchen-mode .kitchen-card-tools .icon-btn{min-width:44px;min-height:44px}
+.kitchen-mode .order-meta{align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px 12px;font-size:16px;color:#5f6b5b;margin:10px 0}
+.kitchen-mode .order-meta>span:first-child{margin-right:auto}
+.kitchen-mode .waiting-time{font-size:19px;font-weight:700;color:#2f4a3c}
+.kitchen-mode .waiting-time svg{width:18px;height:18px}
+.kitchen-mode .waiting-time.late{padding:3px 11px;background:#fff;color:#8a3a12}
+.kitchen-mode .late-label{padding:3px 11px;border-radius:99px;font-size:15px;font-weight:800;letter-spacing:.3px;background:#a85c12;color:#fff}
+.kitchen-mode .order-lines{gap:14px;margin:16px 0}
+.kitchen-mode .order-line{gap:12px}
+.kitchen-mode .order-line strong{font-size:23px;line-height:1.25;font-weight:700;color:#1e2d25}
+.kitchen-mode .order-line small{font-size:18px;line-height:1.4;color:#34413a;font-weight:500}
+.kitchen-mode .order-line small.line-note{font-size:18px}
+.kitchen-mode .qty-badge{min-width:40px;height:40px;font-size:22px;font-weight:800;border-radius:8px;color:#fff;background:var(--green)}
+.kitchen-mode .order-change-notice,.kitchen-mode .print-failed,.kitchen-mode .hold-hint,.kitchen-mode .kitchen-card>.muted.small{font-size:16px}
+.kitchen-mode .packed-badge.packed-loud{font-size:18px;padding:9px 12px}
+.kitchen-mode .kitchen-card .btn{min-height:58px;font-size:19px;font-weight:700;border-radius:12px;padding:10px 14px;gap:10px}
+.kitchen-mode .kitchen-card .btn svg{width:20px;height:20px}
+.kitchen-mode .kitchen-cancel-open{display:inline-flex;align-items:center;min-height:44px;font-size:16px;margin-top:4px}
+.kitchen-mode .kitchen-undo{font-size:16px;padding:8px 8px 8px 14px}
+.kitchen-mode .kitchen-undo .undo-btn{min-height:44px;font-size:16px}
+.kitchen-mode .kitchen-cancellation span,.kitchen-mode .kitchen-cancellation p{font-size:16px}
+.kitchen-mode .kitchen-cancel-actions .btn{min-height:56px}
+
+/* Late: the whole card speaks (amber from 10 minutes, red from 20); the label says it in words too. */
+.kitchen-mode .kitchen-card.late{background:#fff4dc;border-color:#ecc77a;border-left-color:#d4931c}
+.kitchen-mode .kitchen-card.very-late{background:#fde5df;border-color:#e9a593;border-left-color:#c2412b}
+.kitchen-mode .kitchen-card.very-late .late-label{background:#b3261e}
+.kitchen-mode .kitchen-card.very-late .waiting-time.late{color:#9b1f17}
+
+/* Portrait tablet and phone: the stage tabs (larger here) and one column at a time, filling the screen. */
+.kitchen-mode .kitchen-stage-tabs{flex:none}
+.kitchen-mode .kitchen-bar-counts{display:flex}
+@media(max-width:900px){
+  .kitchen-mode .kitchen-bar-counts{display:none}
+  .kitchen-mode .kitchen-stage-tabs button{min-height:56px;font-size:18px;border-radius:12px}
+  .kitchen-mode .kitchen-stage-tabs button span{font-size:17px;padding:2px 10px}
+  .kitchen-mode .kitchen-board{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .kitchen-bar{gap:8px 10px;padding-left:calc(12px + env(safe-area-inset-left,0px));padding-right:calc(12px + env(safe-area-inset-right,0px))}
+  .kitchen-bar-place{flex-basis:100%}
+  .kitchen-bar-tools{margin-left:0;justify-content:flex-start;flex:1 1 100%}
+  .kitchen-bar-btn{min-height:44px;padding:0 11px;font-size:13.5px}
+  .kitchen-mode-body{padding-left:calc(10px + env(safe-area-inset-left,0px));padding-right:calc(10px + env(safe-area-inset-right,0px))}
+  .kitchen-mode .kitchen-card{padding:14px}
+  .kitchen-mode .kitchen-card .order-head h3{font-size:28px}
+}
+@media(prefers-reduced-motion:reduce){.kitchen-mode .kitchen-card{transition:none}}
+/* QR approvals on the kitchen tablet (src/ApprovalQueue.tsx): Onayla / Reddet beside the table's name, always in sight in the short strip. */
+.approval-kitchen .approval-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px}
+.approval-kitchen .approval-head h3{margin:0}
+.approval-kitchen .approval-head .modal-actions{margin:0}
+.kitchen-mode .kitchen-undo .undo-btn{white-space:nowrap;flex:none}

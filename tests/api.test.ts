@@ -1,0 +1,393 @@
+import { licensed } from './merkez-fixture.js';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { mkdirSync, mkdtempSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { createApp, DEMO_PASSWORD } from '../server/app.js';
+import { Store } from '../server/store.js';
+
+test('HTTP integration: authentication, isolated businesses, concurrency, roles and closure', async t => {
+  mkdirSync('.local/tests', { recursive: true });
+  const store = new Store(mkdtempSync(resolve('.local/tests/api-')));
+  let time = Date.now(); let ready = true;
+  licensed(store); const server = createServer(createApp(store, () => new Date(time), () => ready));
+  await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+  t.after(async () => { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); store.close(); });
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  function client() {
+    const jar = new Map<string, string>(); let session = '';
+    return {
+      async call(path: string, body?: unknown, extra: Record<string, string> = {}) {
+        const response = await fetch(base + '/api' + path, { method: body === undefined ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json', Cookie: [...jar].map(([k,v]) => `${k}=${v}`).join('; '), 'X-Guest-Session': session, ...extra }, body: body === undefined ? undefined : JSON.stringify(body) });
+        for (const value of response.headers.getSetCookie()) { const [k, v] = value.split(';')[0].split('='); jar.set(k, v); }
+        const data = await response.json() as any;
+        if (data.session) session = data.session;
+        return { status: response.status, data };
+      },
+    };
+  }
+  const owner = client(), waiter = client(), kitchen = client(), other = client();
+  await t.test('login, missing credentials and origin validation', async () => {
+    assert.equal((await owner.call('/staff/state')).status, 401);
+    assert.equal((await owner.call('/login', { username: 'isletme', password: 'wrong' })).status, 401);
+    assert.equal((await owner.call('/login', { username: 'isletme', password: DEMO_PASSWORD }, { Origin: 'https://attacker.example' })).status, 403);
+    for (const [c, username] of [[owner, 'isletme'], [waiter, 'garson'], [kitchen, 'mutfak'], [other, 'diger']] as const) assert.equal((await c.call('/login', { username, password: DEMO_PASSWORD })).status, 200);
+    assert.equal((await waiter.call('/staff/heartbeat', {})).status, 403);
+    await owner.call('/staff/heartbeat', {});
+  });
+  const table = store.read('mola-demo').tables[0];
+  await t.test('menu option editing validates groups and restricts photo upload to owners', async () => {
+    const product = { code: '77', name: 'Test Tatlı', nameEn: '', category: 'Tatlılar', subtype: 'Sütlü', ingredients: 'Süt', description: '', price: 10000, soldOut: false, art: 'cake', photo: null, groups: [{ id: 'serve', name: 'Servis', required: false, options: [{ id: 'plain', name: 'Sade', extra: 0 }, { id: 'ice', name: 'Dondurmalı', extra: 2500 }] }] };
+    assert.equal((await waiter.call('/staff/products', { product })).status, 403);
+    assert.equal((await owner.call('/staff/products', { product: { ...product, category: '' } })).status, 400);
+    const service = { ...product.groups[0], preset: 'service' };
+    assert.equal((await owner.call('/staff/products', { product: { ...product, groups: [service, { ...service, id: 'second-service' }] } })).status, 400);
+    assert.equal((await owner.call('/staff/products', { product: { ...product, code: '78', groups: [{ ...service, preset: 'custom' }, { ...service, id: 'second-custom', preset: 'custom' }] } })).status, 200);
+    assert.equal((await owner.call('/staff/products', { product: { ...product, groups: [product.groups[0], product.groups[0]] } })).status, 400);
+    assert.equal((await owner.call('/staff/products', { product: { ...product, photo: '/media/other-demo/11111111-1111-1111-1111-111111111111.webp' } })).status, 400);
+    assert.equal((await owner.call('/staff/products', { product })).status, 200);
+    const discounted = { ...product, code: '79', groups: [{ ...service, options: [{ id: 'small', name: 'Küçük', extra: -1000 }] }] };
+    assert.equal((await owner.call('/staff/products', { product: discounted })).status, 200);
+    assert.equal((await owner.call('/staff/products', { product: { ...discounted, code: '80', price: 1000 } })).status, 400);
+    assert.equal((await owner.call('/staff/products', { product: { ...discounted, code: '81', price: 1500, groups: [...discounted.groups, { ...discounted.groups[0], id: 'another', preset: 'custom' }] } })).status, 400);
+    const discountedId = store.read('mola-demo').products.find(p => p.code === '79')!.id;
+    const retainedGroups = await owner.call('/staff/products', { id: discountedId, product: { ...discounted, price: 1000, groups: undefined } });
+    assert.equal(retainedGroups.status, 400); assert.equal(retainedGroups.data.code, 'INVALID_OPTION_PRICE');
+    const saved = store.read('mola-demo').products.find(p => p.code === '77')!;
+    assert.equal(saved.subtype, 'Sütlü'); assert.equal(saved.groups[0].options[1].extra, 2500);
+    assert.equal((await kitchen.call('/staff/photos', { data: 'invalid' })).status, 403);
+    assert.equal((await owner.call('/staff/photos', { data: 'invalid' })).status, 400);
+  });
+  const guests = Array.from({ length: 4 }, () => client());
+  for (const g of guests) assert.equal((await g.call('/guest/session', { token: table.token })).status, 200);
+  const body = () => ({ requestId: randomUUID(), tableId: table.id, lines: [{ productId: 'tea', quantity: 1, selections: [] }], expectedTotal: 3500 });
+  await t.test('campaign management requires owner and validates dates, scope, version and idempotent retries', async () => {
+    const campaign = { name: 'Test kampanya', productIds: ['latte'], percent: 20, startsAt: new Date(time).toISOString(), endsAt: null, enabled: false, combine: false };
+    const input = { requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, campaign };
+    assert.equal((await waiter.call('/staff/campaigns', input)).status, 403);
+    assert.equal((await owner.call('/staff/campaigns', { ...input, campaign: { ...campaign, percent: 101 } })).status, 400);
+    assert.equal((await owner.call('/staff/campaigns', { ...input, campaign: { ...campaign, endsAt: campaign.startsAt } })).data.code, 'INVALID_DATE');
+    assert.equal((await owner.call('/staff/campaigns', { ...input, campaign: { ...campaign, productIds: ['missing'] } })).data.code, 'INVALID_PRODUCTS');
+    const created = await owner.call('/staff/campaigns', input); assert.equal(created.status, 200);
+    assert.deepEqual((await owner.call('/staff/campaigns', input)).data, created.data);
+    assert.equal((await owner.call('/staff/campaigns')).data.campaigns.length, 1);
+    assert.equal((await other.call('/staff/campaigns')).data.campaigns.length, 0);
+    assert.equal((await owner.call('/staff/campaigns', { ...input, requestId: randomUUID() })).data.code, 'VERSION_CONFLICT');
+    const { percent: _, ...base } = campaign;
+    const fixedInput = { requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, campaign: { ...base, id: created.data.id, kind: 'fixed', amount: 2025 } };
+    assert.equal((await waiter.call('/staff/campaigns', fixedInput)).status, 403);
+    for (const minQuantity of [0, -1, 2.5, 21]) assert.equal((await owner.call('/staff/campaigns', { ...fixedInput, campaign: { ...fixedInput.campaign, minQuantity } })).status, 400);
+    for (const maxQuantity of [0, -1, 1.5, 1_000_001]) assert.equal((await owner.call('/staff/campaigns', { ...fixedInput, campaign: { ...fixedInput.campaign, maxQuantity } })).status, 400);
+    assert.equal((await owner.call('/staff/campaigns', { ...fixedInput, campaign: { ...fixedInput.campaign, minQuantity: 2, maxQuantity: 1 } })).data.code, 'INVALID_CAMPAIGN_LIMIT');
+    for (const amount of [0, -100, 1.5, 100_000_001]) assert.equal((await owner.call('/staff/campaigns', { ...fixedInput, campaign: { ...fixedInput.campaign, amount } })).status, 400);
+    assert.equal((await owner.call('/staff/campaigns', { ...fixedInput, campaign: { ...fixedInput.campaign, percent: 10 } })).status, 400);
+    assert.equal((await owner.call('/staff/campaigns', fixedInput)).status, 200);
+    assert.equal((await owner.call('/staff/campaigns', fixedInput)).status, 200);
+    const fixedSaved = (await owner.call('/staff/campaigns')).data.campaigns[0];
+    assert.equal(fixedSaved.kind, 'fixed'); assert.equal(fixedSaved.amount, 2025); assert.equal(fixedSaved.percent, undefined);
+    assert.equal(store.read('mola-demo').campaignHistory?.find(c => c.reportId !== fixedSaved.reportId)?.percent, 20);
+    const conditional = { ...fixedInput, requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, campaign: { ...fixedInput.campaign, minQuantity: 2 } };
+    assert.equal((await owner.call('/staff/campaigns', conditional)).status, 200);
+    assert.equal((await owner.call('/staff/campaigns', conditional)).status, 200);
+    assert.equal((await owner.call('/staff/campaigns')).data.campaigns[0].minQuantity, 2);
+    // Weekly schedule: validated, normalised, kept when an older screen leaves it out, cleared only by null.
+    const weekly = (schedule: unknown, endsAt: string | null = new Date(time + 28 * 86400000).toISOString()) => ({ ...conditional, requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, campaign: { ...conditional.campaign, endsAt, schedule } });
+    for (const schedule of [{ days: [] }, { days: [8] }, { days: [6], from: '25:00', to: '26:00' }, { days: [6], extra: true }]) assert.equal((await owner.call('/staff/campaigns', weekly(schedule))).status, 400);
+    assert.equal((await owner.call('/staff/campaigns', weekly({ days: [6], from: '17:00', to: '14:00' }))).data.code, 'INVALID_SCHEDULE');
+    assert.equal((await owner.call('/staff/campaigns', weekly({ days: [6] }, null))).data.code, 'INVALID_SCHEDULE');
+    assert.equal((await owner.call('/staff/campaigns', weekly({ days: [7, 6, 6], from: '14:00', to: '17:00' }))).status, 200);
+    assert.deepEqual((await owner.call('/staff/campaigns')).data.campaigns[0].schedule, { days: [6, 7], from: '14:00', to: '17:00' });
+    assert.equal((await owner.call('/staff/campaigns', weekly(undefined))).status, 200);
+    assert.deepEqual((await owner.call('/staff/campaigns')).data.campaigns[0].schedule, { days: [6, 7], from: '14:00', to: '17:00' });
+    assert.equal((await owner.call('/staff/campaigns', weekly(null, null))).status, 200);
+    assert.equal((await owner.call('/staff/campaigns')).data.campaigns[0].schedule, undefined);
+  });
+  await t.test('drafts stay private, reject ordering, publish once and preserve legacy live products', async () => {
+    const revision = store.read('mola-demo').menuRevision;
+    const product = { published: false, code: '990', name: 'Taslak içecek', nameEn: '', category: '', price: 0, description: '', art: 'coffee', soldOut: false, groups: [] };
+    const draft = { requestId: randomUUID(), revision, product };
+    assert.equal((await owner.call('/staff/products', draft)).status, 200);
+    assert.equal((await owner.call('/staff/products', draft)).status, 200);
+    assert.equal(store.read('mola-demo').products.filter(p => p.code === '990').length, 1);
+    const saved = store.read('mola-demo').products.find(p => p.code === '990')!;
+    assert.ok(!(await waiter.call('/staff/state')).data.products.some((p: any) => p.id === saved.id));
+    assert.ok(!(await guests[0].call('/guest/state')).data.products.some((p: any) => p.id === saved.id));
+    assert.equal((await guests[0].call('/guest/orders', { ...body(), lines: [{ productId: saved.id, quantity: 1, selections: [] }] })).data.code, 'ITEM_UNAVAILABLE');
+    assert.equal((await owner.call('/staff/products', { id: saved.id, product: { ...product, published: true } })).status, 400);
+    assert.equal((await owner.call('/staff/products', { requestId: randomUUID(), revision, id: saved.id, product })).data.code, 'VERSION_CONFLICT');
+    const publish = { requestId: randomUUID(), revision: revision + 1, id: saved.id, product: { ...product, published: true, price: 3500, category: 'Kahveler' } };
+    assert.equal((await owner.call('/staff/products', publish)).status, 200);
+    assert.equal((await owner.call('/staff/products', publish)).status, 200);
+    assert.ok((await guests[0].call('/guest/state')).data.products.some((p: any) => p.id === saved.id));
+    assert.ok((await waiter.call('/staff/state')).data.products.some((p: any) => p.id === saved.id));
+    assert.ok((await guests[0].call('/guest/state')).data.products.some((p: any) => p.id === 'tea'));
+    assert.equal(store.read('mola-demo').menuRevision, revision + 2);
+    const firstPublishedAt = store.read('mola-demo').products.find(p => p.id === saved.id)!.firstPublishedAt;
+    assert.equal(firstPublishedAt, new Date(time).toISOString());
+    assert.ok((await guests[0].call('/guest/state')).data.newProductIds.includes(saved.id));
+    const edit = { requestId: randomUUID(), revision: revision + 2, id: saved.id, action: 'draft', product: { ...publish.product, published: false, name: 'Gelecek fiyat', price: 9500 } };
+    assert.equal((await owner.call('/staff/products', edit)).status, 200);
+    assert.equal((await owner.call('/staff/products', edit)).status, 200);
+    assert.equal(store.read('mola-demo').products.find(p => p.id === saved.id)!.price, 3500);
+    assert.equal((await owner.call('/staff/state')).data.productDrafts[0].price, 9500);
+    assert.equal((await waiter.call('/staff/state')).data.productDrafts, undefined);
+    const publicState = (await guests[0].call('/guest/state')).data;
+    assert.equal(publicState.productDrafts, undefined); assert.ok(!JSON.stringify(publicState).includes('Gelecek fiyat'));
+    const goLive = { ...edit, requestId: randomUUID(), revision: revision + 3, action: 'publish', product: { ...edit.product, published: true } };
+    assert.equal((await owner.call('/staff/products', goLive)).status, 200);
+    assert.equal((await owner.call('/staff/products', goLive)).status, 200);
+    assert.equal(store.read('mola-demo').productDrafts!.length, 0);
+    assert.equal((await guests[0].call('/guest/state')).data.products.find((p: any) => p.id === saved.id).price, 9500);
+    assert.equal((await owner.call('/staff/products', { ...edit, requestId: randomUUID(), revision: revision + 4 })).status, 200);
+    const discard = { requestId: randomUUID(), revision: revision + 5, id: saved.id };
+    assert.equal((await waiter.call('/staff/products/discard-draft', discard)).status, 403);
+    assert.equal((await owner.call('/staff/products/discard-draft', discard)).status, 200);
+    assert.equal((await owner.call('/staff/products/discard-draft', discard)).status, 200);
+    assert.equal(store.read('mola-demo').products.find(p => p.id === saved.id)!.price, 9500);
+    assert.equal(store.read('mola-demo').productDrafts!.length, 0);
+    const takeDown = { requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, id: saved.id, action: 'unpublish', product: { ...goLive.product, published: false } };
+    assert.equal((await waiter.call('/staff/products', takeDown)).status, 403);
+    assert.equal((await other.call('/staff/products', takeDown)).status, 409);
+    assert.equal((await owner.call('/staff/products', { ...takeDown, requestId: randomUUID(), revision: 0 })).data.code, 'VERSION_CONFLICT');
+    assert.equal((await owner.call('/staff/products', takeDown)).status, 200);
+    assert.equal((await owner.call('/staff/products', takeDown)).status, 200);
+    assert.equal(store.read('mola-demo').products.find(p => p.id === saved.id)!.published, false);
+    assert.equal(store.read('mola-demo').products.find(p => p.id === saved.id)!.firstPublishedAt, firstPublishedAt);
+    assert.ok(!(await guests[0].call('/guest/state')).data.newProductIds.includes(saved.id));
+    assert.equal(store.read('mola-demo').productDrafts!.length, 0);
+    assert.ok(!(await guests[0].call('/guest/state')).data.products.some((p: any) => p.id === saved.id));
+    assert.ok(!(await waiter.call('/staff/state')).data.products.some((p: any) => p.id === saved.id));
+    assert.equal((await guests[0].call('/guest/orders', { ...body(), lines: [{ productId: saved.id, quantity: 1, selections: [] }], expectedTotal: 9500 })).data.code, 'ITEM_UNAVAILABLE');
+  });
+  await t.test('20 simultaneous retries produce exactly one order', async () => {
+    const b = body(); const results = await Promise.all(Array.from({ length: 20 }, () => guests[0].call('/guest/orders', b)));
+    assert.ok(results.every(r => r.status === 200)); assert.equal(new Set(results.map(r => r.data.orderId)).size, 1);
+    assert.equal(store.read('mola-demo').orders.length, 1);
+  });
+  await t.test('four phones share a bill; each sees the whole table bill, the others\' orders labelled and anonymous', async () => {
+    await Promise.all(guests.slice(1).map(g => g.call('/guest/orders', body())));
+    const s = store.read('mola-demo'); assert.equal(s.accounts.length, 1); assert.equal(s.orders.length, 4);
+    // 8 Ekim (owner's decision): Siparişlerim shows the table's open bill; only this phone's own order is unlabelled.
+    for (const g of guests) {
+      const view = (await g.call('/guest/state')).data;
+      assert.equal(view.orders.length, 4);
+      assert.equal(view.orders.filter((o: any) => !o.addedBy).length, 1);
+      for (const o of view.orders.filter((o: any) => o.addedBy)) { assert.equal(o.addedBy, 'table'); assert.equal(o.guestLabel, ''); assert.ok(!('guestId' in o)); assert.equal(o.canEdit, false); }
+    }
+    const stranger = client(); assert.equal((await stranger.call('/guest/state')).status, 401);
+  });
+  await t.test('role and tenant boundaries prevent payment or order access', async () => {
+    const s = store.read('mola-demo'), a = s.accounts[0];
+    const pay = { requestId: randomUUID(), accountId: a.id, version: a.version, amount: 100, tendered: 100, method: 'cash' };
+    assert.equal((await waiter.call('/staff/payments', pay)).status, 403);
+    assert.equal((await other.call('/staff/payments', pay)).status, 409);
+    assert.equal((await other.call('/staff/state')).data.orders.length, 0);
+    const k = (await kitchen.call('/staff/state')).data;
+    assert.ok(k.orders.every((o: any) => o.total === 0 && !('guestId' in o)));
+    assert.equal((await waiter.call('/staff/settings', { changeSeconds: 0, commissionBps: 100 })).status, 403);
+    assert.equal((await guests[1].call('/guest/cancel', { requestId: randomUUID(), orderId: s.orders[0].id, version: 1 })).status, 403);
+  });
+  await t.test('blocking a browser does not block another browser on the same IP', async () => {
+    const o = store.read('mola-demo').orders[0];
+    assert.equal((await owner.call('/staff/block', { orderId: o.id, blocked: true })).status, 200);
+    assert.equal((await guests[0].call('/guest/orders', body())).status, 403);
+    assert.equal((await guests[1].call('/guest/orders', body())).status, 200);
+    await owner.call('/staff/block', { orderId: o.id, blocked: false });
+    assert.equal((await owner.call('/staff/ip-ban', {})).status, 404);
+  });
+  await t.test('actual processor unavailability disables acceptance', async () => {
+    time += 16000; ready = false;
+    assert.equal((await guests[2].call('/guest/orders', body())).status, 503);
+    assert.equal((await guests[2].call('/guest/state')).data.online, false);
+    ready = true;
+  });
+  await t.test('atomic settlement closes old guest sessions but preserves kitchen work', async () => {
+    const s = store.read('mola-demo'), a = s.accounts[0];
+    const total = s.orders.reduce((n, o) => n + o.total, 0);
+    const pay = { requestId: randomUUID(), accountId: a.id, version: a.version, amount: total, tendered: total + 500, method: 'cash' };
+    const results = await Promise.all([owner.call('/staff/payments', pay), owner.call('/staff/payments', pay)]);
+    assert.ok(results.every(r => r.status === 200 && r.data.closed));
+    assert.equal(store.read('mola-demo').payments.length, 1);
+    assert.equal((await guests[3].call('/guest/orders', body())).status, 409);
+    assert.equal((await guests[3].call('/guest/state')).data.closed, true);
+    assert.equal((await kitchen.call('/staff/state')).data.orders.length, s.orders.length);
+    time += 60000; await owner.call('/staff/heartbeat', {});
+    assert.equal((await kitchen.call('/staff/status', { requestId: randomUUID(), orderId: s.orders[0].id, version: 1, status: 'preparing' })).status, 200);
+    await guests[3].call('/guest/session', { token: table.token });
+    assert.equal((await guests[3].call('/guest/state')).data.orders.length, 0);
+    assert.equal((await guests[3].call('/guest/orders', body())).status, 200);
+    assert.equal(store.read('mola-demo').accounts.length, 2);
+  });
+  await t.test('pending kitchen orders and absent browser heartbeats do not block any table', async () => {
+    time += 120000;
+    const before = store.read('mola-demo').orders.length;
+    for (const table of store.read('mola-demo').tables) {
+      const g = client();
+      await g.call('/guest/session', { token: table.token });
+      assert.equal((await g.call('/guest/state')).data.online, true);
+      const result = await g.call('/guest/orders', { ...body(), tableId: table.id });
+      assert.equal(result.status, 200, JSON.stringify(result.data));
+    }
+    assert.equal(store.read('mola-demo').orders.length, before + 12);
+    assert.ok(store.read('mola-demo').orders.slice(-12).every(o => o.status === 'new'));
+  });
+  await t.test('two simultaneous requests for final campaign unit accept only one; usage survives edits and archives are isolated', async () => {
+    const initial = store.read('mola-demo');
+    const c = { name: 'Son bir adet', productIds: ['tea'], kind: 'fixed', amount: 1000, maxQuantity: 1, startsAt: new Date(time).toISOString(), endsAt: null, enabled: true, combine: false };
+    const saved = await owner.call('/staff/campaigns', { requestId: randomUUID(), revision: initial.menuRevision, campaign: c }); assert.equal(saved.status, 200);
+    const clients = [client(), client()];
+    for (const g of clients) await g.call('/guest/session', { token: table.token });
+    const requests = clients.map(() => ({ ...body(), expectedTotal: 2500 }));
+    const replies = await Promise.all(clients.map((g, i) => g.call('/guest/orders', requests[i])));
+    assert.equal(replies.filter(r => r.status === 200).length, 1);
+    assert.equal(replies.find(r => r.status !== 200)?.data.code, 'PRICE_CHANGED');
+    const winner = replies.findIndex(r => r.status === 200);
+    assert.deepEqual((await clients[winner].call('/guest/orders', requests[winner])).data, replies[winner].data);
+    let view = (await owner.call('/staff/campaigns')).data.campaigns.find((c: any) => c.id === saved.data.id);
+    assert.equal(view.usedQuantity, 1); assert.equal(view.remainingQuantity, 0);
+    assert.ok(!(await other.call('/staff/campaigns')).data.campaigns.some((c: any) => c.id === saved.data.id));
+    const edit = { requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, campaign: { ...c, id: saved.data.id, name: 'Aynı kampanya' } };
+    assert.equal((await owner.call('/staff/campaigns', edit)).status, 200);
+    view = (await owner.call('/staff/campaigns')).data.campaigns.find((c: any) => c.id === saved.data.id);
+    assert.equal(view.usedQuantity, 1); assert.equal(view.remainingQuantity, 0);
+    const withoutLimit = { ...edit, requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, campaign: { ...edit.campaign, maxQuantity: undefined } };
+    assert.equal((await owner.call('/staff/campaigns', withoutLimit)).status, 200);
+    assert.equal((await owner.call('/staff/campaigns')).data.campaigns.find((c: any) => c.id === saved.data.id).maxQuantity, 1);
+    const increase = { ...edit, requestId: randomUUID(), revision: store.read('mola-demo').menuRevision, campaign: { ...edit.campaign, maxQuantity: 2 } };
+    assert.equal((await owner.call('/staff/campaigns', increase)).status, 200);
+    assert.equal((await clients[winner].call('/guest/orders', { ...requests[winner], requestId: randomUUID() })).status, 200);
+    assert.equal((await owner.call('/staff/campaigns', { ...edit, requestId: randomUUID(), revision: store.read('mola-demo').menuRevision })).data.code, 'CAMPAIGN_LIMIT_USED');
+  });
+  await t.test('refreshed guest can recover the exact accepted request; changed browser or account cannot recreate an old submission', async () => {
+    const guest = client();
+    const session = await guest.call('/guest/session', { token: table.token });
+    const orderBody = { requestId: randomUUID(), tableId: table.id, guestContext: session.data.guestContext, expectedTotal: 8500, lines: [{ productId: 'herbal', quantity: 1, selections: [] }] };
+    const count = store.read('mola-demo').orders.length;
+    const accepted = await guest.call('/guest/orders', orderBody); assert.equal(accepted.status, 200);
+    const refreshed = await guest.call('/guest/session', { token: table.token });
+    assert.equal(refreshed.data.guestContext, session.data.guestContext);
+    assert.deepEqual((await guest.call('/guest/orders', orderBody)).data, accepted.data);
+    const anotherBrowser = client(); await anotherBrowser.call('/guest/session', { token: table.token });
+    assert.equal((await anotherBrowser.call('/guest/orders', orderBody)).data.code, 'ORDER_CONTEXT_CHANGED');
+    store.mutate('mola-demo', s => { s.tables.find(t => t.id === table.id)!.epoch++; });
+    const newAccountSession = await guest.call('/guest/session', { token: table.token });
+    assert.notEqual(newAccountSession.data.guestContext, session.data.guestContext);
+    assert.deepEqual((await guest.call('/guest/orders', orderBody)).data, accepted.data);
+    assert.equal((await guest.call('/guest/orders', { ...orderBody, requestId: randomUUID() })).data.code, 'ORDER_CONTEXT_CHANGED');
+    assert.equal(store.read('mola-demo').orders.length, count + 1);
+  });
+  await t.test('payment recovery is tied to employee and tenant and replays after account closure and login', async () => {
+    const cashier = client();
+    assert.equal((await cashier.call('/login', { username: 'kasiyer', password: DEMO_PASSWORD })).status, 200);
+    const context = (await cashier.call('/staff/state')).data.paymentContext;
+    assert.match(context, /^[a-f0-9]{64}$/);
+    assert.equal((await waiter.call('/staff/state')).data.paymentContext, undefined);
+    assert.equal((await kitchen.call('/staff/state')).data.paymentContext, undefined);
+    assert.notEqual((await owner.call('/staff/state')).data.paymentContext, context);
+    assert.notEqual((await other.call('/staff/state')).data.paymentContext, context);
+    const state = (await cashier.call('/staff/state')).data, account = state.tables.find((t: any) => t.account?.balance > 0).account;
+    const body = { requestId: randomUUID(), paymentContext: context, accountId: account.id, version: account.version, method: 'cash', amount: account.balance, tendered: account.balance + 500 };
+    const count = store.read('mola-demo').payments.length;
+    assert.equal((await owner.call('/staff/payments', body)).data.code, 'PAYMENT_CONTEXT_CHANGED');
+    assert.equal((await other.call('/staff/payments', body)).data.code, 'PAYMENT_CONTEXT_CHANGED');
+    assert.equal((await waiter.call('/staff/payments', body)).status, 403);
+    const accepted = await cashier.call('/staff/payments', body); assert.equal(accepted.status, 200); assert.equal(accepted.data.closed, true);
+    await cashier.call('/logout', {});
+    assert.equal((await cashier.call('/staff/payments', body)).status, 401);
+    await cashier.call('/login', { username: 'kasiyer', password: DEMO_PASSWORD });
+    assert.equal((await cashier.call('/staff/state')).data.paymentContext, context);
+    assert.deepEqual((await cashier.call('/staff/payments', body)).data, accepted.data);
+    assert.equal((await cashier.call('/staff/payments', { ...body, amount: 1 })).data.code, 'REQUEST_CONFLICT');
+    assert.equal((await cashier.call('/staff/payments', { ...body, requestId: randomUUID() })).data.code, 'ACCOUNT_CLOSED');
+    assert.equal(store.read('mola-demo').payments.length, count + 1);
+  });
+
+  await t.test('edit recovery replays after deadline and settlement but never applies an expired or foreign update', async () => {
+    store.mutate('mola-demo', s => { s.changeSeconds = 60; });
+    const table = store.read('mola-demo').tables.find(t => !t.accountId)!;
+    assert.ok(table);
+    const guest = client(); const session = await guest.call('/guest/session', { token: table.token });
+    const placed = await guest.call('/guest/orders', { requestId: randomUUID(), tableId: table.id, expectedTotal: 8500, lines: [{ productId: 'herbal', quantity: 1, selections: [] }] }); assert.equal(placed.status, 200);
+    const order = store.read('mola-demo').orders.find(o => o.id === placed.data.orderId)!;
+    const body = { requestId: randomUUID(), guestContext: session.data.guestContext, orderId: order.id, version: order.version, expectedTotal: 17000, lines: [{ existingId: order.lines[0].id, productId: 'herbal', quantity: 2, selections: [] }] };
+    const accepted = await guest.call('/guest/orders/edit', body); assert.equal(accepted.status, 200);
+    time += 61000;
+    assert.deepEqual((await guest.call('/guest/orders/edit', body)).data, accepted.data);
+    const late = { ...body, requestId: randomUUID(), version: accepted.data.version };
+    assert.equal((await guest.call('/guest/orders/edit', late)).data.code, 'EDIT_WINDOW_CLOSED');
+    const another = client(); await another.call('/guest/session', { token: table.token });
+    assert.equal((await another.call('/guest/orders/edit', body)).data.code, 'EDIT_CONTEXT_CHANGED');
+    const a = store.read('mola-demo').accounts.find(a => a.id === order.accountId)!;
+    assert.equal((await owner.call('/staff/payments', { requestId: randomUUID(), accountId: a.id, version: a.version, amount: 17000, tendered: 17000, method: 'cash' })).status, 200);
+    const renewed = await guest.call('/guest/session', { token: table.token }); assert.notEqual(renewed.data.guestContext, session.data.guestContext);
+    assert.deepEqual((await guest.call('/guest/orders/edit', body)).data, accepted.data);
+    assert.equal((await guest.call('/guest/orders/edit', late)).data.code, 'EDIT_CONTEXT_CHANGED');
+    assert.equal(store.auditLog('mola-demo').filter(a => a.action === 'order.edited' && a.target === order.id).length, 1);
+    assert.equal(store.read('mola-demo').orders.find(o => o.id === order.id)!.version, accepted.data.version);
+  });
+
+  await t.test('cancellation retry retains immediate and approval results after closure, while late requests never bypass approval', async () => {
+    const table = store.read('mola-demo').tables.find(t => !t.accountId)!;
+    const guest = client(); let session = await guest.call('/guest/session', { token: table.token });
+    const place = () => guest.call('/guest/orders', { requestId: randomUUID(), tableId: table.id, expectedTotal: 8500, lines: [{ productId: 'herbal', quantity: 1, selections: [] }] });
+    const first = await place(); assert.equal(first.status, 200);
+    const body = { requestId: randomUUID(), guestContext: session.data.guestContext, orderId: first.data.orderId, version: 1 };
+    const cancelled = await guest.call('/guest/cancel', body); assert.deepEqual(cancelled.data, { requested: false });
+    const a = store.read('mola-demo').orders.find(o => o.id === first.data.orderId)!.accountId;
+    assert.equal((await owner.call('/staff/close-empty', { requestId: randomUUID(), accountId: a })).status, 200);
+    session = await guest.call('/guest/session', { token: table.token });
+    assert.deepEqual((await guest.call('/guest/cancel', body)).data, cancelled.data);
+    assert.equal((await guest.call('/guest/cancel', { ...body, requestId: randomUUID() })).data.code, 'CANCEL_CONTEXT_CHANGED');
+    const second = await place(); assert.equal(second.status, 200); time += 61000;
+    const late = { requestId: randomUUID(), guestContext: session.data.guestContext, orderId: second.data.orderId, version: 1 };
+    assert.equal((await kitchen.call('/staff/cancel', { requestId: randomUUID(), orderId: second.data.orderId, version: 1 })).status, 403);
+    const requested = await guest.call('/guest/cancel', late); assert.deepEqual(requested.data, { requested: true });
+    assert.deepEqual((await guest.call('/guest/cancel', late)).data, requested.data);
+    let o = store.read('mola-demo').orders.find(o => o.id === second.data.orderId)!;
+    assert.equal(o.status, 'new'); assert.equal(o.cancelRequested, true); assert.equal(o.version, 2);
+    const otherBrowser = client(); await otherBrowser.call('/guest/session', { token: table.token });
+    assert.equal((await otherBrowser.call('/guest/cancel', late)).data.code, 'CANCEL_CONTEXT_CHANGED');
+    assert.equal((await kitchen.call('/staff/status', { requestId: randomUUID(), orderId: o.id, version: o.version, status: 'preparing' })).data.code, 'CANCELLATION_PENDING');
+    const decline = { requestId: randomUUID(), orderId: o.id, version: o.version, reason: 'Hazırlık tamamlandı.' };
+    assert.equal((await waiter.call('/staff/cancel-decline', decline)).status, 403);
+    assert.equal((await kitchen.call('/staff/cancel-decline', { ...decline, reason: ' ' })).status, 400);
+    assert.equal((await kitchen.call('/staff/cancel-decline', decline)).status, 200);
+    assert.equal((await kitchen.call('/staff/cancel-decline', decline)).status, 200);
+    o = store.read('mola-demo').orders.find(o => o.id === second.data.orderId)!;
+    assert.equal(o.status, 'new'); assert.equal(o.cancelRequested, false); assert.equal(o.cancelDeclineReason, decline.reason);
+    assert.equal((await kitchen.call('/staff/cancel-decline', { ...decline, requestId: randomUUID() })).status, 409);
+    // K-I (9 Ekim kullanıcı testi): a declined request is the café's answer; the guest asking again is refused, nothing changes.
+    const again = await guest.call('/guest/cancel', { ...late, requestId: randomUUID(), version: o.version });
+    assert.equal(again.status, 409); assert.equal(again.data.code, 'CANCEL_DECLINED');
+    o = store.read('mola-demo').orders.find(o => o.id === second.data.orderId)!;
+    assert.equal(o.cancelDeclineReason, decline.reason); assert.equal(o.cancelRequested, false); assert.equal(o.version, 3);
+    // The kitchen approves a pending request: a third late order.
+    const third = await place(); assert.equal(third.status, 200); time += 61000;
+    const thirdLate = { requestId: randomUUID(), guestContext: session.data.guestContext, orderId: third.data.orderId, version: 1 };
+    const thirdRequested = await guest.call('/guest/cancel', thirdLate); assert.deepEqual(thirdRequested.data, { requested: true });
+    o = store.read('mola-demo').orders.find(o => o.id === third.data.orderId)!;
+    const approval = { requestId: randomUUID(), orderId: o.id, version: o.version };
+    assert.equal((await waiter.call('/staff/cancel', approval)).status, 403);
+    assert.equal((await kitchen.call('/staff/cancel', approval)).status, 200);
+    assert.equal((await kitchen.call('/staff/cancel', approval)).status, 200);
+    assert.deepEqual((await guest.call('/guest/cancel', thirdLate)).data, thirdRequested.data);
+    assert.deepEqual((await guest.call('/guest/cancel', late)).data, requested.data);
+    o = store.read('mola-demo').orders.find(o => o.id === third.data.orderId)!;
+    assert.equal(o.status, 'cancelled'); assert.equal(o.version, 3);
+  });
+
+  await t.test('photo inventory is owner-only and returns counts without file paths or cross-tenant references', async () => {
+    assert.equal((await client().call('/staff/photo-storage')).status, 401);
+    assert.equal((await waiter.call('/staff/photo-storage')).status, 403);
+    assert.equal((await kitchen.call('/staff/photo-storage')).status, 403);
+    const result = await owner.call('/staff/photo-storage'); assert.equal(result.status, 200);
+    assert.equal(result.data.limitBytes, 500 * 1024 * 1024);
+    assert.ok(!JSON.stringify(result.data).includes('/media/'));
+    const own = (await other.call('/staff/photo-storage')).data;
+    assert.equal(own.usedBytes, 0);
+  });
+
+});

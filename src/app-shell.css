@@ -1,0 +1,67 @@
+/*
+ * Phones as apps: index.html asks for viewport-fit=cover, so on an iPhone with a notch or home indicator (home-screen web
+ * app, landscape) the page reaches the screen edges. The safe-area insets are 0 on every other device, so nothing moves on
+ * tablets, Android and computers. Fixed bottom elements are lifted with a margin, which adds to whatever `bottom` each
+ * screen size sets in style.css.
+ */
+body{padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+body .toast,body .cart-floating{margin-bottom:env(safe-area-inset-bottom,0px)}
+@media(max-width:600px){body .sidebar-bottom.with-support{margin-bottom:env(safe-area-inset-bottom,0px);margin-right:env(safe-area-inset-right,0px)}}
+/*
+ * iPhone/iPad Safari zooms into any field under 16 px when it is tapped and stays zoomed after the next page (the owner's
+ * report: the login zoomed in crookedly and the panel no longer fitted). On touch screens (any-pointer: an iPad with a trackpad
+ * still has its touch screen) and narrow windows every field is
+ * at least 16 px; the few larger ones (codes) keep their size. !important because screen styles loaded later set 11-15 px.
+ */
+@media (pointer:coarse),(any-pointer:coarse),(max-width:1023px){
+  input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px!important}
+  .activation-code-input{font-size:20px!important}
+  .recovery-check input{font-size:18px!important}
+  .locked-form input{font-size:17px!important}
+}
+/* Login on a phone or tablet's browser: the way to /uygulama (src/LoginHelp.tsx InstallHint). */
+.login-install{margin:14px 0 0;font-size:13px}.login-install a{color:var(--green)}
+/* 8 Ekim denetimi K12: on a 1366 × 768 laptop the sidebar's foot (Destek, Kilitle, Çıkış) sat below the screen. It stays in sight
+   at the bottom (the menu scrolls above it), the menu is tighter on short screens and the user line does not break into three. */
+@media (min-width:701px){.sidebar>.sidebar-bottom{position:sticky;bottom:0;background:#fff;z-index:1;margin-top:auto}.user-row>div{min-width:0}.user-row small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+@media (min-width:701px) and (max-height:960px){.sidebar{padding-top:18px}.sidebar .business-pill{margin:16px 0 12px}.sidebar nav button{padding-top:9px;padding-bottom:9px}.sidebar .user-row{padding:10px 0}}
+/* 10 Ekim son kullanıcı testi: with the GÜNLÜK / İŞLETME headings the owner's menu grew; on 1366 × 768 (and in the Mola window,
+   whose title bar takes ~30 px more) "Ayarlar" showed cut in half under the foot ("Avarlar") and Hesabım was out of sight.
+   Short screens get a denser menu so every place of the owner and the Müdür is in sight down to 1366 × 690 (10 Ekim: up to 960 px
+   tall, since the QR card joined the top of the sidebar). */
+@media (min-width:701px) and (max-height:960px){
+  .workspace .sidebar nav{gap:2px}
+  .workspace .sidebar nav .nav-group-label{margin:5px 0 1px}
+  .workspace .sidebar nav .nav-group-rule{margin:4px 12px}
+  .workspace .sidebar .business-pill{margin:12px 0 10px;padding:8px 10px}
+  .workspace .sidebar>.sidebar-bottom{padding-top:8px}
+  .workspace .sidebar-bottom .support-nav{margin-bottom:8px;padding-top:8px;padding-bottom:8px}
+  .workspace .sidebar .user-row{padding:8px 0}
+  .workspace .sidebar .build-label{padding:8px 5px}
+}
+/* With a mouse the rows may be lower still (34 px); a touch screen (a touch POS, a tablet) keeps 38 px rows to tap. */
+@media (min-width:701px) and (max-height:820px) and (pointer:fine){
+  .workspace .sidebar nav button,.workspace .sidebar nav.grouped button{padding-top:6px;padding-bottom:6px;min-height:34px}
+}
+/* 10 Ekim: the QR card (src/QrOrdering.tsx) sits under the business card; on short screens the logo is a little smaller,
+   the top is tighter and the user's name keeps to one line, so the whole menu still fits down to 1366 × 690. */
+@media (min-width:701px) and (max-height:960px){
+  .workspace .sidebar{padding-top:12px}
+  .workspace .sidebar>.brand .brand-symbol{width:34px;height:34px}
+  .workspace .sidebar>.brand strong{font-size:28px}
+  .workspace .sidebar>.brand small{margin-top:4px}
+  .workspace .sidebar .business-pill{margin:10px 0 10px}
+  .workspace .sidebar .user-row .icon-btn{width:32px;height:32px;flex:none}
+}
+@media (min-width:1181px) and (max-height:960px){.workspace .sidebar .user-row strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+/* The Mola window on a 1366 × 768 laptop (~690 px): the logo without its line, a slightly tighter foot and mouse rows of 31 px,
+   so even the closed QR card (its reason and "Siparişleri aç") leaves Hesabım in sight. */
+@media (min-width:701px) and (max-height:740px){
+  .workspace .sidebar>.brand small{display:none}
+  .workspace .sidebar nav{gap:1px}
+  .workspace .sidebar-bottom .support-nav{margin-bottom:6px;padding-top:6px;padding-bottom:6px}
+  .workspace .sidebar .user-row{padding:6px 0}
+}
+@media (min-width:701px) and (max-height:740px) and (pointer:fine){
+  .workspace .sidebar nav button,.workspace .sidebar nav.grouped button{padding-top:5px;padding-bottom:5px;min-height:31px}
+}

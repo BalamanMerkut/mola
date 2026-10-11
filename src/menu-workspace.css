@@ -1,0 +1,136 @@
+/* Scoped to the three compact owner pages and their product form. */
+.main-content.owner-compact{padding-top:26px}
+.owner-compact .page-heading{margin-bottom:20px}
+.owner-compact .page-heading .eyebrow{display:none}
+.owner-compact .page-heading h1{margin:0 0 7px;font-size:29px}
+.owner-compact .page-heading p{color:#71806e}
+.menu-workspace{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.menu-workspace .menu-toolbar{display:flex;gap:8px;align-items:center;padding:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.menu-workspace .menu-toolbar>.btn{padding:10px 13px;font-size:12px;min-height:42px}
+.menu-workspace .menu-search{display:flex;align-items:center;gap:8px;flex:1;min-width:180px;max-width:320px;margin:0 0 0 auto;padding:0 10px;border:1px solid var(--line);border-radius:8px;color:#7c8877}
+.menu-workspace .menu-toolbar .menu-search input{padding:10px 0;margin:0;border:0;background:transparent;min-width:0;min-height:40px;font-size:12px}
+.menu-workspace .menu-search .icon-btn{padding:4px}
+/* Status filter: the shared centred pill bar (src/PillTabs.tsx), the category choice beside it. */
+.menu-workspace .menu-filterbar{display:grid;grid-template-columns:minmax(0,1fr) 210px;align-items:center;gap:12px;padding:12px 16px}
+.menu-workspace .menu-filterbar>.pill-tabs-wrap{justify-content:flex-start}
+.menu-workspace .menu-filterbar select{width:100%;min-height:44px;padding:8px 10px;margin:0;font-size:13px;border-radius:10px}
+.menu-workspace .menu-table-heading,.menu-workspace .menu-row{display:grid;grid-template-columns:minmax(180px,1fr) 86px 120px 185px;gap:16px;align-items:center;padding:12px 18px}
+.menu-workspace .menu-table-heading{background:#f7f9f5;border-block:1px solid var(--line);font-size:11px;color:#77846f;padding-block:10px}
+.menu-workspace .menu-table-heading>span:nth-child(2){text-align:right}
+.menu-workspace .menu-table-heading>span:last-child{text-align:right}
+.menu-workspace .menu-list{border:0;border-radius:0}
+.menu-workspace .menu-row{min-height:80px}
+.menu-workspace .menu-row:hover{background:#fcfdfa}
+.menu-workspace .menu-product-info{display:flex;align-items:center;gap:13px;min-width:0}
+.menu-workspace .menu-product-info>.product-art{width:48px;height:48px;flex:none;border-radius:8px}
+.menu-workspace .menu-product-info>.product-art svg{width:28px;height:28px}
+.menu-workspace .menu-product-name{min-width:0}
+.menu-workspace .menu-product-name h3{font-size:14px;font-weight:600;margin:0 0 5px;overflow-wrap:anywhere}
+.menu-workspace .menu-product-name small{font-size:11px;line-height:1.5;color:#7a8772;display:block;overflow-wrap:anywhere}
+.menu-workspace .menu-row .menu-product-price{text-align:right;min-width:0;font-size:14px;font-variant-numeric:tabular-nums}
+.menu-workspace .menu-row .publication-badge{background:none;font-size:11px;padding:0;white-space:normal;line-height:1.5}
+.menu-workspace .publication-badge:before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:middle}
+.menu-workspace .menu-row-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px}
+.menu-workspace .availability{margin:0;gap:5px;font-size:11px}
+.menu-workspace .availability input{width:15px;height:15px}
+.menu-workspace .menu-row-actions .btn{min-height:38px;padding:8px 10px;gap:6px;font-size:12px}
+.menu-workspace .discard-draft p{display:block}
+.menu-workspace .discard-draft>.text-btn{padding:4px 0;font-size:11px}
+.menu-workspace .menu-list-note{margin:0;padding:13px 18px;background:#fafbf8;border-top:1px solid var(--line);font-size:11px;color:#788570;line-height:1.65}
+.menu-workspace .menu-empty{text-align:center;padding:36px 20px;color:#708168}
+.menu-workspace .menu-empty h3{margin:12px 0 6px}
+.menu-workspace .menu-empty p{font-size:12px}
+
+/* One scrollable form, with the decision buttons always in view. */
+.product-editor-dialog.modal[open]{display:flex;flex-direction:column;width:760px;max-height:calc(100dvh - 32px);overflow:hidden}
+.product-editor-dialog.modal>.modal-header{flex:none;padding:16px 22px}
+.product-editor-dialog .product-editor{padding:0;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.product-editor-dialog .editor-scroll-body{overflow:auto;min-height:0;padding:20px 24px;overscroll-behavior:contain}
+.product-editor-dialog .editor-primary-grid{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:26px;margin-bottom:16px}
+.product-editor-dialog .editor-basics label{margin-bottom:14px;font-size:12px}
+.product-editor-dialog .editor-basics label>small{color:#7b8674;font-size:10px;font-weight:400}
+.product-editor-dialog .editor-basics label:last-child{margin-bottom:0}
+.product-editor-dialog .editor-required-note{font-size:11px;color:#75836c;margin:0 0 16px}
+.product-editor-dialog .editor-basics input,.product-editor-dialog .editor-basics select{margin-top:6px;padding:10px 11px;min-height:42px}
+.product-editor-dialog .editor-price-code{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.product-editor-dialog .editor-price-code small{display:block;margin-top:5px;line-height:1.4}
+.product-editor-dialog .editor-photo{border-left:1px solid var(--line);padding-left:24px}
+.product-editor-dialog .editor-photo h3{font-size:12px;margin:0 0 13px}
+.product-editor-dialog .editor-photo h3 small{display:block;font-size:10px;color:#7c8874;margin-top:6px;font-weight:400}
+.product-editor-dialog .editor-photo .photo-current{flex-direction:column;align-items:stretch;gap:12px}
+.product-editor-dialog .editor-photo .photo-current>.product-art{width:100%;height:auto;aspect-ratio:1;border-radius:10px}
+.product-editor-dialog .editor-photo .photo-current p{font-size:10px;margin:8px 0;color:#7b8772}
+.product-editor-dialog .editor-photo .photo-upload{font-size:12px;margin:0;justify-content:center}
+.product-editor-dialog .editor-photo .crop-controls{grid-template-columns:1fr;gap:4px}
+.product-editor-dialog .editor-photo .crop-controls label{margin-bottom:6px}
+.product-editor-dialog .editor-photo .option-presets{gap:6px}
+.product-editor-dialog .editor-photo .btn{font-size:11px;padding:8px 10px;min-height:36px}
+.product-editor-dialog .editor-disclosure{background:white;border:0;border-top:1px solid var(--line);border-radius:0;margin:0;padding:14px 0}
+.product-editor-dialog .editor-disclosure:last-child{padding-bottom:0}
+.product-editor-dialog .editor-disclosure summary{font-size:13px}
+.product-editor-dialog .editor-disclosure summary small{display:inline;margin-left:9px;font-size:11px}
+.product-editor-dialog .editor-disclosure .editor-section{margin:12px 0 0;padding:0;border:0}
+.product-editor-dialog .product-editor .editor-save-area{flex:none;margin:0;padding:14px 24px 16px;border-top:1px solid var(--line);background:#fcfdfb;z-index:4}
+.product-editor-dialog .editor-save-area .modal-actions{margin:0;display:flex;align-items:center;gap:8px}
+.product-editor-dialog .editor-save-area .modal-actions>.btn:first-child{margin-right:auto}
+.product-editor-dialog .editor-save-area .btn{font-size:12px;min-height:40px;padding:10px 12px}
+.product-editor-dialog .missing-fields{font-size:11px;line-height:1.5;margin:9px 0 0}
+@media(max-width:1150px){
+  .menu-workspace .menu-table-heading,.menu-workspace .menu-row{grid-template-columns:minmax(160px,1fr) 75px 95px 170px;gap:10px}
+  .menu-workspace .menu-toolbar .menu-search{max-width:none;flex-basis:100%;margin:4px 0 0}
+}
+@media(max-width:900px){
+  .menu-workspace .menu-table-heading{display:none}
+  .menu-workspace .menu-filterbar{border-bottom:1px solid var(--line);grid-template-columns:minmax(0,1fr)}
+  .menu-workspace .menu-filterbar>.pill-tabs-wrap{justify-content:center}
+  .menu-workspace .menu-row{grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:14px 16px}
+  .menu-workspace .menu-product-info{grid-column:1;grid-row:1}
+  .menu-workspace .menu-row .menu-product-price{grid-column:2;grid-row:1}
+  .menu-workspace .menu-row .publication-badge{grid-column:1;grid-row:2}
+  .menu-workspace .menu-row-actions{grid-column:2;grid-row:2}
+}
+@media(max-width:600px){
+  .main-content.owner-compact{padding:20px 14px 85px}
+  .owner-compact .page-heading{margin-bottom:16px}
+  .owner-compact .page-heading h1{font-size:26px}
+  .owner-compact .page-heading p{font-size:11px}
+  .menu-workspace .menu-toolbar{padding:12px;gap:7px}
+  .menu-workspace .menu-toolbar>.btn{padding:9px 10px;min-height:40px;font-size:11px;gap:6px}
+  .menu-workspace .menu-toolbar>.btn:first-child{flex-basis:100%;justify-content:flex-start}
+  .menu-workspace .menu-toolbar>.btn:not(:first-child){flex:1}
+  .menu-workspace .menu-filterbar{padding:8px 12px;gap:8px}
+  .menu-workspace .menu-row{padding:12px;gap:10px}
+  .menu-workspace .menu-row .menu-product-price{font-size:13px}
+  .menu-workspace .menu-product-info{gap:10px}
+  .menu-workspace .menu-product-name h3{font-size:13px}
+  .menu-workspace .menu-product-name small{font-size:10px}
+  .menu-workspace .menu-product-info>.product-art{width:40px;height:40px}
+  .menu-workspace .menu-row-actions{gap:8px}
+  .menu-workspace .menu-row .publication-badge{font-size:10px}
+  .product-editor-dialog.modal[open]{max-height:calc(100dvh - 16px)}
+  .product-editor-dialog .editor-scroll-body{padding:16px}
+  .product-editor-dialog .editor-primary-grid{grid-template-columns:1fr;gap:18px}
+  .product-editor-dialog .editor-photo{border-left:0;border-top:1px solid var(--line);padding:16px 0 0}
+  .product-editor-dialog .editor-photo h3 small{display:inline;margin-left:7px}
+  .product-editor-dialog .editor-photo .photo-current{flex-direction:row;gap:14px;align-items:center}
+  .product-editor-dialog .editor-photo .photo-current>.product-art{width:90px;height:90px;aspect-ratio:1}
+  .product-editor-dialog .editor-photo .photo-current>div:last-child{flex:1;min-width:0}
+  .product-editor-dialog .editor-photo .photo-upload{justify-content:flex-start}
+  .product-editor-dialog .editor-photo .crop-controls{grid-template-columns:1fr}
+  .product-editor-dialog .editor-disclosure summary small{display:block;margin:5px 0 0 15px;font-size:10px}
+  .product-editor-dialog .product-editor .editor-save-area{padding:12px 16px}
+  .product-editor-dialog .editor-save-area .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .product-editor-dialog .editor-save-area .modal-actions>.btn:first-child{margin:0}
+  .product-editor-dialog .editor-save-area .save-help,.product-editor-dialog .editor-save-area .save-help button{width:100%}
+}
+
+.product-editor-dialog .save-help [role=tooltip]{max-height:35dvh;overflow:auto}
+
+/* Focus belongs to the full search field, including its icon and clear action. */
+.menu-workspace .menu-toolbar .menu-search:focus-within{border-color:#7a9c82;box-shadow:0 0 0 3px #a4bda93b}
+.menu-workspace .menu-toolbar .menu-search input:focus,.menu-workspace .menu-toolbar .menu-search input:focus-visible{outline:none;box-shadow:none}
+
+
+/* English section of the product editor: one compact box per option group, two columns on wide screens. */
+.product-editor .english-group{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0;background:#fafbf8;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px 14px}
+.product-editor .english-group legend{padding:0 8px;color:var(--green);font-weight:600}

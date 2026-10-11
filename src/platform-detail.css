@@ -1,0 +1,180 @@
+/*
+ * A business page in Mola Yönetim: Özet, Lisans, Bilgiler and Destek as cards on the page (src/PlatformDetail.tsx,
+ * src/PlatformDetailKit.tsx), like the screens the owner likes (Hizmet, Satışlarım, Paketler). Hizmet keeps its own sheet
+ * (src/platform-workspace.css). The older flat-sheet rules stay there; everything here is under `.detail-sheet.dsheet`.
+ */
+.yonetim .detail-sheet.dsheet { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; align-content:start; max-width:1040px; padding:0; background:none; border:0; border-radius:0; overflow:visible; }
+
+/* Every card: white, a soft line, round corners. Two small cards share a row (`.dpair`); one alone takes the row. */
+.yonetim .detail-sheet.dsheet>*:not(.dpair):not(.dsheet-bare), .yonetim .detail-sheet.dsheet>.dpair>* { margin:0; padding:22px 24px; background:var(--y-card); border:1px solid var(--y-line); border-radius:var(--y-radius); min-width:0; }
+.yonetim .detail-sheet.dsheet>.dpair { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:16px; align-items:start; padding:0; margin:0; background:none; border:0; min-width:0; }
+.yonetim .detail-sheet.dsheet>.dpair:empty { display:none; }
+.yonetim .detail-sheet.dsheet>.dsheet-bare { display:flex; flex-direction:column; gap:12px; padding:0; margin:0; background:none; border:0; min-width:0; }
+.yonetim .detail-sheet.dsheet>.platform-list-panel { padding:22px 24px; border:1px solid var(--y-line); border-radius:var(--y-radius); }
+.yonetim .detail-sheet.dsheet .detail-section { gap:14px; }
+.yonetim .detail-sheet.dsheet details.detail-section { display:block; }
+
+/* Card head: icon tile, title, actions and the grey ⓘ on the right. */
+.yonetim .dcard-head { display:flex; align-items:center; gap:12px; min-height:40px; min-width:0; flex-wrap:wrap; }
+.yonetim .dcard-head h2 { flex:1 1 auto; margin:0; font-size:17px; font-weight:650; line-height:1.3; min-width:0; overflow-wrap:anywhere; }
+.yonetim .dcard-actions { display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end; }
+.yonetim .dcard-actions .btn { margin:0; }
+.yonetim .dcard-actions .help-tip { margin-left:2px; }
+.yonetim .dcard-icon, .yonetim .dtile-icon { flex:none; display:grid; place-items:center; width:40px; height:40px; border-radius:12px; background:var(--ok-bg); color:var(--ok-fg); }
+.yonetim :is(.dcard-icon, .dtile-icon).warn { background:var(--warn-bg); color:var(--warn-fg); }
+.yonetim :is(.dcard-icon, .dtile-icon).bad { background:var(--bad-bg); color:var(--bad-fg); }
+.yonetim :is(.dcard-icon, .dtile-icon).info { background:var(--info-bg); color:var(--info-fg); }
+.yonetim :is(.dcard-icon, .dtile-icon).idle { background:var(--idle-bg); color:var(--idle-fg); }
+.yonetim .dcard-quiet { margin:0; color:var(--y-muted); font-size:14px; }
+.yonetim .dsheet .section-note { font-size:13.5px; }
+.yonetim .dsheet .section-lead { font-size:14.5px; }
+
+/* Cards drawn by other files (sunucu yedeği, taşıma, program dosyaları, sözleşme, uzaktan destek, fatura, geçmiş): the same
+   head. Their own icon becomes the tile; the ones without an icon get one here. */
+.yonetim .dsheet .detail-section>h2, .yonetim .dsheet .detail-section>.detail-section-head>h2 { margin:0; font-size:17px; font-weight:650; gap:12px; min-height:40px; }
+.yonetim .dsheet .detail-section>h2>svg:first-child, .yonetim .dsheet .detail-section>.detail-section-head>h2>svg:first-child { box-sizing:content-box; width:20px; height:20px; padding:10px; flex:none; border-radius:12px; background:var(--ok-bg); color:var(--ok-fg); }
+.yonetim .dsheet .integrity-section.changed>h2>svg:first-child { background:var(--bad-bg); color:var(--bad-fg); }
+.yonetim .detail-sheet.dsheet>.integrity-section.changed:not(.dpair):not(.dsheet-bare) { border-color:#efcfc4; }
+.yonetim .dsheet :is(.license-agreement-section>h2, .business-progress>h2, .remote-support-admin>.detail-section-head>h2, .detail-invoice>h2, .detail-invoice>.detail-section-head>h2, .platform-list-panel>.detail-section-head>h2, .platform-list-panel>h2)::before { content:''; flex:none; width:40px; height:40px; border-radius:12px; background:var(--ok-bg) var(--dicon) center / 20px no-repeat; }
+.yonetim .dsheet .license-agreement-section>h2 { --dicon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c6436' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 17-2.156-1.868A.5.5 0 0 0 18 15.5v.5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1c0-2.545-3.991-3.97-8.5-4a1 1 0 0 0 0 5c4.153 0 4.745-11.295 5.708-13.5a2.5 2.5 0 1 1 3.31 3.284'/%3E%3Cpath d='M3 21h18'/%3E%3C/svg%3E"); }
+.yonetim .dsheet .business-progress>h2 { --dicon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c6436' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 5h8M13 12h8M13 19h8m-18-2 2 2 4-4M3 7l2 2 4-4'/%3E%3C/svg%3E"); }
+.yonetim .dsheet .remote-support-admin>.detail-section-head>h2 { --dicon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c6436' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8M10 19v-3.96 3.15M7 19h5'/%3E%3Crect width='6' height='10' x='16' y='12' rx='2'/%3E%3C/svg%3E"); }
+.yonetim .dsheet :is(.detail-invoice>h2, .detail-invoice>.detail-section-head>h2) { --dicon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c6436' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 16H8M14 8H8M16 12H8'/%3E%3Cpath d='M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z'/%3E%3C/svg%3E"); }
+.yonetim .dsheet :is(.platform-list-panel>.detail-section-head>h2, .platform-list-panel>h2)::before { background-color:var(--idle-bg); }
+.yonetim .dsheet :is(.platform-list-panel>.detail-section-head>h2, .platform-list-panel>h2) { --dicon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c665f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5M12 7v5l4 2'/%3E%3C/svg%3E"); }
+.yonetim .dsheet .license-agreement-line { margin:0; font-weight:600; font-size:14.5px; }
+
+/* ---------- Özet: KPI tiles ---------- */
+.yonetim .dsheet .detail-facts.dtiles { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0; }
+.yonetim .dsheet .dtiles>.dtile { position:relative; display:flex; flex-direction:column; gap:2px; min-width:0; min-height:136px; padding:16px 16px 14px; background:var(--y-card); border:1px solid var(--y-line); border-radius:18px; }
+.yonetim .dsheet .dtiles>.dtile.tone-warn { border-color:#ecd9a8; background:#fffcf4; }
+.yonetim .dsheet .dtiles>.dtile.tone-bad { border-color:#efcfc4; background:#fff8f5; }
+.yonetim .dsheet .dtiles dt { display:flex; flex-direction:column; align-items:flex-start; gap:12px; margin:0 0 4px; font-size:13px; font-weight:600; color:var(--y-muted); }
+.yonetim .dsheet .dtiles .dtile-icon { width:36px; height:36px; border-radius:11px; }
+.yonetim .dsheet .dtiles dd.dtile-value { margin:0; display:flex; align-items:center; gap:7px; font-size:17px; font-weight:650; line-height:1.3; color:var(--y-text); overflow-wrap:anywhere; min-width:0; }
+.yonetim .dsheet .dtiles dd.dtile-value.fact-bad { color:var(--bad-fg); }
+.yonetim .dsheet .dtiles dd.dtile-value.fact-warn { color:var(--warn-fg); }
+.yonetim .dsheet .dtiles dd.fact-sub { margin:0; font-size:12.5px; font-weight:400; color:var(--y-faint); line-height:1.4; overflow-wrap:anywhere; }
+.yonetim .dsheet .dtiles dd.dtile-go { position:absolute; top:6px; right:6px; margin:0; }
+.yonetim .dsheet .dtiles .fact-dot { width:8px; height:8px; border-radius:50%; flex:none; }
+.yonetim .detail-sheet.dsheet .detail-trial-note { margin:0 !important; }
+
+/* Small icon buttons: 44 px to touch, a 16-px icon, quiet until hovered. */
+.yonetim .dicon-btn { flex:none; display:inline-grid; place-items:center; width:44px; height:44px; padding:0; margin:0; border:0; border-radius:12px; background:transparent; color:var(--y-muted); cursor:pointer; text-decoration:none; }
+.yonetim .dicon-btn:hover:not(:disabled) { background:var(--y-soft); color:var(--green); }
+.yonetim .dicon-btn:disabled { opacity:.45; cursor:default; }
+
+/* Sıradaki işler */
+.yonetim .dsheet .detail-next ul { margin:-4px 0; }
+.yonetim .dsheet .detail-next .next-go { display:inline-flex; align-items:center; gap:2px; margin-left:auto; padding:4px 6px 4px 12px; border-radius:999px; background:var(--y-soft); color:var(--green); font-size:13px; font-weight:600; white-space:nowrap; }
+
+/* Diğer bilgiler and Hata kayıtları: a card that opens. */
+.yonetim .dsheet .dmore>details>summary, .yonetim .dsheet details.detail-errors>summary { display:flex; align-items:center; gap:12px; min-height:44px; list-style:none; cursor:pointer; font-size:17px; font-weight:650; color:var(--y-text); }
+.yonetim .dsheet :is(.dmore>details, details.detail-errors)>summary::-webkit-details-marker { display:none; }
+.yonetim .dsheet .dmore-title { flex:1; }
+.yonetim .dsheet .dmore-chevron { color:var(--y-faint); transition:transform .15s; }
+.yonetim .dsheet :is(.dmore>details, details.detail-errors)[open]>summary .dmore-chevron { transform:rotate(90deg); }
+.yonetim .dsheet .dmore .detail-more { margin-top:18px; padding-top:16px; border-top:1px solid var(--y-line-soft); }
+.yonetim .dsheet details.detail-errors[open]>summary { margin-bottom:12px; }
+
+/* Satıcı notu, bilgisayarlar */
+.yonetim .dsheet .detail-notes textarea { width:100%; margin:0; min-height:96px; resize:vertical; }
+.yonetim .dsheet .detail-notes .application-actions { margin:0; }
+.yonetim .dsheet .detail-machines li { gap:6px 12px; }
+.yonetim .dsheet .detail-machines li .status-chip { margin-left:auto; }
+.yonetim .dsheet .detail-machines .machine-dates { flex-basis:100%; font-size:13px; }
+.yonetim .dsheet .detail-machines li .btn { margin:4px 0 0; }
+
+/* ---------- Lisans ---------- */
+.yonetim .dsheet .license-hero { gap:24px; padding:0; }
+.yonetim .dsheet .license-days { width:116px; height:116px; }
+.yonetim .dsheet .license-days strong { font-size:36px; }
+.yonetim .dsheet .license-hero-text { gap:10px; }
+.yonetim .dsheet .license-summary { font-size:17px; }
+.yonetim .dsheet .license-delivery { align-self:flex-start; display:inline-flex; padding:5px 12px; border-radius:12px; font-size:13px; font-weight:600; line-height:1.45; }
+.yonetim .dsheet .license-delivery.ok { background:var(--ok-bg); color:var(--ok-fg); }
+.yonetim .dsheet .license-delivery.warn { background:var(--warn-bg); color:var(--warn-fg); }
+.yonetim .dsheet .platform-license-section .payment-card { margin:0; }
+.yonetim .dsheet .plan-change .license-actions .btn { min-height:52px; }
+.yonetim .dsheet .dcard-freeze .license-freeze>h3, .yonetim .dsheet .dcard-freeze .license-freeze>h3+p { display:none; }
+.yonetim .dsheet .dcard-freeze .license-freeze:not(:has(> :not(h3):not(h3+p))) { display:none; }
+.yonetim .dsheet .owner-reset-issued { margin:0; }
+.yonetim .dsheet .detail-section>.application-actions { margin:0; }
+.yonetim .detail-sheet.dsheet>.detail-danger:not(.dpair):not(.dsheet-bare) { margin:0 !important; padding:22px 24px !important; gap:14px; background:#fdf7f4; border:1px solid #efd9cf; border-radius:var(--y-radius); }
+.yonetim .detail-sheet.dsheet>.detail-danger h2 { color:var(--bad-fg); }
+.yonetim .detail-sheet.dsheet>.detail-application:not(.dpair):not(.dsheet-bare) { margin:0 !important; padding:22px 24px !important; background:#fffcf4; border-color:#ecd9a8; }
+
+/* ---------- Bilgiler: definition rows ---------- */
+.yonetim .ddefs { margin:0; display:flex; flex-direction:column; min-width:0; }
+.yonetim .ddefs>div { display:grid; grid-template-columns:minmax(96px,36%) minmax(0,1fr); gap:2px 12px; align-items:center; min-height:48px; padding:2px 0; border-top:1px solid var(--y-line-soft); }
+.yonetim .ddefs>div:first-child { border-top:0; }
+.yonetim .ddefs dt { font-size:13px; color:var(--y-faint); }
+.yonetim .ddefs dd { margin:0; display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0; font-size:14.5px; }
+.yonetim .ddefs dd.fact-warn { color:var(--warn-fg); }
+.yonetim .ddefs-value { min-width:0; overflow-wrap:anywhere; font-weight:500; }
+.yonetim .ddefs-value a { display:inline-flex; align-items:center; min-height:44px; color:var(--green); text-decoration:none; font-weight:600; }
+.yonetim .ddefs-actions { flex:none; display:flex; align-items:center; margin-right:-8px; }
+.yonetim .ddefs code { font-size:13px; background:var(--y-soft); padding:2px 6px; border-radius:6px; }
+/* Fatura bilgileri: two columns of rows, each value with its copy button. */
+.yonetim .dsheet .invoice-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 28px; margin:0; }
+.yonetim .dsheet .invoice-facts>div { min-width:0; padding:8px 0; border-top:1px solid var(--y-line-soft); }
+.yonetim .dsheet .invoice-facts dd { margin:2px 0 0; overflow-wrap:anywhere; font-weight:500; }
+.yonetim .dsheet .invoice-facts.copyable dd { display:flex; align-items:center; justify-content:space-between; gap:6px; margin:0 -8px 0 0; }
+.yonetim .dsheet .invoice-facts.copyable dd .ddefs-value { min-width:0; }
+/* Sosyal medya: one row per link with its icon (read-only). */
+.yonetim .dsheet .detail-social-list { margin:0; gap:0; }
+.yonetim .dsheet .detail-social-list li { display:grid; grid-template-columns:32px minmax(84px,auto) minmax(0,1fr) 16px; gap:12px; align-items:center; min-height:48px; border-top:1px solid var(--y-line-soft); flex-wrap:nowrap; }
+.yonetim .dsheet .detail-social-list li:first-child { border-top:0; }
+.yonetim .dsheet .social-icon-tile { width:32px; height:32px; border-radius:10px; display:grid; place-items:center; background:var(--y-soft); color:var(--y-text); }
+/* The older list rule (platform-workspace.css: li > span { min-width:120px }) stretched the tile over the name. */
+.yonetim .dsheet .detail-social-list li > .social-icon-tile { min-width:0; }
+.yonetim .dsheet .detail-social-list .social-name { min-width:0; font-weight:600; font-size:14px; }
+.yonetim .dsheet .detail-social-list a { display:inline-flex; align-items:center; min-height:44px; min-width:0; overflow-wrap:anywhere; color:var(--green); text-decoration:none; font-weight:500; }
+.yonetim .dsheet .social-out { color:var(--y-faint); }
+.yonetim .dsheet .detail-duplicates ul { gap:0; }
+.yonetim .dsheet .detail-duplicates li { min-height:48px; border-top:1px solid var(--y-line-soft); }
+.yonetim .dsheet .detail-duplicates li:first-child { border-top:0; }
+.yonetim .dsheet .detail-duplicates .text-btn { min-height:44px; }
+
+/* ---------- Destek ---------- */
+.yonetim .dsheet .detail-support .tc-shell, .yonetim .dsheet .detail-support>.ticket-chat { margin:0; }
+.yonetim .dsheet .dsupport-empty { display:flex; flex-direction:column; align-items:center; gap:6px; padding:28px 16px; text-align:center; background:var(--y-soft); border-radius:16px; }
+.yonetim .dsheet .dsupport-empty-icon { width:56px; height:56px; border-radius:18px; display:grid; place-items:center; background:var(--y-card); color:var(--green); margin-bottom:6px; box-shadow:0 1px 3px #1c2e2412; }
+.yonetim .dsheet .dsupport-empty strong { font-size:16px; }
+.yonetim .dsheet .dsupport-empty p { margin:0; color:var(--y-muted); font-size:14px; max-width:420px; }
+.yonetim .dsheet .dsupport-contact { display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; padding-top:14px; border-top:1px solid var(--y-line-soft); }
+.yonetim .dsheet .dsupport-contact-name { display:inline-flex; align-items:center; gap:6px; color:var(--y-muted); font-size:14px; margin-right:4px; }
+.yonetim .dsheet .dchip { display:inline-flex; align-items:center; max-width:100%; min-width:0; padding-left:14px; border:1px solid var(--y-line); border-radius:999px; background:var(--y-card); }
+.yonetim .dsheet .dchip a { display:inline-flex; align-items:center; gap:6px; min-height:44px; min-width:0; color:var(--y-text); text-decoration:none; font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.yonetim .dsheet .dchip .dicon-btn { border-radius:999px; }
+.yonetim .dsheet .remote-support-admin .application-actions { margin:0; }
+
+/* ---------- Sizes ---------- */
+@media (max-width:1099.98px) and (min-width:900px), (max-width:819.98px) {
+  .yonetim .dsheet .detail-facts.dtiles { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media (max-width:599.98px) {
+  .yonetim .detail-sheet.dsheet { gap:12px; }
+  .yonetim .detail-sheet.dsheet>*:not(.dpair):not(.dsheet-bare), .yonetim .detail-sheet.dsheet>.dpair>*, .yonetim .detail-sheet.dsheet>.platform-list-panel { padding:18px 16px; border-radius:18px; }
+  .yonetim .detail-sheet.dsheet>.detail-danger, .yonetim .detail-sheet.dsheet>.detail-application { padding:18px 16px !important; }
+  .yonetim .detail-sheet.dsheet>.dpair { gap:12px; }
+  .yonetim .dsheet .detail-facts.dtiles { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .yonetim .dsheet .dtiles>.dtile { min-height:124px; padding:14px 12px 12px; }
+  .yonetim .dsheet .dtiles dd.dtile-value { font-size:15.5px; }
+  .yonetim .dsheet .dtiles dd.dtile-go { top:2px; right:2px; }
+  .yonetim .dcard-head { gap:10px; }
+  .yonetim .dcard-icon { width:36px; height:36px; border-radius:11px; }
+  .yonetim .dsheet .detail-section>h2>svg:first-child, .yonetim .dsheet .detail-section>.detail-section-head>h2>svg:first-child { padding:8px; border-radius:11px; }
+  .yonetim .dsheet :is(.license-agreement-section>h2, .business-progress>h2, .remote-support-admin>.detail-section-head>h2, .detail-invoice>h2, .detail-invoice>.detail-section-head>h2, .platform-list-panel>.detail-section-head>h2, .platform-list-panel>h2)::before { width:36px; height:36px; border-radius:11px; }
+  .yonetim .dcard-head h2, .yonetim .dsheet .detail-section>h2, .yonetim .dsheet .detail-section>.detail-section-head>h2 { font-size:16px; }
+  .yonetim .dsheet .invoice-facts { grid-template-columns:minmax(0,1fr); }
+  .yonetim .ddefs>div { grid-template-columns:minmax(0,1fr); padding:6px 0; }
+  .yonetim .dsheet .detail-social-list li { grid-template-columns:32px minmax(0,1fr) 16px; row-gap:0; }
+  .yonetim .dsheet .detail-social-list .social-name { grid-column:2; }
+  .yonetim .dsheet .detail-social-list a { grid-column:2; }
+  .yonetim .dsheet .detail-social-list .social-out { grid-column:3; grid-row:1 / 3; }
+  .yonetim .dsheet .detail-social-list .social-icon-tile { grid-row:1 / 3; }
+  .yonetim .dsheet .license-hero { gap:16px; }
+  .yonetim .dsheet .license-days { width:96px; height:96px; }
+  .yonetim .dsheet .license-days strong { font-size:30px; }
+}

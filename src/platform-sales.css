@@ -1,0 +1,316 @@
+/* Hizmet paketleri, Hizmet fiyatları, işletme → Hizmet, Satışlarım (src/platformCatalog.tsx and the Platform* screens that use
+   it). Same language as the rest of Mola Yönetim (platform-workspace.css): white cards on the soft green-grey page, one accent
+   (the brand green), green / amber / red only for states, 44px touch targets, nothing wider than the screen from 360px up. */
+
+/* ---------- Chips ---------- */
+.yonetim .feature-chips { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
+.yonetim .feature-chips li { font-size:12.5px; line-height:1.4; padding:3px 10px; border-radius:999px; background:#eef3eb; color:#3d5a45; max-width:100%; overflow-wrap:anywhere; }
+.yonetim .feature-chips li.more { background:transparent; color:var(--y-muted); border:1px dashed #cdd8c9; }
+.yonetim .feature-chips.on li { background:var(--ok-bg); color:var(--ok-fg); }
+.yonetim .feature-chips.off li { background:var(--idle-bg); color:var(--idle-fg); text-decoration:line-through; text-decoration-color:#b4bbb4; }
+.yonetim .feature-tag { font-style:normal; font-size:11.5px; font-weight:600; padding:1px 8px; border-radius:999px; background:#e6efe3; color:var(--green); white-space:nowrap; }
+.yonetim .feature-tag.soon { background:var(--warn-bg); color:var(--warn-fg); }
+.yonetim .discount-chip { align-self:flex-start; font-size:12.5px; font-weight:600; color:#7a4b12; background:#fdf1dc; border-radius:999px; padding:3px 10px; }
+.yonetim .field-problem { color:var(--bad-fg); font-size:13px; }
+.yonetim .affix { color:var(--y-muted); font-weight:600; padding:0 0 0 12px; }
+.yonetim .money-input { display:flex; align-items:center; border:1px solid #d9e0d5; border-radius:10px; background:#fff; min-width:0; }
+.yonetim .money-input:focus-within { border-color:var(--green); box-shadow:0 0 0 3px #234c3e1a; }
+.yonetim .money-input input { border:0 !important; box-shadow:none !important; margin:0; min-width:0; width:100%; padding-left:6px; background:transparent; }
+.yonetim .money-input input[aria-invalid=true] { color:var(--bad-fg); }
+.yonetim .money-input.narrow { width:110px; }
+
+/* ---------- Service picker: checkbox cards per group ---------- */
+.yonetim .feature-picker { display:flex; flex-direction:column; gap:22px; min-width:0; }
+.yonetim .feature-note { display:flex; align-items:center; gap:8px; margin:0; padding:10px 14px; border-radius:12px; background:#eef6ec; color:var(--ok-fg); font-size:14px; animation:mola-fade-in .2s ease-out; }
+.yonetim .feature-group header { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.yonetim .feature-group h4 { margin:0; font-size:13px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:#6c7a70; }
+.yonetim .feature-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr)); gap:10px; }
+.yonetim .feature-card { position:relative; display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:4px 12px; align-items:start; margin:0; padding:14px 16px; min-height:72px; border:1.5px solid var(--y-line); border-radius:16px; background:var(--y-card); cursor:pointer; transition:border-color .15s, background .15s, box-shadow .15s; font-weight:400; }
+.yonetim .feature-card:hover { border-color:#b3c7ad; box-shadow:var(--y-shadow); }
+.yonetim .feature-card input { position:absolute; opacity:0; width:1px; height:1px; margin:0; }
+.yonetim .feature-card:focus-within { outline:3px solid #a4bda0; outline-offset:2px; }
+.yonetim .feature-tick { width:22px; height:22px; margin-top:1px; border-radius:7px; border:1.5px solid #c3cfbf; display:grid; place-items:center; color:transparent; background:#fff; transition:background .15s, border-color .15s; }
+.yonetim .feature-card.on { border-color:var(--green); background:#f5f9f3; }
+.yonetim .feature-card.on .feature-tick { background:var(--green); border-color:var(--green); color:#fff; }
+.yonetim .feature-card.locked { cursor:default; background:#f3f7f1; border-style:solid; }
+.yonetim .feature-card.locked .feature-tick { background:#dfe9dc; border-color:#dfe9dc; color:var(--green); }
+.yonetim .feature-card.soon { cursor:default; border-style:dashed; background:#fafbf9; color:#7a847c; }
+.yonetim .feature-card.soon .feature-tick { border-style:dashed; }
+.yonetim .feature-card:has(input:disabled):not(.locked):not(.soon) { cursor:default; opacity:.75; }
+.yonetim .feature-body { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.yonetim .feature-title { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.yonetim .feature-title strong { font-size:15px; font-weight:600; }
+.yonetim .feature-body small { font-size:13px; color:var(--y-muted); line-height:1.45; }
+.yonetim .feature-body .feature-why { color:var(--green); font-weight:600; }
+.yonetim .feature-price { font-weight:650; font-size:15px; white-space:nowrap; color:var(--y-text); }
+.yonetim .feature-price small { font-weight:500; color:var(--y-muted); font-size:12px; }
+@keyframes mola-fade-in { from { opacity:0; transform:translateY(-2px); } to { opacity:1; transform:none; } }
+
+/* ---------- Discount and prices ---------- */
+.yonetim .discount-field { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.yonetim .discount-label { font-size:14px; font-weight:600; }
+.yonetim .discount-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.yonetim .discount-kind button { padding:0 14px; font-size:14px; }
+.yonetim .discount-input { display:flex; align-items:center; margin:0; border:1px solid #d9e0d5; border-radius:10px; background:#fff; flex:1 1 120px; max-width:200px; }
+.yonetim .discount-input:focus-within { border-color:var(--green); box-shadow:0 0 0 3px #234c3e1a; }
+.yonetim .discount-input input { border:0 !important; box-shadow:none !important; margin:0; min-width:0; width:100%; background:transparent; }
+.yonetim .price-block { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.yonetim .price-block>div { display:flex; flex-direction:column; gap:2px; padding:12px 14px; border-radius:14px; background:var(--y-soft); min-width:0; }
+.yonetim .price-block span { font-size:12.5px; color:var(--y-muted); font-weight:600; }
+.yonetim .price-block strong { font-size:24px; font-weight:700; letter-spacing:-.5px; line-height:1.15; color:var(--green); overflow-wrap:anywhere; }
+.yonetim .price-block s, .yonetim .price-block small { font-size:12.5px; color:var(--y-faint); }
+
+/* ---------- Ayarlar → Hizmet fiyatları ---------- */
+.yonetim .platform-settings-wide { max-width:980px; }
+.yonetim .price-settings form { display:flex; flex-direction:column; gap:20px; margin:0; }
+.yonetim .price-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px 16px; flex-wrap:wrap; margin-bottom:8px; }
+.yonetim .price-head>div { flex:1 1 360px; min-width:0; }
+.yonetim .price-updated { white-space:nowrap; padding-top:4px; }
+.yonetim .price-group { margin:0; padding:0; border:0; min-width:0; }
+.yonetim .price-group legend { font-size:13px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:#6c7a70; margin-bottom:8px; padding:0; }
+.yonetim .price-row { display:grid; grid-template-columns:minmax(0,1fr) 150px 150px 150px; gap:6px 14px; align-items:center; padding:12px 14px; border:1px solid var(--y-line-soft); border-radius:14px; background:#fff; transition:background .15s, border-color .15s; }
+.yonetim .price-row+.price-row { margin-top:8px; }
+.yonetim .price-row.changed { border-color:#e2c48a; background:#fffbf2; }
+.yonetim .price-row.soon { background:#fafbf9; border-style:dashed; }
+.yonetim .price-name { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.yonetim .price-name strong { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; }
+.yonetim .price-name small { font-size:13px; color:var(--y-muted); }
+.yonetim .price-input { display:flex; flex-direction:column; gap:4px; margin:0; font-size:12.5px; color:var(--y-muted); font-weight:600; min-width:0; }
+.yonetim .x10 { font-style:normal; font-weight:700; color:var(--green); background:#e6efe3; border-radius:6px; padding:0 6px; margin-left:4px; }
+.yonetim .price-meta { display:flex; align-items:center; min-width:0; }
+.yonetim .inline-reset { padding:0; font-size:13px; gap:4px; }
+.yonetim .price-save { position:sticky; bottom:12px; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:10px 16px; flex-wrap:wrap; padding:12px 16px; border:1px solid var(--y-line); border-radius:16px; background:#fffffff2; box-shadow:0 10px 30px #1c2e2414; backdrop-filter:blur(6px); }
+.yonetim .price-save>span { color:var(--y-muted); font-size:14px; }
+.yonetim .price-save.dirty { border-color:#e2c48a; }
+.yonetim .price-save.dirty>span { color:var(--warn-fg); font-weight:600; }
+
+/* ---------- Ayarlar → Paketler ---------- */
+.yonetim .packages-page { display:flex; flex-direction:column; gap:20px; min-width:0; }
+.yonetim .packages-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; }
+.yonetim .packages-head>div { flex:1 1 320px; min-width:0; }
+.yonetim .packages-head h2 { display:flex; align-items:center; gap:8px; }
+.yonetim .packages-head p { margin:6px 0 0; }
+.yonetim .packages-head .btn { margin:0; gap:6px; }
+.yonetim .package-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); gap:16px; }
+.yonetim .package-card { display:flex; flex-direction:column; align-items:stretch; gap:12px; min-width:0; margin:0; padding:22px; border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); transition:box-shadow .15s, border-color .15s, transform .15s; }
+.yonetim .package-card:hover { box-shadow:var(--y-shadow); border-color:#c8d6c3; }
+.yonetim .package-card header { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.yonetim .package-card h3 { font-size:19px; font-weight:650; letter-spacing:-.2px; overflow-wrap:anywhere; }
+.yonetim .package-price { display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 6px; }
+.yonetim .package-price strong { font-size:30px; font-weight:700; letter-spacing:-.8px; color:var(--green); line-height:1.1; }
+.yonetim .package-price span { color:var(--y-muted); font-weight:600; }
+.yonetim .package-price small { flex-basis:100%; color:var(--y-muted); font-size:13.5px; }
+.yonetim .package-card footer { margin-top:auto; padding-top:12px; border-top:1px solid var(--y-line-soft); display:flex; flex-direction:column; gap:10px; }
+.yonetim .package-use { display:flex; align-items:center; gap:6px; color:var(--y-muted); font-size:13.5px; }
+.yonetim .package-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.yonetim .package-actions .btn { margin:0; gap:6px; padding-left:12px; padding-right:12px; }
+.yonetim .package-actions .btn.grow { flex:1 1 auto; }
+.yonetim .package-actions .btn.icon-only { width:44px; padding:0; justify-content:center; flex:none; }
+.yonetim .package-card.archived, .yonetim .package-card.legacy { background:#fafbf9; }
+.yonetim .package-card.archived .package-price strong, .yonetim .package-card.legacy .package-price strong { color:#5f6d63; }
+.yonetim .package-new { align-items:center; justify-content:center; text-align:center; min-height:220px; border:1.5px dashed #c3d1bd; background:transparent; color:var(--green); font:inherit; cursor:pointer; }
+.yonetim .package-new:hover { background:#fbfcfa; border-color:var(--green); }
+.yonetim .package-new strong { font-size:17px; }
+.yonetim .package-new small { color:var(--y-muted); font-size:13px; max-width:220px; }
+.yonetim .package-more summary { cursor:pointer; font-weight:600; color:var(--green); min-height:44px; display:flex; align-items:center; }
+.yonetim .package-more[open] summary { margin-bottom:8px; }
+.yonetim .package-legacy { display:flex; flex-direction:column; gap:8px; padding-top:8px; }
+.yonetim .package-legacy p { margin:0 0 8px; max-width:720px; }
+/* Builder */
+.yonetim .package-builder { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.yonetim .builder-head p { margin:6px 0 0; }
+.yonetim .builder-layout { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:24px; align-items:start; }
+.yonetim .builder-main { min-width:0; background:var(--y-card); border:1px solid var(--y-line); border-radius:var(--y-radius); padding:24px; }
+.yonetim .builder-summary { position:sticky; top:16px; display:flex; flex-direction:column; gap:14px; padding:22px; border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); box-shadow:var(--y-shadow); min-width:0; }
+.yonetim .builder-name { display:flex; flex-direction:column; gap:6px; margin:0; font-weight:600; }
+.yonetim .builder-name input { margin:0; width:100%; }
+.yonetim .builder-total { display:flex; flex-direction:column; gap:8px; padding-top:14px; border-top:1px solid var(--y-line-soft); }
+.yonetim .builder-count { font-size:13px; font-weight:700; color:var(--y-muted); letter-spacing:.3px; text-transform:uppercase; }
+.yonetim .builder-notes { margin:0; padding:10px 14px 10px 30px; border-radius:12px; background:#eef6ec; color:var(--ok-fg); font-size:13.5px; display:grid; gap:2px; }
+.yonetim .builder-warning { margin:0; padding:10px 14px; border-radius:12px; background:var(--warn-bg); color:var(--warn-fg); font-size:13.5px; }
+.yonetim .builder-warning.asking { font-weight:600; box-shadow:0 0 0 2px #e2b257 inset; }
+.yonetim .builder-actions { display:flex; gap:10px; }
+.yonetim .builder-actions .btn { margin:0; flex:1; }
+.yonetim .btn.confirm { background:#b06d10; border-color:#b06d10; }
+
+/* ---------- İşletme → Hizmet ---------- */
+.yonetim .service-state { display:flex; align-items:flex-start; gap:14px; padding:18px 20px; border-radius:16px; background:var(--ok-bg); color:var(--ok-fg); }
+.yonetim .service-state.info { background:var(--info-bg); color:var(--info-fg); }
+.yonetim .service-state.bad { background:var(--bad-bg); color:var(--bad-fg); }
+.yonetim .service-state-icon { flex-shrink:0; width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:#ffffffa8; }
+.yonetim .service-state strong { font-size:17px; font-weight:650; display:block; overflow-wrap:anywhere; }
+.yonetim .service-state p { margin:4px 0 0; color:inherit; opacity:.9; font-size:14px; }
+.yonetim .service-warn { margin:0; padding:10px 14px; border-radius:12px; background:var(--warn-bg); color:var(--warn-fg); font-size:14px; }
+.yonetim .service-card-price { font-size:14px; color:var(--y-muted); }
+.yonetim .service-card-price b { font-size:24px; font-weight:700; letter-spacing:-.5px; color:var(--green); }
+.yonetim .service-card .feature-chips li { font-size:12px; }
+.yonetim .service-card .service-foot { display:flex; align-items:center; gap:6px; }
+.yonetim .service-card.custom .service-summary { display:flex; align-items:center; gap:6px; }
+.yonetim .service-card.custom { border-style:dashed; }
+.yonetim .service-card.custom.selected { border-style:solid; }
+.yonetim .service-sheet .service-packages { margin-top:4px; }
+.yonetim .service-sheet .service-card { min-height:200px; }
+.yonetim .service-sheet .feature-picker { margin-top:12px; padding:20px; border-radius:18px; background:#f8faf6; border:1px solid var(--y-line-soft); }
+.yonetim .service-price-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:20px 28px; align-items:start; }
+.yonetim .service-price { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.yonetim .price-steps { margin:0; display:grid; gap:4px; font-size:14px; }
+.yonetim .price-steps div { display:flex; justify-content:space-between; gap:12px; color:var(--y-muted); }
+.yonetim .price-steps dd { margin:0; font-weight:600; color:var(--y-text); }
+.yonetim .service-split { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.yonetim .service-split>div { display:flex; flex-direction:column; gap:10px; padding:16px 18px; border-radius:16px; background:#f8faf6; border:1px solid var(--y-line-soft); min-width:0; }
+.yonetim .service-split h3 { display:flex; align-items:center; gap:6px; font-size:15px; }
+.yonetim .service-split p { margin:0; }
+.yonetim .detail-sheet>.service-confirm { margin:0 -40px; padding:28px 40px 32px; background:#fffbf2; border-top:1px solid #f0dfb8; animation:mola-fade-in .2s ease-out; }
+.yonetim .service-confirm.asking { background:#fff4df; }
+.yonetim .change-list { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+.yonetim .change-list li { display:grid; grid-template-columns:140px minmax(0,1fr); gap:12px; font-size:14.5px; }
+.yonetim .change-list span { color:var(--y-muted); }
+.yonetim .change-list b { font-weight:600; overflow-wrap:anywhere; }
+.yonetim .package-choice { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:10px; }
+.yonetim .package-choice button { display:flex; flex-direction:column; align-items:flex-start; gap:6px; text-align:left; }
+.yonetim .package-choice .feature-chips li { font-size:11.5px; padding:2px 8px; }
+
+/* ---------- Lisans → Ödeme alındı ---------- */
+.yonetim .payment-card { display:flex; flex-direction:column; gap:14px; padding:16px 18px; border:1px solid var(--y-line); border-radius:16px; background:#fafbf8; transition:background .15s, border-color .15s; }
+.yonetim .payment-card.on { background:#f5f9f3; border-color:#c9dbc3; }
+.yonetim .switch-line { display:flex; align-items:center; gap:12px; margin:0; cursor:pointer; min-height:44px; font-weight:400; }
+.yonetim .switch-line input { position:absolute; opacity:0; width:1px; height:1px; }
+.yonetim .switch { flex-shrink:0; position:relative; width:44px; height:26px; border-radius:13px; background:#cfd8cb; transition:background .15s; }
+.yonetim .switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0003; transition:transform .15s; }
+.yonetim .switch-line input:checked+.switch { background:var(--green); }
+.yonetim .switch-line input:checked+.switch::after { transform:translateX(18px); }
+.yonetim .switch-line input:focus-visible+.switch { outline:3px solid #a4bda0; outline-offset:2px; }
+.yonetim .switch-line span:last-child { display:flex; flex-direction:column; }
+.yonetim .switch-line small { color:var(--y-muted); font-size:13px; }
+.yonetim .payment-fields { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px 20px; align-items:start; animation:mola-fade-in .2s ease-out; }
+.yonetim .payment-fields label { display:flex; flex-direction:column; gap:6px; margin:0; font-weight:600; min-width:0; }
+.yonetim .payment-fields label input { margin:0; }
+.yonetim .payment-fields label small { font-weight:400; }
+.yonetim .payment-total { display:grid; grid-template-columns:auto 1fr; gap:4px 16px; align-items:baseline; padding:12px 16px; border-radius:14px; background:#fff; border:1px solid var(--y-line-soft); font-size:14px; }
+.yonetim .payment-total span { color:var(--y-muted); }
+.yonetim .payment-total b { text-align:right; font-weight:600; }
+.yonetim .payment-total b.big { font-size:20px; color:var(--green); }
+.yonetim .payment-pills { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.yonetim .pill-label { font-size:14px; font-weight:600; }
+.yonetim .payment-pills .platform-pills>button { padding:6px 14px; }
+
+/* ---------- Satışlarım ---------- */
+.yonetim .sales-page { display:flex; flex-direction:column; gap:20px; min-width:0; }
+.yonetim .sales-head-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.yonetim .sales-head-actions .btn { margin:0; gap:6px; text-decoration:none; display:inline-flex; align-items:center; }
+.yonetim .sales-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.yonetim .kpi-card { display:flex; flex-direction:column; gap:2px; padding:20px 22px; border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); min-width:0; }
+.yonetim .kpi-card.warn { border-color:#ecd39e; background:#fffcf4; }
+.yonetim .kpi-icon { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; margin-bottom:10px; }
+.yonetim .kpi-icon.ok { background:var(--ok-bg); color:var(--ok-fg); } .yonetim .kpi-icon.info { background:var(--info-bg); color:var(--info-fg); }
+.yonetim .kpi-icon.warn { background:var(--warn-bg); color:var(--warn-fg); } .yonetim .kpi-icon.idle { background:var(--idle-bg); color:var(--idle-fg); }
+.yonetim .kpi-label { font-size:14px; color:var(--y-muted); font-weight:600; }
+.yonetim .kpi-card strong { font-size:30px; font-weight:700; letter-spacing:-.8px; line-height:1.2; overflow-wrap:anywhere; }
+.yonetim .kpi-card.warn strong { color:var(--warn-fg); }
+.yonetim .kpi-card small { font-size:13px; color:var(--y-faint); }
+.yonetim .sales-filters { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+.yonetim .sales-filters label { display:flex; flex-direction:column; gap:4px; margin:0; font-size:13px; font-weight:600; color:var(--y-muted); flex:0 1 170px; min-width:0; }
+.yonetim .sales-filters label.grow { flex:1 1 240px; }
+.yonetim .sales-filters select { margin:0; width:100%; }
+.yonetim .sales-totals { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid var(--y-line); border-radius:16px; background:var(--y-card); overflow:hidden; }
+.yonetim .sales-totals>div { display:flex; flex-direction:column; gap:2px; padding:14px 18px; min-width:0; }
+.yonetim .sales-totals>div+div { border-left:1px solid var(--y-line-soft); }
+.yonetim .sales-totals span { font-size:13px; color:var(--y-muted); }
+.yonetim .sales-totals strong { font-size:19px; font-weight:650; overflow-wrap:anywhere; }
+.yonetim .sales-totals .warn strong { color:var(--warn-fg); }
+.yonetim .sales-list { display:flex; flex-direction:column; border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); overflow:hidden; }
+.yonetim .sales-row { display:grid; grid-template-columns:96px minmax(0,1.6fr) 64px minmax(0,1fr) minmax(0,1fr) 100px 156px; gap:12px; align-items:center; padding:14px 20px; border-bottom:1px solid var(--y-line-soft); min-width:0; }
+.yonetim .sales-row:last-child { border-bottom:0; }
+.yonetim .sales-row.head { padding-top:10px; padding-bottom:10px; background:#f7f9f5; font-size:12.5px; font-weight:700; color:#6c7a70; letter-spacing:.3px; text-transform:uppercase; }
+.yonetim .sales-row:not(.head):hover { background:#fbfcfa; }
+.yonetim .sales-row>span { display:flex; flex-direction:column; gap:2px; min-width:0; overflow-wrap:anywhere; }
+.yonetim .sales-row small { font-size:12.5px; color:var(--y-faint); }
+.yonetim .sales-row .r { text-align:right; align-items:flex-end; }
+.yonetim .sales-row .c-amount strong { font-size:16px; }
+.yonetim .sales-row .c-status { align-items:flex-start; }
+.yonetim .sales-row .c-actions { flex-direction:row; justify-content:flex-end; align-items:center; gap:4px; }
+.yonetim .sales-row .c-actions .btn { margin:0; padding:6px 12px; gap:4px; white-space:nowrap; }
+.yonetim .sales-row.cancelled .c-amount strong, .yonetim .sales-row.cancelled .c-biz strong { color:var(--y-faint); text-decoration:line-through; }
+.yonetim .sales-breakdown { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:16px; align-items:start; }
+.yonetim .sales-breakdown .panel, .yonetim .sales-vat-alone { padding:22px 24px; }
+.yonetim .sales-breakdown h2 { margin:0 0 10px; }
+.yonetim .mini-table { width:100%; border-collapse:collapse; font-size:14px; }
+.yonetim .mini-table th { text-align:left; font-size:12px; color:var(--y-muted); font-weight:700; padding:6px 8px 6px 0; border-bottom:1px solid var(--y-line); }
+.yonetim .mini-table td { padding:8px 8px 8px 0; border-bottom:1px solid var(--y-line-soft); }
+.yonetim .mini-table .r { text-align:right; white-space:nowrap; padding-right:0; padding-left:8px; }
+.yonetim .mini-table tfoot td { font-weight:700; border-bottom:0; border-top:1.5px solid var(--green); }
+.yonetim .mini-table td.warn { color:var(--warn-fg); font-weight:600; }
+.yonetim .vat-rate { display:flex; align-items:flex-end; gap:8px 12px; flex-wrap:wrap; margin:16px 0 0; padding-top:14px; border-top:1px solid var(--y-line-soft); }
+.yonetim .vat-rate label { display:flex; flex-direction:column; gap:6px; margin:0; font-weight:600; }
+.yonetim .vat-rate .btn { margin:0; }
+.yonetim .vat-rate small { flex-basis:100%; }
+.yonetim .sale-dialog { width:min(720px,calc(100vw - 24px)); }
+.yonetim .sale-form { margin:0; }
+.yonetim .sale-fields { padding:20px 24px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px 20px; }
+.yonetim .sale-fields>label { display:flex; flex-direction:column; gap:6px; margin:0; font-weight:600; min-width:0; }
+.yonetim .sale-fields>label input, .yonetim .sale-fields>label select { margin:0; width:100%; }
+.yonetim .sale-fields small { font-weight:400; }
+.yonetim .sale-fields .span-2 { grid-column:1/-1; }
+.yonetim .sale-amount { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px 16px; align-items:end; padding:16px; border-radius:16px; background:#f5f9f3; border:1px solid #d7e5d2; }
+.yonetim .sale-amount .segmented { grid-column:1/-1; }
+.yonetim .sale-amount label { display:flex; flex-direction:column; gap:6px; margin:0; font-weight:600; min-width:0; }
+.yonetim .sale-amount .payment-total { grid-column:1/-1; grid-template-columns:repeat(3,auto 1fr); }
+.yonetim .sale-history summary { cursor:pointer; color:var(--green); font-weight:600; min-height:44px; display:flex; align-items:center; }
+.yonetim .sale-history ul { margin:0; padding:0; list-style:none; display:grid; gap:8px; font-size:13.5px; }
+.yonetim .sale-history li { display:flex; flex-direction:column; gap:2px; padding:8px 12px; border-radius:10px; background:var(--y-soft); }
+.yonetim .sale-error { padding:0 24px 12px; }
+
+/* ---------- The sixth item in the compact top bar (Satışlarım) ---------- */
+@media(max-width:899.98px) {
+  .yonetim .yonetim-nav { grid-template-columns:repeat(6,minmax(0,1fr)); }
+  .yonetim .yonetim-nav button { padding:6px 4px; gap:6px; font-size:13px; }
+}
+@media(max-width:1100px) {
+  .yonetim .builder-layout { grid-template-columns:minmax(0,1fr); }
+  .yonetim .builder-summary { position:static; }
+  .yonetim .sales-row { grid-template-columns:90px minmax(0,1.4fr) 56px minmax(0,1fr) minmax(0,1fr) 96px; }
+  .yonetim .sales-row .c-actions { grid-column:1/-1; justify-content:flex-start; }
+  .yonetim .sales-row.head span:last-child { display:none; }
+}
+@media(max-width:899.98px) {
+  .yonetim .price-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .yonetim .price-row .price-name { grid-column:1/-1; }
+  .yonetim .price-row .price-meta { grid-column:1/-1; }
+  .yonetim .sales-kpis { grid-template-columns:1fr; }
+  .yonetim .kpi-card { display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-rows:auto auto auto; column-gap:14px; align-items:center; padding:16px 18px; }
+  .yonetim .kpi-icon { grid-row:1/4; margin:0; }
+  .yonetim .kpi-card strong { font-size:24px; }
+  .yonetim .sales-totals { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .yonetim .sales-totals>div:nth-child(3) { border-left:0; }
+  .yonetim .sales-totals>div:nth-child(n+3) { border-top:1px solid var(--y-line-soft); }
+  .yonetim .sales-breakdown { grid-template-columns:1fr; }
+  .yonetim .sales-row.head { display:none; }
+  .yonetim .sales-row { grid-template-columns:minmax(0,1fr) auto; gap:4px 12px; padding:14px 16px; }
+  .yonetim .sales-row .c-day { grid-column:1; grid-row:1; font-size:13px; color:var(--y-muted); }
+  .yonetim .sales-row .c-status { grid-column:2; grid-row:1; align-items:flex-end; }
+  .yonetim .sales-row .c-biz { grid-column:1; grid-row:2; }
+  .yonetim .sales-row .c-amount { grid-column:2; grid-row:2; }
+  .yonetim .sales-row .c-period { grid-column:1; grid-row:3; font-size:13px; color:var(--y-muted); flex-direction:row; }
+  .yonetim .sales-row .c-period::before { content:'Dönem: '; white-space:pre; }
+  .yonetim .sales-row .c-method { grid-column:1/-1; grid-row:4; font-size:13px; flex-direction:row; flex-wrap:wrap; gap:4px 8px; }
+  .yonetim .sales-row .c-actions { grid-column:1/-1; grid-row:5; }
+}
+@media(max-width:599.98px) {
+  .yonetim .yonetim-nav button { font-size:10.5px; padding:6px 1px; gap:2px; letter-spacing:-.1px; }
+  .yonetim .detail-sheet>.service-confirm { margin:0 -18px; padding:24px 18px; }
+  .yonetim .service-price-grid, .yonetim .service-split, .yonetim .payment-fields, .yonetim .sale-fields { grid-template-columns:1fr; }
+  .yonetim .sale-fields { padding:16px 18px; }
+  .yonetim .sale-amount { grid-template-columns:minmax(0,1fr); }
+  .yonetim .sale-amount .payment-total { grid-template-columns:auto 1fr; }
+  .yonetim .change-list li { grid-template-columns:1fr; gap:0; }
+  .yonetim .builder-main, .yonetim .builder-summary { padding:16px; border-radius:18px; }
+  .yonetim .service-sheet .feature-picker { padding:14px; }
+  .yonetim .feature-card { padding:12px 14px; grid-template-columns:22px minmax(0,1fr); }
+  .yonetim .feature-price { grid-column:2; }
+  .yonetim .package-card { padding:18px; }
+  .yonetim .service-sheet .service-card { min-height:0; padding:16px 18px 12px; }
+  .yonetim .price-save { bottom:8px; }
+  .yonetim .sales-head-actions { width:100%; }
+  .yonetim .sales-head-actions .btn { flex:1 1 auto; justify-content:center; }
+  .yonetim .sales-filters label, .yonetim .sales-filters label.grow { flex:1 1 140px; }
+}

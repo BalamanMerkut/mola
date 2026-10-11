@@ -1,0 +1,8 @@
+/* Sunucu yedeği in Mola Yönetim (src/PlatformCloudBackup.tsx). */
+.cloud-copies { list-style:none; margin:10px 0; padding:0; display:grid; gap:4px; max-height:220px; overflow:auto; }
+.cloud-copies li { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; padding:6px 10px; border:1px solid var(--line, #e3e6df); border-radius:8px; font-size:14px; }
+.cloud-settings { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; align-items:end; margin:10px 0; }
+.cloud-settings label { display:grid; gap:4px; font-size:13px; }
+.cloud-settings input { min-height:44px; border:1px solid var(--line, #d6ddd2); border-radius:9px; padding:8px 12px; font:inherit; min-width:0; }
+.cloud-settings .application-actions { grid-column:1 / -1; }
+.cloud-disk .detail-facts.compact { margin:10px 0; }

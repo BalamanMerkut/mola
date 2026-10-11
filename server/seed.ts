@@ -1,0 +1,17 @@
+import { randomBytes } from 'node:crypto';
+import type { State, Product } from '../packages/domain/types.js';
+
+const size = { id: 'size', name: 'Boy', required: true, options: [{ id: 'regular', name: 'Standart', extra: 0 }, { id: 'large', name: 'Büyük boy', extra: 2500 }] };
+export function seed(tenantId = 'mola-demo'): State {
+  const products: Product[] = [
+    { id: 'latte', code: '17', name: 'Caffè Latte', nameEn: 'Caffè Latte', category: 'Kahveler', description: 'Espresso ve kadifemsi süt köpüğü. Günün yumuşak molası.', descriptionEn: 'Espresso with velvety milk foam. A gentle break in your day.', price: 14000, soldOut: false, art: 'coffee', groups: [size, { id: 'milk', name: 'Süt tercihi', required: false, options: [{ id: 'oat', name: 'Yulaf sütü', extra: 3000 }, { id: 'lactose', name: 'Laktozsuz süt', extra: 1500 }] }] },
+    { id: 'americano', code: '18', name: 'Americano', nameEn: 'Americano', category: 'Kahveler', description: 'Çift espresso, sıcak su. Sade ve dengeli.', descriptionEn: 'Double espresso with hot water. Smooth and balanced.', price: 11000, soldOut: false, art: 'coffee', groups: [size] },
+    { id: 'turkish', code: '19', name: 'Türk Kahvesi', nameEn: 'Turkish Coffee', category: 'Kahveler', description: 'Geleneksel lezzet, taze çekilmiş kahve.', descriptionEn: 'Traditional taste, freshly ground coffee.', price: 9500, soldOut: false, art: 'coffee', groups: [{ id: 'sugar', name: 'Şeker tercihi', required: true, options: [{ id: 'none', name: 'Sade', extra: 0 }, { id: 'medium', name: 'Orta', extra: 0 }, { id: 'sweet', name: 'Şekerli', extra: 0 }] }] },
+    { id: 'tea', code: '21', name: 'Demleme Çay', nameEn: 'Turkish Tea', category: 'Çaylar', description: 'Her zaman taze, ince belli bardakta.', descriptionEn: 'Always fresh, served in a tulip glass.', price: 3500, soldOut: false, art: 'tea', groups: [] },
+    { id: 'herbal', code: '22', name: 'Ihlamur', nameEn: 'Linden Tea', category: 'Çaylar', description: 'Doğal ıhlamur, limon dilimi eşliğinde.', descriptionEn: 'Natural linden blossom with a slice of lemon.', price: 8500, soldOut: false, art: 'tea', groups: [] },
+    { id: 'lemonade', code: '31', name: 'Ev Yapımı Limonata', nameEn: 'Homemade Lemonade', category: 'Soğuk İçecekler', description: 'Taze limon, nane ve bol ferahlık.', descriptionEn: 'Fresh lemon, mint and plenty of refreshment.', price: 12000, soldOut: false, art: 'cold', groups: [] },
+    { id: 'cheesecake', code: '42', name: 'San Sebastian', nameEn: 'Basque Cheesecake', category: 'Tatlılar', description: 'İçi yumuşak, üzeri karamelize. Çikolata sosuyla.', descriptionEn: 'Soft inside, caramelised on top. Served with chocolate sauce.', price: 19000, soldOut: false, art: 'cake', groups: [] },
+    { id: 'brownie', code: '43', name: 'Çikolatalı Brownie', nameEn: 'Chocolate Brownie', category: 'Tatlılar', description: 'Yoğun bitter çikolata ve ceviz.', descriptionEn: 'Rich dark chocolate and walnuts.', price: 16000, soldOut: true, art: 'cake', groups: [] },
+  ];
+  return { schemaVersion: 1, tenantId, name: 'Mola Coffee House', menuRevision: 1, changeSeconds: 60, commissionBps: null, products, tables: Array.from({ length: 12 }, (_, i) => ({ id: `table-${i + 1}`, name: `Masa ${String(i + 1).padStart(2, '0')}`, token: randomBytes(18).toString('base64url'), epoch: 0, accountId: null })), accounts: [], orders: [], payments: [], archives: [], blocked: [], requests: {}, audit: [] };
+}

@@ -1,0 +1,11 @@
+/* Mola Yönetim: "Dosyalar değiştirilmiş" (tile chip, Lisans card) and the Lisans sözleşmesi line (src/PlatformIntegrity.tsx). */
+.yonetim .tile-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.yonetim .business-tile .tile-chips .status-chip { margin-top:0; }
+.yonetim .integrity-section h2 { display:flex; align-items:center; gap:8px; }
+.yonetim .integrity-section.changed h2 { color:var(--bad-fg); }
+.yonetim .integrity-section.changed .section-lead { font-weight:600; }
+.yonetim .integrity-files ul, .yonetim .integrity-steps { margin:6px 0 12px; padding-left:20px; display:grid; gap:4px; }
+.yonetim .integrity-files code { font-size:13px; overflow-wrap:anywhere; }
+.yonetim .integrity-steps .text-btn { display:inline-flex; align-items:center; gap:4px; }
+.yonetim .license-agreement-line { font-weight:600; margin:4px 0 6px; overflow-wrap:anywhere; }
+.yonetim .license-agreement-line.warn { color:var(--bad-fg); }

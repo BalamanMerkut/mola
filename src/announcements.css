@@ -1,0 +1,36 @@
+/* Duyurular: the cards (café's Destek → Duyurular, the owner's Önemli window, Mola Yönetim's preview). */
+.announcement-list{margin:0}
+.announcement-items{display:grid;gap:12px}
+.announcement-card{display:grid;gap:12px;min-width:0;padding:18px 20px;border:1px solid var(--line,#e4e8e0);border-radius:14px;background:#fff;box-sizing:border-box}
+.announcement-card.unread{border-color:#c9d9c4;background:#f7faf4}
+.announcement-card.important{border-left:4px solid #d0612f;padding-left:17px}
+.announcement-head{display:flex;align-items:flex-start;gap:12px;min-width:0}
+.announcement-icon{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#e9f0e5;color:#2f5a48;flex-shrink:0}
+.announcement-card.important .announcement-icon{background:#fdeee4;color:#b04a1c}
+.announcement-title{display:grid;gap:3px;flex:1;min-width:0}
+.announcement-title h3{margin:0;font-size:16px;line-height:1.35;color:var(--ink,#24382e);overflow-wrap:anywhere}
+.announcement-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0;font-size:12px;color:var(--muted,#7b827b)}
+.announcement-edited{font-style:italic}
+.announcement-edited::before{content:'·';margin-right:8px;font-style:normal}
+.announcement-chips{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;flex-shrink:0}
+.announcement-chip{font-size:11.5px;font-weight:700;color:#a3401a;background:#fde9dd;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.announcement-new{font-size:11px;font-weight:700;color:#b5321f;background:#fde6e2;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.announcement-text{margin:0;font-size:14px;line-height:1.6;color:#3a4b40;white-space:pre-wrap;overflow-wrap:anywhere}
+.announcement-text a{color:var(--green,#234c3e);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.announcement-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.announcement-actions:empty{display:none}
+.announcement-actions .btn{min-height:44px;margin:0;gap:7px}
+.announcement-done{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#2f6b4c}
+/* The owner's Önemli window: the card without its frame. */
+.announcement-dialog .announcement-card{padding:4px 2px 0;border:0;border-radius:0;background:none}
+.announcement-dialog .announcement-card.important{border-left:0}
+.announcement-dialog-actions{flex-wrap:wrap}
+@media(max-width:600px){
+  .announcement-card{padding:16px}
+  .announcement-card.important{padding-left:13px}
+  .announcement-head{flex-wrap:wrap}
+  .announcement-chips{order:-1;width:100%;justify-content:flex-start}
+  .announcement-chips:empty{display:none}
+  .announcement-actions .btn{flex:1 1 auto;justify-content:center}
+  .announcement-dialog-actions .btn{flex:1 1 100%}
+}

@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mola-dev-lan",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "npm.cmd run dev:lan"],
+      "port": 3000
+    },
+    {
+      "name": "mola-ornek-kafe",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set DATA_DIR=.local\\ornek-kafe&& set PORT=3001&& npm.cmd run dev:lan"],
+      "port": 3001
+    },
+    {
+      "name": "mola-ornek-restoran",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set DATA_DIR=.local\\ornek-restoran&& set PORT=3002&& npm.cmd run dev:lan"],
+      "port": 3002
+    },
+    {
+      "name": "mola-ornek-tatlici",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set DATA_DIR=.local\\ornek-tatlici&& set PORT=3003&& npm.cmd run dev:lan"],
+      "port": 3003
+    },
+    {
+      "name": "mola-merkez",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "npm.cmd run merkez:dev"],
+      "port": 4000
+    }
+  ]
+}

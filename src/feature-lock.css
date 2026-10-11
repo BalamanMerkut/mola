@@ -1,0 +1,140 @@
+/* Hizmet paketi: a closed service, faded in the menus and blurred on its page, with one calm card on top (src/FeatureLock.tsx). */
+:root{--lock-ink:#24382e;--lock-muted:#6f7a72;--lock-glass:rgba(255,255,255,.72);--lock-edge:rgba(255,255,255,.85);--lock-shadow:0 24px 60px rgba(35,76,62,.18),0 2px 8px rgba(35,76,62,.08);--lock-soft:#eef2ec}
+
+/* The small mark beside a faded item: soft, never alarming. */
+.feature-locked-hint{display:inline-flex;align-items:center;margin-left:auto;padding:2px 8px;border-radius:999px;background:var(--lock-soft);color:var(--lock-muted);font-size:11px;font-weight:600;letter-spacing:.01em;white-space:nowrap;line-height:1.5}
+.nav-locked{opacity:.62}
+.nav-locked:hover,.nav-locked.active{opacity:.9}
+.nav-locked .feature-locked-hint{margin-left:auto}
+.pill-tab.locked{opacity:.6}
+.pill-tab.locked.active{opacity:.9}
+.pill-tab-locked{margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--lock-soft);color:var(--lock-muted);font-size:10.5px;font-weight:600;white-space:nowrap}
+.btn.locked,.text-btn.locked{opacity:.58}
+.btn.locked:hover{opacity:.8}
+
+/* A faded stand-in row (Ayarlar cards, a button of a closed service). */
+.feature-locked-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:14px 16px;border:1px dashed var(--line);border-radius:14px;background:#fbfcfa;color:var(--lock-ink);text-align:left;opacity:.78;transition:opacity .2s,border-color .2s}
+.feature-locked-row:hover{opacity:1;border-color:#cdd8cf}
+.feature-locked-row-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.feature-locked-row-text strong{font-size:14px}
+.feature-locked-row-text span{color:var(--lock-muted);font-size:12.5px;overflow-wrap:anywhere}
+
+/* The page of a closed service: sample shapes under a heavy blur, the card in the middle. */
+.feature-lock{position:relative;min-height:520px;border-radius:18px;overflow:hidden;isolation:isolate;animation:feature-lock-in .35s ease both}
+.feature-lock.compact{min-height:340px}
+.feature-lock-sample{position:absolute;inset:0;padding:22px;display:flex;flex-direction:column;gap:16px;filter:blur(14px) saturate(.9);transform:scale(1.04);pointer-events:none;user-select:none}
+.fls-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.fls-tile{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+.fls-line{display:block;height:10px;border-radius:6px;background:#dfe6dc;width:80%}
+.fls-line.short{width:40%}.fls-line.tiny{width:18%;margin-left:auto}
+.fls-figure{display:block;height:26px;width:60%;border-radius:8px;background:#c9d8cc}
+.fls-chart{flex:1;min-height:140px;display:flex;align-items:flex-end;gap:10px;padding:18px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+.fls-chart span{flex:1;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,#9fbcac,#5f8a75)}
+.fls-rows{display:flex;flex-direction:column;gap:10px}
+.fls-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:#fff;border:1px solid var(--line)}
+.fls-dot{width:28px;height:28px;border-radius:50%;background:#d7e2d9;flex:none}
+.feature-lock-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(246,247,244,.55),rgba(246,247,244,.82))}
+.feature-lock>.feature-lock-card{position:relative;z-index:1;margin:min(12vh,90px) auto 32px}
+.feature-lock.compact>.feature-lock-card{margin:36px auto 24px}
+
+/* The card: glass over the blur. */
+.feature-lock-card{width:min(440px,calc(100% - 32px));padding:28px 26px 22px;border-radius:22px;background:var(--lock-glass);border:1px solid var(--lock-edge);box-shadow:var(--lock-shadow);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);text-align:center;color:var(--lock-ink)}
+.feature-lock-icon{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#e7f0ea,#f6efe7);color:var(--green);margin-bottom:12px}
+.feature-lock-card h2{margin:0 0 10px;font-size:20px;line-height:1.25;letter-spacing:-.01em}
+.feature-lock-name{margin:0;font-weight:700;font-size:15px;color:var(--green)}
+.feature-lock-line{margin:4px 0 0;color:var(--lock-muted);font-size:13.5px;line-height:1.45}
+.feature-lock-how{margin:14px 0 0;font-size:13.5px;line-height:1.5}
+.feature-lock-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:18px}
+.feature-lock-actions .btn{min-height:44px;display:inline-flex;align-items:center;gap:8px}
+.feature-lock-contact{justify-content:center;margin:14px 0 0}
+
+/* Over the screen (a faded button). */
+.feature-lock-layer{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(36,56,46,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:feature-lock-fade .25s ease both}
+.feature-lock-dialog{position:relative;width:min(460px,100%);max-height:calc(100dvh - 32px);overflow:auto;display:grid;place-items:center;animation:feature-lock-in .3s ease both}
+.feature-lock-dialog .feature-lock-card{width:100%;background:rgba(255,255,255,.9)}
+.feature-lock-x{position:absolute;top:10px;right:10px;z-index:1}
+
+/* "Paketiniz" and the one-time "deneme bitti" notice (src/PackageCard.tsx). */
+.feature-soon-chip,.pk-soon{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;background:#fff3dc;color:#7a5410;font-size:11px;font-weight:700;letter-spacing:.02em;white-space:nowrap;line-height:1.5}
+.feature-lock-name .feature-soon-chip{margin-left:8px;vertical-align:2px}
+.package-card{gap:18px}
+.pk-hero{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 16px;padding:18px 20px;border-radius:16px;border:1px solid color-mix(in srgb,var(--green) 12%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--green) 9%,var(--paper)) 0%,color-mix(in srgb,var(--accent) 6%,var(--paper)) 100%)}
+.pk-hero-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pk-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--green) 70%,var(--muted))}
+.pk-name{font-size:24px;line-height:1.2;font-weight:650;letter-spacing:-.02em;color:var(--green);overflow-wrap:anywhere}
+.pk-summary{font-size:13px;color:var(--lock-muted);overflow-wrap:anywhere}
+.pk-status{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;background:var(--paper);border:1px solid var(--line);color:var(--lock-ink);box-shadow:0 1px 2px #1c2e240d}
+.pk-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.pk-status.on{color:#2f7a4f;border-color:#cfe5d6}
+.pk-status.trial{color:#8a5a0c;border-color:#f0dcb5;background:#fffaf0}
+.pk-status.off{color:#9d442e;border-color:#ecd0c6;background:#fdf5f2}
+.pk-trial-note{display:flex;gap:9px;align-items:flex-start;margin:0;padding:10px 14px;border-radius:12px;background:#fffaf0;color:#6b4a0e;font-size:13px;line-height:1.5}
+.pk-trial-note svg{flex:none;margin-top:2px}
+.pk-section{display:grid;gap:10px;min-width:0}
+.pk-section-title{display:flex;align-items:center;gap:8px;margin:0;font-size:13.5px;font-weight:700;color:var(--lock-ink)}
+.pk-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:color-mix(in srgb,var(--green) 12%,var(--paper));color:var(--green);font-size:12px;font-weight:700}
+.pk-count.muted{background:var(--lock-soft);color:var(--lock-muted)}
+.pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,232px),1fr));gap:10px;margin:0;padding:0;list-style:none}
+.pk-grid>li{display:flex;min-width:0}
+/* A service that is itself the list item (the ones in the package) is the grid card, not a flex row: as a flex row its icon
+   tile and green check were squeezed into narrow ovals by the text beside them. */
+.pk-grid>li.pk-service{display:grid}
+.pk-service-icon,.pk-service-check{flex:none;box-sizing:border-box}
+.pk-service{position:relative;display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:start;gap:11px;width:100%;min-height:72px;padding:12px 12px 12px 12px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--lock-ink);text-align:left;font:inherit}
+.pk-service.on{border-color:color-mix(in srgb,var(--green) 16%,var(--line));background:color-mix(in srgb,var(--green) 4%,var(--paper))}
+.pk-service-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,var(--green) 11%,var(--paper));color:var(--green)}
+.pk-service-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pk-service-text strong{font-size:13.5px;line-height:1.3}
+.pk-service-text span{font-size:12px;line-height:1.45;color:var(--lock-muted);overflow-wrap:anywhere}
+.pk-service-text em{font-style:normal;font-size:11px;font-weight:700;color:color-mix(in srgb,var(--green) 75%,var(--muted));margin-top:2px}
+.pk-service-check{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#2f7a4f;color:#fff;margin-top:2px}
+.pk-service.off,.pk-service.soon{grid-template-columns:36px minmax(0,1fr);row-gap:8px;cursor:pointer;background:#fbfcfa;border-style:dashed;transition:border-color .2s,background .2s,box-shadow .2s}
+.pk-service.off .pk-service-icon,.pk-service.soon .pk-service-icon{background:var(--lock-soft);color:#97a199}
+.pk-service.off .pk-service-text strong,.pk-service.soon .pk-service-text strong{color:#5d675f}
+.pk-service.off .pk-service-text span,.pk-service.soon .pk-service-text span{color:#98a19a}
+.pk-service.off:hover,.pk-service.soon:hover{border-style:solid;border-color:color-mix(in srgb,var(--green) 30%,var(--line));background:var(--paper);box-shadow:0 6px 18px #1c2e2412}
+.pk-service.off:hover .pk-service-icon{color:var(--green)}
+.pk-service.static{cursor:default;border-style:solid}
+.pk-add{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:var(--lock-soft);color:var(--lock-muted);font-size:11px;font-weight:700;white-space:nowrap;margin-top:1px;transition:background .2s,color .2s}
+.pk-add .pk-plus{display:none}
+.pk-service .pk-add,.pk-service .pk-soon{grid-column:2;justify-self:start}
+.pk-service.off:hover .pk-add{background:color-mix(in srgb,var(--green) 12%,var(--paper));color:var(--green)}
+.pk-service.off:hover .pk-lock{display:none}
+.pk-service.off:hover .pk-plus{display:block}
+.pk-contact{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start;padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:#fafbf8}
+.pk-contact-icon{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,#e7f0ea,#f6efe7);color:var(--green);flex:none}
+.pk-contact-body{display:grid;gap:6px;min-width:0}
+.pk-contact-body h4{margin:0;font-size:15px}
+.pk-contact-body p{margin:0;font-size:13px;line-height:1.55;color:var(--lock-ink)}
+.pk-contact-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+.pk-contact-actions>.btn{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.pk-readonly{display:flex;gap:9px;align-items:center;margin:0;padding:12px 14px;border-radius:12px;background:var(--lock-soft);color:var(--lock-ink);font-size:13px}
+.pk-readonly svg{flex:none;color:var(--lock-muted)}
+.trial-end-head{display:flex;gap:12px;align-items:center;margin:0}
+.package-closed{margin:4px 0 0}
+.trial-end .contact-buttons{margin-top:-2px}
+@media (max-width:600px){
+  .pk-hero{padding:16px}
+  .pk-name{font-size:21px}
+  .pk-contact{grid-template-columns:1fr;padding:16px}
+  .pk-contact-actions>.btn{flex:1 1 100%;justify-content:center}
+  .pk-contact-actions .contact-buttons{width:100%}
+  .pk-contact-actions .contact-button{flex:1 1 auto;justify-content:center}
+}
+
+@keyframes feature-lock-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes feature-lock-fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.feature-lock,.feature-lock-layer,.feature-lock-dialog{animation:none}}
+@media (max-width:600px){
+  .feature-lock{min-height:460px;border-radius:14px}
+  .fls-tiles{grid-template-columns:1fr 1fr}.fls-tile:nth-child(3){display:none}
+  .feature-lock-card{padding:22px 18px 18px;border-radius:18px}
+  .feature-lock-card h2{font-size:18px}
+  .feature-lock-actions .btn{flex:1 1 140px;justify-content:center}
+}
+/* The desktop rail's faded "İkiye böl" (src/DesktopRail.tsx). */
+.desktop-rail .rail-locked{opacity:.55}
+.desktop-rail .rail-locked:hover{opacity:.85}
+.rail-locked-hint{display:block;font-size:9px;line-height:1.2;color:inherit;opacity:.85;white-space:nowrap}
+.feature-locked-inline{display:inline-flex;align-items:center;gap:8px;margin:6px 0 2px;font-size:12.5px;color:var(--lock-muted)}
+.feature-locked-inline .feature-locked-hint{margin-left:0}

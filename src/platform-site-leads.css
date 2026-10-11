@@ -1,0 +1,17 @@
+/* Mola Yönetim → Başvurular → Web sitesi talepleri (src/PlatformSiteLeads.tsx). */
+.yonetim .application-kinds { margin:0 0 18px; }
+.yonetim .site-lead-card header { gap:6px 10px; }
+.yonetim .site-lead-name { font-size:19px; color:var(--y-ink, #24382e); }
+.yonetim .site-lead-kind { display:inline-flex; align-items:center; gap:5px; }
+.yonetim .site-lead-card.status-closed { opacity:.86; }
+.yonetim .site-lead-message { margin:0; padding:12px 14px; border-left:3px solid var(--y-line, #e4e8e0); background:rgba(35,76,62,.04); border-radius:0 10px 10px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.yonetim .site-lead-notes { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+.yonetim .site-lead-notes li { display:grid; gap:2px; font-size:14px; overflow-wrap:anywhere; }
+.yonetim .site-lead-notes small { color:var(--muted, #7b827b); font-size:12px; }
+.yonetim .site-lead-linked { margin:0; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.yonetim .site-lead-card .application-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.yonetim .site-lead-card .application-actions .btn { min-height:44px; }
+.yonetim .site-lead-remove { margin-left:auto; min-height:44px; }
+.yonetim .site-lead-delete span { flex-basis:100%; font-size:14px; }
+.yonetim .site-leads-closed-toggle { display:inline-flex; align-items:center; gap:4px; min-height:44px; font-weight:600; }
+.yonetim .site-leads-closed-toggle[aria-expanded="true"] svg { transform:rotate(90deg); }

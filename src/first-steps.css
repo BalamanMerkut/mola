@@ -1,0 +1,27 @@
+/* "İlk adımlar" on the owner's Masalar (src/FirstSteps.tsx): one quiet card, ticks in the same green as Güvenlik. */
+.first-steps{margin:0 0 18px;padding:16px 18px}
+.first-steps-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.first-steps-head h2{margin:0 0 2px;font-size:1.05rem}
+.first-steps ul{list-style:none;padding:0;margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+/* Each step wraps instead of squeezing: the title keeps its width (it never runs under the hint), a long hint ("Kasa
+   bilgisayarındaki Mola penceresinden: …") takes its own line under the title, a short button stays beside it when it fits. */
+.first-steps li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.first-steps li .grow{flex:1 1 auto;min-width:min(100%,9rem);overflow-wrap:anywhere}
+.first-steps li .text-btn{display:inline-flex;align-items:center;gap:2px;white-space:nowrap;margin-left:auto}
+.first-steps li small{flex:1 1 100%;padding-left:32px;font-size:.78rem;line-height:1.35;text-align:left;overflow-wrap:anywhere}
+.first-steps .check-mark{width:22px;height:22px;flex:none;border-radius:50%;border:1.5px solid #c9d2c4;display:grid;place-items:center;color:#fff}
+.first-steps li.done .check-mark{background:#7f9f86;border-color:#7f9f86}
+.first-steps li.done{color:var(--green)}
+.first-steps .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.first-steps-reminder{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:10px 14px;border-radius:10px;background:#fbf1e3;color:#7a4a12}
+.first-steps-reminder .text-btn{display:inline-flex;align-items:center;margin-left:auto}
+@media (max-width:600px){.first-steps ul{grid-template-columns:1fr}}
+/* The counter's compact Masalar: one line "İlk adımlar 2/6" that opens the list (src/FirstSteps.tsx `folded`). */
+.first-steps.folded{padding:6px 10px 6px 6px;margin-bottom:12px}
+.first-steps.folded.open{padding:10px 14px 14px 10px}
+.first-steps.folded .first-steps-head{align-items:center;margin:0}
+.first-steps-toggle{display:inline-flex;align-items:center;gap:9px;min-height:40px;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.first-steps-toggle:hover{background:#f1f5ee}
+.first-steps-count{padding:1px 8px;border-radius:10px;background:#eef3ea;color:var(--green);font-size:12.5px;font-weight:700}
+.first-steps-toggle svg{transition:transform .15s}
+.first-steps-toggle[aria-expanded=true] svg{transform:rotate(180deg)}

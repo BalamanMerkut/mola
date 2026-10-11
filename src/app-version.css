@@ -1,0 +1,5 @@
+/* Version lines (src/AppVersion.tsx): Hesabım, Ayarlar, the sign-in screen, Mola Yönetim. */
+.app-version { margin: 20px 0 4px; color: var(--muted, #66736a); font-size: 12px; line-height: 1.5; text-align: center; }
+.app-version-update { display: inline-block; }
+.login-form .app-version { margin-top: 22px; }
+.yonetim .app-version { color: var(--y-muted, #66736a); }

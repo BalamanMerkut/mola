@@ -1,0 +1,18 @@
+/* Mutfak fişi modu (src/KitchenTickets.tsx): the red print warning, "Teslim edildi" and the Ekran / Fiş choice. */
+.print-alerts { display: grid; gap: 8px; margin: 0 0 14px; }
+.print-alert { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 2px solid #d64545; border-radius: 12px; background: #fff0ee; color: #8f2a1e; }
+.print-alert-icon { flex: none; margin-top: 2px; }
+.print-alert-body { min-width: 0; flex: 1; }
+.print-alert-title { margin: 0; font-size: 15px; line-height: 1.35; }
+.print-alert-items { margin: 3px 0 0; color: #7a3b31; font-size: 13px; overflow-wrap: anywhere; }
+.print-alert-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.print-alert-actions .btn { min-height: 36px; }
+.deliver-btn { margin-top: 8px; }
+.kitchen-mode-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 4px; }
+.kitchen-mode-option { display: grid; gap: 6px; text-align: left; padding: 12px 14px; border: 1.5px solid var(--line, #e4e8e0); border-radius: 12px; background: var(--paper, #fff); color: inherit; font: inherit; cursor: pointer; }
+.kitchen-mode-option.selected { border-color: var(--green, #234c3e); box-shadow: 0 0 0 2px color-mix(in srgb, var(--green, #234c3e) 18%, transparent); }
+.kitchen-mode-option:disabled { cursor: wait; opacity: .7; }
+.kitchen-mode-head { display: flex; align-items: center; gap: 8px; }
+.kitchen-mode-chip { margin-left: auto; padding: 2px 8px; border-radius: 999px; background: var(--green, #234c3e); color: #fff; font-size: 11px; }
+.kitchen-mode-text { color: var(--ink, #24382e); font-size: 13px; line-height: 1.45; }
+.kitchen-mode-example { color: var(--muted, #7b827b); font-size: 12.5px; line-height: 1.4; }

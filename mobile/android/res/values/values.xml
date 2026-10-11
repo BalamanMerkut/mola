@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mola</string>
+    <color name="mola_yesil">#234c3e</color>
+    <color name="mola_zemin">#f6f7f4</color>
+    <style name="MolaTema" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/mola_yesil</item>
+        <item name="android:colorPrimaryDark">@color/mola_yesil</item>
+        <item name="android:colorAccent">@color/mola_yesil</item>
+        <item name="android:statusBarColor">@color/mola_yesil</item>
+        <item name="android:windowBackground">@color/mola_zemin</item>
+    </style>
+</resources>

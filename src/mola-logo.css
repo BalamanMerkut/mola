@@ -1,0 +1,28 @@
+/*
+ * The Mola symbol on pages (src/MolaLogo.tsx). The cup is 24 px with 2-px strokes; its frame has an even size so the cup sits
+ * on whole pixels (sharp on 1x and 2x screens). The frame never shrinks in a flex row (no squashed oval) and has the app
+ * icon's rounded square (scripts/desktop/mola-icon.svg, rx 56/256 ≈ 22 %).
+ */
+.mola-cup { display:block; flex:none; shape-rendering:geometricPrecision; }
+
+/* Café: green frame, cream cup (light: cream frame, green cup). Sizes stay in style.css (42 px, 34 px in the sidebar…). */
+.brand>.brand-symbol { flex:0 0 auto; aspect-ratio:1; border-radius:24%; }
+/* The café computer's left rail (src/DesktopRail.tsx): the same rounded square, cream on the rail. */
+span.desktop-rail-logo { flex:none; aspect-ratio:1; border-radius:24%; }
+/* The line under "mola." was 6–7 px with wide spacing: unreadable and soft. Now 8 px, a little bolder. */
+.brand>div>small:not(.x) { font-size:8px; letter-spacing:2px; font-weight:600; }
+
+/* Mola Yönetim: the same cup on near-black, "Mola Yönetim" beside it. */
+.ybrand { display:flex; align-items:center; gap:12px; min-width:0; color:#1c1f1e; }
+.ybrand-mark { width:40px; height:40px; flex:0 0 40px; aspect-ratio:1; display:grid; place-items:center; border-radius:10px; background:#1c1f1e; color:#f3ebdd; }
+.ybrand-word { font-size:19px; line-height:1.15; letter-spacing:-.2px; white-space:nowrap; min-width:0; }
+.ybrand-word strong { font-weight:700; }
+.ybrand-word span { font-weight:500; color:#5f6b63; }
+.ybrand.light { color:#fff; }
+.ybrand.light .ybrand-word span { color:#d6e0d3; }
+.ybrand.light .ybrand-mark { box-shadow:0 0 0 1px #ffffff33; }
+/* Mola Yönetim's phone/tablet top bar (src/platform-workspace.css shows it under 900 px). */
+.yonetim-topbar-brand .ybrand { gap:10px; }
+.yonetim-topbar-brand .ybrand-mark { width:36px; height:36px; flex-basis:36px; border-radius:9px; }
+.yonetim-topbar-brand .ybrand-word { font-size:17px; }
+@media (max-width:419.98px) { .yonetim-topbar-brand .ybrand-word span { display:none; } }

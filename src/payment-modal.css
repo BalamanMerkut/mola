@@ -1,0 +1,47 @@
+/* Ödeme al: the change and "Ödemeyi kaydet" stay in sight at the bottom of the window (1280×800, 1024×768, tablets, phones),
+   whatever opens above them (a tip, a print error, a long list of items). */
+.payment-modal .payment-form{padding-bottom:0}
+.payment-modal .payment-main{min-width:0}
+.payment-modal .payment-footer{position:sticky;bottom:0;z-index:2;margin:6px -23px 0;padding:12px 23px 16px;background:#fff;border-top:1px solid var(--line);box-shadow:0 -10px 18px -14px #1c2e2433;display:grid;gap:8px}
+.payment-modal .payment-footer .notice{margin:0}
+.payment-change{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.payment-change span{font-size:14px;font-weight:600;color:#5d6a60}
+.payment-change strong{font-size:30px;line-height:1.1;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+.payment-change.short strong{color:#a3401f}
+/* K-D: a bill paid in full in cash: its window closed, the change stays large above the toast for a few seconds. */
+.change-due{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:99;display:flex;align-items:center;gap:14px;max-width:calc(100vw - 32px);padding:10px 10px 10px 18px;border:1px solid #cfdcc8;border-radius:14px;background:#f4f8f1;color:var(--ink);box-shadow:0 10px 30px #183b2f2e}
+.change-due span{font-size:14px;font-weight:600;color:var(--green)}
+.change-due strong{font-size:30px;line-height:1.1;color:var(--green);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:700px){.change-due{bottom:calc(var(--bottom-nav-h, 82px) + 64px)}.change-due strong{font-size:24px}}
+/* K-D: the change of the payment just saved, handed to the guest now. */
+.payment-change.given{padding:8px 12px;border-radius:12px;background:#eaf3e6}
+.payment-change.given span{color:var(--green)}
+.payment-card-note{margin:0;font-size:13px;color:#5d6a60}
+.payment-save-hint{margin:0;font-size:12.5px;color:#a3401f;font-weight:500}
+.payment-footer-actions{display:grid;gap:8px}
+.payment-footer-actions .payment-print-after{margin:0}
+.payment-footer-actions .btn{margin:0}
+.payment-cash label{margin-bottom:8px}
+.payment-quick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.payment-quick button{min-height:44px;border:1px solid #d7e0d2;border-radius:10px;background:#fff;color:var(--ink);font-size:14px;font-weight:650;padding:0 4px}
+.payment-quick button.selected{border-color:var(--green);background:#eaf3e6;color:var(--green)}
+.payment-quick button:disabled{opacity:.4}
+.payment-deposit{margin:4px 0 0;font-size:13px;color:#8a5a1f}
+.payment-deposit small{font-size:12px;color:#8a9487}
+/* "Ürün seç": − and + instead of a drop-down; a weighed line is one box. */
+.payment-item .payment-stepper{display:flex;align-items:center;gap:4px;flex:none}
+.payment-stepper button{display:grid;place-items:center;width:44px;height:44px;border:1px solid #d7e0d2;border-radius:10px;background:#fff;color:var(--green)}
+.payment-stepper button:disabled{opacity:.35}
+.payment-stepper output{min-width:46px;text-align:center;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.payment-stepper output small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+.payment-item .payment-whole{display:flex;align-items:center;gap:8px;margin:0;flex:none;min-height:44px;font-size:13.5px;font-weight:600}
+.payment-item .payment-whole input{width:22px;height:22px}
+@media (max-width:600px){
+  .payment-modal .payment-footer{margin:6px -18px 0;padding:10px 18px 12px}
+  .payment-change strong{font-size:26px}
+  .payment-quick{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .payment-quick button{font-size:13px}
+}
+/* The guest said how they pay when asking for the bill ("Hesap · Kart"). */
+.payment-prefer{margin:-4px 0 0;padding:6px 10px;border-radius:8px;background:#eef4f9;color:#2f557c;font-size:12.5px;font-weight:600}
+.payment-tip-out{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}.payment-tip-out>span{flex-basis:100%;font-weight:600;font-size:13px}.payment-tip-out button{min-height:40px;padding:6px 18px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;cursor:pointer}.payment-tip-out button.selected{border-color:var(--green);background:#eef5ea;color:var(--green);font-weight:700}.payment-tip-out small{flex-basis:100%}

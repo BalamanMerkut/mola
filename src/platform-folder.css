@@ -1,0 +1,22 @@
+/* "Göz at" folder field (src/PlatformFolderPicker.tsx): the path, the browse button beside it, quick places as chips. */
+.yonetim .folder-field { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.yonetim .folder-row { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; align-items:end; min-width:0; }
+.yonetim .folder-row.with-browse { grid-template-columns:minmax(0,1fr) auto; }
+.yonetim .folder-row label { display:flex; flex-direction:column; gap:6px; margin:0; min-width:0; font-size:13.5px; font-weight:600; color:#44544a; }
+.yonetim .folder-row input { width:100%; box-sizing:border-box; min-height:44px; }
+.yonetim .folder-browse { min-height:44px; margin:0; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; }
+.yonetim .folder-note { color:var(--y-muted); font-size:12.5px; }
+.yonetim .folder-field .field-problem { color:var(--bad-fg, #983f28); font-size:12.5px; }
+.yonetim .folder-places { display:flex; flex-wrap:wrap; gap:8px; min-width:0; }
+.yonetim .folder-place { display:inline-flex; align-items:center; gap:8px; min-height:44px; max-width:100%; padding:6px 12px; border:1px solid var(--y-line); border-radius:12px; background:var(--y-soft); color:#3d5345; font:inherit; text-align:left; cursor:pointer; min-width:0; }
+.yonetim .folder-place:hover:not(:disabled) { border-color:#cfdac9; background:#eef3ea; }
+.yonetim .folder-place.active { border-color:#8fb48a; background:#e6f1e3; }
+.yonetim .folder-place.gdrive svg, .yonetim .folder-place.onedrive svg { color:#2d5579; }
+.yonetim .folder-place.usb svg { color:#55487d; }
+.yonetim .folder-place span { display:flex; flex-direction:column; min-width:0; line-height:1.25; }
+.yonetim .folder-place strong { font-size:13.5px; font-weight:650; }
+.yonetim .folder-place small { font-size:12px; color:var(--y-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:220px; }
+@media (max-width: 420px) {
+  .yonetim .folder-row.with-browse { grid-template-columns:minmax(0,1fr); }
+  .yonetim .folder-browse { justify-content:center; }
+}

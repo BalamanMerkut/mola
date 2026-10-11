@@ -1,0 +1,109 @@
+/* Sosyal medya: the guest's "Bizi takip edin" icons (SocialFollow.tsx), the Ayarlar page and its cards (SocialSettings.tsx). */
+
+/* ---- Guest menu: quiet round icons in the business colours; the brand colour only on hover and focus ---- */
+.social-follow{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0;max-width:100%}
+.social-follow ul{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0;padding:0;list-style:none}
+.customer-footer .social-follow-title,.social-follow-title{margin:0;font-family:inherit;font-style:normal;font-size:11.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--green);opacity:.75}
+.social-follow-link{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;color:var(--green);background:var(--brand-soft,#edf3ed);border:1px solid color-mix(in srgb,var(--green) 16%,transparent);transition:background-color .16s,color .16s,border-color .16s,transform .16s}
+.social-follow-link:hover,.social-follow-link:focus-visible{color:#fff;background:var(--green);border-color:var(--green);transform:translateY(-1px)}
+.social-follow-link[data-platform=instagram]:hover,.social-follow-link[data-platform=instagram]:focus-visible{background:#e4405f;border-color:#e4405f}
+.social-follow-link[data-platform=facebook]:hover,.social-follow-link[data-platform=facebook]:focus-visible{background:#1877f2;border-color:#1877f2}
+.social-follow-link[data-platform=tiktok]:hover,.social-follow-link[data-platform=tiktok]:focus-visible,
+.social-follow-link[data-platform=x]:hover,.social-follow-link[data-platform=x]:focus-visible{background:#111;border-color:#111}
+.social-follow-link[data-platform=youtube]:hover,.social-follow-link[data-platform=youtube]:focus-visible{background:#e62117;border-color:#e62117}
+.social-follow-link[data-platform=whatsapp]:hover,.social-follow-link[data-platform=whatsapp]:focus-visible{background:#1fa855;border-color:#1fa855}
+.social-follow-link[data-platform=maps]:hover,.social-follow-link[data-platform=maps]:focus-visible{background:#3b78e7;border-color:#3b78e7}
+.social-follow-link[data-platform=review]:hover,.social-follow-link[data-platform=review]:focus-visible{background:#4285f4;border-color:#4285f4}
+@media (prefers-reduced-motion:reduce){.social-follow-link{transition:none}.social-follow-link:hover,.social-follow-link:focus-visible{transform:none}}
+.social-follow-footer{margin:2px 0 10px}
+.social-follow-sent{margin:18px 0 16px;padding-top:16px;border-top:1px solid var(--line)}
+.social-follow-prompt{margin:2px 0}
+/* After the bill: the calm "Hesabınız kapandı" card and, under it, the short "Bizi değerlendirin ve takip edin" card
+   (title only, the Google button, the icons). Both centred, in the menu's own colours, compact on a phone. */
+.bill-closed{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;margin:0 0 14px;padding:20px 18px 18px;border-radius:18px;border:1px solid color-mix(in srgb,var(--green) 18%,transparent);background:color-mix(in srgb,var(--brand-soft,#edf3ed) 70%,#fff);min-width:0}
+.bill-closed-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;margin-bottom:4px}
+.bill-closed h2{margin:0;font-size:18px;font-weight:700;color:var(--ink,#22352c);line-height:1.3}
+.bill-closed p{margin:0;font-size:14px;color:var(--muted,#66746b)}
+.bill-closed .btn{margin-top:10px;min-height:44px;padding:0 20px;max-width:100%}
+.review-prompt .review-prompt-title{margin:0;font-size:16px;font-weight:650;color:var(--green)}
+.review-prompt .review-link{margin:0;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:0 18px;border-radius:99px;background:#fff;border:1px solid color-mix(in srgb,var(--green) 22%,transparent);color:var(--ink,#22352c);font-size:14px;font-weight:600;text-decoration:none;max-width:100%}
+.review-prompt .review-link svg:first-child{color:#4285f4;flex:none}
+.review-prompt .review-link:hover,.review-prompt .review-link:focus-visible{border-color:var(--green);background:color-mix(in srgb,var(--brand-soft,#edf3ed) 60%,#fff)}
+
+/* ---- Ayarlar → İşletme → Sosyal medya ---- */
+.social-rows{display:grid;gap:0;min-width:0}
+.social-row{display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;align-items:start;padding:14px 0;border-top:1px solid var(--set-line,#edf0e9);min-width:0}
+.social-row:first-child{border-top:0;padding-top:4px}
+.social-row-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--set-tile,#eaf1e5);color:var(--green)}
+.social-row-main{display:grid;gap:7px;min-width:0}
+.social-row-main>label{margin:0}
+.social-row-main input{width:100%;min-width:0;margin:0}
+.social-row-main input[aria-invalid=true]{border-color:#c46a5a}
+.social-row-main .field-error{margin:0}
+.social-preview{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-width:0}
+.social-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;padding:5px 12px 5px 9px;border-radius:99px;background:#eef3ea;color:#2f4b36;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.social-chip svg{flex:none;color:var(--green)}
+.social-open{display:inline-flex;align-items:center;gap:4px;min-height:36px;color:var(--green);font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.social-preview .btn{margin:0}
+.social-google{background:transparent}
+.social-google .social-row-icon{background:#e8f0fe;color:#4285f4}
+/* Without "Sosyal medya ve QR kartları" (6 Ekim): the other platforms' rows are faded buttons that open the lock card. */
+.social-row-locked{grid-template-columns:40px minmax(0,1fr) auto;align-items:center;width:100%;margin:0;background:none;border:0;border-top:1px solid var(--set-line,#edf0e9);border-radius:0;font:inherit;color:inherit;text-align:left;cursor:pointer;opacity:.62;transition:opacity .2s}
+.social-row-locked:hover,.social-row-locked:focus-visible{opacity:.95}
+.social-row-locked .social-row-main{gap:2px}
+.social-row-locked .social-row-main strong{font-size:14px}
+.social-row-locked .feature-locked-hint{margin-left:0}
+.social-qr-locked{opacity:.7}
+.social-qr-locked .feature-locked-hint{margin-left:4px}
+.social-settings .feature-locked-row{margin-bottom:6px}
+.social-qr-note{margin:12px 0 0}
+.social-qr-actions{align-items:center}
+.social-pdf{display:inline-flex;gap:6px;align-items:center;flex-wrap:nowrap;min-width:0}
+.social-qr-actions .social-pdf select{margin:0;min-height:44px;width:auto;min-width:0;flex:none;padding-right:28px}
+.social-qr-address{margin:0}
+.social-pick{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;border:0;min-width:0}
+.social-pick legend{margin-bottom:8px;padding:0}
+.social-pick-item{margin:0}
+.social-pick-item{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px 0 10px;border:1px solid var(--set-field,#d9e1d5);border-radius:99px;background:#fff;color:var(--ink);font-size:13px;cursor:pointer}
+.social-pick-item.on{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);background:#f4f8f1}
+.social-pick-item input{margin:0;accent-color:var(--green)}
+.social-pick-item svg{color:var(--green)}
+.social-combined .settings-actions{margin-top:2px}
+
+/* The card window: the PNG preview fits the window; the buttons wrap under it. */
+.social-qr-dialog{width:560px}
+.social-qr-body{display:grid;gap:14px;padding:18px 20px 20px;min-width:0}
+.social-card-stage{display:grid;place-items:center;min-height:220px;padding:12px;border-radius:14px;background:#f4f7f1}
+.social-card-preview{display:block;width:auto;max-width:100%;max-height:min(56dvh,520px);border-radius:10px;box-shadow:0 6px 22px #183b2f1f}
+.social-card-wait{font-size:13px;color:var(--muted)}
+.social-qr-actions .btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+.social-qr-body code{overflow-wrap:anywhere}
+@media (max-width:480px){.social-qr-body{padding:14px}.social-qr-actions .btn,.social-pdf{flex:1 1 100%;justify-content:center}.social-pdf .btn{flex:1 1 auto}.social-row{grid-template-columns:34px minmax(0,1fr);gap:10px}.social-row-icon{width:34px;height:34px;border-radius:10px}.social-row-locked{grid-template-columns:34px minmax(0,1fr) auto}}
+
+/* ---- Printed card (A4): only while printing; settings-qr.css hides the rest of the page ---- */
+.social-print-root{display:none}
+@media print{
+  .social-print-root{display:block}
+  .social-print-page{width:190mm;height:276mm;display:grid;place-items:center;break-after:page;page-break-after:always}
+  .social-print-page:last-child{break-after:auto;page-break-after:auto}
+  .social-print-card{display:flex;flex-direction:column;align-items:center;gap:4mm;width:150mm;padding:12mm 10mm;border:.4mm solid #bbb;border-radius:8mm;text-align:center;color:#111}
+  .combined .social-print-card{width:186mm;padding:9mm 8mm;gap:3mm}
+  .social-print-head{display:flex;flex-direction:column;align-items:center;gap:2mm}
+  .social-print-head img{width:20mm;height:20mm;border-radius:50%;object-fit:cover}
+  .social-print-head strong{font-size:14pt}
+  .social-print-mark{display:grid;place-items:center;width:17mm;height:17mm;border-radius:50%;border:.5mm solid #111}
+  .social-print-card h1{margin:0;font-family:Arial,Helvetica,sans-serif;font-size:22pt;font-weight:700;line-height:1.2}
+  .social-print-card small{font-size:9pt;color:#444}
+  .single .social-print-qr{width:92mm;height:92mm}
+  .social-print-handle{font-size:16pt}
+  .social-print-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4mm;width:100%;margin-top:2mm}
+  .count-1 .social-print-grid{grid-template-columns:1fr}
+  .count-5 .social-print-grid,.count-6 .social-print-grid,.count-7 .social-print-grid,.count-8 .social-print-grid,.count-9 .social-print-grid{grid-template-columns:repeat(3,1fr)}
+  .social-print-cell{display:flex;flex-direction:column;align-items:center;gap:2mm;padding:4mm;border:.3mm dashed #999;border-radius:4mm}
+  .social-print-name{display:inline-flex;align-items:center;gap:2mm;font-size:12pt;font-weight:700}
+  .social-print-cell .social-print-qr{width:62mm;height:62mm}
+  .count-1 .social-print-cell .social-print-qr{width:90mm;height:90mm}
+  .count-5 .social-print-qr,.count-6 .social-print-qr{width:50mm;height:50mm}
+  .count-7 .social-print-qr,.count-8 .social-print-qr,.count-9 .social-print-qr{width:40mm;height:40mm}
+  .social-print-cell .social-print-handle{font-size:10.5pt;overflow-wrap:anywhere}
+}

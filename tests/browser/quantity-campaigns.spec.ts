@@ -1,0 +1,90 @@
+import { test, expect } from '@playwright/test';
+import { ensureSetup, openView } from './helpers';
+
+test('quantity offer follows basket changes and saved terms on order edits, with correct payment and report', async ({ page, browser }, info) => {
+  await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } });
+  await ensureSetup(page.request);
+  const initial = await (await page.request.get('/api/staff/state')).json();
+  const table = initial.tables.find((t: any) => !t.account && !t.needsCleaning);
+  expect(table).toBeTruthy();
+  await page.request.post('/api/staff/settings', { data: { changeSeconds: 600, commissionBps: initial.commissionBps } });
+  await page.goto('/'); await openView(page, 'Kampanyalar');
+  await page.getByRole('button', { name: 'Kampanya ekle', exact: true }).click();
+  const editor = page.getByRole('dialog');
+  await editor.getByLabel('Kampanya adı').fill('İki çay fırsatı');
+  await editor.getByLabel('İndirim türü').selectOption('fixed');
+  await editor.getByLabel('İndirim tutarı (TL)').fill('10');
+  await editor.getByRole('checkbox', { name: 'Adet koşulu ekle' }).check();
+  await editor.getByLabel('En az kaç adet?').fill('21');
+  await expect(editor.getByRole('button', { name: 'Kampanyayı kaydet' })).toBeDisabled();
+  await editor.getByLabel('En az kaç adet?').fill('2');
+  await editor.getByRole('button', { name: /Menüden seç/ }).click();
+  const picker = page.getByRole('dialog', { name: 'Menüden kampanya ürünü seç' });
+  await picker.getByRole('button', { name: /Demleme Çay/ }).click();
+  await picker.getByRole('button', { name: /Seçimi tamamla/ }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('quantity-owner-mobile.png') });
+  await editor.getByRole('button', { name: 'Kampanyayı kaydet' }).click();
+  const card = page.locator('.campaign-card').filter({ hasText: 'İki çay fırsatı' });
+  await expect(card).toContainText('2 adet ve üzeri');
+  // No weekly schedule chosen: an ordinary date-range campaign, active right away.
+  await expect(card).toContainText('Aktif · 1 ürün');
+  expect((await (await page.request.get('/api/staff/campaigns')).json()).campaigns.find((c: any) => c.name === 'İki çay fırsatı').schedule).toBeUndefined();
+  const customer = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  try {
+    const guest = await customer.newPage();
+    await guest.goto(`/m/${table.token}`);
+    const product = guest.getByRole('button', { name: /Demleme Çay/ });
+    await expect(product).toContainText('₺35');
+    async function add() { await product.click(); await guest.getByRole('button', { name: /Sepete ekle/ }).click(); }
+    await product.click();
+    await expect(guest.getByRole('dialog')).toContainText('2 adet ve üzeri');
+    await expect(guest.getByRole('button', { name: /Sepete ekle/ })).toContainText('₺35');
+    await guest.getByRole('button', { name: 'Adedi artır' }).click();
+    await expect(guest.getByRole('button', { name: /Sepete ekle/ })).toContainText('₺50');
+    await guest.screenshot({ path: info.outputPath('quantity-product-mobile.png') });
+    await guest.getByRole('button', { name: 'Adedi azalt' }).click();
+    await guest.getByRole('button', { name: /Sepete ekle/ }).click();
+    await add();
+    await expect(guest.getByRole('button', { name: /Sepet(imi|i) görüntüle/ })).toContainText('₺50');
+    await guest.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
+    // The same tea twice is one line of 2 (8 Ekim denetimi K8): one less brings the single price back.
+    await expect(guest.getByRole('dialog').getByRole('button', { name: 'Ürünü kaldır' })).toHaveCount(1);
+    await guest.getByRole('button', { name: 'Demleme Çay adedini azalt' }).click();
+    await expect(guest.getByRole('dialog').locator('.total-line')).toContainText('₺35');
+    await guest.getByRole('dialog').getByRole('button', { name: 'Kapat', exact: true }).click();
+    await add();
+    await guest.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
+    await guest.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
+    await guest.getByRole('button', { name: 'Tamam', exact: true }).click();
+    const order = (await (await page.request.get('/api/staff/state')).json()).orders.find((o: any) => o.tableName === table.name && !initial.orders.some((old: any) => old.id === o.id));
+    expect(order.total).toBe(5000);
+    expect(order.lines[0].quantityPricing.offers[0].minQuantity).toBe(2);
+    await card.getByRole('button', { name: 'Kampanyayı düzenle' }).click();
+    await expect(editor.getByLabel('En az kaç adet?')).toHaveValue('2');
+    await editor.getByRole('checkbox', { name: 'Kampanya etkin', exact: true }).uncheck();
+    await editor.getByRole('button', { name: 'Kampanyayı kaydet' }).click();
+    await guest.getByRole('button', { name: /Siparişlerim/ }).click();
+    await guest.getByRole('button', { name: /Siparişi değiştir/ }).click();
+    // One line of 2 (K8): down to 1.
+    await guest.getByLabel('Demleme Çay adet').fill('1');
+    await expect(guest.getByRole('dialog').locator('.total-line')).toContainText('₺35');
+    await guest.getByRole('button', { name: 'Değişiklikleri kaydet', exact: true }).click();
+    await expect(guest.getByRole('dialog')).toHaveCount(0);
+    await guest.getByRole('button', { name: /Siparişi değiştir/ }).click();
+    await guest.getByLabel('Demleme Çay adet').fill('2');
+    await expect(guest.getByRole('dialog').locator('.total-line')).toContainText('₺50');
+    await guest.screenshot({ path: info.outputPath('quantity-edit-mobile.png') });
+    await guest.getByRole('button', { name: 'Değişiklikleri kaydet', exact: true }).click();
+    await expect(guest.getByRole('dialog')).toHaveCount(0);
+    const state = await (await page.request.get('/api/staff/state')).json();
+    const account = state.tables.find((t: any) => t.id === table.id).account;
+    expect(state.orders.find((o: any) => o.id === order.id).total).toBe(5000);
+    expect((await page.request.post('/api/staff/payments', { data: { requestId: crypto.randomUUID(), accountId: account.id, version: account.version, amount: 5000, tendered: 5000, method: 'cash' } })).ok()).toBe(true);
+    const report = await (await page.request.get('/api/staff/reports/campaigns')).json();
+    const period = report.campaigns.find((c: any) => c.name === 'İki çay fırsatı');
+    expect(period.minQuantity).toBe(2); expect(period.discount).toBe(2000); expect(period.appliedAmount).toBe(5000);
+    expect(await guest.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally { await customer.close(); }
+});

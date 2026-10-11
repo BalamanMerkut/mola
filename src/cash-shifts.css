@@ -1,0 +1,246 @@
+/*
+ * Gün sonu kasası, vardiya and bahşiş (src/CashDay.tsx, CashClosing.tsx, CashReports.tsx, Shifts.tsx). Same rhythm as
+ * Ayarlar and Satış ve Raporlar: white cards with a 16 px radius, an icon tile, quiet green tints, tabular figures.
+ * Colours of a difference: green none, red short (kasa açık), amber over (kasa fazla). Spacing scale 4 · 8 · 12 · 16 · 20.
+ */
+
+/* ---- Masalar: the cash day ---- */
+.cash-day{display:grid;gap:12px;margin:0 0 20px;min-width:0}
+.cash-strip{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;padding:12px 14px 12px 16px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px #1c2e240a;min-width:0}
+.cash-strip-state{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 240px}
+.cash-strip-icon{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:12px;background:#eaf1e5;color:var(--green)}
+.cash-strip-state>div{min-width:0}
+.cash-strip-state strong{display:block;font-size:15px;line-height:1.35;color:var(--ink)}
+.cash-strip-state small{display:block;font-size:12.5px;line-height:1.5;color:#6e7b6c;overflow-wrap:anywhere}
+.cash-strip-state small.cash-strip-warn{color:#a3401f;font-weight:600}
+.cash-strip.after-close{border-color:#e7c79a;background:#fffaf2}
+.cash-strip-actions{display:flex;gap:8px;flex-wrap:wrap;min-width:0;margin-left:auto}
+.cash-strip-actions .btn{margin:0;min-height:42px;gap:7px}
+@media (max-width:620px){.cash-strip-actions{width:100%}.cash-strip-actions .btn{flex:1 1 auto}}
+.cash-alert{display:flex;align-items:center;gap:12px 14px;flex-wrap:wrap;padding:14px 16px;border-radius:14px;background:#eef4ea;border:1px solid #d3e2cb;color:#2f4f38;min-width:0}
+.cash-alert.warn{background:#fff6e8;border-color:#f0dcb6;color:#7a4d10}
+.cash-alert>svg{flex:none}
+.cash-alert>div{flex:1 1 240px;min-width:0;display:grid;gap:2px}
+.cash-alert strong{font-size:14.5px;line-height:1.4}
+.cash-alert span{font-size:13px;line-height:1.5}
+.cash-alert .btn{margin:0}
+@media (max-width:620px){.cash-alert .btn{width:100%}}
+
+.cash-opening{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.15fr);gap:14px 18px;align-items:start;padding:18px 20px;background:linear-gradient(135deg,#fdfefb,#f1f6ee);border:1.5px solid #c9dcc0;border-radius:16px;min-width:0}
+.cash-opening-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#fff3dc;color:#a06414}
+.cash-opening-copy{min-width:0}
+.cash-opening-copy h2{margin:2px 0 4px;font-size:17px;line-height:1.35;color:var(--ink);letter-spacing:-.2px}
+.cash-opening-copy p{margin:0;font-size:13.5px;line-height:1.55;color:#4e5f50}
+.cash-opening-form{display:grid;gap:10px;min-width:0}
+.cash-opening-form label{margin:0}
+.cash-opening-form .notice{margin:0}
+.cash-opening-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.cash-opening-actions .btn{margin:0}
+.cash-opening-diff{margin:0;font-size:13px;color:#4e5f50}
+@media (max-width:860px){.cash-opening{grid-template-columns:auto minmax(0,1fr)}.cash-opening-form{grid-column:1/-1}.cash-opening-actions{justify-content:stretch}.cash-opening-actions .btn{flex:1 1 auto}}
+
+/* ---- Closing dialog ---- */
+.cash-segment{display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;margin:0 0 14px;border-radius:12px;background:#eaefe6;max-width:100%;box-sizing:border-box}
+.cash-segment button{min-height:42px;padding:0 16px;border:0;border-radius:9px;background:transparent;color:#5d6a60;font-weight:500;font-size:13.5px}
+.cash-segment button:hover{color:var(--ink)}
+.cash-segment button.selected{background:#fff;color:var(--green);font-weight:650;box-shadow:0 1px 3px #1c2e2420}
+.cash-segment.small{display:flex;width:fit-content}
+.cash-segment.small button{min-height:40px;font-size:12.5px}
+.cash-segment.wrap{display:flex}
+.cash-segment.wrap button{flex:1 1 auto}
+.cash-lead{font-size:13.5px;line-height:1.6;color:#4e5f50;margin:0 0 14px}
+.cash-dialog form>.notice{margin-bottom:14px}
+.cash-notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;margin:0 0 14px}
+.cash-notes label{display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;gap:2px 10px;margin:0;padding:8px 10px;border:1px solid #e4e9df;border-radius:12px;background:#fbfcfa;font-weight:500}
+.cash-note-face{grid-row:1/3;display:grid;place-items:center;height:40px;border-radius:8px;background:#e6f0e0;color:#2e5a40;font-weight:700;font-size:12.5px;white-space:nowrap}
+.cash-notes label.coin .cash-note-face{background:#f6efdf;color:#7b5a1d;border-radius:99px}
+.cash-notes input{margin:0!important;min-height:40px!important;padding:6px 10px!important;text-align:right;font-variant-numeric:tabular-nums}
+.cash-notes small{font-size:11px;color:#6e7b6c;text-align:right;min-height:15px;font-variant-numeric:tabular-nums}
+.cash-counted{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 16px;border-radius:12px;background:#f3f6f0;margin:0 0 14px;color:#4e5f50}
+.cash-counted strong{font-size:24px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.4px}
+.cash-field{margin:0 0 14px}
+.cash-field small{display:block;margin-top:6px;font-weight:400}
+.cash-hint{margin:10px 0 0;text-align:center}
+.cash-result{min-width:0}
+.cash-result>.notice{margin-bottom:14px}
+.cash-difference{display:grid;justify-items:center;gap:2px;padding:18px;margin:0 0 16px;border-radius:16px;border:1.5px solid;text-align:center}
+.cash-difference span{font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase}
+.cash-difference strong{font-size:34px;line-height:1.2;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.cash-difference small{font-size:13px}
+.cash-difference.even{background:#eef6ea;border-color:#cfe2c6;color:#2f6b3a}
+.cash-difference.short{background:#fff2ee;border-color:#efcfc3;color:#9d3b26}
+.cash-difference.over{background:#fff8e6;border-color:#efdcab;color:#8a5a12}
+/* The counter's result (cashier, Müdür): neutral, never the fazla/eksik colours. */
+.cash-difference.blind{background:#f3f5f2;border-color:#d9e1d5;color:var(--ink)}
+.cash-difference.blind span{text-transform:none;letter-spacing:0;font-size:14px}
+.cash-difference.blind.done{background:#eef6ea;border-color:#cfe2c6}
+.cash-lines-total.negative dd{color:#9d3b26}
+.cash-result-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px 20px;margin:0 0 16px}
+.cash-result-grid h3{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:14px;color:var(--ink)}
+.cash-result-grid h3 svg{color:var(--green)}
+@media (max-width:680px){.cash-result-grid{grid-template-columns:minmax(0,1fr)}}
+.cash-lines{margin:0}
+.cash-lines>div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid #edf0e9;font-size:13px}
+.cash-lines dt{color:#4e5f50;min-width:0}
+.cash-lines dt small{display:block;font-size:11px;line-height:1.4;color:#8a9487}
+.cash-lines dd{margin:0;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cash-lines>.cash-lines-total{border-bottom:0;border-top:2px solid #d9e1d5;font-size:14.5px}
+.cash-lines-total dt{color:var(--ink);font-weight:700}
+.cash-lines>.cash-lines-quiet{border-bottom:0;opacity:.85}
+.cash-side{display:grid;gap:8px}
+.cash-side>div{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:2px 8px;padding:10px 12px;border:1px solid #edf0e9;border-radius:12px;font-size:13px;background:#fbfcfa}
+.cash-side>div>svg{color:var(--green)}
+.cash-side strong{font-variant-numeric:tabular-nums;white-space:nowrap}
+.cash-side small{grid-column:2/-1;font-size:11.5px;color:#6e7b6c}
+.cash-diff-text.short{color:#a3402a!important}.cash-diff-text.over{color:#8a5a12!important}.cash-diff-text.even{color:#2f6b3a!important}
+.cash-finish{display:grid;margin:0 0 4px}
+.cash-slip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.cash-slip-actions .btn{margin:0}
+.cash-slip-actions .notice{flex-basis:100%;margin:4px 0 0}
+.cash-movement .cash-segment{width:100%}
+.cash-movement-list{margin-top:18px;padding-top:14px;border-top:1px solid #edf0e9}
+.cash-movement-list h3,.cash-detail-list h4{margin:0 0 8px;font-size:13.5px;color:var(--ink)}
+.cash-movement-list ul,.cash-detail-list ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.cash-movement-list li,.cash-detail-list li{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;padding:8px 10px;border-radius:10px;background:#f6f8f3;font-size:13px}
+.cash-movement-list li small,.cash-detail-list li small{grid-column:2/-1;font-size:11.5px;color:#6e7b6c;overflow-wrap:anywhere}
+.cash-movement-list li>span:first-child,.cash-detail-list li>span:first-child{color:#6e7b6c;font-variant-numeric:tabular-nums}
+.cash-movement-list li>span:nth-child(3),.cash-detail-list li>span:nth-child(3){font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---- Satış ve Raporlar: Kasa kapanışları ---- */
+.reports-v2 .cash-kpis{margin-bottom:16px}
+.cash-kpi.short>strong{color:#9d3b26}.cash-kpi.over>strong{color:#8a5a12}.cash-kpi.even>strong{color:#2f6b3a}
+.reports-v2 .kpi>strong.cash-kpi-text{font-size:18px;line-height:1.4}
+.cash-badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:99px;font-size:12.5px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cash-badge.even{background:#e7f2e2;color:#2f6b3a}.cash-badge.short{background:#fde9e3;color:#9d3b26}.cash-badge.over{background:#fdf1d8;color:#8a5a12}
+.cash-people,.cash-openings{margin:0 0 16px}
+.cash-trend{position:relative;display:inline-flex;align-items:center;gap:3px;height:30px;padding:0 2px}
+.cash-trend::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px dashed #d4dccf}
+.cash-trend i{position:relative;width:6px;border-radius:2px;background:#9cc39a}
+.cash-trend i.short{background:#d9826a;transform:translateY(50%)}.cash-trend i.over{background:#d9b25f;transform:translateY(-50%)}.cash-trend i.even{background:#9cc39a}
+@media (max-width:700px){.reports-v2 .cash-people .cash-trend-col{display:none}}
+.reports-v2 .cash-people td.cash-short{color:#9d3b26}.reports-v2 .cash-people td.cash-over{color:#8a5a12}
+.cash-openings ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.cash-openings li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 0;border-bottom:1px solid #f0f2ec;font-size:13px}
+.cash-openings li small{grid-column:1/-1;color:#6e7b6c;font-size:11.5px}
+.cash-closing-list{display:grid;gap:10px}
+.cash-closing-more{display:block;margin:12px auto 0;min-height:44px}
+.reports-v2 .cash-closing-card{padding:0;overflow:hidden}
+.cash-closing-head{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,1.4fr) auto 20px;align-items:center;gap:12px 16px;width:100%;margin:0;padding:14px 18px;border:0;background:transparent;text-align:left;color:inherit;font:inherit;cursor:pointer;min-height:64px}
+.cash-closing-head:hover{background:#fafcf8}
+.cash-closing-title{min-width:0}
+.cash-closing-title strong{display:block;font-size:14px;color:var(--ink)}
+.cash-closing-title small{display:block;font-size:12px;color:#6e7b6c;line-height:1.5}
+.cash-closing-figures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+.cash-closing-figures div{min-width:0}
+.cash-closing-head .cash-closing-figures dt{font-size:11px;line-height:1.4;color:#8a9487;text-align:left}
+.cash-closing-head .cash-closing-figures dd{margin:2px 0 0;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:left}
+.cash-chevron{color:#8a9487;transition:transform .15s}
+[aria-expanded=true]>.cash-chevron,[aria-expanded=true] .cash-chevron{transform:rotate(180deg)}
+.cash-closing-note{margin:0;padding:0 18px 12px;font-size:13px;color:#4e5f50;overflow-wrap:anywhere}
+.cash-closing-details{display:grid;gap:14px;padding:16px 18px 18px;border-top:1px solid #edf0e9;background:#fcfdfb}
+.cash-closing-details .cash-result-grid{margin:0}
+.cash-detail-list .btn{margin:8px 0 0}
+@media (max-width:760px){
+  .cash-closing-head{grid-template-columns:minmax(0,1fr) auto 20px}
+  .cash-closing-figures{grid-column:1/-1;grid-row:2}
+}
+
+/* ---- Personel ve bahşiş ---- */
+.staff-table .staff-name{display:inline-flex;align-items:center;gap:6px;margin:0;padding:6px 0;border:0;background:none;color:var(--ink);font:inherit;font-weight:600;cursor:pointer;min-height:36px;text-align:left}
+.staff-table .staff-name svg:first-child{color:var(--green)}
+.reports-v2 .staff-table tbody th small{margin-top:0}
+.estimate-tag,.late-tag,.auto-tag{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:1px 7px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.estimate-tag{background:#eef2ea;color:#5b6a58}
+.late-tag{background:#fdeee7;color:#9d3b26;margin-left:0}
+.auto-tag{background:#f3efe2;color:#7a5d22;margin-left:0}
+.per-hour{position:relative;display:inline-flex;align-items:center;min-width:110px;padding:2px 6px;border-radius:6px;font-variant-numeric:tabular-nums;isolation:isolate}
+.per-hour i{position:absolute;inset:0 auto 0 0;z-index:-1;border-radius:6px;background:#e3eedd}
+.staff-shifts td{white-space:normal!important;background:#fafcf8}
+.staff-shifts ul{list-style:none;margin:0;padding:4px 0;display:grid;gap:6px}
+.staff-shifts li{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;font-size:12.5px}
+.staff-shifts li svg{color:var(--green)}
+.staff-shifts li .text-btn{margin-left:auto;padding:6px}
+@media (max-width:560px){
+  .reports-v2 .staff-table thead th:nth-child(2),.reports-v2 .staff-table tr.staff-line td:nth-child(2){display:table-cell}
+  .reports-v2 .staff-table thead th:nth-child(3),.reports-v2 .staff-table tr.staff-line td:nth-child(3){display:none}
+  .reports-v2 .staff-table th,.reports-v2 .staff-table td{padding-left:4px;padding-right:4px}
+  .per-hour{min-width:0}
+}
+
+/* ---- Vardiya: gate, code boxes, chip, counter code ---- */
+.shift-gate{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(circle at 20% 10%,#eef5ea,transparent 50%),#f6f7f4;box-sizing:border-box}
+.shift-gate-card{display:grid;justify-items:center;gap:14px;width:100%;max-width:420px;padding:28px 24px;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 36px #0c21150f;text-align:center;box-sizing:border-box}
+.shift-gate-icon{display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:#eaf1e5;color:var(--green);margin-top:6px}
+.shift-gate-card h1{margin:0;font-size:26px;letter-spacing:-.6px}
+.shift-gate-lead{margin:0;font-size:14px;line-height:1.6;color:#4e5f50}
+.shift-gate-card .text-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.shift-gate-card>.muted.small{margin:0}
+.shift-code-form{display:grid;gap:12px;width:100%}
+.shift-code-form .notice{margin:0;text-align:left}
+.shift-code-form .btn{margin:0}
+.code-boxes{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;width:100%;max-width:340px;margin:0 auto}
+.code-boxes input{position:absolute;inset:0;width:100%!important;height:100%!important;margin:0!important;padding:0!important;border:0!important;opacity:0;font-size:16px!important;cursor:text;z-index:1}
+.code-box{display:grid;place-items:center;aspect-ratio:3/4;min-height:52px;border:1.5px solid #d6dfd2;border-radius:12px;background:#fbfcfa;font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.code-box.filled{border-color:#a9c3a0;background:#fff}
+.code-box.current{border-color:var(--green);box-shadow:0 0 0 3px #d7e6d2}
+.code-boxes.disabled .code-box{opacity:.6}
+.shift-chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border:1px solid #cfe0c6;border-radius:99px;background:#eef6ea;color:#2f5a3e;font-size:12.5px;font-weight:600;white-space:nowrap}
+@media (max-width:440px){.shift-chip .shift-time{display:none}.shift-chip{min-height:32px;padding:0 10px}}
+.shift-dot{width:8px;height:8px;border-radius:50%;background:#3b8a4f;box-shadow:0 0 0 3px #3b8a4f30}
+.shift-end p{margin-bottom:14px}
+.counter-code{display:grid;gap:14px;justify-items:center;text-align:center}
+.counter-code-main{display:grid;justify-items:center;gap:10px}
+.counter-code-main img{border-radius:12px;border:1px solid #e4e9df;background:#fff}
+.counter-code-digits{font-size:54px;line-height:1.1;font-weight:700;letter-spacing:6px;color:var(--ink);font-variant-numeric:tabular-nums}
+.counter-code.compact .counter-code-digits{font-size:38px;letter-spacing:4px}
+.counter-code-note{margin:0;max-width:380px}
+.counter-code-open{width:100%;text-align:left;padding-top:14px;border-top:1px solid #edf0e9}
+.counter-code-open h3{display:flex;align-items:center;gap:6px;margin:0 0 8px;font-size:14px}
+.counter-code-open ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.counter-code-open li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 10px;border-radius:10px;background:#f6f8f3;font-size:13px}
+.counter-code-open li small{grid-column:1/-1;color:#6e7b6c}
+@media (max-width:420px){.counter-code-digits{font-size:42px;letter-spacing:4px}.code-boxes{gap:6px}.code-box{font-size:22px;min-height:46px}}
+.shift-plan-button{gap:6px;max-width:100%;white-space:normal}
+/* Çalışanlar → Vardiya planı: start and end side by side, seven even day chips (4 + 3 on a narrow phone), ⓘ for the text. */
+.shift-plan-form{display:grid;gap:16px}
+.shift-plan-lead{display:flex;align-items:center;gap:6px;margin:0;color:var(--muted);font-size:13px}
+.shift-plan-times{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:10px}
+.shift-plan-times label{display:grid;gap:6px;margin:0;font-size:13px;font-weight:600;color:var(--ink);min-width:0}
+.shift-plan-times input{margin:0;font-size:18px;text-align:center;min-height:48px}
+.shift-plan-dash{padding-bottom:13px;color:var(--muted);font-weight:600}
+.shift-plan-night{margin:-8px 0 0}
+.shift-plan-dayset{margin:0;padding:0;border:0;min-width:0;display:grid;gap:8px}
+.shift-plan-dayset legend{padding:0;margin:0 0 8px;font-size:13px;font-weight:600;color:var(--ink)}
+.shift-plan-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:0}
+.shift-plan-days button{width:100%;min-width:0;margin:0;box-sizing:border-box;min-height:44px;padding:0 2px;border:1px solid #dce3d9;border-radius:10px;background:#fff;color:#5d6a60;font-weight:600;font-size:13px}
+.shift-plan-days button.selected{background:var(--green);border-color:var(--green);color:#fff}
+.shift-plan-quick{display:flex;gap:14px}
+.shift-plan-quick .text-btn{min-height:36px;padding:0;font-size:13px}
+@media (max-width:380px){.shift-plan-days{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* ---- Ödeme al: "Bahşiş" ---- */
+.payment-tip{display:grid;gap:4px;margin:0 0 14px}
+.payment-tip label{margin:0}
+.payment-tip small{font-size:12px;line-height:1.5}
+.payment-tip-way{display:flex;gap:3px;width:fit-content;max-width:100%;padding:3px;border-radius:10px;background:#eaefe6}
+.payment-tip-way button{min-height:38px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#5d6a60;font-size:12.5px;font-weight:500}
+.payment-tip-way button.selected{background:#fff;color:var(--green);font-weight:650;box-shadow:0 1px 3px #1c2e2420}
+.payment-tip .text-btn{justify-self:start;padding:6px 0}
+.payment-tip-open{display:block;padding:8px 0;margin:-4px 0 10px;min-height:40px}
+
+/* ---- A4 closing slip: only the slip prints ---- */
+.cash-print-root{display:none}
+@media print{
+  body.cash-printing>*:not(.cash-print-root){display:none!important}
+  body.cash-printing .cash-print-root{display:block;color:#000;font:12pt/1.45 Arial,Helvetica,sans-serif;padding:0}
+  .cash-print-root h1{font-size:20pt;margin:0 0 4pt}
+  .cash-print-root h2{font-size:14pt;margin:0 0 4pt}
+  .cash-print-root h3{font-size:12pt;margin:14pt 0 4pt}
+  .cash-print-root table{width:100%;border-collapse:collapse;margin:10pt 0}
+  .cash-print-root th,.cash-print-root td{padding:4pt 2pt;border-bottom:.5pt solid #999;text-align:left}
+  .cash-print-root td{text-align:right;white-space:nowrap}
+  .cash-print-root tr.total th,.cash-print-root tr.total td{font-weight:700;border-bottom:1pt solid #000}
+  .cash-print-root ul{margin:0;padding-left:14pt}
+  .cash-print-foot{margin-top:18pt;font-size:9pt}
+  @page{size:A4;margin:16mm}
+}

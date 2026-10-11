@@ -1,0 +1,737 @@
+{
+  "format": 1,
+  "name": "Restoran başlangıç şablonu",
+  "categories": [
+    "Çorbalar",
+    "Ana Yemekler",
+    "Burgerler",
+    "Salatalar",
+    "Tatlılar",
+    "İçecekler"
+  ],
+  "subcategories": [
+    {
+      "category": "Çorbalar",
+      "names": []
+    },
+    {
+      "category": "Ana Yemekler",
+      "names": [
+        "Izgaralar",
+        "Tavuk yemekleri",
+        "Ev yemekleri"
+      ]
+    },
+    {
+      "category": "Burgerler",
+      "names": []
+    },
+    {
+      "category": "Salatalar",
+      "names": []
+    },
+    {
+      "category": "Tatlılar",
+      "names": [
+        "Sütlü tatlılar",
+        "Şerbetli tatlılar"
+      ]
+    },
+    {
+      "category": "İçecekler",
+      "names": [
+        "Soğuk içecekler",
+        "Sıcak içecekler"
+      ]
+    }
+  ],
+  "products": [
+    {
+      "id": "r-mercimek",
+      "code": "101",
+      "name": "Mercimek Çorbası",
+      "nameEn": "Lentil Soup",
+      "category": "Çorbalar",
+      "price": 9000,
+      "art": "soup",
+      "descriptionEn": "Cooked fresh daily; with lemon and crispy bread.",
+      "ingredients": "Kırmızı mercimek, soğan, havuç, tereyağı",
+      "ingredientsEn": "Red lentils, onion, carrot, butter",
+      "description": "Günlük pişer; limon ve kıtır ekmekle.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "portion",
+          "name": "Porsiyon",
+          "required": true,
+          "options": [
+            {
+              "id": "full",
+              "name": "Tam porsiyon",
+              "extra": 0
+            },
+            {
+              "id": "half",
+              "name": "Yarım porsiyon",
+              "extra": -3000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-ezogelin",
+      "code": "102",
+      "name": "Ezogelin Çorbası",
+      "nameEn": "Ezogelin Soup",
+      "category": "Çorbalar",
+      "price": 9000,
+      "art": "soup",
+      "descriptionEn": "With bulgur and mint, mildly spicy.",
+      "ingredients": "Mercimek, bulgur, pirinç, nane, pul biber",
+      "ingredientsEn": "Lentils, bulgur, rice, mint, chilli flakes",
+      "description": "Bulgur ve naneli, hafif acılı.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "portion",
+          "name": "Porsiyon",
+          "required": true,
+          "options": [
+            {
+              "id": "full",
+              "name": "Tam porsiyon",
+              "extra": 0
+            },
+            {
+              "id": "half",
+              "name": "Yarım porsiyon",
+              "extra": -3000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-tavuk-suyu",
+      "code": "103",
+      "name": "Tavuk Suyu Çorbası",
+      "nameEn": "Chicken Soup",
+      "category": "Çorbalar",
+      "price": 10000,
+      "art": "soup",
+      "descriptionEn": "Home-style, with vermicelli.",
+      "ingredients": "Tavuk, şehriye, limon",
+      "ingredientsEn": "Chicken, vermicelli, lemon",
+      "description": "Ev usulü, şehriyeli.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "portion",
+          "name": "Porsiyon",
+          "required": true,
+          "options": [
+            {
+              "id": "full",
+              "name": "Tam porsiyon",
+              "extra": 0
+            },
+            {
+              "id": "half",
+              "name": "Yarım porsiyon",
+              "extra": -3000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-adana",
+      "code": "201",
+      "name": "Adana Kebap",
+      "nameEn": "Adana Kebab",
+      "category": "Ana Yemekler",
+      "subtype": "Izgaralar",
+      "price": 42000,
+      "art": "food",
+      "descriptionEn": "Hand-minced lamb with flame-roasted pepper and tomato.",
+      "ingredients": "Kuzu eti, kuyruk yağı, pul biber",
+      "ingredientsEn": "Lamb, tail fat, chilli flakes",
+      "description": "Zırhla çekilmiş kuzu eti, közde biber ve domates.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "heat",
+          "name": "Acı tercihi",
+          "required": true,
+          "options": [
+            {
+              "id": "mild",
+              "name": "Acısız",
+              "extra": 0
+            },
+            {
+              "id": "hot",
+              "name": "Acılı",
+              "extra": 0
+            }
+          ]
+        },
+        {
+          "preset": "custom",
+          "id": "garnish",
+          "name": "Yanında",
+          "required": true,
+          "options": [
+            {
+              "id": "rice",
+              "name": "Pirinç pilavı",
+              "extra": 0
+            },
+            {
+              "id": "bulgur",
+              "name": "Bulgur pilavı",
+              "extra": 0
+            },
+            {
+              "id": "fries",
+              "name": "Patates kızartması",
+              "extra": 2000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-kofte",
+      "code": "202",
+      "name": "Izgara Köfte",
+      "nameEn": "Grilled Meatballs",
+      "category": "Ana Yemekler",
+      "subtype": "Izgaralar",
+      "price": 36000,
+      "art": "food",
+      "descriptionEn": "Beef mince with roasted pepper and bean salad.",
+      "ingredients": "Dana kıyma, soğan, baharat",
+      "ingredientsEn": "Beef mince, onion, spices",
+      "description": "Dana kıyma, közde biber ve piyaz.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "garnish",
+          "name": "Yanında",
+          "required": true,
+          "options": [
+            {
+              "id": "rice",
+              "name": "Pirinç pilavı",
+              "extra": 0
+            },
+            {
+              "id": "bulgur",
+              "name": "Bulgur pilavı",
+              "extra": 0
+            },
+            {
+              "id": "fries",
+              "name": "Patates kızartması",
+              "extra": 2000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-tavuk-sis",
+      "code": "203",
+      "name": "Tavuk Şiş",
+      "nameEn": "Chicken Shish",
+      "category": "Ana Yemekler",
+      "subtype": "Tavuk yemekleri",
+      "price": 32000,
+      "art": "food",
+      "descriptionEn": "Yoghurt-marinated, with roasted vegetables.",
+      "ingredients": "Tavuk göğsü, yoğurt, biber salçası",
+      "ingredientsEn": "Chicken breast, yoghurt, pepper paste",
+      "description": "Yoğurtlu marinasyon, közde sebzeler.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "garnish",
+          "name": "Yanında",
+          "required": true,
+          "options": [
+            {
+              "id": "rice",
+              "name": "Pirinç pilavı",
+              "extra": 0
+            },
+            {
+              "id": "bulgur",
+              "name": "Bulgur pilavı",
+              "extra": 0
+            },
+            {
+              "id": "fries",
+              "name": "Patates kızartması",
+              "extra": 2000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-tavuk-sote",
+      "code": "204",
+      "name": "Tavuk Sote",
+      "nameEn": "Chicken Sauté",
+      "category": "Ana Yemekler",
+      "subtype": "Tavuk yemekleri",
+      "price": 29000,
+      "art": "food",
+      "descriptionEn": "Sautéed with mushrooms, peppers and tomatoes.",
+      "ingredients": "Tavuk, mantar, biber, domates",
+      "ingredientsEn": "Chicken, mushrooms, peppers, tomatoes",
+      "description": "Mantar, biber ve domatesle sotelenir.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "garnish",
+          "name": "Yanında",
+          "required": true,
+          "options": [
+            {
+              "id": "rice",
+              "name": "Pirinç pilavı",
+              "extra": 0
+            },
+            {
+              "id": "bulgur",
+              "name": "Bulgur pilavı",
+              "extra": 0
+            },
+            {
+              "id": "fries",
+              "name": "Patates kızartması",
+              "extra": 2000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-kuru-fasulye",
+      "code": "205",
+      "name": "Kuru Fasulye",
+      "nameEn": "White Bean Stew",
+      "category": "Ana Yemekler",
+      "subtype": "Ev yemekleri",
+      "price": 22000,
+      "art": "food",
+      "descriptionEn": "With butter, slow-cooked.",
+      "ingredients": "Kuru fasulye, domates, tereyağı",
+      "ingredientsEn": "White beans, tomato, butter",
+      "description": "Tereyağlı, ağır ateşte pişer.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "side",
+          "name": "Yanına",
+          "required": false,
+          "options": [
+            {
+              "id": "rice",
+              "name": "Pirinç pilavı",
+              "extra": 6000
+            },
+            {
+              "id": "pickle",
+              "name": "Turşu",
+              "extra": 3000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-burger",
+      "code": "301",
+      "name": "Klasik Burger",
+      "nameEn": "Classic Burger",
+      "category": "Burgerler",
+      "price": 32000,
+      "art": "burger",
+      "descriptionEn": "150 g beef patty, lettuce, tomato, pickles; served with fries.",
+      "ingredients": "Dana köfte, brioche ekmek, marul, domates, turşu",
+      "ingredientsEn": "Beef patty, brioche bun, lettuce, tomato, pickles",
+      "description": "150 g dana köfte, marul, domates, turşu; patates ile.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "doneness",
+          "name": "Pişme derecesi",
+          "required": true,
+          "options": [
+            {
+              "id": "medium",
+              "name": "Orta",
+              "extra": 0
+            },
+            {
+              "id": "well",
+              "name": "İyi pişmiş",
+              "extra": 0
+            },
+            {
+              "id": "rare",
+              "name": "Az pişmiş",
+              "extra": 0
+            }
+          ]
+        },
+        {
+          "preset": "custom",
+          "id": "extra",
+          "name": "Ekstra",
+          "required": false,
+          "options": [
+            {
+              "id": "cheddar",
+              "name": "Cheddar peyniri",
+              "extra": 4000
+            },
+            {
+              "id": "onion",
+              "name": "Karamelize soğan",
+              "extra": 3000
+            },
+            {
+              "id": "patty",
+              "name": "Ekstra köfte",
+              "extra": 12000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-cheeseburger",
+      "code": "302",
+      "name": "Cheeseburger",
+      "nameEn": "Cheeseburger",
+      "category": "Burgerler",
+      "price": 35000,
+      "art": "burger",
+      "descriptionEn": "Double cheddar, caramelised onion; served with fries.",
+      "ingredients": "Dana köfte, cheddar, soğan, brioche ekmek",
+      "ingredientsEn": "Beef patty, cheddar, onion, brioche bun",
+      "description": "Çift cheddar, karamelize soğan; patates ile.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "doneness",
+          "name": "Pişme derecesi",
+          "required": true,
+          "options": [
+            {
+              "id": "medium",
+              "name": "Orta",
+              "extra": 0
+            },
+            {
+              "id": "well",
+              "name": "İyi pişmiş",
+              "extra": 0
+            },
+            {
+              "id": "rare",
+              "name": "Az pişmiş",
+              "extra": 0
+            }
+          ]
+        },
+        {
+          "preset": "custom",
+          "id": "extra",
+          "name": "Ekstra",
+          "required": false,
+          "options": [
+            {
+              "id": "cheddar",
+              "name": "Cheddar peyniri",
+              "extra": 4000
+            },
+            {
+              "id": "onion",
+              "name": "Karamelize soğan",
+              "extra": 3000
+            },
+            {
+              "id": "patty",
+              "name": "Ekstra köfte",
+              "extra": 12000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-tavuk-burger",
+      "code": "303",
+      "name": "Tavuk Burger",
+      "nameEn": "Chicken Burger",
+      "category": "Burgerler",
+      "price": 28000,
+      "art": "burger",
+      "descriptionEn": "Crispy chicken, coleslaw; served with fries.",
+      "ingredients": "Tavuk göğsü, coleslaw, brioche ekmek",
+      "ingredientsEn": "Chicken breast, coleslaw, brioche bun",
+      "description": "Çıtır tavuk, coleslaw; patates ile.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "extra",
+          "name": "Ekstra",
+          "required": false,
+          "options": [
+            {
+              "id": "cheddar",
+              "name": "Cheddar peyniri",
+              "extra": 4000
+            },
+            {
+              "id": "onion",
+              "name": "Karamelize soğan",
+              "extra": 3000
+            },
+            {
+              "id": "patty",
+              "name": "Ekstra köfte",
+              "extra": 12000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-coban",
+      "code": "401",
+      "name": "Çoban Salata",
+      "nameEn": "Shepherd’s Salad",
+      "category": "Salatalar",
+      "price": 12000,
+      "art": "food",
+      "descriptionEn": "Tomato, cucumber, pepper, onion; with pomegranate molasses.",
+      "ingredients": "Domates, salatalık, biber, soğan, maydanoz",
+      "ingredientsEn": "Tomato, cucumber, pepper, onion, parsley",
+      "description": "Domates, salatalık, biber, soğan; nar ekşili.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "r-sezar",
+      "code": "402",
+      "name": "Sezar Salata",
+      "nameEn": "Caesar Salad",
+      "category": "Salatalar",
+      "price": 24000,
+      "art": "food",
+      "descriptionEn": "Romaine lettuce, parmesan, croutons, Caesar dressing.",
+      "ingredients": "Marul, parmesan, kruton, sezar sos",
+      "ingredientsEn": "Lettuce, parmesan, croutons, Caesar dressing",
+      "description": "Göbek marul, parmesan, kruton, sezar sos.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "extra",
+          "name": "Ekstra",
+          "required": false,
+          "options": [
+            {
+              "id": "chicken",
+              "name": "Izgara tavuk",
+              "extra": 8000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-sutlac",
+      "code": "501",
+      "name": "Fırın Sütlaç",
+      "nameEn": "Baked Rice Pudding",
+      "category": "Tatlılar",
+      "subtype": "Sütlü tatlılar",
+      "price": 12000,
+      "art": "cake",
+      "descriptionEn": "Fresh milk, browned in the oven.",
+      "ingredients": "Süt, pirinç, şeker",
+      "ingredientsEn": "Milk, rice, sugar",
+      "description": "Günlük süt, üzeri fırında kızarmış.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "r-kunefe",
+      "code": "502",
+      "name": "Künefe",
+      "nameEn": "Künefe",
+      "category": "Tatlılar",
+      "subtype": "Şerbetli tatlılar",
+      "price": 22000,
+      "art": "cake",
+      "descriptionEn": "Served hot with Hatay cheese and pistachios.",
+      "ingredients": "Tel kadayıf, künefe peyniri, şerbet, fıstık",
+      "ingredientsEn": "Shredded kadayıf pastry, künefe cheese, syrup, pistachios",
+      "description": "Hatay peyniriyle sıcak servis, Antep fıstıklı.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "service",
+          "id": "service",
+          "name": "Servis tercihi",
+          "required": false,
+          "options": [
+            {
+              "id": "plain",
+              "name": "Sade",
+              "extra": 0
+            },
+            {
+              "id": "icecream",
+              "name": "Dondurmalı",
+              "extra": 3500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "r-ayran",
+      "code": "601",
+      "name": "Ayran",
+      "nameEn": "Ayran",
+      "category": "İçecekler",
+      "subtype": "Soğuk içecekler",
+      "price": 4500,
+      "art": "cold",
+      "descriptionEn": "Frothy, traditional churned ayran.",
+      "description": "Köpüklü, yayık ayranı.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "r-kola",
+      "code": "602",
+      "name": "Kola",
+      "nameEn": "Cola",
+      "category": "İçecekler",
+      "subtype": "Soğuk içecekler",
+      "price": 6000,
+      "art": "cold",
+      "descriptionEn": "330 ml can.",
+      "description": "330 ml kutu.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "r-su",
+      "code": "603",
+      "name": "Su",
+      "nameEn": "Water",
+      "category": "İçecekler",
+      "subtype": "Soğuk içecekler",
+      "price": 2000,
+      "art": "cold",
+      "descriptionEn": "500 ml.",
+      "description": "500 ml.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "r-cay",
+      "code": "604",
+      "name": "Çay",
+      "nameEn": "Turkish Tea",
+      "category": "İçecekler",
+      "subtype": "Sıcak içecekler",
+      "price": 2500,
+      "art": "tea",
+      "descriptionEn": "Freshly brewed, served in a tulip glass.",
+      "description": "İnce belli bardakta, taze demlenmiş.",
+      "soldOut": false,
+      "published": true,
+      "groups": []
+    },
+    {
+      "id": "r-turk-kahvesi",
+      "code": "605",
+      "name": "Türk Kahvesi",
+      "nameEn": "Turkish Coffee",
+      "category": "İçecekler",
+      "subtype": "Sıcak içecekler",
+      "price": 7000,
+      "art": "coffee",
+      "descriptionEn": "After your meal, with Turkish delight.",
+      "description": "Yemek sonrası, lokumla.",
+      "soldOut": false,
+      "published": true,
+      "groups": [
+        {
+          "preset": "custom",
+          "id": "sugar",
+          "name": "Şeker tercihi",
+          "required": true,
+          "options": [
+            {
+              "id": "none",
+              "name": "Sade",
+              "extra": 0
+            },
+            {
+              "id": "medium",
+              "name": "Orta",
+              "extra": 0
+            },
+            {
+              "id": "sweet",
+              "name": "Şekerli",
+              "extra": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

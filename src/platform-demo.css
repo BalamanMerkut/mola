@@ -1,0 +1,10 @@
+/* Mola Yönetim → işletme → Hizmet → "Tanıtım işletmesi" (src/PlatformDemo.tsx). */
+.demo-section .demo-reset{display:grid;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid #e3e8e2}
+.demo-section .demo-reset label:not(.demo-template):not(.checkbox-line){display:grid;gap:6px;max-width:260px}
+.demo-section .demo-templates{display:flex;flex-wrap:wrap;gap:8px}
+.demo-section .demo-template{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid #d6ddd5;border-radius:10px;background:#fff;cursor:pointer;font-weight:600}
+.demo-section .demo-template.selected{border-color:#234c3e;box-shadow:0 0 0 3px #234c3e22}
+.demo-section .demo-template input{width:auto;margin:0}
+.demo-section .demo-status{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#f3f6f1;font-size:13px}
+.demo-section .demo-status.failed,.demo-section .demo-status.expired{background:#fbefed;color:#8a2c2c}
+.demo-section .demo-status.pending{background:#fff7e6;color:#6d4a06}

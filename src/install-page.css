@@ -1,0 +1,26 @@
+/* /uygulama (src/InstallPage.tsx): one centred column of plain cards; phones first. */
+/* Safe-area insets come from body (app-shell.css). */
+.install-page{max-width:720px;margin:0 auto;padding:20px 16px 32px;color:var(--ink)}
+.install-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.install-back{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-size:13px;text-decoration:none;padding:8px 0}
+.install-page h1{font-family:Georgia,serif;font-weight:400;font-size:30px;line-height:1.2;margin:0 0 10px;overflow-wrap:anywhere}
+.install-lead{font-size:15px;line-height:1.6;color:#4c5d50;margin:0 0 20px}
+.install-page>.notice{margin-bottom:18px}
+.install-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;min-width:0}
+.install-card-head{display:flex;align-items:center;gap:10px;color:var(--green);margin-bottom:14px}
+.install-card-head h2{margin:0;font-size:18px;font-weight:600;color:var(--ink)}
+.install-card-note{margin:0 0 14px;line-height:1.6}
+.install-card>.notice{margin-bottom:14px}
+.install-download{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.install-download .btn,.install-card>.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.install-download .btn{font-size:15px;padding:14px 20px}
+.install-steps{margin:0 0 16px;padding-left:22px;display:grid;gap:12px;line-height:1.6}
+.install-steps li{padding-left:4px}
+.install-steps b{font-weight:600;color:var(--green)}
+.install-steps.illustrated{list-style:none;padding:0;counter-reset:step}
+.install-steps.illustrated li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;padding:0;counter-increment:step}
+.install-steps.illustrated li>div::before{content:counter(step) ". ";font-weight:700;color:var(--green)}
+.install-picture{display:block;width:72px;height:112px}
+.install-card p.muted{margin:12px 0 0}
+.install-foot{margin:6px 0 0;line-height:1.6}
+@media(max-width:380px){.install-page h1{font-size:25px}.install-card{padding:16px}.install-steps.illustrated li{grid-template-columns:56px minmax(0,1fr);gap:10px}.install-picture{width:56px;height:87px}}
