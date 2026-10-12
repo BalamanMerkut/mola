@@ -8,7 +8,7 @@ Bu belgedeki değerler:
 
 | Değer | Ne |
 |---|---|
-| `molayazilim.com.tr` | Alan adınız (Metunic). Site `molayazilim.com.tr`, Mola Yönetim `merkez.molayazilim.com.tr`, masa QR menüsü `menu.molayazilim.com.tr` |
+| `molayazilim.com.tr` | Alan adınız (Metunic'te kayıtlı, DNS'i ücretsiz Cloudflare'de). Site `molayazilim.com.tr`, Mola Yönetim `merkez.molayazilim.com.tr`, masa QR menüsü `menu.molayazilim.com.tr` |
 | `203.0.113.10` | **Örnek** IP: sunucunuzun gerçek IP adresiyle değiştirin (VDS firması verir) |
 | `yonetici` | Sunucuda sizin kullanıcı adınız |
 
@@ -28,15 +28,15 @@ Her adımı yaptıkça kutusunu işaretleyin. Parola, kurtarma kodu ve anahtar p
 
 ### B. Satın alma
 
-- [ ] VDS: **Ubuntu 24.04 LTS**, en az 1 işlemci, 2 GB bellek, 20 GB disk, sabit IPv4 (aday: Keyubu ya da İsimtescil). Kurulum ekranında SSH açık anahtarınızı yapıştırın (§2, §3).
+- [ ] VDS: **Ubuntu 24.04 LTS**, en az 1 işlemci, 2 GB bellek, 20 GB disk, sabit IPv4. Alınan (12 Ekim 2026): Keyubu/Datacasa VDS L-TR 6GB, İstanbul, 170 GB disk. Kurulum ekranında SSH açık anahtarınızı yapıştırın (§2, §3).
 - [ ] VDS panelinde iki adımlı girişi açın; panel şifresi şifre yöneticisinde (§14).
 - [ ] Sunucunun IP adresini not edin (kapaktaki kutu). Bu belgede `203.0.113.10` gördüğünüz her yere o gelir.
-- [ ] Alan adı paneline (Metunic) girebildiğinizi deneyin.
+- [ ] Metunic paneline girebildiğinizi deneyin; ücretsiz bir Cloudflare hesabı açın (§5).
 
 ### C. Kurulum, adım adım (bir akşam, 2 ile 3 saat)
 
-1. [ ] **DNS:** Metunic panelinde dört A kaydı: `@`, `www`, `merkez`, `menu` → sunucu IP'si. `nslookup merkez.molayazilim.com.tr` IP'yi gösterene kadar bekleyin (§5).
-2. [ ] **İlk giriş ve kullanıcı:** `ssh root@<IP>`, `yonetici` kullanıcısını açın, anahtarla girişi deneyin, şifreyle ve root ile girişi kapatın (§3).
+1. [ ] **DNS:** Cloudflare'de dört A kaydı (`@`, `www`, `merkez`, `menu` → sunucu IP'si, hepsi **DNS only**, gri bulut), Metunic'te ad sunucularını Cloudflare'inkilerle değiştirin. `nslookup merkez.molayazilim.com.tr` IP'yi gösterene kadar bekleyin (§5).
+2. [ ] **İlk giriş ve kullanıcı:** `ssh root@<IP>`, `yonetici` kullanıcısını açın, anahtarla girişi deneyin, şifreyle ve root ile girişi `/etc/ssh/sshd_config.d/01-mola.conf` ile kapatın (§3).
 3. [ ] **Güncellemeler ve güvenlik duvarı:** yalnız 22, 80, 443 açık (§4).
 4. [ ] **Paket:** Windows'ta `npm.cmd run merkez:linux-paket` (§1), sunucuya kopyalayın, `sudo ./kur.sh` (§6).
 5. [ ] **Ayarlar:** `/etc/mola-merkez/ayarlar.env` içinde şu satırlar (§6, §13):
@@ -52,16 +52,18 @@ Her adımı yaptıkça kutusunu işaretleyin. Parola, kurtarma kodu ve anahtar p
 6. [ ] **Anahtar parolası (`MERKEZ_KEY_PASSPHRASE`):** `kur.sh` rastgele üretip `/etc/mola-merkez/anahtar-parolasi` dosyasına yazar; ayarlar onu `MERKEZ_KEY_PASSPHRASE_FILE` ile okur. `MERKEZ_KEY_PASSPHRASE=` satırını ayrıca **yazmayın** (parola ayar dosyasında görünmesin). Dosyanın bir kopyasını şifre yöneticisine alın: `sudo cat /etc/mola-merkez/anahtar-parolasi` (§6).
 7. [ ] **Caddy ve HTTPS:** Caddy'yi kurun, `/etc/caddy/Caddyfile`'ı §13'teki tam metinle değiştirin, `sudo caddy validate --config /etc/caddy/Caddyfile`, `sudo systemctl reload caddy` (§7, §13).
 8. [ ] **Mevcut Merkez verisini taşıyın:** Windows'ta Şimdi yedekle → `merkez:restore` → sunucuya kopyala → yerine koy → başlat → "Kodu kaydettim" → yeniden başlat (§8).
-9. [ ] **Deneyin:** `https://merkez.molayazilim.com.tr` → Mola Yönetim girişi; iki adımlı giriş açık (§8).
-10. [ ] **Site:** `npm.cmd run site:build`, yükleyin (§13 "Siteyi yükleme").
-11. [ ] **Sertleştirme:** §14'teki kontrol listesinin tamamı.
-12. [ ] **Okuma izni:** `mola-okuma` sudo kuralı ve `systemd-journal` grubu (§15.1).
-13. [ ] **Windows'ta araçlar:** `npm run vds:cek -- --kur --host yonetici@<IP>`, ilk bağlantı, parmak izini karşılaştırıp onaylama, ilk çekme (§15.2).
-14. [ ] **Google Drive zinciri:** Google Drive masaüstü uygulaması, `--ikinci "G:\Drive'ım"`, her gün 07:00 görevi (`--zamanla`, komutu siz çalıştırırsınız) (§15.3, §10).
-15. [ ] **Kafeleri yeni adrese geçirin:** eski (Windows) Merkez'de `MERKEZ_YENI_ADRES=https://merkez.molayazilim.com.tr` (§9).
-16. [ ] **Kendi deneme kafeniz:** açık tutun; en geç 10 dakikada yeni adrese geçer. Mola Yönetim'de "son görülme" güncellenmeli; masa QR'ını Wi-Fi'si kapalı bir telefonla okutun (§9, §13 "Denetim").
-17. [ ] **Kafe kurulum paketleri:** VDS Merkez'inin adresi ve açık anahtarıyla yeniden hazırlayın, siteye koyun, indirmeyi açın (`downloads.enabled: true`) (§13 "Uygulamayı indir").
+9. [ ] **Deneyin:** `https://merkez.molayazilim.com.tr` → Mola Yönetim girişi; iki adımlı giriş açık (§8). Bundan sonra Mola Yönetim yalnız bu adresten kullanılır (§8 "Eski Windows Mola Yönetim").
+10. [ ] **Kafe kurulum paketleri (yeni kafe kurmadan ÖNCE):** VDS Merkez'inin adresi ve açık anahtarıyla `npm.cmd run installer` (§13 "Uygulamayı indir", 1. adım).
+11. [ ] **Site:** `npm.cmd run site:indir`, `npm.cmd run site:build`, yükleyin (§13 "Uygulamayı indir" ve "Siteyi yükleme").
+12. [ ] **Sertleştirme:** §14'teki kontrol listesinin tamamı.
+13. [ ] **Okuma izni:** `mola-okuma` sudo kuralı ve `systemd-journal` grubu (§15.1).
+14. [ ] **Windows'ta araçlar:** `npm run vds:cek -- --kur --host yonetici@<IP>`, ilk bağlantı, parmak izini karşılaştırıp onaylama, ilk çekme (§15.2).
+15. [ ] **Google Drive zinciri:** Google Drive masaüstü uygulaması, `--ikinci "G:\Drive'ım"`, her gün 07:00 görevi (`--zamanla`, komutu siz çalıştırırsınız) (§15.3, §10).
+16. [ ] **Kafeleri yeni adrese geçirin:** eski (Windows) Merkez'de `MERKEZ_YENI_ADRES=https://merkez.molayazilim.com.tr` (§9).
+17. [ ] **Kendi deneme kafeniz:** açık tutun; en geç 10 dakikada yeni adrese geçer. Mola Yönetim'de "son görülme" güncellenmeli; masa QR'ını Wi-Fi'si kapalı bir telefonla okutun (§9, §13 "Denetim").
 18. [ ] **Dışarıdan takip:** UptimeRobot benzeri bir hizmete sağlık adresi ve site (§12).
+
+> **Yeni kafeyi yalnız VDS adresiyle hazırlanmış paketle kurun (10. adım).** Eski paket Merkez adresini (`127.0.0.1` ya da Windows Merkez) içinde taşır: kurulan kafe etkinleştirme kodunu eski Merkez'e sorar ve "kod geçersiz" der. Böyle kurulduysa Mola'yı "Verileri ve yedekleri de sil" işaretli kaldırıp yeni paketle kurun. Paketin hangi Merkez'e bağlı olduğunu `site:indir`'in son satırı söyler.
 
 ### D. İlk gün testleri
 
@@ -183,7 +185,11 @@ Merkez'in kendi portu (4000) dışarıya **açılmaz**; yalnız sunucunun içind
 
 ## 5. Alan adı (DNS)
 
-Alan adı panelinde (Metunic) dört **A kaydı** ekleyin, hepsi sunucunun IP adresine:
+Alan adı Metunic'te kayıtlıdır; DNS'i **ücretsiz Cloudflare** yönetir (ana yol):
+
+1. Cloudflare'de hesap açın → **Add a site** → `molayazilim.com.tr` → **Free** plan.
+2. DNS → Records'ta aşağıdaki dört **A kaydı**; her birinde **Proxy status: DNS only (gri bulut)**.
+3. Cloudflare'in verdiği iki ad sunucusunu (`….ns.cloudflare.com`) Metunic panelinde alan adının ad sunucuları (nameserver) bölümüne yazın. Cloudflare "Active" diyene kadar bekleyin (birkaç dakika ile 24 saat).
 
 | Ad (host) | Tür | Değer | Ne için |
 |---|---|---|---|
@@ -192,7 +198,11 @@ Alan adı panelinde (Metunic) dört **A kaydı** ekleyin, hepsi sunucunun IP adr
 | `merkez` | A | `203.0.113.10` | Mola Merkez ve Mola Yönetim |
 | `menu` | A | `203.0.113.10` | Misafirlerin QR menüsü, kendi adresinde (§13) |
 
-Sunucunun bir IPv6 adresi de varsa aynı dört ad için AAAA kaydı ekleyebilirsiniz (zorunlu değil). Birkaç dakika sonra Windows'ta `nslookup merkez.molayazilim.com.tr` ve `nslookup menu.molayazilim.com.tr` sunucunuzun IP'sini göstermeli. HTTPS sertifikası ancak bundan sonra alınabilir.
+> **Turuncu bulut (Proxied) kullanmayın.** Bütün istekler Cloudflare'in adresinden gelir: Merkez'in misafir başına sınırları herkesi tek misafir sayar ve Caddy'nin sertifikası bozulur. Aynı nedenle Cloudflare'in ya da başka bir rehberin **"Only allow Cloudflare IPs"** (güvenlik duvarında yalnız Cloudflare adreslerine izin) önerisini **uygulamayın**: kafeler, misafirler ve sertifika doğrudan sunucuya gelir, hepsi kesilir.
+
+**Alternatif (Metunic DNS):** ad sunucuları Metunic'te kalırsa aynı dört A kaydını Metunic panelinde ekleyin.
+
+Sunucunun IPv6 adresi varsa aynı dört ad için AAAA kaydı da eklenebilir (zorunlu değil). Windows'ta `nslookup merkez.molayazilim.com.tr` ve `nslookup menu.molayazilim.com.tr` sunucunun IP'sini göstermeli (Cloudflare adresi değil); HTTPS sertifikası ancak bundan sonra alınır.
 
 ## 6. Mola Merkez'i kurun (systemd servisi)
 
@@ -283,6 +293,8 @@ Sağlık yanıtı `{"ok":true,"role":"merkez",...}` olmalı. Tarayıcıda `https
 
 Mola Yönetim → Ayarlar → Yedek "kurtarma kodunu kaydedin" derse: yedeği açarken yazdığınız kod budur; "Kodu kaydettim"e basın ve `sudo systemctl restart mola-merkez`. Bu açılışta veri anahtarı parola dosyasına kilitlenir (Ayarlar → Yedek'te "anahtar koruması: sunucu parolası").
 
+**Eski Windows Mola Yönetim:** taşıma bir kerelik kopyadır; Windows'taki Mola Yönetim bundan sonra VDS ile **eşitlenmez**, orada yapılan değişiklik kaybolur. Mola Yönetim'i yalnız `https://merkez.molayazilim.com.tr` adresinden kullanın (Edge'de "Bu siteyi uygulama olarak yükle" ile masaüstü simgesi olur). Windows Merkez yalnız kafeleri yeni adrese geçirmek için açık kalır (§9).
+
 **Çalışma klasörü:** Windows'ta Mola Yönetim → Ayarlar → Çalışma klasörü için bir Windows klasörü (ör. `C:\MolaCalisma`) seçtiyseniz sunucu onu kullanmaz, kendiliğinden `/var/lib/mola-merkez/calisma`'ya yazar. Orada "kapalı" seçtiyseniz sunucuda da kapalı kalır: aynı ekrandan `/var/lib/mola-merkez/calisma` yazıp açın.
 
 > Bazı işlemler güvenlik için yalnız Merkez'in kendi bilgisayarında yapılır (kurtarma kodunu ekranda göstermek, kilit ekranı). Kurtarma kodunu taşımadan **önce** Windows'taki Mola Yönetim'de kaydedin. Şifre unutulursa son çare: `sudo systemctl stop mola-merkez && sudo -u mola /opt/mola-merkez/sifre-sifirla.sh && sudo systemctl start mola-merkez`.
@@ -306,11 +318,7 @@ Açık olan her kafe en geç 10 dakikada geçer; kapalı olanlar açıldıkları
 
 **Kendi deneme kafeniz:** bilgisayarınızdaki deneme kafesi de aynı yolla geçer: duyuruyu açtıktan sonra kafeyi açık tutun. Geçtiğini üç yerden görün: Mola Yönetim'de (yeni adres) işletmenin "son görülme"si birkaç dakika önce; kafenin Destek → Bildirimler'inde ya da işlem geçmişinde "Merkez adresi değişti"; Ayarlar → Masalar ve QR'da "QR kodları internet adresini taşır (menu.molayazilim.com.tr/q/…) · Bağlı". Sonra masa QR'ını Wi-Fi'si kapalı bir telefonla okutun (§13 "Denetim"). Geçmiyorsa eski Merkez'in açık olduğunu ve `ayarlar.cmd` satırını denetleyin.
 
-Yeni kafe paketlerini artık yeni adresle hazırlayın (ayrıntı ve siteye koymak: §13 "Uygulamayı indir"):
-
-```powershell
-$env:MOLA_MERKEZ_URL="https://merkez.molayazilim.com.tr"; npm.cmd run installer
-```
+Yeni kafe paketleri yeni adres ve anahtarla hazırlanır (§13 "Uygulamayı indir", 1. adım).
 
 ## 10. Yedekler: üç yer ve geri yükleme provası
 
@@ -376,7 +384,7 @@ Tanıtım sitesi (Ana sayfa, Özellikler, Destek ve İletişim, yasal sayfalar) 
 
 ### DNS
 
-Alan adı panelinde (Metunic) dört **A kaydı**: `@` → sunucu IP'si, `www` → aynı IP, `merkez` → aynı IP, `menu` → aynı IP (§5'teki tablo).
+§5'teki dört A kaydı (`@`, `www`, `merkez`, `menu` → sunucu IP'si; Cloudflare'de gri bulut).
 
 ### Caddyfile (tamamı)
 
@@ -524,16 +532,16 @@ Caddy'yi yeniden başlatmak gerekmez. Telefon, WhatsApp ve e-posta `site/config.
 
 ### Uygulamayı indir (`/indir/`): kurulum dosyalarını sitede yayınlama
 
-Sitedeki "Uygulamayı indir" sayfası (`molayazilim.com.tr/indir/`) Windows, Mac (Apple Silicon / Intel) ve Linux kartlarını gösterir. `site/config.json` → `downloads.enabled` **false** iken her kart **"Yakında"** der ve hiçbir dosya bağlantısı yoktur. Bugünkü kurulum dosyaları bu bilgisayardaki Merkez'e (`http://127.0.0.1:4000`) bağlanır; bunlar siteye konmaz.
+`molayazilim.com.tr/indir/` Windows, Android (personel uygulaması, APK), Mac ve Linux kartlarını gösterir. Şu an (12 Ekim 2026) **Windows ve Android açık**, Mac ve Linux **"Yakında"** (dosyası `config.json`'da olmayan kart "Yakında" der; `downloads.enabled: false` iken hepsi). Varsayılan paketler `http://127.0.0.1:4000`'e bağlanır; siteye konmaz.
 
-VDS hazır olduktan sonra, sırasıyla:
+Yeni kafe kurmadan **önce**, sırasıyla:
 
 1. **VDS Merkez'i için kafe paketini hazırlayın** (Windows'ta, kaynak klasöründe; anahtar VDS'teki Merkez'in açık anahtarıdır, §8. Taşınan Merkez'de bu, Windows'taki `%LOCALAPPDATA%\Mola Yonetim\veri\merkez-public-key.txt` ile aynıdır):
    ```powershell
    $env:MOLA_MERKEZ_URL="https://merkez.molayazilim.com.tr"; $env:MOLA_MERKEZ_PUBLIC_KEY="C:\yol\merkez-public-key.txt"; npm.cmd run installer
    ```
    Sonundaki "Kafe paketlerinin Mola Merkezi" özeti "Adres: https://merkez.molayazilim.com.tr" demeli.
-2. **Dosyaları siteye alın:** `npm.cmd run site:indir`. Betik `.local\installer\Mola-<sürüm>` içinden Windows klasörünü `Mola-Windows-<sürüm>.zip` yapar, Mac ve Linux arşivlerini kopyalar (`site\dist\indir\`), her dosyanın boyutunu ve SHA-256'sını `site/config.json` → `downloads.files`'a ve `site\dist\indir\SHA256SUMS.txt`'ye yazar, siteyi yeniden derler. Sonunda dosyaların hangi Merkez'e bağlandığını yazar; `127.0.0.1` görürseniz 1. adıma dönün.
+2. **Dosyaları siteye alın:** `npm.cmd run site:indir`. Betik `.local\installer\Mola-<sürüm>` içinden Windows klasörünü `Mola-Windows-<sürüm>.zip` yapar, Mac ve Linux arşivlerini ve `.local\android\Mola.apk`'yı (`Mola-Android-<sürüm>.apk`) kopyalar (`site\dist\indir\`), her dosyanın boyutunu ve SHA-256'sını `site/config.json` → `downloads.files`'a ve `site\dist\indir\SHA256SUMS.txt`'ye yazar, siteyi yeniden derler. Sonunda dosyaların hangi Merkez'e bağlandığını yazar; `127.0.0.1` görürseniz 1. adıma dönün.
 3. **İndirmeyi açın:** `site/config.json` → `"downloads": { "enabled": true, … }`, sonra `npm.cmd run site:build` (derleme `site\dist\indir`'i silmez; dosya eksikse uyarır).
 4. **Yükleyin:** yukarıdaki gibi `scp -r .\site\dist …` ve `rsync`. `/indir/` altındaki dosyaları Caddy'nin `file_server`'ı verir; ek ayar gerekmez.
 5. **Deneyin:** başka bir bilgisayardan `https://molayazilim.com.tr/indir/` → Windows → İndir; ZIP'i açıp "Mola Kurulum.exe" → "Mola'yı etkinleştir" → "Kodum yok, başvuru yapacağım" → Mola Yönetim → Başvurular'da görünmeli.
@@ -558,7 +566,7 @@ Hangisini seçerseniz seçin, **kafelere toplu QR kartı bastırmadan önce** se
 Masa QR'ları menünün **kendi adresini** taşır: `https://menu.molayazilim.com.tr/q/<kod>/<masa kodu>` (`MERKEZ_MENU_ORIGIN`). Misafir QR'ı kendi mobil verisiyle ya da herhangi bir Wi-Fi'den açar; Mola Merkez misafirin isteklerini kafenin **kendi açtığı** tünele (kafeden dışa doğru tek WebSocket, kurulum anahtarıyla imzalı) geçirir. Kafede port açmak, modem ayarı ya da üçüncü bir hizmet gerekmez. Ayrıntı: GELISTIRICI_REHBERI bölüm 14e.
 
 * **Gerekli ayar (güvenlik, bulgu Y1):** `/etc/mola-merkez/ayarlar.env`'de `MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr`, DNS'te `menu` A kaydı ve yukarıdaki Caddyfile'daki `menu.` bloğu. Değer `PUBLIC_ORIGIN`'den ve siteden farklı bir https kök adresi olmalı; değilse yok sayılır ve `journalctl -u mola-merkez`'e "MERKEZ_MENU_ORIGIN yok sayıldı" yazılır (o zaman menü eskisi gibi `MERKEZ_SITE_ORIGIN`/`PUBLIC_ORIGIN` adresine düşer: düzeltin).
-* **Karar ve sıra:** **masa QR'larını toplu bastırmadan önce** verin. Kafe, Merkez'in bu sürümünü gördükten sonraki ilk kalp atışlarında (en geç yaklaşık 20 dakika) internet adresini alır; Ayarlar → Masalar ve QR'da "QR kodları internet adresini taşır (menu.molayazilim.com.tr/q/…) · Bağlı" yazar. Daha önce basılmış (Wi-Fi adresli) QR'lar için sahibe Masalar'da "Masa QR kodları internet adresiyle yeniden basılmalı" uyarısı çıkar. Eski internet adresiyle (`molayazilim.com.tr/q/…` ya da `merkez.…/q/…`) basılmış QR'lar yeniden basılmadan çalışır (Caddy ve Merkez `308` ile `menu.` adresine yönlendirir); bu yüzden onlar için uyarı çıkmaz.
+* **Karar ve sıra:** **masa QR'larını toplu bastırmadan önce** verin. Kafe (yeni etkinleşen kafe de) internet adresini iki kalp atışı sonra (10 ile 20 dakika) alır; o zamana kadar QR Wi-Fi adresini taşır, bu sürede QR basmayın. Sonra Ayarlar → Masalar ve QR'da "QR kodları internet adresini taşır (menu.molayazilim.com.tr/q/…) · Bağlı" yazar. Daha önce basılmış (Wi-Fi adresli) QR'lar için sahibe Masalar'da "Masa QR kodları internet adresiyle yeniden basılmalı" uyarısı çıkar. Eski internet adresiyle (`molayazilim.com.tr/q/…` ya da `merkez.…/q/…`) basılmış QR'lar yeniden basılmadan çalışır (Caddy ve Merkez `308` ile `menu.` adresine yönlendirir); bu yüzden onlar için uyarı çıkmaz.
 * **Uyumluluk:** yeni Merkez, kalp atışında `guest.menu-origin` der ve menü adresini verir; yeni kafe bu durumda QR'a hiçbir zaman Merkez'in kendi adresini koymaz. Eski kafe de verilen adresi (artık `menu.`) kullanır. Eski Merkez'e bağlı yeni kafe eskisi gibi davranır. Önce Merkez güncellenir, sonra kafeler.
 * **Ev ağı provası ve yerel denemeler:** `MERKEZ_MENU_ORIGIN` yokken hiçbir şey değişmez; yerel ağdaki Merkez'in (`http://192.168.x.x`) adresi zaten QR'a girmez, QR'lar kafenin Wi-Fi adresini taşır.
 * **Ne zaman açılmaz:** işletme askıda, lisansı bitmiş ya da dondurulmuş, kafe 14 gündür bağlanmamış ya da pakette "QR menü" yoksa Merkez kafeye sormadan "Bu işletmenin dijital menüsü şu anda kullanılamıyor." gösterir; kafe bilgisayarı kapalıysa ya da interneti yoksa menü Merkez'deki **kopyasından** açılır (sipariş kapalı: "Şu an sipariş alınamıyor, lütfen garsonunuza sorun."); kafe henüz kopya göndermemişse (eski sürüm) "Menü şu anda açılamıyor. Lütfen garsonunuza sorun." (sayfa 15 saniyede bir kendiliğinden yeniden dener).
@@ -609,7 +617,7 @@ Kurulumdan sonra bir kez, her maddeyi işaretleyerek geçin. Ayrıntılı gerek�
 - [ ] `ls -l /usr/local/sbin/mola-oku` → `root root`, `-rwxr-xr-x` (başkası değiştiremez).
 
 **Caddy**
-- [ ] DNS'te `menu` A kaydı (§5 ve §13). §13'teki Caddyfile (zaman aşımları, `request_body` sınırları, HSTS, `nosniff`, `menu.` bloğu yalnız `/q/*`, `merkez.` ve site bloklarında `/q/*` → `menu.` yönlendirmesi). `sudo caddy validate --config /etc/caddy/Caddyfile`.
+- [ ] DNS'te `menu` A kaydı; Cloudflare'de dört kayıt da gri bulut (DNS only), ufw'de "yalnız Cloudflare IP'leri" kuralı yok (§5). §13'teki Caddyfile (zaman aşımları, `request_body` sınırları, HSTS, `nosniff`, `menu.` bloğu yalnız `/q/*`, `merkez.` ve site bloklarında `/q/*` → `menu.` yönlendirmesi). `sudo caddy validate --config /etc/caddy/Caddyfile`.
 - [ ] Erişim kaydı (`log`) eklemeyin (gizlilik metni). Caddy'nin kendi hata kayıtları `journalctl -u caddy`'de kalır.
 - [ ] İsteğe bağlı (önerilir): Mola Yönetim'i yalnız sizin bağlantınızdan açın. Ev ya da ofis IP'niz sabitse `merkez.` bloğuna, `reverse_proxy`'den önce:
   ```
@@ -741,8 +749,12 @@ Yazdığı komut şuna benzer: `schtasks --% /Create /TN "Mola\VDS yedek cek" /T
 
 ### Sorun giderme
 
-| Ne yazıyor | Ne yapın |
+| Belirti | Ne yapın |
 |---|---|
+| `menu.` adresinde her istek **500** | Merkez sürümü eski (systemd kum havuzunda ağ adresleri okunamıyordu; 12 Ekim'de düzeltildi). Merkez'i güncelleyin (§11) |
+| Yeni kafe etkinleştirmede "kod geçersiz" | Kafe eski paketle (eski Merkez adresiyle) kurulmuş: §13 "Uygulamayı indir" 1. adımdaki paketle yeniden kurun (C bölümü, uyarı) |
+| Yeni kafenin masa QR'ı Wi-Fi adresini taşıyor | Normal: internet adresi iki kalp atışı (10 ile 20 dakika) sonra gelir |
+| Sertifika hatası ya da bütün misafirler aynı IP'den | Cloudflare'de kayıt turuncu bulutta: **DNS only** yapın (§5) |
 | "Sunucuya ulaşılamadı" | İnternet, sunucu açık mı (VDS paneli), IP doğru mu (`.local\vds.json`) |
 | "Sunucu girişi reddetti" | Anahtar sunucuda kayıtlı mı (§3); parolalı anahtar ssh-agent'ta mı (`ssh-add -l`) |
 | "parolasız okuma izni yok" | §15.1'deki sudo dosyası kurulmamış ya da kullanıcı adı farklı |

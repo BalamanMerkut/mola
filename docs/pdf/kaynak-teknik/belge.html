@@ -19,7 +19,7 @@
     <dl class="kapak-bilgi">
       <dt>Hazırlayan</dt><dd>Emirhan İspir, Merkut Studios (bilgisayar programcılığı öğrencisi)</dd>
       <dt>Kime</dt><dd>Yapay zekâ ve web tasarımı derslerindeki hocalarım</dd>
-      <dt>Tarih ve sürüm</dt><dd>7 Ekim 2026 · Mola 0.1.0</dd>
+      <dt>Tarih ve sürüm</dt><dd>12 Ekim 2026 · Mola 0.1.0</dd>
       <dt>Kapsam</dt><dd>Ayrıntılı ama sade anlatım; kod yolları dipnot gibi verilmiştir</dd>
     </dl>
     <p class="kapak-not">Bu belgedeki her teknik bilgi projenin kaynak koduyla karşılaştırılarak yazıldı; dosya ve klasör adları verildi. Gerçek cihazda ya da gerçek sunucuda henüz denenmemiş konular "Doğrulanmadı" diye işaretlidir.</p>
@@ -132,10 +132,10 @@
   <text x="382" y="30" font-size="12.5" font-weight="700" fill="#5d6763" text-anchor="middle">İnternet</text>
 
   <rect x="438" y="8" width="314" height="330" rx="10" fill="#e8eef6" stroke="#1f3b5c" stroke-dasharray="5 4"/>
-  <text x="452" y="30" font-size="13.5" font-weight="700" fill="#1f3b5c">VDS (Ubuntu LTS) · İstanbul hedefi</text>
+  <text x="452" y="30" font-size="13.5" font-weight="700" fill="#1f3b5c">VDS (Ubuntu 24.04) · İstanbul · canlı</text>
   <rect x="452" y="42" width="286" height="44" rx="6" fill="#fff" stroke="#1f3b5c"/>
   <text x="464" y="61" font-size="11.5" font-weight="600">Caddy: HTTPS (Let's Encrypt), ters vekil</text>
-  <text x="464" y="77" font-size="10.5">molayazilim.com.tr · merkez.molayazilim.com.tr</text>
+  <text x="464" y="77" font-size="10.5">4 ad: site, www., merkez., menu.</text>
   <rect x="452" y="96" width="286" height="176" rx="6" fill="#fff" stroke="#1f3b5c" stroke-width="1.6"/>
   <text x="464" y="116" font-size="12" font-weight="700" fill="#1f3b5c">Mola Merkez (Node.js · Express 5)</text>
   <text x="464" y="136" font-size="10.5">• Lisans imzalama (Ed25519), kalp atışı</text>
@@ -227,9 +227,9 @@
     <tr><td>tsx + node:test</td><td>Birim testleri (Node'un kendi test koşucusu).</td><td><code>tests/*.test.ts</code></td></tr>
     <tr><td>Playwright 1.63</td><td>Gerçek Chrome'da tarayıcı testleri; site videolarının kaydı; bu belgenin PDF'e basılması.</td><td><code>tests/browser/</code>, <code>scripts/pdf-belgeler.mjs</code></td></tr>
     <tr><td>Android SDK araçları</td><td>Gradle olmadan: <code>aapt2</code>, <code>javac</code>, <code>d8</code>, <code>zipalign</code>, <code>apksigner</code>. Çıktı yaklaşık 100 kB.</td><td><code>scripts/build-apk.mjs</code></td></tr>
-    <tr><td colspan="3" class="grup">Sunucu ortamı (hazırlandı, henüz kurulmadı)</td></tr>
-    <tr><td>Ubuntu LTS, systemd, ufw</td><td>VDS işletim sistemi, Merkez servisi (çökünce 5 sn'de yeniden başlar), güvenlik duvarı (yalnız 22, 80, 443).</td><td><code>docs/VDS_KURULUM.md</code></td></tr>
-    <tr><td>Caddy</td><td>HTTPS sertifikasını otomatik alır ve yeniler, istekleri Merkez'e iletir, siteyi sunar, WebSocket taşır.</td><td><code>Caddyfile.ornek</code></td></tr>
+    <tr><td colspan="3" class="grup">Sunucu ortamı (12 Ekim 2026'dan beri canlı; İstanbul, Keyubu/Datacasa)</td></tr>
+    <tr><td>Ubuntu 24.04, systemd, ufw</td><td>VDS işletim sistemi; Merkez servisi kum havuzunda (bölüm 20.1), çökünce 5 sn'de yeniden başlar; güvenlik duvarı yalnız 22, 80, 443.</td><td><code>scripts/merkez-linux-paket.mjs</code>, <code>docs/VDS_KURULUM.md</code></td></tr>
+    <tr><td>Caddy</td><td>4 adın (site, www, merkez, menu) HTTPS sertifikasını otomatik alır ve yeniler, istekleri Merkez'e iletir, siteyi sunar, WebSocket taşır.</td><td><code>Caddyfile.ornek</code></td></tr>
   </tbody>
 </table>
 <p class="kucuk gri">Neden C# ve Java? Windows'ta bir masaüstü penceresi ve kurulum programı için tarayıcı dışında bir şey gerekiyordu; Windows'ta zaten bulunan C# derleyicisi ek kurulum istemedi. Android'de de ekranların kendisi web olduğu için yalnız ince bir Java kabuğu yetti.</p>
@@ -326,7 +326,7 @@
   <text x="120" y="62" text-anchor="middle" font-size="10.5">o kullanıcı + şifresi</text>
   <rect x="20" y="96" width="200" height="56" rx="8" fill="#fbefe3" stroke="#b8661f"/>
   <text x="120" y="120" text-anchor="middle" font-size="12" font-weight="700">Kurtarma kodu</text>
-  <text x="120" y="138" text-anchor="middle" font-size="10.5">24 hane · scrypt + AES-GCM</text>
+  <text x="120" y="138" text-anchor="middle" font-size="10.5">24 karakter · scrypt + AES-GCM</text>
   <rect x="280" y="56" width="200" height="60" rx="8" fill="#e7efe9" stroke="#234c3e" stroke-width="1.8"/>
   <text x="380" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#234c3e">Ana anahtar</text>
   <text x="380" y="100" text-anchor="middle" font-size="10.5">anahtar.json'da iki kez kilitli</text>
@@ -492,6 +492,7 @@
 </figure>
 <ul>
   <li><strong>İmza türleri ayrı:</strong> aynı Ed25519 anahtarı lisans, nabız (<code>mola-nabiz-1</code>), iletişim bilgisi, güncelleme, adres değişikliği, kapanış ve işlem kaydı mühürü için kullanılır; her birinin mesajı farklı bir amaç etiketiyle başlar. Böylece bir türün imzası başka bir tür yerine kullanılamaz.</li>
+  <li><strong>Saat penceresi:</strong> Merkez, saati kendi saatinden 5 dakikadan fazla farklı imzalı isteği reddeder (<code>CLOCK_WINDOW_MS</code>, <code>server/install-auth.ts</code>); böylece yakalanan eski bir istek sonradan tekrar oynatılamaz. Bir yan etkisi tanıtım verisi üreticisinde çıktı: üretici geçmişi geçmiş tarihli saatle oynattığı için Merkez'e giden istekler reddediliyordu. Düzeltme: bağlantı her zaman gerçek saatle imzalar, geçmiş yalnız kafe verisinde oynar (<code>scripts/demo-template.ts</code>).</li>
   <li><strong>14 gün çevrimdışı:</strong> son imzalı nabızdan sonra 7. günde uyarı, 14. günde misafir menüsü ve yeni sipariş kapanır; bağlantı gelince açılır.</li>
   <li><strong>Bir lisans, bir bilgisayar:</strong> kalp atışı bilgisayar kimliğinin (Windows MachineGuid) kurulum sırrıyla HMAC'ını taşır. Başka bilgisayardan bağlanılınca yeni bilgisayar etkin olur, eskisi imzalı "başka bilgisayar" yanıtı alır.</li>
   <li><strong>Paketler (özellik kapıları):</strong> lisans <code>features</code> listesini taşır (14 hizmet kimliği, <code>packages/domain/features.ts</code>). Sunucu bütün personel ve misafir yollarından önce bir bekçi çalıştırır: kapalı hizmetin yolu <code>403 FEATURE_NOT_IN_PACKAGE</code> döner (<code>server/feature-guard.ts</code>). Ekran kapalı yeri soluk ve bulanık gösterir. Hiçbir veri silinmez; hizmet geri gelince kaldığı yerden döner.</li>
@@ -594,6 +595,7 @@
   <li><strong>Neden WebSocket, neden kendi yazdığım?</strong> Kalıcı, çift yönlü ve çoklanmış tek bir bağlantı; uzun bekleyen istek (köprü) 30 misafirde sıraya girerdi. Yalnız ikili mesajlar, ping/pong ve kapanış gerektiği için RFC 6455'in bu kısmı 200 satırın altında yazıldı.</li>
   <li><strong>Mesaj biçimi:</strong> her mesaj <code>[4 bayt başlık uzunluğu][başlık JSON][gövde]</code>. Türler: <code>hello</code>, <code>req</code>, <code>res</code>, <code>data</code>, <code>cancel</code>. Kafe büyük bir fotoğrafın parçalarını istekler arasında sırayla gönderir; büyük yanıt küçükleri bekletmez.</li>
   <li><strong>İmza:</strong> bağlantı anahtarı = HMAC(kurulum anahtarı, bu bağlantının nonce'u); her istek bu anahtarla imzalanır (kimlik, yöntem, yol, misafir adresi, işletme, gövde özeti). Kafe misafirin IP adresine yalnız bu imzayla inanır; böylece hız sınırları Merkez'in tek adresine değil her misafire ayrı çalışır.</li>
+  <li><strong>Ayrı adres (11 Ekim):</strong> menü yalnız <code>menu.molayazilim.com.tr</code>'de açılır (<code>MERKEZ_MENU_ORIGIN</code>); eski adreslerdeki <code>/q/*</code> buraya yönlenir. <code>mola_browser</code> çerezi Domain'siz yazılır, yani yalnız bu ada ve o kafenin yoluna aittir; Mola Yönetim ve site onu görmez (<code>server/merkez/guest-tunnel.ts</code>).</li>
   <li><strong>İki uçta izin listesi:</strong> yalnız misafir sayfası, onun dosyaları, <code>/api/guest/*</code> ve ürün fotoğrafları. Personel yolları, giriş, masaüstü araçları Merkez'de 404'tür ve kafeye hiç gitmez; kafe aynı listeyi kendi koduyla bir kez daha denetler.</li>
   <li><strong>Adalet:</strong> kafe başına aynı anda en çok 48 istek, fazlası o kafenin kendi sırasında (300) bekler; yanıt vermeyen bir kafe diğerlerini etkilemez. 20 saniyede yanıt gelmezse misafire "Menü şu anda açılamıyor" sayfası.</li>
   <li><strong>İçerikle adreslenen önbellek:</strong> misafir sayfası ve dosyaları SHA-256'larıyla tanınır; Merkez bunları bir kez alır, bütün kafeler için ortak tutar, tarayıcıya "immutable" önbellek başlığıyla verir. Kafenin yüklemesi çoğunlukla yalnız küçük JSON'lardır.</li>
@@ -625,7 +627,7 @@
     <tr><td>Aynı yük, bir kafe hiç yanıt vermiyor</td><td>Diğer kafeler p95 40 ms, hata 0</td></tr>
   </tbody>
 </table>
-<p class="kucuk"><span class="rozet dogrulanmadi">Doğrulanmadı</span> Gerçek VDS'te ve gerçek telefonla henüz denenmedi; gerçek internette misafir → VDS → kafe gidiş-dönüşleri (Türkiye içinde tipik 10–40 ms) eklenecek.</p>
+<p class="kucuk"><span class="rozet dogrulanmadi">Doğrulanmadı</span> VDS 12 Ekim'de canlıya alındı; gerçek internette misafir → VDS → kafe gidiş-dönüş süreleri (Türkiye içinde tipik 10–40 ms) henüz ölçülmedi.</p>
 
 <!-- ============================================================ 16 -->
 <h1 id="t16" class="akis"><span class="no">16</span>Sosyal medya kısa adresleri</h1>
@@ -682,7 +684,7 @@
 <table class="dar">
   <thead><tr><th style="width:26%">Tehdit</th><th>Önlem</th></tr></thead>
   <tbody>
-    <tr><td>Kasa bilgisayarı ya da diski çalınır</td><td>Satırlar AES-256-GCM ile şifreli; anahtar Windows kullanıcısına (DPAPI) kilitli. Disk şifrelemesi (BitLocker) ayrıca önerilir.</td></tr>
+    <tr><td>Kasa bilgisayarı ya da diski çalınır</td><td>Satırlar AES-256-GCM ile şifreli; anahtar o bilgisayarın Windows kilidine (DPAPI) ve 24 karakterlik kurtarma koduna kilitli. Başka bilgisayara taşınan veri yalnız kurtarma koduyla açılır; yeni bilgisayarda anahtar yeniden o bilgisayara kilitlenir. Disk şifrelemesi (BitLocker) ayrıca önerilir.</td></tr>
     <tr><td>Kafe Wi-Fi'sindeki biri başka masanın siparişini görmek ister</td><td>Masa kodları 144 bit rastgele; misafir yalnız kendi masasına ve kendi işletmesine erişir. Kurtarma kodu ağdan hiç gösterilmez.</td></tr>
     <tr><td>Kaba kuvvet şifre denemesi</td><td>scrypt ile saklanan şifreler; cihaz ve hesap başına deneme sınırı; yalnız yanlış denemeler sayılır, gerçek kullanıcı kilitlenmez.</td></tr>
     <tr><td>DNS rebinding, başka siteden istek (CSRF)</td><td>Host başlığı denetimi; çerezler SameSite=Strict ve HttpOnly; sıkı CSP; "yalnız bu bilgisayar" işlemleri ayrıca loopback ister.</td></tr>
@@ -694,6 +696,23 @@
   </tbody>
 </table>
 <p class="kucuk gri">Bilinen sınırlar: kafe içi ağ düz HTTP'dir (yerel ağda TLS sertifikası dağıtmak kafeler için pratik değil). Program dosyaları kod imzalama sertifikasıyla imzalı değil. Bilgisayarda yönetici yetkisi olan biri programı değiştirebilir; denetim yalnız bunu görünür kılar.</p>
+<h2 id="t20-1">20.1 Canlı sunucu (12 Ekim 2026)</h2>
+<ul>
+  <li><strong>Ortam:</strong> Ubuntu 24.04 VDS, İstanbul. Caddy 4 adın (site, www, merkez, menu) HTTPS'ini otomatik alır; Merkez'in kendi portu dışarıya kapalı.</li>
+  <li><strong>Kum havuzu:</strong> <code>mola-merkez</code> servisi yetkisiz <code>mola</code> kullanıcısıyla çalışır: <code>NoNewPrivileges</code>, <code>ProtectSystem=strict</code>, <code>PrivateTmp</code>, <code>PrivateDevices</code>, <code>RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX</code> (<code>scripts/merkez-linux-paket.mjs</code>).</li>
+  <li><strong>Erişim:</strong> SSH yalnız anahtarla (şifreyle giriş ve root girişi kapalı), root şifresi kilitli; ufw yalnız 22/80/443; fail2ban SSH denemelerini engeller; güvenlik güncellemeleri kendiliğinden kurulur (<code>unattended-upgrades</code>).</li>
+  <li><strong>Yalnız okuyan yardımcı:</strong> bakım araçları sunucuda yalnız <code>/usr/local/sbin/mola-oku</code>'yu çalıştırabilir; sudoers izin listesinde onun yedi komutu ile <code>ufw status</code> ve <code>fail2ban-client status</code> vardır, başka bir şey yoktur. Yardımcı anahtarları ve veritabanını hiçbir zaman vermez.</li>
+  <li><strong>Yedek zinciri:</strong> Merkez gece 03:45'te şifreli yedek alır; <code>npm run vds:cek</code> (<code>scripts/vds-cek.ts</code>) her gün yedekleri bilgisayara, ayrıca yalnız şifreli yedekleri Google Drive'a çeker. Sunucunun parmak izi ilk bağlantıda onaylanır, değişirse araç bağlanmaz.</li>
+</ul>
+<div class="kutu uyari">
+  <span class="kutu-baslik">Canlıda bulunan hata: neden canlı ortamla aynı koşulda test gerekir</span>
+  <ul>
+    <li><strong>Belirti:</strong> canlıya alındığı gün <code>menu.molayazilim.com.tr</code> adresindeki istekler 500 hatası döndü.</li>
+    <li><strong>Neden:</strong> sunucu, gelen isteğin adını (Host) denetlerken kendi ağ adreslerini <code>os.networkInterfaces()</code> ile listeliyordu. Kum havuzu <code>AF_NETLINK</code>'i kapattığı için bu çağrı hata verdi. Testler Windows'ta koştuğu için hata hiç görülmemişti.</li>
+    <li><strong>Düzeltme</strong> (<code>server/http-security.ts</code>): çağrının hatası yutulur (yerel adlar ve <code>PUBLIC_ORIGIN</code> yine geçerli), menü adı listeden önce denetlenir.</li>
+    <li><strong>Ders:</strong> güvenlik kısıtları da ortamın parçasıdır. Testler canlıyla aynı işletim sisteminde ve aynı kum havuzu ayarlarıyla da koşmalı.</li>
+  </ul>
+</div>
 
 <!-- ============================================================ 21 -->
 <h1 id="t21"><span class="no">21</span>Performans ve testler</h1>
@@ -785,7 +804,7 @@
 <ul>
   <li><strong>Açık gereksinim şart.</strong> Kısa sorular yanlış anlaşıldı: bir gün üç karar ("menü" hangi ekran, ayarlar solda mı üstte mi, kira aya yayılsın mı) kısa sorulduğu için yanlış verildi ve geri alındı. O günden sonra her soru "şu an nasıl, her seçenek günlük kullanımda ne demek, önerim ne" biçiminde soruluyor.</li>
   <li><strong>Daha önce verilmiş kararı yeniden sormak güveni sarsıyor.</strong> Yapay zekâ bir kez, en baştan kararlaştırılmış bir konuyu (misafirin menüyü mobil veriyle açması) yeniden sordu; bu, programın doğru çalışıp çalışmadığından şüphe etmeme yol açtı. Çözüm yine yazılı kararlar oldu.</li>
-  <li><strong>Gerçek cihaz testinin yerini tutmaz.</strong> Bugün hâlâ denenmemiş olanlar: Android uygulaması gerçek telefonda, gerçek fiş yazıcısı, Mac ve Linux paketleri gerçek bilgisayarda, Mola Merkez gerçek VDS'te, iPhone'da Safari'nin kendisi. Yapay zekâ bunları "derleme düzeyinde doğrulandı" diye açıkça ayırdı; ben de bunları ayrı bir aşama olarak planladım.</li>
+  <li><strong>Gerçek cihaz ve gerçek ortam testinin yerini tutmaz.</strong> Bugün hâlâ denenmemiş olanlar: Android uygulaması gerçek telefonda, gerçek fiş yazıcısı, Mac ve Linux kafe paketleri gerçek bilgisayarda, iPhone'da Safari'nin kendisi. Mola Merkez 12 Ekim'de VDS'e geçti ve ilk gün, Windows'taki testlerin göremediği bir hata çıktı (bölüm 20.1).</li>
   <li><strong>İnsan incelemesi gerekir.</strong> Örneğin lisans sözleşmesi ve web sitesinin yasal sayfaları yapay zekânın taslağıdır ve avukata gidiyor. Bu belge için yapılan kod doğrulaması da iki yerde taslakla programın uyuşmadığını buldu (gizlilik taslağı sunucunun IP kaydı tuttuğunu söylüyor, sunucu ayarı tutmuyor; satıcı tarafındaki işlem kayıtları ise IP adresi tutuyor). Yapay zekâ kendinden emin ama yanlış bir cümle kurabilir; kodla karşılaştırmak gerekir.</li>
   <li><strong>Paralel çalışmanın riski:</strong> iki alt ajan aynı dosyalara dokunurken başlatılan bir test, yarım düzenlenmiş kodu yükleyip hata verdi; sorun koddaydı sanıldı, aslında zamanlamadaydı. Bu belge hazırlanırken de birim testlerinin ilk koşusunda, aynı bilgisayarda başka işler sürerken bir test dosyası zaman aşımına uğradı; ikinci koşuda hepsi geçti. Kararsız testler ayrıca incelenmeli.</li>
 </ul>
@@ -794,7 +813,7 @@
   <li>Yapay zekâ bir yazılım ekibi gibi çalışabiliyor, ama ürün sahibi siz olmalısınız: neyi istemediğinizi de yazın.</li>
   <li>Kararları ve durumu bir belgede tutun; yapay zekânın hafızası o belgedir.</li>
   <li>Testsiz değişiklik kabul etmeyin; mümkünse kullanıcı gibi tıklayan tarayıcı testleri de yazdırın.</li>
-  <li>"Çalışıyor" ile "gerçek cihazda denendi"yi ayırın.</li>
+  <li>"Çalışıyor" ile "gerçek cihazda denendi"yi ayırın; sunucuyu canlıdakiyle aynı işletim sistemi ve aynı kısıtlarla deneyin.</li>
   <li>Hukuk, güvenlik, para gibi konularda yapay zekânın çıktısı bir taslaktır; uzmana gösterin.</li>
   <li>Sorulara uzun ve somut cevap verin; belirsiz bir kelime bir günü boşa harcatabilir.</li>
 </ol>

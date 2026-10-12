@@ -71,7 +71,7 @@ function isletmeler() {
     sekil('y-isletme-hizmet', { aciklamalar: ['Hizmet durumu: deneme mi, hangi hizmetler açık.', 'Paket seçimi: Çay bahçesi, Kafe Standart, Restoran Pro ve sizin paketleriniz.', '"Özel": hizmetleri tek tek seçersiniz.', 'Bu işletme için fiyat ve işletmeye özel indirim (₺ ya da %).'] }),
     p('Paket ya da hizmet değişince ekranın altında bir <b>değişiklik çubuğu</b> belirir ve sayfayı kaydırırken de yerinde kalır: "3 hizmet değişti · ₺2.500 → ₺975/ay", <b>Vazgeç</b> ve <b>Değişikliği uygula</b>. "Neler değişiyor" eklenen ve çıkan hizmetleri, indirimi ve aylık farkı açar. "Değişikliği uygula" doğrudan doğrulayıcı kodunu ister ("Emin misiniz?" sorulmaz). Kafe yeni lisansı en geç 10 dakikada alır; kapanan hizmetin verisi silinmez, sahip onu soluk ve "Pakette yok" olarak görür.'),
     sekil('y-hizmet-degisiklik', { genislik: 600, aciklamalar: ['Değişiklik çubuğu (sayfa kayarken altta kalır): kaç hizmet değişti, paket (burada Kafe Standart) ve eski → yeni aylık fiyat; "Neler değişiyor" ayrıntıyı açar.', '"Değişikliği uygula".'] }),
-    p('Sayfanın altında <b>Tanıtım işletmesi</b> anahtarı vardır: satış sunumu yaptığınız bir kafeyi işaretler, ekranlarına "Tanıtım" etiketi koyar ve "Tanıtımı sıfırla" ile örnek veriye döndürmenizi sağlar.'),
+    p('Sayfanın altında <b>Tanıtım işletmesi</b> anahtarı vardır: satış sunumu yaptığınız bir kafeyi işaretler, ekranlarına "Tanıtım" etiketi koyar ve "Tanıtımı sıfırla" ile örnek veriye döndürmenizi sağlar. Sıfırlama yalnız elle yapılır, kafeye kalp atışıyla (en geç 10 dakika) ulaşır; masa QR\'ları değişmez.'),
     h2('Bilgiler'),
     sekil('y-isletme-bilgiler', { aciklamalar: ['İletişim: yetkili, telefon (ara simgesi), e-posta (yaz simgesi); her satırda kopyala. Yanında Adres.', 'Fatura bilgileri: unvan, vergi dairesi ve no, adres, yetkili, telefon, e-posta; her satırda kopyala, "Düzenle" ile düzeltirsiniz.'] }),
     p('Altında <b>Sosyal medya</b> ile <b>Cihaz ve kurulum</b> (Mola sürümü, bilgisayar, kurulum no, etkinleştirme, kurulum, ilk giriş, son bağlantı, masa · çalışan · ürün sayısı) yan yanadır. "Olası tekrar" kartı aynı vergi numarası, aynı bilgisayar, aynı telefon ya da e-postayla açılmış diğer kayıtları nedeniyle listeler. En altta "Bu işletmenin geçmişi".'),
@@ -192,7 +192,7 @@ function internetMenu() {
       ['Bilinmeyen kod', '"Bu bağlantı bulunamadı. Masanızdaki QR kodunu yeniden okutun."'],
     ]),
     not('<b>MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr ayarını toplu QR basımından önce yapın</b> (güvenlik gereği; DNS\'te <b>menu</b> kaydı ve Caddy\'de <b>menu.</b> bloğu ile). Basılı bir QR adresini sonradan değiştiremez. Kafelerin gönderdiği menü sayfası böylece Mola Yönetim\'in ve sitenin adresinden ayrı bir adreste açılır; oradaki çerez ve anahtarlara ulaşamaz. Sosyal medya QR kartlarının kısa adresleri için ayrıca <b>MERKEZ_SITE_ORIGIN=https://molayazilim.com.tr</b>. Ayardan sonra bir masa kartını Wi-Fi\'si kapalı bir telefonla okutup deneyin.', 'dikkat'),
-    liste(['Caddy\'de <b>menu.</b> adresinde yalnız <b>/q/*</b>, sitede <b>/s/*</b> Merkez\'e iletilir; eski adreslerdeki <b>/q/*</b> menü adresine yönlenir. Merkez bloğu kafelerin tünellerini taşır.', 'Eski kafe sürümü menü kodu almaz; QR\'ları Wi-Fi adresinde kalır ve sahibine "internet adresi hazır olunca yeniden basılmalı" notu çıkar. Eski Merkez internetten menüyü bilmez: önce Merkez\'i güncelleyin.', 'Merkez misafir trafiğini saklamaz ve günlüğe yazmaz; yalnız kafe başına sayaçlar bellekte durur (işletme Özet\'inde "İnternetten menü" satırı).']),
+    liste(['Yeni etkinleşen kafede masa QR\'ının internet adresi <b>iki kalp atışı (10 ile 20 dakika)</b> sonra gelir; o zamana kadar QR Wi-Fi adresini taşır. QR\'ı bundan sonra basın.', 'Caddy\'de <b>menu.</b> adresinde yalnız <b>/q/*</b>, sitede <b>/s/*</b> Merkez\'e iletilir; eski adreslerdeki <b>/q/*</b> menü adresine yönlenir. Merkez bloğu kafelerin tünellerini taşır.', 'Eski kafe sürümü menü kodu almaz; QR\'ları Wi-Fi adresinde kalır ve sahibine "internet adresi hazır olunca yeniden basılmalı" notu çıkar. Eski Merkez internetten menüyü bilmez: önce Merkez\'i güncelleyin.', 'Merkez misafir trafiğini saklamaz ve günlüğe yazmaz; yalnız kafe başına sayaçlar bellekte durur (işletme Özet\'inde "İnternetten menü" satırı).']),
     h2('Menünün Merkez\'deki kopyası'),
     p('Kafe menüsünü (ürünler, fiyatlar, kampanyalar, "tükendi", görünüm, ürün fotoğrafları) her değişiklikten birkaç saniye sonra Merkez\'e gönderir; fotoğraf aynıysa bir daha göndermez. Merkez bunu şifreli olarak saklar ve kafe kapalıyken misafire menüyü bundan gösterir. Siparişi her zaman kafe kabul eder: az önce tükenen bir ürün için misafir "Bu ürün az önce tükendi" görür. Kopyada satış, sipariş, müşteri ya da çalışan bilgisi yoktur; işletmenin kaydını silince kopyası da silinir. Tipik boyut kafe başına 20–30 MB; Menü metni Merkez\'in gece yedeğine girer, fotoğraflar girmez (kafeler eksik fotoğrafı yeniden gönderir).'),
     h2('Saklama süreleri'),
@@ -209,8 +209,9 @@ function webSitesi() {
     sekil('w-iletisim', { baslik: 'Destek ve İletişim sayfası ve form' }),
     p('Form Mola Merkez\'e gider ve Başvurular → Web sitesi talepleri\'ne düşer; zilde "Web sitesi talebi" çıkar. Form kötüye kullanıma karşı sınırlıdır (adres başına saatte 5 talep, günde toplam 200). Yasal sayfalar şu an <b>taslaktır</b> (sarı şerit); avukat onayından sonra config.json\'da legalDraft kapatılır.'),
     h2('Uygulamayı indir (/indir/)'),
-    p('Sitenin "Uygulamayı indir" sayfası Windows, Mac (Apple Silicon / Intel) ve Linux kartlarını, Android ve iPhone notlarını (telefon uygulaması siteden değil, kafenin bilgisayarından QR ile kurulur), dört adımı (indir ve kur → "Kodum yok, başvuru yapacağım" ya da "Etkinleştirme kodum var" → siz onaylarsınız → 30 gün deneme) ve Windows SmartScreen notunu ("Ek bilgi → Yine de çalıştır") gösterir. config.json\'da <b>downloads.enabled</b> false iken her kart <b>"Yakında"</b> der.'),
-    adimlar(['VDS Merkez\'i için kafe paketini hazırlayın (MOLA_MERKEZ_URL ve VDS\'in açık anahtarıyla <b>npm.cmd run installer</b>; bugünkü paketler bu bilgisayarın 127.0.0.1 Merkez\'ine bağlanır, siteye konmaz).', '<b>npm.cmd run site:indir</b>: Windows klasörünü ZIP yapar, Mac/Linux arşivlerini site/dist/indir\'e kopyalar, boyut ve SHA-256\'yı config.json → downloads\'a yazar, siteyi derler ve dosyaların hangi Merkez\'e bağlandığını söyler.', 'config.json\'da <b>downloads.enabled: true</b>, sonra <b>npm.cmd run site:build</b> ve yükleme (docs/VDS_KURULUM.md bölüm 13).']),
+    p('"Uygulamayı indir" sayfasında şu an <b>Windows</b> ve <b>Android personel uygulaması (APK)</b> açık, Mac ve Linux <b>"Yakında"</b>. Sayfa dört adımı (indir ve kur → "Kodum yok, başvuru yapacağım" ya da "Etkinleştirme kodum var" → siz onaylarsınız → 30 gün deneme) ve SmartScreen notunu ("Ek bilgi → Yine de çalıştır") gösterir. Dosyası olmayan kart "Yakında" der; config.json\'da <b>downloads.enabled</b> false iken hepsi.'),
+    adimlar(['Kafe paketini VDS adresi ve açık anahtarıyla hazırlayın (MOLA_MERKEZ_URL ile <b>npm.cmd run installer</b>).', '<b>npm.cmd run site:indir</b>: Windows ZIP\'ini, Mac/Linux arşivlerini ve .local/android/Mola.apk\'yı site/dist/indir\'e alır, boyut ve SHA-256\'yı config.json\'a yazar, dosyaların hangi Merkez\'e bağlandığını söyler.', '<b>downloads.enabled: true</b>, <b>npm.cmd run site:build</b>, yükleme (docs/VDS_KURULUM.md bölüm 13).']),
+    not('<b>Paketi yeni kafe kurmadan önce hazırlayın.</b> Eski paketle kurulan kafe kodu eski Merkez\'e sorar ve "kod geçersiz" der; Mola\'yı "Verileri ve yedekleri de sil" işaretli kaldırıp yeni paketle kurun.', 'dikkat'),
     p('VDS\'ten önce bütün yolu evde denemek için <b>npm.cmd run ev-provasi</b>: kurulum dosyalarını bu bilgisayarın ev ağı adresiyle ayrı bir klasöre hazırlar ve siteyi ev ağında yayınlar; Mola Yönetim\'de <b>MERKEZ_LAN=1</b> gerekir (Mola Yönetim ekranları yine yalnız bu bilgisayardan açılır). Adımlar ve geri alma: docs/EV_AGI_PROVASI.md.'),
   ].join('');
 }
@@ -227,9 +228,14 @@ function operasyon() {
       ['https://menu.molayazilim.com.tr/q/*', 'İnternetten menü (masa QR\'ları), kendi adresinde; başka hiçbir şey'],
       ['https://merkez.molayazilim.com.tr', 'Mola Merkez, Mola Yönetim ve kafelerin bağlantıları'],
     ]),
+    liste([
+      'Alan adı Metunic\'te kayıtlı; DNS\'i <b>ücretsiz Cloudflare</b> yönetir (ad sunucuları Cloudflare\'de). Dört A kaydı: <b>@, www, merkez, menu</b> → sunucu IP\'si.',
+      'Dört kayıt da <b>DNS only (gri bulut)</b>. Turuncu bulut (proxy) kullanılmaz: misafir başına sınırlar herkesi tek misafir sayar, sertifika bozulur. "Only allow Cloudflare IPs" önerisi de uygulanmaz.',
+      'Mola Yönetim yalnız <b>https://merkez.molayazilim.com.tr</b> adresinden kullanılır (Edge\'de "uygulama olarak yükle"). Eski Windows Mola Yönetim taşımadan sonra eşitlenmez; orada değişiklik yapmayın.',
+    ]),
     not('Alan adının yenileme tarihini takviminize yazın ve otomatik yenilemeyi açın. Alan adı düşerse bütün QR\'lar, kafelerin lisans bağlantısı ve web sitesi aynı anda durur.', 'dikkat'),
     h2('VDS (İstanbul)'),
-    p('Sunucu İstanbul\'daki bir veri merkezindedir; veriler yurt dışına çıkmaz. Ubuntu LTS, yalnız 22, 80 ve 443 portları açık (ufw), Mola Merkez systemd servisi olarak çalışır, Caddy HTTPS sertifikasını kendisi alır ve yeniler.'),
+    p('Keyubu/Datacasa VDS L-TR 6GB, İstanbul (veriler yurt dışına çıkmaz), Ubuntu 24.04, 170 GB disk. Yalnız 22, 80 ve 443 açık (ufw); Mola Merkez systemd servisi, Caddy HTTPS sertifikasını kendisi alır ve yeniler.'),
     tablo(['Neye bakın', 'Nasıl', 'Ne sıklıkla'], [
       ['Merkez çalışıyor mu', 'Ücretsiz bir "uptime" hizmetine https://merkez.molayazilim.com.tr/api/merkez/v1/health adresini ekleyin; erişilemezse e-posta gelir.', 'Sürekli'],
       ['Disk', 'df -h; yüzde 80\'i geçmesin. Sunucu yedekleri disk kullanır (Ayarlar → Yedek → Kafelerin sunucu yedekleri).', 'Haftalık'],
@@ -239,8 +245,10 @@ function operasyon() {
       ['Bildirim merkezi', 'Merkez yedeği, kafe yedekleri, bağlanmayan kafeler, dosya bütünlüğü', 'Her gün'],
     ]),
     h2('Merkez yedeğini kendi bilgisayarınıza çekin'),
-    p('Merkez her gece yedek alır ama yedek aynı sunucudadır; sunucu kaybolursa işe yaramaz. <b>Haftada bir</b> yedek klasörünü kendi bilgisayarınıza indirin (Windows Görev Zamanlayıcı ile otomatik yapabilirsiniz). Yedekler şifrelidir; açmak için Merkez kurtarma kodu gerekir.'),
-    p('<b>Ayda bir geri yükleme provası</b> yapın (5 dakika): indirdiğiniz en yeni yedeği <b>npm.cmd run merkez:restore</b> ile ayrı bir klasöre açın. "Geri yüklendi ve doğrulandı: N işletme" yazmalı. Sonra prova klasörünü silin.'),
+    liste([
+      'Merkez her gece şifreli yedek alır; yedek aynı sunucudadır. <b>npm run vds:cek</b> yedekleri her gün 07:00\'de bilgisayarınıza (C:\\MolaCalisma\\vds) ve Google Drive\'a çeker (docs/VDS_KURULUM.md bölüm 15). Yedekler Merkez kurtarma koduyla açılır.',
+      '<b>Ayda bir geri yükleme provası</b> (5 dakika): en yeni yedeği <b>npm.cmd run merkez:restore</b> ile ayrı bir klasöre açın; "Geri yüklendi ve doğrulandı: N işletme" yazmalı. Sonra prova klasörünü silin.',
+    ]),
     h2('Her sürümün güncelleme paketini yükleyin'),
     p('Kafelere hangi sürümü kurarsanız kurun (otomatik güncellemeyle ya da elle) o sürümün .mola-guncelleme paketini Mola Yönetim → Güncellemeler\'e yükleyin. Yayınlamak gerekmez. Dosya bütünlüğü denetimi imzalı listeyi buradan alır; yüklenmemiş sürümü denetleyemez.'),
     h2('Toplu QR basımından önce'),
@@ -248,7 +256,7 @@ function operasyon() {
     h2('Kontrol listesi'),
     tablo(['Sıklık', 'İş'], [
       ['Her gün', 'Bugün listesi ve Bildirim merkezi; yanıt bekleyen destek talepleri; web sitesi talepleri.'],
-      ['Haftalık', 'Merkez yedeğini kendi bilgisayarınıza indirin; disk; bağlanmayan kafeler.'],
+      ['Haftalık', 'npm run vds -- ozet; vds:cek günlüğünde bugünün yedeği; bağlanmayan kafeler.'],
       ['Aylık', 'Geri yükleme provası; sunucu güncellemeleri; Satışlarım\'da bekleyen ödemeler; biten lisanslar.'],
       ['Her yeni sürümde', 'Önce Merkez\'i güncelleyin; güncelleme paketini yükleyin; önce pilot, sonra herkese.'],
       ['Yılda bir', 'Alan adı ve VDS yenilemesi; Merkez kurtarma kodu hâlâ yerinde mi.'],
@@ -256,6 +264,8 @@ function operasyon() {
     h2('Sık sorulanlar'),
     sss('Bir kafe "Mola Merkez\'e ulaşılamıyor" diyor.', 'Kafe nedeni ayrı söyler: internet yok, Merkez yanıt vermiyor, adres yanlış ya da bilgisayarın saati yanlış. Merkez\'in sağlık adresini kontrol edin; sorun kafedeyse internetini ve saatini kontrol ettirin. Kafe 14 güne kadar Merkez\'siz çalışır.'),
     sss('Kafe yeni bilgisayara geçiyor.', 'Bulut yedeği varsa işletme sayfası → Lisans → <b>Yeni bilgisayara taşıma</b>\'dan taşıma kodu verin; yoksa kafe USB\'deki yedeği ve kurtarma kodunu kullanır. "İki farklı bilgisayar" uyarısı çıkarsa işletme Özet\'inden "Eski bilgisayarı yeniden etkinleştir" ile çözersiniz.'),
+    sss('Menü adresi (menu.) her istekte hata (500) veriyor.', 'Merkez sürümü eski: sunucunun kum havuzunda ağ adresleri okunamıyordu, 12 Ekim\'de düzeltildi. Merkez\'i güncelleyin.'),
+    sss('Yeni kafe etkinleştirmede "kod geçersiz" diyor.', 'Kafe eski paketle kurulmuş, kodu eski Merkez\'e soruyor. VDS adresiyle hazırlanmış paketle yeniden kurun (Web sitesi → Uygulamayı indir).'),
     sss('Merkez\'in bilgisayarı değişti.', 'Kafeler yeni adresi imzalı bir duyuruyla öğrenir ve doğrular. Adım adım: docs/VDS_KURULUM.md "Kafeleri yeni adrese geçirin".'),
   ].join('');
 }
