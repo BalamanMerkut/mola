@@ -402,7 +402,7 @@ export function guestTunnelRoutes(app: Express, o: { hub: GuestTunnelHub; store:
       if (rest === '/api/guest/state' && mirrorTable) {
         const table = copy.tables.find(t => t.h === mirrorTable);
         if (!table) return notice(503, 'offline');
-        const text = JSON.stringify(mirrorSnapshot(copy, table.name, now())), tag = createHash('sha256').update(text).digest('base64url').slice(0, 27);
+        const text = JSON.stringify(mirrorSnapshot(copy, table.name, now(), table.h)), tag = createHash('sha256').update(text).digest('base64url').slice(0, 27);
         res.set('X-Mola-Tag', tag);
         if (req.get('X-Mola-Tag') === tag) { res.status(204).end(); return; }
         res.status(200).type('application/json').send(text); return;

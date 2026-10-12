@@ -1,14 +1,16 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { CalendarClock, UserRound, Wallet } from 'lucide-react';
+import { CalendarClock, QrCode, UserRound, Wallet } from 'lucide-react';
 import type { StaffSnapshot, TableView } from '../packages/domain/types';
 import { cashDayOf } from '../packages/domain/cash';
-import { depositMethodNames, eventOverdue, eventStarted, markPhase, markText, DEFAULT_ASK, DEFAULT_LEAD, type PublicEvent, type ReservationMark } from '../packages/domain/reservations';
+import { depositMethodNames, eventOverdue, eventStarted, heldBusyText, holdActive, markPhase, markText, qrHeldText, DEFAULT_ASK, DEFAULT_LEAD, type PublicEvent, type ReservationMark } from '../packages/domain/reservations';
 import { api, money, requestId } from './api';
 import { Modal, Notice } from './components';
 import './reservations.css';
 
 /*
- * Masalar's part of Ajanda ve rezervasyon: "Rezerve · Ahmet · 4 kişi · 20:00" on a table from an hour before (Ayarlar), the
+ * Masalar's part of Ajanda ve rezervasyon: "Rezerve · Ahmet · 4 kişi · 20:00" on a table from half an hour before (12 Ekim: the
+ * same setting closes the table QR, "QR kapalı · 20:00 rezervasyonu"; before it the table looks like any other and its window
+ * only says "Bugün 20:00 rezervasyon"; someone else still at the table: "20:00 rezervasyonu · masada hâlâ misafir var"), the
  * small "Ahmet · 20:00 · Geldi mi?" question half an hour after (Geldi / 15 dk daha bekle / Gelmedi), the seated name on the
  * table and its window, a started event's temporary tables in their own section ("Etkinlik: Derbi"), walk-in names and
  * "Kaporayla kapat". Nothing changes by itself: the screen only asks; staff decide. The clock is this device's.
@@ -21,7 +23,8 @@ export function useClock(ms = 10_000) {
   return now;
 }
 
-export type FloorMark = { mark: ReservationMark; phase: 'reserved' | 'ask' };
+/** `qrClosed`: the table QR takes no new guest orders now (Rezerve masada QR, 12 Ekim: the server decides, this mirrors it). */
+export type FloorMark = { mark: ReservationMark; phase: 'reserved' | 'ask'; qrClosed: boolean };
 export type Floor = {
   /** Started, not closed events, and their temporary tables in the event's order. */
   events: PublicEvent[]; eventTables: TableView[];
@@ -43,7 +46,8 @@ export function floorParts(data: StaffSnapshot, now: number): Floor {
     const phase = markPhase(mark, now, rules);
     if (phase === 'later') continue;
     if (phase === 'ask') asks.push(mark);
-    if (!marks.has(mark.tableId)) marks.set(mark.tableId, { mark, phase });
+    // Event tables have no QR; a forgotten reservation stops closing the QR at its next 05:00 (holdActive).
+    if (!marks.has(mark.tableId)) marks.set(mark.tableId, { mark, phase, qrClosed: !!rules.qrHold && !mark.eventId && holdActive(mark, now, rules.leadMinutes) });
   }
   const names = new Map([...data.tables, ...(data.eventTables ?? [])].map(t => [t.id, t.name]));
   return { events, eventTables, hideNormal: events.some(e => e.hideNormal), marks, asks, names, canRunEvents: rules.canRunEvents };
@@ -55,7 +59,10 @@ export function TableBadge({ table, floor }: { table: TableView; floor: Floor })
   if (!guest && !m) return null;
   return <span className="table-resv-lines">
     {guest && <span className="table-guest"><UserRound size={13} aria-hidden="true" />{guest.name}{guest.people ? ` · ${guest.people} kişi` : ''}</span>}
-    {m && (m.phase === 'ask' ? <span className="table-resv ask">{m.mark.name} · {m.mark.time} · Geldi mi?</span> : <span className="table-resv"><CalendarClock size={13} aria-hidden="true" />Rezerve · {markText(m.mark)}</span>)}
+    {/* Someone else's bill is still open when the reservation's time comes: said plainly, never cut off (12 Ekim). */}
+    {m && table.account ? <span className="table-resv held-busy" data-testid="table-held-busy"><CalendarClock size={13} aria-hidden="true" />{heldBusyText(m.mark.time)}</span>
+      : m && (m.phase === 'ask' ? <span className="table-resv ask">{m.mark.name} · {m.mark.time} · Geldi mi?</span> : <span className="table-resv"><CalendarClock size={13} aria-hidden="true" />Rezerve · {markText(m.mark)}</span>)}
+    {m?.qrClosed && <span className="table-resv qr-held" data-testid="table-qr-held"><QrCode size={13} aria-hidden="true" />{qrHeldText(m.mark.time)}</span>}
   </span>;
 }
 
@@ -73,6 +80,12 @@ function AskButtons({ mark, busyTable, onDone, onError }: { mark: ReservationMar
     {sure ? <button type="button" className="btn danger-soft" disabled={busy} onClick={() => void act('no-show', `${mark.name} gelmedi olarak işaretlendi. Masa boşaldı.`)}>Evet, gelmedi</button>
       : <button type="button" className="btn ghost" disabled={busy} onClick={() => setSure(true)}>Gelmedi</button>}
   </div>;
+}
+
+/** "Geldi" before the hold: a guest who came early is seated (the rest waits until the table is held). */
+function SeatEarly({ mark, busyTable, onDone, onError }: { mark: ReservationMark; busyTable?: boolean; onDone: Done; onError: (m: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  return <button type="button" className="btn secondary" disabled={busy || busyTable} title={busyTable ? 'Masa dolu: önce hesabı kapatın ya da rezervasyonu başka masaya alın' : undefined} onClick={() => { setBusy(true); onError(''); void api('/api/staff/reservations/seat', { requestId: requestId(), id: mark.id }).then(() => onDone(`${mark.name} masaya oturdu.`)).catch(e => onError((e as Error).message)).finally(() => setBusy(false)); }}>Geldi</button>;
 }
 
 /** The "Geldi mi?" questions due now, above the tables. */
@@ -116,7 +129,9 @@ export function TablePanel({ table, data, floor, onDone, onError }: { table: Tab
     {a?.deposit && !a.deposit.settledAt && <div className="resv-panel-row deposit"><Wallet size={18} aria-hidden="true" /><div><strong>Kapora {money(a.deposit.amount)} ({depositMethodNames[a.deposit.method]})</strong><span>{a.depositCredit ? `${money(a.depositCredit)} bu hesaptan düşüldü.` : 'Sipariş gelince bu hesaptan düşülür.'}{a.deposit.amount > (a.depositCredit ?? 0) && a.total > 0 ? ' Artan kapora için karar işletme sahibine kalır.' : ''}</span></div></div>}
     {!a && table.event && staff && !table.needsCleaning && (editing ? form : <div className="resv-panel-row"><UserRound size={18} aria-hidden="true" /><div><strong>Rezervasyonsuz misafir</strong><span>Adını yazarsanız masada ve hesapta görünür.</span></div><button type="button" className="btn secondary" onClick={() => { setName(''); setPeople(''); setEditing(true); }}>Ad yaz</button></div>)}
     {a && !guest && table.event && staff && (editing ? form : <div className="resv-panel-row"><UserRound size={18} aria-hidden="true" /><div><strong>Adı yazılmadı</strong></div><button type="button" className="text-btn" onClick={() => { setName(''); setPeople(''); setEditing(true); }}>Ad yaz</button></div>)}
-    {next && staff && <div className={`resv-panel-next${phase === 'ask' ? ' ask' : ''}`}><div><strong>{phase === 'ask' ? `${next.name} · ${next.time} · Geldi mi?` : `Rezervasyon: ${markText(next)}`}</strong>{next.deposit ? <span>Kapora {money(next.deposit)}</span> : null}{a && <span>Masa şu an dolu. Önce bu hesabı kapatın.</span>}</div><AskButtons mark={next} busyTable={!!a} onDone={onDone} onError={onError} /></div>}
+    {/* Before the hold (12 Ekim): the table is a normal table; only a small neutral note, and "Geldi" for an early guest. */}
+    {next && staff && !shown && <div className="resv-panel-row resv-panel-later" data-testid="resv-later"><CalendarClock size={18} aria-hidden="true" /><div><strong>Bugün {next.time} rezervasyon</strong><span>{next.name} · {next.people} kişi{next.deposit ? ` · Kapora ${money(next.deposit)}` : ''}</span></div><SeatEarly mark={next} busyTable={!!a} onDone={onDone} onError={onError} /></div>}
+    {next && staff && shown && <div className={`resv-panel-next${phase === 'ask' ? ' ask' : ''}`}><div><strong>{phase === 'ask' ? `${next.name} · ${next.time} · Geldi mi?` : `Rezervasyon: ${markText(next)}`}</strong>{next.deposit ? <span>Kapora {money(next.deposit)}</span> : null}{a && <span className="resv-held-busy">{heldBusyText(next.time)}. Rezervasyonu oturtmak için önce bu hesabı kapatın ya da başka masaya alın.</span>}{shown.qrClosed && <span className="resv-qr-held">{qrHeldText(next.time)}. Garson çağır ve Hesabı iste açık; garson kendi telefonundan sipariş alabilir.</span>}</div><AskButtons mark={next} busyTable={!!a} onDone={onDone} onError={onError} /></div>}
   </div>;
 }
 

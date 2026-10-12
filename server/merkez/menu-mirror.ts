@@ -34,6 +34,8 @@ const menuSchema = z.object({
   categories: z.array(z.string().max(120)).max(300), subcategories: z.array(z.object({ category: z.string().max(120), names: z.array(z.string().max(120)).max(300) }).passthrough()).max(300),
   popularProductIds: z.array(z.string().max(100)).max(100), products: z.array(product).max(2000), campaigns: z.array(z.object({ id: z.string().max(100) }).passthrough()).max(500),
   campaignUsage: z.record(z.string().max(100), z.number().int().min(0)), tables: z.array(z.object({ h: z.string().regex(/^[a-f0-9]{40}$/), name: z.string().max(120) }).strict()).max(1000),
+  // Rezerve masada QR (12 Ekim): when each held table's QR is closed (hash, instants, "20:00"; nothing about the guest).
+  reserved: z.array(z.object({ h: z.string().regex(/^[a-f0-9]{40}$/), from: z.string().datetime(), until: z.string().datetime(), time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/) }).strict()).max(2000).optional(),
   photos: z.record(z.string().regex(MIRROR_FILE), z.string().regex(/^[a-f0-9]{64}$/)),
   logo: z.string().max(48_000).regex(/^data:image\/webp;base64,[A-Za-z0-9+/=]+$/).optional(),
 }).passthrough();

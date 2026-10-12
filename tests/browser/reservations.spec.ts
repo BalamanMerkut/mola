@@ -1,11 +1,11 @@
 import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ensureSetup, openReport, openSettings } from './helpers';
 
 /*
- * Masa ayırma end to end: "Masa ayır" with a kapora, the ±2 hour warning, "Rezerve" on Masalar an hour before (this tablet's
+ * Masa ayırma end to end: "Masa ayır" with a kapora, the ±2 hour warning, "Rezerve" on Masalar half an hour before (this tablet's
  * clock moved forward), "Geldi mi?" half an hour after, "15 dk daha bekle", Geldi (the name on the table and its window,
  * the kapora deducted), a no-show whose kapora the owner keeps, and the Rezervasyon report. No sideways scroll; 16 px fields.
  */
@@ -16,6 +16,12 @@ async function shot(page: Page, file: string, path: string, fullPage = true) {
   await page.screenshot({ path, fullPage });
   const folder = process.env.KAFE_EKRAN;
   if (folder) { mkdirSync(folder, { recursive: true }); await page.screenshot({ path: join(folder, file), fullPage }); }
+}
+/** The guest's screens go beside the café's (KAFE_EKRAN=docs/ekran/kafe → docs/ekran/misafir). */
+async function shotIn(page: Page, folder: 'misafir', file: string, path: string) {
+  await page.screenshot({ path });
+  const kafe = process.env.KAFE_EKRAN;
+  if (kafe) { const dir = join(dirname(kafe), folder); mkdirSync(dir, { recursive: true }); await page.screenshot({ path: join(dir, file) }); }
 }
 const istanbul = (at: number) => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(at)).map(x => [x.type, x.value])); return { day: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` }; };
 async function sellable(request: APIRequestContext) {
@@ -44,10 +50,13 @@ test('masa ayırma: kapora, conflict warning, Rezerve and Geldi mi? on the floor
   await page.clock.install({ time: start });
   await page.setViewportSize({ width: 1280, height: 860 });
   await page.goto('/');
-  // Ayarlar → Masalar ve QR → Rezervasyon: the defaults (an hour before, 30 minutes after; cashier and waiter may write).
+  // Ayarlar → Masalar ve QR → Rezervasyon: the defaults (the table held 30 minutes before, "Geldi mi?" 30 minutes after;
+  // cashier and waiter may write). Since 12 Ekim one setting: "Rezerve" on Masalar and the table QR closing together.
   await openSettings(page, 'Rezervasyon');
   const settings = page.locator('.settings-card').filter({ has: page.getByRole('heading', { name: /^Rezervasyon/ }) });
-  await expect(settings.getByRole('button', { name: '1 saat önce' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(settings.getByText('Rezervasyondan kaç dakika önce masa ayrılsın')).toBeVisible();
+  await expect(settings.getByRole('button', { name: '30 dk önce' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(settings.getByRole('button', { name: 'Kapalı', exact: true })).toBeVisible();
   await expect(settings.getByRole('button', { name: '30 dk sonra' })).toHaveAttribute('aria-pressed', 'true');
   await expect(settings.getByLabel('Garson rezervasyon yazabilir')).toBeChecked();
   await settings.evaluate(e => e.scrollIntoView({ block: 'start' }));
@@ -107,14 +116,28 @@ test('masa ayırma: kapora, conflict warning, Rezerve and Geldi mi? on the floor
   const masa5 = page.locator('.table-card').filter({ has: page.getByRole('heading', { name: 'Masa 05', exact: true }) });
   await expect(masa5).toBeVisible();
   await expect(masa5).not.toContainText('Rezerve');
-  // 59 minutes before: "Rezerve · Ahmet Yılmaz · 4 kişi · 20:00".
-  await page.clock.fastForward(at - 59 * 60_000 - start);
+  // 31 minutes before (12 Ekim): still a normal table, no reserved styling; its window only notes the reservation (and
+  // offers "Geldi" for an early guest).
+  await page.clock.fastForward(at - 31 * 60_000 - start);
+  await page.waitForTimeout(300);
+  await expect(masa5).not.toContainText('Rezerve');
+  await expect(masa5).not.toHaveClass(/reserved/);
+  await masa5.click();
+  const early = page.getByRole('dialog', { name: 'Masa 05' });
+  await expect(early.getByTestId('resv-later')).toContainText(`Bugün ${when.time} rezervasyon`);
+  await expect(early.getByTestId('resv-later')).toContainText('Ahmet Yılmaz · 4 kişi');
+  await expect(early.getByTestId('resv-later').getByRole('button', { name: 'Geldi' })).toBeVisible();
+  await expect(early.getByRole('button', { name: '15 dk daha bekle' })).toHaveCount(0);
+  await early.getByRole('button', { name: 'Kapat', exact: true }).click();
+  // 29 minutes before: "Rezerve · Ahmet Yılmaz · 4 kişi · 20:00" and the table QR closed (the same setting).
+  await page.clock.fastForward(2 * 60_000);
   await expect(masa5).toContainText(`Rezerve · Ahmet Yılmaz · 4 kişi · ${when.time}`, { timeout: 20000 });
+  await expect(masa5).toContainText(`QR kapalı · ${when.time} rezervasyonu`);
   await expect(masa5).toHaveClass(/reserved/);
   await masa5.scrollIntoViewIfNeeded();
   await shot(page, 'masalar-rezerve.png', info.outputPath('masalar-rezerve.png'), false);
   // 31 minutes after: the small question, for both.
-  await page.clock.fastForward(90 * 60_000);
+  await page.clock.fastForward(60 * 60_000);
   const asks = page.getByRole('region', { name: 'Rezervasyon soruları' });
   const ahmet = asks.locator('.resv-ask').filter({ hasText: 'Ahmet Yılmaz' });
   await expect(ahmet).toContainText(`Ahmet Yılmaz · ${when.time} · Geldi mi?`, { timeout: 20000 });
@@ -218,7 +241,8 @@ test('masa penceresi: the night turns at 05:00, so at 22:45 the 00:45 guest is s
   await expect(card('Masa 03')).not.toContainText('Rezerve');
   await card('Masa 03').click();
   const w3 = page.getByRole('dialog', { name: 'Masa 03' });
-  await expect(w3).toContainText('Rezervasyon: Gece · 2 kişi · 00:45');
+  await expect(w3.getByTestId('resv-later')).toContainText('Bugün 00:45 rezervasyon');
+  await expect(w3.getByTestId('resv-later')).toContainText('Gece · 2 kişi');
   await expect(w3.getByRole('button', { name: 'Geldi' })).toBeVisible();
   await w3.getByRole('button', { name: 'Kapat', exact: true }).click();
   const w4 = page.getByRole('dialog', { name: 'Masa 04' });
@@ -322,6 +346,75 @@ test('masa planı: tap a free table to reserve it (table, day and time filled), 
     await expect(tile('Masa 08')).toContainText('Dolu');
   }
 });
+test('rezerve masada QR (12 Ekim): 30 minutes before, the table QR stops new orders with a calm sentence; staff see why; Geldi opens it for the party', async ({ page, browser }, info) => {
+  test.setTimeout(120000);
+  await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } });
+  await ensureSetup(page.request);
+  expect((await page.request.post('/api/staff/settings', { data: { commissionBps: null, changeSeconds: 0, waiterApproval: false } })).ok()).toBe(true);
+  // The server's own clock decides the guest side: a reservation a quarter of an hour from now is inside its 30 minutes.
+  const when = istanbul(Date.now() + 15 * 60_000), state = await (await page.request.get('/api/staff/state')).json();
+  const t10 = state.tables.find((t: any) => t.name === 'Masa 10'), t12 = state.tables.find((t: any) => t.name === 'Masa 12');
+  // A walk-in already eats at Masa 12 when its reservation's half hour starts.
+  await order(page.request, t12.id, 1);
+  for (const [t, name] of [[t10, 'Selin Kaya'], [t12, 'Mert']] as const) {
+    const r = await page.request.post('/api/staff/reservations', { data: { requestId: randomUUID(), tableId: t.id, day: when.day, time: when.time, name, people: 2 } });
+    expect(r.ok(), await r.text()).toBe(true);
+  }
+  const reserved = `Bu masa ${when.time} için ayrılmıştır. Sipariş için lütfen garsonunuza sorun.`;
+  // The guest at Masa 10: the menu, a calm note, the basket waits, Garson çağır works.
+  const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'tr-TR' }), guest = await phone.newPage();
+  await guest.goto(`/m/${t10.token}`);
+  await expect(guest.getByRole('button', { name: /Demleme Çay/ })).toBeVisible({ timeout: 15000 });
+  await expect(guest.getByTestId('ordering-reserved')).toContainText(reserved);
+  await expect(guest.getByTestId('ordering-closed')).toHaveCount(0);
+  await expect(guest.getByRole('button', { name: 'Garson çağır' })).toBeEnabled();
+  expect(await noSideScroll(guest)).toBe(true);
+  await shotIn(guest, 'misafir', 'masa-rezerve.png', info.outputPath('masa-rezerve.png'));
+  await guest.getByRole('button', { name: /Demleme Çay/ }).click();
+  await guest.getByRole('button', { name: /Sepete ekle/ }).click();
+  await guest.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
+  await expect(guest.getByRole('button', { name: 'Siparişi gönder', exact: true })).toBeDisabled();
+  await expect(guest.locator('.send-blocked-reason')).toHaveText(reserved);
+  await guest.keyboard.press('Escape');
+  await guest.getByRole('button', { name: 'EN', exact: true }).click();
+  await expect(guest.getByTestId('ordering-reserved')).toContainText(`This table is reserved for ${when.time}. Please ask your waiter to order.`);
+  await guest.getByRole('button', { name: 'TR', exact: true }).click();
+
+  // The staff side: "QR kapalı · 20:00 rezervasyonu" on the tile and in the window; the walk-in table says it plainly.
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Masalar', exact: true }).click();
+  const card = (name: string) => page.locator('.table-card').filter({ has: page.getByRole('heading', { name, exact: true }) });
+  await expect(card('Masa 10')).toContainText(`Rezerve · Selin Kaya · 2 kişi · ${when.time}`, { timeout: 20000 });
+  await expect(card('Masa 10').getByTestId('table-qr-held')).toHaveText(`QR kapalı · ${when.time} rezervasyonu`);
+  await expect(card('Masa 12').getByTestId('table-held-busy')).toHaveText(`${when.time} rezervasyonu · masada hâlâ misafir var`);
+  await expect(card('Masa 12')).toHaveClass(/held-busy/);
+  await card('Masa 10').scrollIntoViewIfNeeded();
+  await shot(page, 'masa-rezerve-qr-kapali.png', info.outputPath('masa-rezerve-qr-kapali.png'), false);
+  await card('Masa 10').click();
+  const w10 = page.getByRole('dialog', { name: 'Masa 10' });
+  await expect(w10).toContainText(`QR kapalı · ${when.time} rezervasyonu`);
+  await page.screenshot({ path: info.outputPath('masa-rezerve-pencere.png') });
+  await w10.getByRole('button', { name: 'Kapat', exact: true }).click();
+  await card('Masa 12').click();
+  const w12 = page.getByRole('dialog', { name: /^Masa 12/ });
+  await expect(w12).toContainText(`${when.time} rezervasyonu · masada hâlâ misafir var`);
+  await w12.getByRole('button', { name: 'Kapat', exact: true }).click();
+  for (const [width, height] of VIEWPORTS) { await page.setViewportSize({ width, height }); expect(await noSideScroll(page), `Masalar rezerve ${width}`).toBe(true); }
+  await page.setViewportSize({ width: 1280, height: 860 });
+
+  // Selin came: "Geldi" from the window; the same QR works for her party at once and the waiting basket goes.
+  await card('Masa 10').click();
+  await w10.getByRole('button', { name: 'Geldi' }).click();
+  await expect(card('Masa 10').locator('.table-guest')).toHaveText('Selin Kaya · 2 kişi');
+  await expect(card('Masa 10').getByTestId('table-qr-held')).toHaveCount(0);
+  await expect(guest.getByTestId('ordering-reserved')).toHaveCount(0, { timeout: 10000 });
+  await guest.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
+  await guest.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
+  await expect(guest.getByRole('dialog', { name: 'Siparişiniz alındı' })).toBeVisible();
+  await phone.close();
+});
+
 test('K-Q (9 Ekim): a plan left open over midnight moves on to the new day; a time already past asks before it is saved', async ({ page }) => {
   test.setTimeout(120000);
   await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } });

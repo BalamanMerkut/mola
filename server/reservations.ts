@@ -132,10 +132,11 @@ export function depositFlowsFor(store: Store, tenant: string, s: State, from: nu
 }
 
 /** The floor's view of reservations and events (StaffSnapshot): no phone, no note. Kitchen gets none. */
-export function floorReservations(s: State, role: Role, now: number, view: (t: CafeTable) => TableView) {
+export function floorReservations(s: State, role: Role, now: number, view: (t: CafeTable) => TableView, qr = false) {
   if (role === 'kitchen') return {};
   const settings = reservationSettings(s.reservationSettings);
-  const rules: FloorRules = { leadMinutes: settings.leadMinutes, askMinutes: settings.askMinutes, canReserve: canReserve(role, s.reservationSettings), canRunEvents: canRunEvents(role) };
+  // `qr`: QR ordering is in this business's service; then a held table's QR is closed (Rezerve masada QR, 12 Ekim).
+  const rules: FloorRules = { leadMinutes: settings.leadMinutes, askMinutes: settings.askMinutes, canReserve: canReserve(role, s.reservationSettings), canRunEvents: canRunEvents(role), ...(qr && settings.holdMinutes > 0 ? { qrHold: true } : {}) };
   const marks: ReservationMark[] = (s.reservations ?? []).filter(r => r.status === 'booked' && Math.abs(Date.parse(r.at) - now) < 36 * 3600_000)
     .map(r => ({ id: r.id, tableId: r.tableId, name: r.name, people: r.people, time: r.time, day: r.day, at: r.at, ...(r.waitUntil ? { waitUntil: r.waitUntil } : {}), ...(r.deposit ? { deposit: r.deposit.amount } : {}), ...(r.eventId ? { eventId: r.eventId } : {}) }))
     .sort((a, b) => a.at.localeCompare(b.at));
@@ -184,7 +185,7 @@ export function reservationRoutes(app: Express, store: Store, actorFor: (req: Re
   app.post('/api/staff/reservations/deposit', (req, res) => { const b = simple.extend({ kind: z.enum(['refund', 'keep']) }).parse(req.body); res.json(run(req, (s, a) => decideDeposit(s, a, b, ctx()))); });
   app.get('/api/staff/reservations/settings', (req, res) => { const { a, s } = staff(req); requireRole(s, a, ['owner']); res.json(reservationSettings(s.reservationSettings)); });
   app.post('/api/staff/reservations/settings', (req, res) => {
-    const b = z.object({ leadMinutes: z.number().int().optional(), askMinutes: z.number().int().optional(), roles: z.array(z.enum(['cashier', 'waiter'])).max(2).optional() }).parse(req.body);
+    const b = z.object({ holdMinutes: z.number().int().optional(), leadMinutes: z.number().int().optional(), askMinutes: z.number().int().optional(), roles: z.array(z.enum(['cashier', 'waiter'])).max(2).optional() }).parse(req.body);
     res.json(reservationSettings(run(req, (s, a) => saveReservationSettings(s, a, b))));
   });
   app.post('/api/staff/reservations/walk-in', (req, res) => { const b = z.object({ requestId, tableId: id, name: z.string().max(200), people: z.number().int().optional() }).parse(req.body); res.json(run(req, (s, a) => seatWalkIn(s, a, b, ctx()))); });

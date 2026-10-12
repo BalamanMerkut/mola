@@ -147,7 +147,9 @@ test('etkinlik: 25 temporary tables, reservation, walk-in, orders, closing only 
   // Selin comes: Geldi from D5's window (two hours early, at any hour: the window offers the started event's reservations).
   await card('D5').click();
   const d5 = page.getByRole('dialog', { name: 'D5' });
-  await expect(d5).toContainText(`Rezervasyon: Selin · 5 kişi · ${start.time}`);
+  // Before the half hour the table is a normal table: only a neutral note in its window (12 Ekim).
+  await expect(d5.getByTestId('resv-later')).toContainText(`Bugün ${start.time} rezervasyon`);
+  await expect(d5.getByTestId('resv-later')).toContainText('Selin · 5 kişi');
   await d5.getByRole('button', { name: 'Geldi' }).click();
   await expect(card('D5').locator('.table-guest')).toHaveText('Selin · 5 kişi');
   // Orders on both (also from Sipariş al, where the event tables are listed with the names).

@@ -137,6 +137,34 @@ test('café computer off: the guest still opens the menu from Merkez, ordering c
   assert.equal(raced.status, 409); assert.equal(raced.data.code, 'ITEM_UNAVAILABLE'); assert.match(raced.data.message, /^Bu ürün az önce tükendi: Demleme Çay\./);
 });
 
+test('Rezerve masada QR through Mola Merkez: the café refuses through the tunnel; with the café away the copy\'s windows say it', async t => {
+  const { pair, tunnel, hub, mirror, copies, installId, owner, base } = await setup('mirror-reserved'); t.after(() => pair.close());
+  // A reservation a quarter of an hour from now on the second table: held now (30 minutes before).
+  const table = pair.store.read('mola-demo').tables[1], when = new Date(Date.now() + 15 * 60_000 + 3 * 3600_000).toISOString();
+  const time = when.slice(11, 16);
+  assert.equal((await owner('/staff/reservations', { requestId: randomUUID(), tableId: table.id, day: when.slice(0, 10), time, name: 'Ahmet Yılmaz', people: 2, phone: '0532 111 22 33' })).status, 200);
+  const text = { tr: `Bu masa ${time} için ayrılmıştır. Sipariş için lütfen garsonunuza sorun.` };
+  // Online: the café's own word, through the tunnel.
+  const guest = guestPhone(base);
+  assert.equal((await guest('/api/guest/session', { token: table.token })).status, 200);
+  assert.deepEqual((await guest('/api/guest/state')).data.ordering, { open: false, reason: 'reserved', call: true, reservedFor: time });
+  const refused = await guest('/api/guest/orders', { requestId: randomUUID(), tableId: table.id, lines: [{ productId: 'tea', quantity: 1, selections: [] }], expectedTotal: 2800 });
+  assert.equal(refused.status, 409); assert.equal(refused.data.code, 'TABLE_RESERVED_SOON'); assert.equal(refused.data.message, text.tr);
+  // The copy carries the window (hash, times; no name, no phone) and Merkez answers from it while the café is away.
+  await mirror.flush();
+  const copy = copies.get('mola-demo')!;
+  assert.equal(copy.reserved?.length, 1); assert.equal(copy.reserved![0].time, time);
+  for (const secret of ['Ahmet', '0532']) assert.ok(!JSON.stringify(copy).includes(secret));
+  tunnel.pause(true); await wait(() => !hub.online(installId));
+  const away = guestPhone(base);
+  assert.equal((await away('/api/guest/session', { token: table.token })).status, 200);
+  assert.deepEqual((await away('/api/guest/state')).data.ordering, { open: false, reason: 'reserved', call: false, reservedFor: time });
+  const other = guestPhone(base);
+  await other('/api/guest/session', { token: pair.store.read('mola-demo').tables[2].token });
+  assert.equal((await other('/api/guest/state')).data.ordering.reason, 'offline', 'another table: the usual "Şu an sipariş alınamıyor"');
+  tunnel.pause(false); await wait(() => hub.online(installId));
+});
+
 test('suspended, or no copy (an older café): as before; the business deleted: its copy and photos go with it', async t => {
   const { pair, tunnel, hub, mirror, copies, installId, base, table } = await setup('mirror-closed'); t.after(() => pair.close());
   await mirror.flush(); assert.ok(copies.get('mola-demo'));

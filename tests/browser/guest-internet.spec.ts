@@ -1,7 +1,7 @@
 import { test, expect, request as playwrightRequest, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { detailTab, ensureSetup, MERKEZ, openBusiness, openSettings, openYonetim } from './helpers';
+import { ADMIN_API, adminLogin, detailTab, ensureSetup, MERKEZ, openBusiness, openSettings, openYonetim } from './helpers';
 
 /*
  * İnternetten menü (server/guest-tunnel.ts, server/merkez/guest-tunnel.ts): the table QR holds Mola Merkez's public address
@@ -179,6 +179,48 @@ test('İnternetten menü: a guest off the café network orders through Mola Merk
     await scan.goto(url);
     await expect(scan.getByRole('button', { name: /Demleme Çay/ })).toBeEnabled({ timeout: 20_000 });
   } finally { await guestContext.close(); await vendor.close(); }
+});
+
+test('İnternetten menü: a reserved table says so through Mola Merkez, and from Merkez\'s copy with the café computer away (12 Ekim)', async ({ page, browser }) => {
+  test.setTimeout(120_000);
+  await page.request.post('/api/login', { data: { username: 'isletme', password: PASSWORD } });
+  await ensureSetup(page.request);
+  await expect.poll(async () => (await (await page.request.get('/api/staff/network')).json()).public?.connected ?? false, { timeout: 30_000 }).toBe(true);
+  const base: string = (await (await page.request.get('/api/staff/network')).json()).public.base;
+  const state = await (await page.request.get('/api/staff/state')).json(), table = state.tables[7], url = `${base}/${table.token}`;
+  const vendor = await playwrightRequest.newContext(); await adminLogin(vendor);
+  const copyAt = async () => (await (await vendor.get(`${ADMIN_API}/state`)).json()).businesses.find((b: any) => b.name === state.name).menu?.mirror?.updatedAt ?? '';
+  const before = await copyAt();
+  // A reservation a quarter of an hour from now (the café's clock): the table is held now.
+  const at = new Date(Date.now() + 15 * 60_000 + 3 * 3600_000).toISOString(), time = at.slice(11, 16);
+  expect((await page.request.post('/api/staff/reservations', { data: { requestId: `internet-resv-${Date.now()}`, tableId: table.id, day: at.slice(0, 10), time, name: 'Deniz', people: 2 } })).ok()).toBe(true);
+  const reserved = `Bu masa ${time} için ayrılmıştır. Sipariş için lütfen garsonunuza sorun.`;
+  // The copy follows the change a few seconds later (only the window: no name).
+  await expect.poll(copyAt, { timeout: 30_000 }).not.toBe(before);
+  const guestContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await guestContext.route(`${KAFE}/**`, route => route.abort());
+  try {
+    const guest = await guestContext.newPage();
+    await guest.goto(url);
+    await expect(guest.getByRole('button', { name: /Demleme Çay/ })).toBeVisible({ timeout: 20_000 });
+    await expect(guest.getByTestId('ordering-reserved')).toContainText(reserved);
+    await expect(guest.getByRole('button', { name: 'Garson çağır' })).toBeEnabled();
+    // The café computer away: Merkez answers from its copy and still says the table is reserved (not asking the café).
+    expect((await page.request.post('/api/test/tunnel', { data: { on: false } })).ok()).toBe(true);
+    await expect.poll(async () => (await guest.request.get(`${base}/api/guest/state`)).status(), { timeout: 10_000 }).toBe(503);
+    const scan = await guestContext.newPage();
+    await scan.goto(url);
+    await expect(scan.getByRole('button', { name: /Demleme Çay/ })).toBeVisible({ timeout: 20_000 });
+    await expect(scan.getByTestId('ordering-reserved')).toContainText(reserved);
+    await expect(scan.getByTestId('ordering-offline')).toHaveCount(0);
+    await expect(scan.getByRole('button', { name: 'Garson çağır' })).toBeDisabled();
+    expect(await fits(scan)).toBe(true);
+  } finally {
+    await page.request.post('/api/test/tunnel', { data: { on: true } });
+    const r = (await (await page.request.get(`/api/staff/reservations?from=${at.slice(0, 10)}&to=${at.slice(0, 10)}`)).json()).reservations.find((x: any) => x.name === 'Deniz');
+    if (r) await page.request.post('/api/staff/reservations/cancel', { data: { requestId: `internet-resv-cancel-${Date.now()}`, id: r.id } });
+    await guestContext.close(); await vendor.dispose();
+  }
 });
 
 test('İnternetten menü: the owner is told to reprint Wi-Fi-only QR codes once the internet address is ready', async ({ page }) => {

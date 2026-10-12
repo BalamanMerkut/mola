@@ -3,7 +3,8 @@ import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { campaignUsage } from '../packages/domain/campaigns.js';
 import { menuCategories, menuNamesEn, menuSubcategories } from '../packages/domain/categories.js';
-import { MIRROR_FILE, MIRROR_TABLE_PREFIX, type MirrorMenu } from '../packages/domain/menu-mirror.js';
+import { MIRROR_FILE, MIRROR_TABLE_PREFIX, type MirrorHold, type MirrorMenu } from '../packages/domain/menu-mirror.js';
+import { holdUntil, reservationSettings } from '../packages/domain/reservations.js';
 import { sectorOf } from '../packages/domain/sector.js';
 import { guestSocial } from '../packages/domain/social-links.js';
 import { floorTables } from '../packages/domain/takeaway.js';
@@ -30,7 +31,7 @@ const sha = (b: Buffer | string) => createHash('sha256').update(b).digest('hex')
 export const tableHash = (token: string) => sha(MIRROR_TABLE_PREFIX + token).slice(0, 40);
 
 /** The copy of one business and the photo files it names (name → path on this computer). */
-export function buildMirror(s: State, directory: string, o: { menuOnly: boolean; demo: boolean; social: boolean; popular: string[] }) {
+export function buildMirror(s: State, directory: string, o: { menuOnly: boolean; demo: boolean; social: boolean; popular: string[]; holds?: boolean; now?: number }) {
   const published = s.products.filter(p => p.published !== false), files = new Map<string, string>();
   const folder = join(directory, 'media', s.tenantId), photoOf = (photo: string | null | undefined) => {
     const m = /^\/media\/([^/]+)\/([a-f0-9-]{36})\.webp$/.exec(photo ?? '');
@@ -50,8 +51,23 @@ export function buildMirror(s: State, directory: string, o: { menuOnly: boolean;
     popularProductIds: o.popular.filter(id => published.some(p => p.id === id)), products,
     campaigns: live, campaignUsage: Object.fromEntries(Object.entries(used).filter(([id]) => live.some(c => c.id === id))),
     tables: floorTables(s).filter(t => t.token && !t.event && !t.takeaway).map(t => ({ h: tableHash(t.token), name: t.name })),
+    ...(o.holds ? { reserved: mirrorHolds(s, o.now ?? Date.now()) } : {}),
   };
   return { menu, files };
+}
+/**
+ * Rezerve masada QR (12 Ekim): the windows of the waiting reservations on QR tables, from now to a week ahead (each from
+ * `holdMinutes` before its time to the next 05:00: packages/domain/reservations.ts holdUntil). A reservation decided later
+ * ("Geldi", "Gelmedi", "İptal") changes the snapshot, so a new copy goes a few seconds later.
+ */
+export function mirrorHolds(s: State, now: number): MirrorHold[] {
+  const minutes = reservationSettings(s.reservationSettings).holdMinutes;
+  if (!minutes) return [];
+  const tables = new Map(floorTables(s).filter(t => t.token && !t.event && !t.takeaway).map(t => [t.id, tableHash(t.token)]));
+  return (s.reservations ?? []).flatMap(r => {
+    const h = tables.get(r.tableId), from = Date.parse(r.at) - minutes * 60_000, until = holdUntil(r.at);
+    return r.status === 'booked' && h && until > now && from < now + 7 * 86_400_000 ? [{ h, from: new Date(from).toISOString(), until: new Date(until).toISOString(), time: r.time }] : [];
+  }).sort((a, b) => a.from.localeCompare(b.from) || a.h.localeCompare(b.h)).slice(0, 1000);
 }
 
 type Sent = { hash: string; at: number };
@@ -114,7 +130,7 @@ export class MenuMirror {
   /** One business: the copy (if it changed), then the photos Merkez asks for. */
   async push(tenant: string, force = false) {
     const s = this.store.read(tenant);
-    const { menu, files } = buildMirror(s, this.store.directory, { menuOnly: this.link.menuOnly(tenant) || !this.link.has(tenant, 'qr-order'), demo: this.link.isDemo(tenant), social: this.link.has(tenant, 'social'), popular: this.popular(tenant, s) });
+    const { menu, files } = buildMirror(s, this.store.directory, { menuOnly: this.link.menuOnly(tenant) || !this.link.has(tenant, 'qr-order'), demo: this.link.isDemo(tenant), social: this.link.has(tenant, 'social'), popular: this.popular(tenant, s), holds: this.link.has(tenant, 'reservations') && this.link.has(tenant, 'qr-order') && !this.link.menuOnly(tenant) });
     const photos: Record<string, string> = {};
     for (const [name, path] of files) { if (!MIRROR_FILE.test(name)) continue; try { photos[name] = this.fileSha(path); } catch { /* a missing file: the guest sees the drawing */ } }
     const full: MirrorMenu = { ...menu, photos }, text = JSON.stringify(full), hash = sha(text);

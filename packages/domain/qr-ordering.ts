@@ -9,10 +9,15 @@ import { businessDay } from './business-day.js';
  *   - not paused after gün sonu: a completed gün sonu pauses it until someone taps "Aç", the cash day is opened again or the
  *     next business day (05:00) begins;
  *   - not stopped by hand ("QR siparişlerini durdur", cashier, Müdür, owner); a reminder after 30 minutes.
+ * One table only (12 Ekim): a table held for a reservation takes no new guest orders (`reason: 'reserved'`, reservedText;
+ * the rule is packages/domain/reservations.ts tableHold).
  * There is no closing-hour setting (rejected by the owner). Platform (delivery) orders and staff orders are not affected.
  * No imports beyond the business day: the screens use the same texts.
  */
-export type QrOrderingReason = 'staff' | 'closing' | 'stopped' | 'offline';
+/** `reserved` is per table (the guest's own table is held for a reservation; packages/domain/reservations.ts tableHold). */
+export type QrOrderingReason = 'staff' | 'closing' | 'stopped' | 'offline' | 'reserved';
+/** What the guest snapshot carries (GuestSnapshot.ordering): `reservedFor` "20:00" with reason `reserved`. */
+export type GuestOrdering = { open: boolean; reason?: QrOrderingReason; call: boolean; reservedFor?: string };
 /** Kept in the business's State (`qrOrdering`); missing = never stopped or paused. */
 export type QrOrderingState = {
   /** "QR siparişlerini durdur": when and by whom (name for the chip; the id is in the audit). */
@@ -68,5 +73,10 @@ export function qrClosedLine(v: Pick<QrOrderingView, 'reason' | 'byName'>) {
 export const QR_CLOSED_TEXT = { tr: 'Şu an sipariş almıyoruz, lütfen garsonunuza sorun.', en: 'We are not taking orders right now. Please ask your waiter.' };
 /** The guest's line while the café cannot be reached (Mola Merkez serves the menu copy; tunnel down, café computer off). */
 export const QR_OFFLINE_TEXT = { tr: 'Şu an sipariş alınamıyor, lütfen garsonunuza sorun.', en: 'Orders cannot be placed right now. Please ask your waiter.' };
+/**
+ * Rezerve masada QR (12 Ekim, sahibin kararı): from the hold on (default 30 minutes before) a reserved table's QR takes no new
+ * guest orders; the menu, "Garson çağır" and "Hesabı iste" stay. The guest's calm line, Turkish and English.
+ */
+export const reservedText = (time: string) => ({ tr: `Bu masa ${time} için ayrılmıştır. Sipariş için lütfen garsonunuza sorun.`, en: `This table is reserved for ${time}. Please ask your waiter to order.` });
 /** The confirmation of "QR siparişlerini durdur" (owner's wording). */
 export const QR_STOP_CONFIRM = 'Emin misiniz? Müşteriler telefondan sipariş veremez. Menü görünmeye devam eder, siparişleri garsonlar alır.';

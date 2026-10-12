@@ -28,6 +28,7 @@
 .floor-tile.ready .floor-tile-state{color:#8a5a12}
 .floor-tile.reserved{border-color:var(--accent,#b96844);background:#fdf3ee}
 .floor-tile.reserved .floor-tile-state,.floor-tile.asking .floor-tile-state{color:#9a4f2c}
+.floor-tile.held-busy{box-shadow:inset 3px 0 0 var(--accent,#b96844)}
 .floor-tile.asking{border-color:var(--accent,#b96844);border-style:dashed;background:#fdf3ee}
 .floor-tile.cleaning{border-color:#c9cfc4;background:#f1f2ee}
 .floor-tile:focus-visible{outline:2px solid var(--green);outline-offset:2px}

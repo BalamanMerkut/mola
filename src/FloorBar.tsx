@@ -4,6 +4,7 @@ import type { TableView } from '../packages/domain/types';
 import { api, money } from './api';
 import { reportToday } from './ReportPeriod';
 import type { Floor } from './ReservationFloor';
+import { heldBusyText, qrHeldText } from '../packages/domain/reservations';
 import './floor-bar.css';
 // The staff side of Sipariş al (rows with "+", the basket bar); the Composer itself lives in src/components.tsx.
 import './staff-order.css';
@@ -63,10 +64,12 @@ export function FloorFilters({ value, onChange, counts }: { value: FloorFilter; 
 
 /** One small tile: the table's number, its open amount or "boş", one word for its state. */
 export function CompactTable({ table, state, floor, calls, onOpen }: { table: TableView; state: { label: string; tone: string }; floor: Floor; calls: ('bill' | 'call')[]; onOpen: () => void }) {
-  const mark = !table.account ? floor.marks.get(table.id) : undefined;
+  const held = floor.marks.get(table.id), mark = !table.account ? held : undefined;
+  // Rezerve masada QR (12 Ekim): a party still at a held table, and a closed table QR, are said in the tile's name too.
+  const holdWords = held ? `${table.account ? ` · ${heldBusyText(held.mark.time)}` : ''}${held.qrClosed ? ` · ${qrHeldText(held.mark.time)}` : ''}` : '';
   const word = table.needsCleaning ? 'Temizlik' : mark ? mark.phase === 'ask' ? 'Geldi mi?' : `Rezerve ${mark.mark.time}` : state.label === 'Servise hazır' ? 'Hazır' : table.account ? state.label : '';
   const tone = table.needsCleaning ? 'cleaning' : mark ? mark.phase === 'ask' ? 'asking' : 'reserved' : state.label === 'Servise hazır' ? 'ready' : table.account ? 'open' : 'empty';
-  return <button type="button" className={`floor-tile ${tone}`} data-table={table.id} onClick={onOpen} aria-label={`${table.name}${table.account ? ` · ${money(table.account.balance)}` : ' · boş'}${word ? ` · ${word}` : ''}${calls.length ? ` · ${calls.includes('bill') ? 'Hesap istiyor' : 'Garson çağırıyor'}` : ''}`}>
+  return <button type="button" className={`floor-tile ${tone}${held && table.account ? ' held-busy' : ''}`} data-table={table.id} onClick={onOpen} aria-label={`${table.name}${table.account ? ` · ${money(table.account.balance)}` : ' · boş'}${word ? ` · ${word}` : ''}${holdWords}${calls.length ? ` · ${calls.includes('bill') ? 'Hesap istiyor' : 'Garson çağırıyor'}` : ''}`}>
     <span className="floor-tile-top"><strong>{table.name.replace(/^Masa\s+/i, '')}</strong>{calls.length > 0 && <span className="floor-tile-call" aria-hidden="true">{calls.includes('bill') ? <ReceiptText size={13} /> : <BellRing size={13} />}</span>}</span>
     <span className="floor-tile-amount">{table.account ? money(table.account.balance) : 'boş'}</span>
     {word && <span className="floor-tile-state">{tone === 'reserved' || tone === 'asking' ? <CalendarClock size={12} aria-hidden="true" /> : tone === 'cleaning' ? <Sparkles size={12} aria-hidden="true" /> : null}{word}</span>}

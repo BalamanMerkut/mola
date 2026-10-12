@@ -33,18 +33,33 @@ export type MirrorMenu = {
   /** Campaigns with their time windows and weekly repeat; `campaignUsage`: the units already sold (quota campaigns). */
   campaigns: Campaign[]; campaignUsage: Record<string, number>;
   tables: { h: string; name: string }[];
+  /**
+   * Rezerve masada QR (12 Ekim): when each held table's QR closes and opens again (table hash, instants, the reservation's
+   * "20:00"; no guest name, no phone), so Merkez can say "Bu masa 20:00 için ayrılmıştır" without asking the café. A top-level
+   * field: an older Merkez keeps its strict table list and ignores this. Missing = no holds known (ordering is closed anyway
+   * on the copy).
+   */
+  reserved?: MirrorHold[];
   photos: Record<string, string>;
 };
+export type MirrorHold = { h: string; from: string; until: string; time: string };
+/** The hold on a table of the copy at `now` (the earliest when two overlap). */
+export function mirrorHold(m: Pick<MirrorMenu, 'reserved'>, h: string, now: Date) {
+  const t = now.getTime();
+  return (m.reserved ?? []).filter(x => x.h === h && Date.parse(x.from) <= t && t < Date.parse(x.until)).sort((a, b) => a.from.localeCompare(b.from))[0];
+}
 
 /**
  * The guest snapshot Merkez answers from its copy: the menu as the café would show it now (campaign windows at this moment,
  * new products of the last 30 days), no orders, no calls, and ordering closed ("Şu an sipariş alınamıyor"): the café cannot
  * be reached. `mirror: true` tells the screen (src/Customer.tsx).
  */
-export function mirrorSnapshot(m: MirrorMenu, tableName: string, now: Date): GuestSnapshot {
+export function mirrorSnapshot(m: MirrorMenu, tableName: string, now: Date, tableHash?: string): GuestSnapshot {
   const s = { products: m.products, campaigns: m.campaigns, archivedCampaignUsage: m.campaignUsage, orders: [], archives: [] };
+  // A table held for a reservation says so (from the copy, the café is not asked); everything else: "Şu an sipariş alınamıyor".
+  const hold = tableHash && !m.menuOnly ? mirrorHold(m, tableHash, now) : undefined;
   return {
-    mirror: true, ordering: { open: false, reason: 'offline', call: false }, ...(m.demo ? { demo: true } : {}), ...(m.sector ? { sector: m.sector } : {}), menuOnly: m.menuOnly,
+    mirror: true, ordering: hold ? { open: false, reason: 'reserved', call: false, reservedFor: hold.time } : { open: false, reason: 'offline', call: false }, ...(m.demo ? { demo: true } : {}), ...(m.sector ? { sector: m.sector } : {}), menuOnly: m.menuOnly,
     calls: { waiter: false, bill: false }, tableHasAccount: false, ...(m.logo ? { logo: m.logo } : {}), ...(m.theme ? { theme: m.theme } : {}), ...(m.menuHero ? { menuHero: m.menuHero } : {}),
     ...(m.googleReviewUrl ? { googleReviewUrl: m.googleReviewUrl } : {}), ...m.social, ...(m.paymentMode ? { paymentMode: m.paymentMode } : {}), needsCleaning: false,
     newProductIds: newProductIds(m.products, now), popularProductIds: m.popularProductIds, categories: m.categories, ...(m.categoryNamesEn ? { categoryNamesEn: m.categoryNamesEn } : {}),

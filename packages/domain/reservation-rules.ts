@@ -1,6 +1,6 @@
 import { assertInt, DomainError, once, requireRole } from './engine.js';
 import type { Account, Actor, CafeTable, Context, State } from './types.js';
-import { canReserve, canRunEvents, conflicts, reservationSettings, eventTableNames, instantOf, isDay, TIME_PATTERN, turkishDay, WAIT_MINUTES, type CafeEvent, type DepositMethod, type Reservation, type ReservationSettings, type SeatedGuest } from './reservations.js';
+import { canReserve, canRunEvents, conflicts, reservationSettings, eventTableNames, instantOf, isDay, MAX_HOLD, TIME_PATTERN, turkishDay, WAIT_MINUTES, type CafeEvent, type DepositMethod, type Reservation, type ReservationSettings, type SeatedGuest } from './reservations.js';
 
 /*
  * The changes of Ajanda ve rezervasyon (server side: they use the engine's errors and request replay). Every change happens
@@ -188,7 +188,11 @@ export function decideDeposit(s: State, actor: Actor, input: { requestId: string
 export function saveReservationSettings(s: State, actor: Actor, input: ReservationSettings) {
   requireRole(s, actor, ['owner']);
   const next = { ...s.reservationSettings };
-  if (input.leadMinutes !== undefined) { assertInt(input.leadMinutes, 0, 24 * 60); next.leadMinutes = input.leadMinutes; }
+  // "Rezervasyondan kaç dakika önce masa ayrılsın" (12 Ekim). `leadMinutes` from an older screen means the same now.
+  const hold = input.holdMinutes ?? input.leadMinutes;
+  if (hold !== undefined) { assertInt(hold, 0, MAX_HOLD); next.holdMinutes = hold; }
+  // The old display-only setting is never read again (reservations.ts reservationSettings).
+  delete next.leadMinutes;
   if (input.askMinutes !== undefined) { assertInt(input.askMinutes, 5, 240); next.askMinutes = input.askMinutes; }
   if (input.roles !== undefined) next.roles = [...new Set(input.roles.filter(r => r === 'cashier' || r === 'waiter'))];
   s.reservationSettings = next;

@@ -2,6 +2,8 @@
 
 Üç denetimin (kurulum ve yaşam döngüsü, günlük işletme ekranları, Mola Yönetim ve güvenlik) birleşik listesi. Her dalga sonunda bütün testler ve gerçek paketle deneme kurulumu yapılır. [K] = sahibin kararı gerekiyor.
 
+> **Durum (12 Ekim, rezerve masada QR — sahibin kararı):** docs/HAFTA_SONU_BULGULARI.md "Karar bekleyenler"deki tek madde yapıldı (oraya 2. madde olarak taşındı; bekleyen karar kalmadı). Tek ayar "Rezervasyondan kaç dakika önce masa ayrılsın" (varsayılan 30, 0 = kapalı) hem Masalar'daki "Rezerve"yi hem masanın QR'ının yeni misafir siparişine kapanmasını belirler (409 `TABLE_RESERVED_SOON`; tünel ve Merkez'in menü kopyası dahil); Geldi/ödeme/Gelmedi/İptal/05:00 ile açılır; masada hâlâ misafir varsa kesilmez, personel uyarılır. Typecheck, birim testleri (832; 1 atlanan: pwsh yok), derleme, tam tarayıcı turu (122/122 paket, ilk denemede, 3500/3590), `test:paket` (25 denetim), `installer` ve `check-pilot-package` geçti. Gerçek cihazda denenecek: docs/GERCEK_CIHAZ_TESTI.md 13.2–13.4.
+>
 > **Durum (11 Ekim, hafta sonu bulguları — garson ve yazıcı tarafı):** docs/HAFTA_SONU_BULGULARI.md 1, 4, 5, 6, 9 yapıldı (yazıcı durumu ve "Yazıcıda kâğıt yok" uyarısı; uzun süredir sipariş yok hatırlatması; garsonun sipariş değiştirmesi ve hazır ürün değişimi; garson ataması/"Servise hazır", masa bölümleri ve sıra; garsonun masa birleştirmesi). Birim ve tek tek tarayıcı testleri geçti; ortak tam e2e turu ve gerçek yazıcıyla (kâğıt bitmiş rulo, USB sürücüsü) deneme bekliyor (docs/GERCEK_CIHAZ_TESTI.md 6, 7, 8, 18).
 
 ## Dalga 1 — Kullanımı engelleyenler ve güvenlik

@@ -9,6 +9,8 @@ const english: Record<string, string> = {
   // QR siparişleri kapalı (8 Ekim) and the café unreachable (Mola Merkez's menu copy): packages/domain/qr-ordering.ts.
   ORDERING_CLOSED: 'We are not taking orders right now. Please ask your waiter.',
   CAFE_OFFLINE: 'Orders cannot be placed right now. Please ask your waiter.',
+  // Rezerve masada QR (12 Ekim): the screen's own note names the time (packages/domain/qr-ordering.ts reservedText).
+  TABLE_RESERVED_SOON: 'This table is reserved. Please ask your waiter to order.',
   CALL_UNAVAILABLE: 'Staff screens are not connected right now. Please call out to our staff.',
   CAMPAIGN_LIMIT: 'This offer has just run out. Please check your basket.',
   OPTION_REQUIRED: 'Please choose the required options.', INVALID_OPTIONS: 'Please check the options you chose.',

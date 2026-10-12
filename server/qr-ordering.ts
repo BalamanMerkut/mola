@@ -2,7 +2,8 @@ import type { Express, Request } from 'express';
 import { directLoopback, type HttpSecurity } from './http-security.js';
 import { z } from 'zod';
 import { DomainError, requireRole } from '../packages/domain/engine.js';
-import { QR_CHANGERS, QR_CLOSED_TEXT, QR_STAFF_WINDOW_MS, qrOrderingView, type QrOrderingView } from '../packages/domain/qr-ordering.js';
+import { QR_CHANGERS, QR_CLOSED_TEXT, QR_STAFF_WINDOW_MS, qrOrderingView, reservedText, type GuestOrdering, type QrOrderingView } from '../packages/domain/qr-ordering.js';
+import { reservationSettings, tableHold } from '../packages/domain/reservations.js';
 import { businessDay } from '../packages/domain/business-day.js';
 import type { Actor, Role, State } from '../packages/domain/types.js';
 import type { MerkezLink } from './kafe-link.js';
@@ -23,6 +24,10 @@ import type { Store } from './store.js';
  *   Guests     POST /api/guest/orders refuses with ORDERING_CLOSED ("Şu an sipariş almıyoruz, lütfen garsonunuza sorun.");
  *              the basket stays on the phone. Garson çağır / Hesabı iste need only a connected staff screen. Editing or
  *              cancelling an order already sent is not refused (it is the guest's own, within its short change window).
+ *   Rezerve    (12 Ekim) one table only: from `holdMinutes` (default 30) before a waiting reservation until "Geldi", "Gelmedi",
+ *              "İptal" or the next 05:00, that table's QR refuses new orders with TABLE_RESERVED_SOON ("Bu masa 20:00 için
+ *              ayrılmıştır. Sipariş için lütfen garsonunuza sorun."). A party already at the table keeps its orders, "Garson
+ *              çağır" and "Hesabı iste"; staff see "20:00 rezervasyonu · masada hâlâ misafir var" (src/ReservationFloor.tsx).
  *   Not touched: staff orders, masasız sipariş, delivery platform orders.
  * MOLA_QR_STAFF_CHECK=0 (browser tests' server) or a unit test (NODE_TEST_CONTEXT) leaves the "staff screen connected" part
  * off unless a test turns it on (`staffRule`; POST /api/test/qr-staff in the browser tests): those suites order as guests
@@ -73,10 +78,25 @@ export class QrOrdering {
     const v = qrOrderingView(state, this.staffConnected(tenant), this.now().getTime());
     return role && (QR_CHANGERS as readonly string[]).includes(role) ? { ...v, canChange: true } : v;
   }
-  /** The guest snapshot's part. */
-  guestView(tenant: string, s: Pick<State, 'qrOrdering'>) { const { open, reason, call } = this.view(tenant, s); return { open, ...(reason ? { reason } : {}), call }; }
-  /** A new guest order: refused while closed (the café's word, whatever the phone showed). */
-  assertGuestOrder(tenant: string, s: Pick<State, 'qrOrdering'>) {
+  /**
+   * Rezerve masada QR (12 Ekim): the reservation holding this table now, if any. Only with "Rezervasyon ve etkinlik" in the
+   * service (without it the floor shows no reservations either; the data stays). The setting and the rule:
+   * packages/domain/reservations.ts (holdMinutes, tableHold).
+   */
+  tableHold(tenant: string, s: Pick<State, 'reservations' | 'reservationSettings'>, tableId: string | undefined) {
+    if (!tableId || !this.link.has(tenant, 'reservations')) return undefined;
+    return tableHold(s.reservations, tableId, this.now().getTime(), reservationSettings(s.reservationSettings).holdMinutes);
+  }
+  /** The guest snapshot's part: the café's state, or this table held for a reservation ("Bu masa 20:00 için ayrılmıştır"). */
+  guestView(tenant: string, s: Pick<State, 'qrOrdering' | 'reservations' | 'reservationSettings'>, tableId?: string): GuestOrdering {
+    const { open, reason, call } = this.view(tenant, s), hold = this.tableHold(tenant, s, tableId);
+    if (hold) return { open: false, reason: 'reserved', call, reservedFor: hold.time };
+    return { open, ...(reason ? { reason } : {}), call };
+  }
+  /** A new guest order: refused while closed or while its table is held (the café's word, whatever the phone showed). */
+  assertGuestOrder(tenant: string, s: Pick<State, 'qrOrdering' | 'reservations' | 'reservationSettings'>, tableId?: string) {
+    const hold = this.tableHold(tenant, s, tableId);
+    if (hold) throw new DomainError('TABLE_RESERVED_SOON', reservedText(hold.time).tr, 409);
     if (!this.view(tenant, s).open) throw new DomainError('ORDERING_CLOSED', QR_CLOSED_TEXT.tr, 409);
   }
   /** Garson çağır / Hesabı iste: only while someone could hear it. */

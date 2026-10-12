@@ -384,3 +384,43 @@ test('8 Ekim: the change time runs out with the edit window open: a clear pop-up
       await request.post('/api/staff/orders/review', { data: { requestId: crypto.randomUUID().replace(/-/g, ''), orderId: o.id, version: o.version, approve: false, reason: 'Test' } });
   } finally { await settings(request, { changeSeconds: 0, waiterApproval: false }); }
 });
+
+test('rezerve masada QR (12 Ekim): a walk-in still at the table keeps its orders and "Hesabı iste"; new QR orders wait with a calm sentence', async ({ page, browser }) => {
+  const request = await owner(page.request);
+  await settings(request, { changeSeconds: 0, waiterApproval: false });
+  // The walk-in orders first; then the table is booked for a quarter of an hour from now (inside its 30 minutes).
+  const guest = await guestAt(browser, request, 8);
+  await addTea(guest); await sendBasket(guest);
+  await guest.getByRole('button', { name: 'Tamam', exact: true }).click();
+  const at = new Date(Date.now() + 15 * 60_000 + 3 * 3600_000).toISOString(), time = at.slice(11, 16), table = (await staffState(request)).tables[8];
+  const booked = await request.post('/api/staff/reservations', { data: { requestId: crypto.randomUUID(), tableId: table.id, day: at.slice(0, 10), time, name: 'Rezervasyonlu', people: 2 } });
+  expect(booked.ok(), await booked.text()).toBe(true);
+  const reserved = `Bu masa ${time} için ayrılmıştır. Sipariş için lütfen garsonunuza sorun.`;
+  await expect(guest.getByTestId('ordering-reserved')).toContainText(reserved, { timeout: 10_000 });
+  // Not cut off: their order and the table bill stay, "Hesabı iste" and "Garson çağır" work; only a new order waits.
+  await guest.getByRole('button', { name: /Siparişlerim/ }).click();
+  await expect(guest.locator('.customer-order')).toHaveCount(1);
+  await expect(guest.locator('.customer-due')).toContainText('Masanın hesabı');
+  await expect(guest.getByRole('button', { name: 'Hesabı iste' })).toBeEnabled();
+  await guest.getByRole('button', { name: /Menümüz/ }).click();
+  await addTea(guest);
+  await guest.getByRole('button', { name: /Sepetimi görüntüle/ }).click();
+  await expect(guest.getByRole('button', { name: 'Siparişi gönder', exact: true })).toBeDisabled();
+  await expect(guest.locator('.send-blocked-reason')).toHaveText(reserved);
+  await guest.keyboard.press('Escape');
+  await guest.getByRole('button', { name: 'Hesabı iste' }).click();
+  await guest.getByRole('group', { name: 'Nasıl ödeyeceksiniz?' }).getByRole('button', { name: 'Nakit' }).click();
+  await expect(guest.getByRole('button', { name: 'Hesap istendi' })).toBeDisabled();
+  // The waiter adds from his own phone as ever.
+  const tea = (await staffState(request)).products.find((p: any) => p.id === 'tea');
+  expect((await request.post('/api/staff/orders', { data: { requestId: crypto.randomUUID(), tableId: table.id, lines: [{ productId: 'tea', quantity: 1, selections: [] }], expectedTotal: tea.price } })).ok()).toBe(true);
+  // Paid and gone: the next guest at this table meets the reservation sentence too, until staff seat the party.
+  for (const call of (await staffState(request)).serviceCalls ?? []) await request.post('/api/staff/calls/resolve', { data: { callId: call.id } });
+  await payAll(request, 8);
+  const next = await guestAt(browser, request, 8);
+  await expect(next.getByTestId('ordering-reserved')).toContainText(reserved);
+  const r = (await (await request.get(`/api/staff/reservations?from=${at.slice(0, 10)}&to=${at.slice(0, 10)}`)).json()).reservations.find((x: any) => x.name === 'Rezervasyonlu');
+  expect((await request.post('/api/staff/reservations/no-show', { data: { requestId: crypto.randomUUID(), id: r.id } })).ok()).toBe(true);
+  await expect(next.getByTestId('ordering-reserved')).toHaveCount(0, { timeout: 10_000 });
+  await guest.context().close(); await next.context().close();
+});

@@ -1,5 +1,5 @@
 import type { Account, Order, Payment, Role } from './types.js';
-import { businessDay } from './business-day.js';
+import { businessDay, dayStart, DAY_MS } from './business-day.js';
 
 /*
  * Ajanda ve rezervasyon: masa ayırma (a real table reserved for a time) and etkinlikler (match days and the like, with
@@ -65,13 +65,24 @@ export type CafeEvent = {
   closedAt?: string; closedBy?: string; closedByName?: string;
   createdAt: string; by: string; byName: string;
 };
-/** Ayarlar → Masalar ve QR → Rezervasyon. `roles`: besides the owner, who may write reservations. */
-export type ReservationSettings = { leadMinutes?: number; askMinutes?: number; roles?: ('cashier' | 'waiter')[] };
-export const DEFAULT_LEAD = 60, DEFAULT_ASK = 30, WAIT_MINUTES = 15;
+/**
+ * Ajanda ve rezervasyon → Ayarlar. `roles`: besides the owner, who may write reservations.
+ * `holdMinutes` (12 Ekim, sahibin kararı): "Rezervasyondan kaç dakika önce masa ayrılsın". One setting drives both the table's
+ * "Rezerve · Ahmet · 20:00" on Masalar and the table QR closing for new guest orders (default 30; 0 = the QR never closes and
+ * the table shows "Rezerve" only from the reservation's time). Before it the table looks and works like any other table.
+ * `leadMinutes` is the old, display-only setting (default 60): no longer read (its meaning changed: it would now close the QR
+ * for hours), every business starts at 30; the next save drops it.
+ */
+export type ReservationSettings = { holdMinutes?: number; /** @deprecated before 12 Ekim; not read. */ leadMinutes?: number; askMinutes?: number; roles?: ('cashier' | 'waiter')[] };
+export const DEFAULT_HOLD = 30, DEFAULT_ASK = 30, WAIT_MINUTES = 15;
+/** The floor's lead is the hold (kept under its old name for the screens). */
+export const DEFAULT_LEAD = DEFAULT_HOLD;
 export const CONFLICT_MS = 2 * 3600_000;
-export const LEAD_CHOICES = [30, 60, 90, 120, 180] as const, ASK_CHOICES = [15, 30, 45, 60] as const;
+export const HOLD_CHOICES = [0, 15, 30, 45, 60, 90, 120] as const, ASK_CHOICES = [15, 30, 45, 60] as const;
+export const MAX_HOLD = 240;
 export function reservationSettings(s?: ReservationSettings) {
-  return { leadMinutes: s?.leadMinutes ?? DEFAULT_LEAD, askMinutes: s?.askMinutes ?? DEFAULT_ASK, roles: s?.roles ?? ['cashier', 'waiter'] as ('cashier' | 'waiter')[] };
+  const hold = s?.holdMinutes ?? DEFAULT_HOLD;
+  return { holdMinutes: hold, leadMinutes: hold, askMinutes: s?.askMinutes ?? DEFAULT_ASK, roles: s?.roles ?? ['cashier', 'waiter'] as ('cashier' | 'waiter')[] };
 }
 /** The owner and the Müdür always; the cashier and waiters when Ayarlar allows them. */
 export const canReserve = (role: Role, s?: ReservationSettings) => role === 'owner' || role === 'manager' || ((role === 'cashier' || role === 'waiter') && reservationSettings(s).roles.includes(role));
@@ -86,7 +97,7 @@ export function withoutContact<T extends { phone?: string; note?: string }>(r: T
 }
 
 /** What a floor screen needs (StaffSnapshot.reservations). */
-export type FloorRules = { leadMinutes: number; askMinutes: number; canReserve: boolean; canRunEvents: boolean };
+export type FloorRules = { leadMinutes: number; askMinutes: number; canReserve: boolean; canRunEvents: boolean; /** The held table's QR is closed for new guest orders (QR ordering in the service, hold > 0). */ qrHold?: boolean };
 /** A booked reservation as Masalar sees it (no phone, no note). */
 export type ReservationMark = { id: string; tableId: string; name: string; people: number; time: string; day: string; at: string; waitUntil?: string; deposit?: number; eventId?: string };
 export type PublicEvent = Pick<CafeEvent, 'id' | 'name' | 'day' | 'start' | 'end' | 'startAt' | 'endAt' | 'startedAt' | 'hideNormal' | 'capacity'> & { tables: number };
@@ -107,6 +118,25 @@ export function markPhase(m: Pick<ReservationMark, 'at' | 'waitUntil'>, now: num
   const askAt = Math.max(at + rules.askMinutes * 60_000, m.waitUntil ? Date.parse(m.waitUntil) : 0);
   return now < askAt ? 'reserved' : 'ask';
 }
+/**
+ * Rezerve masada QR (12 Ekim). A waiting ("Bekleniyor") reservation holds its table from `minutes` before its time: the table
+ * QR takes no new guest orders (server/qr-ordering.ts). The hold ends when staff decide: "Geldi" (the party's own bill opens
+ * and the QR works for them; when that bill closes the reservation is over), "Gelmedi" or "İptal". Never decided, it ends with
+ * the reservation's business day (the next 05:00), so a forgotten reservation never closes a table QR for good. 0 = no hold.
+ */
+export function holdUntil(at: string) { return dayStart(businessDay(at)) + DAY_MS; }
+export function holdActive(r: Pick<Reservation, 'at'>, now: number, minutes: number) {
+  const at = Date.parse(r.at);
+  return minutes > 0 && Number.isFinite(at) && now >= at - minutes * 60_000 && now < holdUntil(r.at);
+}
+/** The reservation holding this table now (the earliest one, when two overlap), or undefined. */
+export function tableHold<R extends Pick<Reservation, 'id' | 'tableId' | 'at' | 'time' | 'status'>>(list: readonly R[] | undefined, tableId: string, now: number, minutes: number): R | undefined {
+  return (list ?? []).filter(r => r.tableId === tableId && r.status === 'booked' && holdActive(r, now, minutes)).sort((a, b) => a.at.localeCompare(b.at))[0];
+}
+/** Staff words: the table tile and window ("QR kapalı · 20:00 rezervasyonu") and a party still at a held table. */
+export const qrHeldText = (time: string) => `QR kapalı · ${time} rezervasyonu`;
+export const heldBusyText = (time: string) => `${time} rezervasyonu · masada hâlâ misafir var`;
+
 /** An event's tables are on Masalar from its start time or from "Etkinliği başlat", until it is closed. */
 export const eventStarted = (e: Pick<CafeEvent, 'startedAt' | 'startAt'>, now: number) => !!e.startedAt || now >= Date.parse(e.startAt);
 /** After the planned end only a gentle "Etkinlik bitti mi?"; never closed by itself. */
