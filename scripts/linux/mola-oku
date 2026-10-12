@@ -1,0 +1,122 @@
+#!/bin/bash
+# mola-oku: Mola Merkez sunucusunda YALNIZ OKUYAN yardımcı (docs/VDS_KURULUM.md, "Sunucuyu incelemek ve yedekleri çekmek").
+# kur.sh bunu /usr/local/sbin/mola-oku olarak kurar (root:root 755). Windows'taki "npm run vds" ve "npm run vds:cek" yalnız
+# şöyle çağırır (parolasız izin: /etc/sudoers.d/mola-okuma, örneği pakette mola-okuma.sudoers.ornek):
+#   sudo -n -u mola /usr/local/sbin/mola-oku <komut>
+# Hiçbir dosyayı yazmaz, silmez ya da değiştirmez. Yalnız Mola çalışma klasörünü ve Merkez yedeklerini okur; veri klasörüne
+# (anahtarlar, merkez.sqlite) yalnız "boyut" bakar (du), içeriğini hiçbir zaman vermez.
+#   surum     bu yardımcının biçimi, Merkez sürümü, klasörler
+#   liste     çalışma klasörü ve Merkez yedeklerindeki dosyalar: boyut, değişme zamanı, 1 MB'a kadar olanların SHA-256'sı
+#   ozet      standart girdiden gelen (NUL ile ayrılmış) "calisma/…" ya da "yedek/…" adlarının SHA-256'sı
+#   paket     aynı adların tar akışı (standart çıktıya)
+#   yedekler  Merkez yedekleri (ad, boyut, tamam mı, doğrulandı mı) ve yedek durum dosyası
+#   hatalar   çalışma klasöründeki hata-kayitlari/hatalar.json ve durum-ozeti.md
+#   boyut     /var/lib/mola-merkez altındaki klasörlerin boyutu
+set -u
+export LC_ALL=C.UTF-8
+umask 077
+cd / || exit 1
+[ "$#" -eq 1 ] || { echo "Kullanım: mola-oku surum|liste|ozet|paket|yedekler|hatalar|boyut" >&2; exit 2; }
+
+AYAR=/etc/mola-merkez/ayarlar.env
+KOK=/var/lib/mola-merkez
+PROGRAM=/opt/mola-merkez/app/package.json
+
+# ayarlar.env'deki bir değer (yalnız tam yol kabul edilir), yoksa varsayılan.
+ayar() {
+  local v=""
+  [ -r "$AYAR" ] && v=$(grep -E "^$1=" "$AYAR" 2>/dev/null | tail -n 1 | cut -d= -f2- | tr -d "\"'\r")
+  case "$v" in /*) printf '%s' "$v" ;; *) printf '%s' "$2" ;; esac
+}
+# $1, $2'nin kendisi ya da içinde mi?
+icinde() { case "$1/" in "$2"/*) return 0 ;; esac; return 1; }
+VERI=$(realpath -m -- "$(ayar MERKEZ_DATA_DIR "$KOK/veri")")
+# Okunabilecek bir kök: veri klasörü (anahtarlar) ya da onu içeren bir klasör asla olmaz.
+guvenli() {
+  local p
+  p=$(realpath -m -- "$1" 2>/dev/null) || return 0
+  if icinde "$p" "$VERI" || icinde "$VERI" "$p"; then echo "mola-oku: $p veri klasörüyle çakışıyor, okunmaz." >&2; return 0; fi
+  printf '%s' "$p"
+}
+CALISMA=$(guvenli "$(ayar MERKEZ_CALISMA_KLASORU "$KOK/calisma")")
+YEDEK=$(guvenli "$(ayar MERKEZ_BACKUP_DIR "$KOK/merkez-yedek")")
+
+# "calisma/<yol>" ya da "yedek/<yol>" → tam yol. Kökün dışı, "..", bağlantı (symlink) ve normal dosya olmayan reddedilir.
+coz() {
+  local ad=$1 kok yol tam gercek
+  case "$ad" in
+    calisma/*) kok=$CALISMA; yol=${ad#calisma/} ;;
+    yedek/*) kok=$YEDEK; yol=${ad#yedek/} ;;
+    *) return 1 ;;
+  esac
+  [ -n "$kok" ] && [ -n "$yol" ] || return 1
+  case "/$yol/" in */../*|*/./*|*//*) return 1 ;; esac
+  tam="$kok/$yol"
+  [ -f "$tam" ] && [ ! -L "$tam" ] || return 1
+  gercek=$(realpath -e -- "$tam" 2>/dev/null) || return 1
+  icinde "$gercek" "$kok" && [ "$gercek" != "$kok" ] || return 1
+  printf '%s' "$tam"
+}
+
+# Bir kökün dosyaları: "<kök adı>\t<boyut>\t<zaman>\t<sha256 ya da ->\t<göreli yol>\0"
+liste_kok() {
+  [ -n "$2" ] && [ -d "$2" ] || return 0
+  find "$2" -mindepth 1 -maxdepth "$3" -type f -printf '%s\t%T@\t%P\0' 2>/dev/null | while IFS= read -r -d '' s; do
+    boyut=${s%%$'\t'*}; s=${s#*$'\t'}; zaman=${s%%$'\t'*}; yol=${s#*$'\t'}; ozet=-
+    if [ "$boyut" -le 1048576 ]; then ozet=$(sha256sum < "$2/$yol" 2>/dev/null | cut -c1-64); fi
+    printf '%s\t%s\t%s\t%s\t%s\0' "$1" "$boyut" "${zaman%.*}" "${ozet:--}" "$yol"
+  done
+}
+
+case "$1" in
+  surum)
+    printf 'MOLA-OKU\t1\n'
+    printf 'merkez\t%s\n' "$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$PROGRAM" 2>/dev/null | head -n 1)"
+    printf 'calisma\t%s\nyedek\t%s\n' "${CALISMA:--}" "${YEDEK:--}"
+    ;;
+  liste)
+    printf 'MOLA-LISTE\t1\t%s\t%s\0' "${CALISMA:--}" "${YEDEK:--}"
+    liste_kok calisma "$CALISMA" 6
+    liste_kok yedek "$YEDEK" 2
+    ;;
+  ozet)
+    while IFS= read -r -d '' ad; do
+      tam=$(coz "$ad") || continue
+      printf '%s\t%s\0' "$(sha256sum < "$tam" | cut -c1-64)" "$ad"
+    done
+    ;;
+  paket)
+    while IFS= read -r -d '' ad; do tam=$(coz "$ad") && printf '%s\0' "${tam#/}"; done |
+      tar --null --no-recursion --ignore-failed-read --format=pax --numeric-owner -C / -T - -cf - 2>/dev/null
+    ;;
+  yedekler)
+    printf '##mola:yedekler\n'
+    if [ -n "$YEDEK" ] && [ -d "$YEDEK" ]; then
+      for d in "$YEDEK"/merkez-yedek-*/; do
+        [ -d "$d" ] || continue
+        ad=$(basename "$d"); boyut=$(du -sb -- "$d" 2>/dev/null | cut -f1); tamam=0; dogru=0
+        [ -f "$d/complete.json" ] && [ ! -e "$d/YEDEK_SURUYOR.txt" ] && tamam=1
+        [ -f "$d/verification.json" ] && dogru=1
+        printf '%s\t%s\t%s\t%s\n' "$ad" "${boyut:-0}" "$tamam" "$dogru"
+      done
+    fi
+    printf '##mola:yedek-durum\n'
+    [ -n "$YEDEK" ] && cat -- "$YEDEK/merkez-yedek-durum.json" 2>/dev/null
+    printf '\n'
+    ;;
+  hatalar)
+    printf '##mola:hatalar\n'
+    { [ -n "$CALISMA" ] && cat -- "$CALISMA/hata-kayitlari/hatalar.json" 2>/dev/null; } || printf '(çalışma klasöründe hatalar.json yok)'
+    printf '\n##mola:durum-ozeti\n'
+    { [ -n "$CALISMA" ] && cat -- "$CALISMA/durum-ozeti.md" 2>/dev/null; } || printf '(çalışma klasöründe durum-ozeti.md yok)'
+    printf '\n'
+    ;;
+  boyut)
+    printf '##mola:boyut\n'
+    du -sb -- "$KOK"/*/ 2>/dev/null
+    ;;
+  *)
+    echo "Kullanım: mola-oku surum|liste|ozet|paket|yedekler|hatalar|boyut" >&2; exit 2
+    ;;
+esac
+exit 0

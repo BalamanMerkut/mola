@@ -26,8 +26,9 @@ import type { MerkezData, MerkezStore } from './store.js';
  *                          data: never written into a cloud-synced folder (OneDrive, Google Drive, Dropbox, iCloud)
  *   surumler\              releases and each café's version history
  *   guncellemeler\         drop a .mola-guncelleme here: Güncellemeler shows it as "Klasörde hazır" (publishing needs a click)
- * Once Merkez runs on a VDS, the same folder is filled on the vendor's PC from GET /api/merkez/admin/workfolder/snapshot
- * (admin session or a "calisma" token); see docs/GELISTIRICI_REHBERI.md "Mola çalışma klasörü".
+ * On the VDS Merkez writes /var/lib/mola-merkez/calisma (MERKEZ_CALISMA_KLASORU in the Linux package) and the vendor's PC
+ * copies it every day with "npm run vds:cek" (scripts/vds/cek.ts, read-only over SSH; docs/VDS_KURULUM.md bölüm 15).
+ * GET /api/merkez/admin/workfolder/snapshot (admin session or a "calisma" token) still gives the same content as JSON.
  */
 export const DEFAULT_WORK_FOLDER = 'C:\\MolaCalisma';
 export const SNAPSHOT_FORMAT = 'mola-calisma-1';
@@ -252,9 +253,14 @@ export class WorkFolder {
   private verified?: { head: string | null; at: number; report: VerifyReport };
   private known = new Map<string, string>();
   constructor(private deps: SnapshotDeps & { attachments?: Attachments; fallback?: string | null }) {}
-  /** The folder in use: the vendor's choice (null = off), else the default of this run. */
-  path(): string | null { const w = this.deps.store.read().workFolder; return w ? w.path : (this.deps.fallback === undefined ? defaultWorkFolder() : this.deps.fallback); }
-  status(): WorkFolderStatus { const p = this.path(); return { path: p, isDefault: !this.deps.store.read().workFolder, cloud: !!p && cloudFolder(p), running: !!this.running, ...this.state }; }
+  /**
+   * The folder in use: the vendor's choice (null = off), else the default of this run. A choice that is no full path on this
+   * system (a Windows folder like C:\MolaCalisma, carried in a Merkez moved to the Linux VDS) is not used: the default of
+   * this run is (on the VDS: MERKEZ_CALISMA_KLASORU=/var/lib/mola-merkez/calisma), never a folder relative to the program.
+   */
+  path(): string | null { const w = this.chosen(); return w ? w.path : (this.deps.fallback === undefined ? defaultWorkFolder() : this.deps.fallback); }
+  private chosen() { const w = this.deps.store.read().workFolder; return w && (w.path === null || isAbsolute(w.path)) ? w : undefined; }
+  status(): WorkFolderStatus { const p = this.path(); return { path: p, isDefault: !this.chosen(), cloud: !!p && cloudFolder(p), running: !!this.running, ...this.state }; }
   /** Every 5 minutes, and a few seconds after each change (runtime.ts; tests call run() themselves). */
   start() {
     this.stop(); this.timer = setInterval(() => void this.run(), SYNC_MS); this.timer.unref(); this.schedule(SOON_MS);

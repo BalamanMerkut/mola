@@ -16,6 +16,8 @@
     "merkez:restore": "tsx scripts/merkez-restore.ts",
     "merkez:sifre-sifirla": "tsx scripts/merkez-sifre-sifirla.ts",
     "merkez:linux-paket": "node scripts/merkez-linux-paket.mjs",
+    "vds": "tsx --disable-warning=ExperimentalWarning scripts/vds.ts",
+    "vds:cek": "tsx --disable-warning=ExperimentalWarning scripts/vds-cek.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "node scripts/browser-tests.mjs",
@@ -45,7 +47,8 @@
     "ev-provasi": "tsx scripts/ev-provasi.ts",
     "pdf:belgeler": "node scripts/pdf-belgeler.mjs",
     "pdf:test-listesi": "node scripts/pdf-test-listesi.mjs",
-    "pdf:hafta-sonu": "node scripts/pdf-test-listesi.mjs --kisa --kaynak=docs/HAFTA_SONU_SENARYOSU.md --cikti=docs/pdf/Mola-Hafta-Sonu-Senaryosu.pdf"
+    "pdf:hafta-sonu": "node scripts/pdf-test-listesi.mjs --kisa --kaynak=docs/HAFTA_SONU_SENARYOSU.md --cikti=docs/pdf/Mola-Hafta-Sonu-Senaryosu.pdf",
+    "pdf:vds": "node scripts/pdf-test-listesi.mjs --kaynak=docs/VDS_KURULUM.md --kalip=docs/pdf/kaynak-vds/vds.html --cikti=docs/pdf/Mola-VDS-Kurulum-Rehberi.pdf"
   },
   "dependencies": {
     "express": "5.2.1",

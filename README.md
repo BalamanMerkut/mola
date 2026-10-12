@@ -141,6 +141,12 @@ Yeni ürün eklerken kategori otomatik seçilmez; Kategori seçiniz ile başlar 
 ### Mola Merkez ve Mola Yönetim
 Satıcının paneli artık kafe sunucusunda değil, ayrı bir süreç olan **Mola Merkez**'dedir: `npm.cmd run merkez:dev` → `http://localhost:4000` (kullanıcı `admin`, ilk şifre `.local/merkez/merkez-first-login.txt`). Kafe sunucusu (`npm.cmd run dev`) lisansını ondan imzalı olarak alır ve yalnız dışarıya bağlanır. İşletme verisi (satış, ödeme, menü, çalışan) Merkez'e gitmez. Yeni kafe ilk açılışta "Mola'yı etkinleştir" der (30 gün deneme ya da Mola Yönetim'den alınan kod). Bölünme öncesi veri klasörleri bir kez `npm.cmd run merkez:import -- <klasör>` ile bağlanır. Ayrıntılar: `docs/GELISTIRICI_REHBERI.md` bölüm 12. SMS/e-posta gönderimi kapalıdır ve ücretli servis satın alınmamıştır.
 
+### Mola Merkez sunucuda (VDS): yedekleri çekmek ve sunucuya bakmak
+Merkez'in VDS'e taşınması adım adım `docs/VDS_KURULUM.md`'de (en üstte "Kurulum sırası"; yazdırılabilir hâli `docs/pdf/Mola-VDS-Kurulum-Rehberi.pdf`, `npm.cmd run pdf:vds`). Taşındıktan sonra iki araç sunucuya **yalnız okumak için** bağlanır (Windows'un SSH'ı, sizin anahtarınız; sunucuda `mola-oku` yardımcısı ve `/etc/sudoers.d/mola-okuma` izni):
+- `npm run vds:cek`: sunucudaki Mola çalışma klasörünü ve en yeni 14 Merkez yedeğini `C:\MolaCalisma\vds`'e, şifreli yedekleri ayrıca Google Drive'a çeker (çalışma klasörü Drive'a gitmez). İlk kez: `npm run vds:cek -- --kur --host yonetici@<IP>`, sonra parmak izini onaylama. Her gün 07:00 için Görev Zamanlayıcı komutunu `--zamanla` yazar; komutu siz çalıştırırsınız.
+- `npm run vds -- <komut>`: `durum`, `kayitlar [--son N] [--hata]`, `caddy`, `hatalar`, `yedek`, `disk`, `sertifika`, `guvenlik`, `ozet`. Sabit komut listesi, serbest komut yok; `--kuru` gönderilecek komutu yalnız yazar.
+Kayıtlar: `.local/kayitlar/vds-cek.log`, `.local/kayitlar/vds.log`; ayar: `.local/vds.json`. Sunucuda bir şeyi değiştiren her işlemi sahip kendisi yapar (`docs/VDS_KURULUM.md` bölüm 15, "Claude için").
+
 ## Klasör düzeni
 
 | Klasör | İçinde |

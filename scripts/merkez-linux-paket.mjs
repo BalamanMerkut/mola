@@ -126,6 +126,10 @@ Type=simple
 User=mola
 Group=mola
 WorkingDirectory=/opt/mola-merkez/app
+# Mola çalışma klasörü (README, durum özeti, işlem/hata kayıtları, destek talepleri; server/merkez/workfolder.ts): the vendor's
+# PC copies it every day with "npm run vds:cek" (docs/VDS_KURULUM.md). Inside ReadWritePaths, only mola reads it (UMask).
+# ayarlar.env may set another folder or 0 (off); its values win over this line.
+Environment=MERKEZ_CALISMA_KLASORU=/var/lib/mola-merkez/calisma
 # Settings (PUBLIC_ORIGIN, data folder, key passphrase file...): /etc/mola-merkez/ayarlar.env
 EnvironmentFile=/etc/mola-merkez/ayarlar.env
 Environment=SERVE_BUILD=1
@@ -174,6 +178,9 @@ TRUST_LOCAL_PROXY=1
 MERKEZ_PORT=4000
 MERKEZ_DATA_DIR=/var/lib/mola-merkez/veri
 MERKEZ_BACKUP_DIR=/var/lib/mola-merkez/merkez-yedek
+# Mola çalışma klasörü on this server; the vendor's PC copies it (and the backups above) every day with "npm run vds:cek".
+# Only the mola user reads it; "npm run vds:cek" reads it through /usr/local/sbin/mola-oku (docs/VDS_KURULUM.md bölüm 15).
+MERKEZ_CALISMA_KLASORU=/var/lib/mola-merkez/calisma
 # The data key is locked with this passphrase file (at least 12 characters; kur.sh makes a random one). Keep a copy of it
 # AND of the 24-letter Merkez recovery code somewhere else: without both, a lost server's backups stay closed.
 MERKEZ_KEY_PROTECTION=1
@@ -254,6 +261,7 @@ set -eu
 HERE="$(cd "$(dirname "$0")" && pwd)"
 id mola >/dev/null 2>&1 || useradd --system --home-dir /var/lib/mola-merkez --shell /usr/sbin/nologin mola
 install -d -o mola -g mola -m 700 /var/lib/mola-merkez
+install -d -o mola -g mola -m 700 /var/lib/mola-merkez/calisma
 install -d -o root -g mola -m 750 /etc/mola-merkez
 if [ ! -f /etc/mola-merkez/ayarlar.env ]; then install -o root -g mola -m 640 "$HERE/ayarlar.env.ornek" /etc/mola-merkez/ayarlar.env; YENI=1; fi
 if [ ! -f /etc/mola-merkez/anahtar-parolasi ]; then
@@ -265,8 +273,11 @@ systemctl stop mola-merkez 2>/dev/null || true
 rm -rf /opt/mola-merkez.yeni
 mkdir -p /opt/mola-merkez.yeni
 cp -R "$HERE/app" "$HERE/runtime" /opt/mola-merkez.yeni/
-cp "$HERE/sifre-sifirla.sh" "$HERE/BENIOKU.txt" /opt/mola-merkez.yeni/
+cp "$HERE/sifre-sifirla.sh" "$HERE/BENIOKU.txt" "$HERE/mola-okuma.sudoers.ornek" /opt/mola-merkez.yeni/
 chmod 755 /opt/mola-merkez.yeni/runtime/node /opt/mola-merkez.yeni/sifre-sifirla.sh
+# Read-only helper for "npm run vds" / "npm run vds:cek" (never writes). Its password-less sudo rule is the owner's own step:
+# mola-okuma.sudoers.ornek → /etc/sudoers.d/mola-okuma (docs/VDS_KURULUM.md bölüm 15).
+install -o root -g root -m 755 "$HERE/mola-oku" /usr/local/sbin/mola-oku
 rm -rf /opt/mola-merkez.eski; [ -d /opt/mola-merkez ] && mv /opt/mola-merkez /opt/mola-merkez.eski
 mv /opt/mola-merkez.yeni /opt/mola-merkez
 chown -R root:root /opt/mola-merkez
@@ -309,6 +320,8 @@ Adım adım anlatım: docs/VDS_KURULUM.md (Ubuntu LTS, SSH anahtarı, güvenlik 
   ayarlar.env.ornek    ayarlar (/etc/mola-merkez/ayarlar.env olur; PUBLIC_ORIGIN ve MERKEZ_MENU_ORIGIN'i kendi adlarınızla değiştirin)
   Caddyfile.ornek      Caddy ile otomatik HTTPS (/etc/caddy/Caddyfile)
   sifre-sifirla.sh     Mola Yönetim yönetici şifresi için son çare
+  mola-oku             yalnız okuyan yardımcı (kur.sh /usr/local/sbin/mola-oku yapar): npm run vds ve npm run vds:cek kullanır
+  mola-okuma.sudoers.ornek  o yardımcının parolasız izni (/etc/sudoers.d/mola-okuma; elle kurulur, docs/VDS_KURULUM.md 15)
 
 KISACA
   tar xzf Mola-Merkez-Linux-x64-${version}.tar.gz && cd ${BASE} && sudo ./kur.sh
@@ -325,15 +338,18 @@ function checkArchive(file) {
   const files = untar(gunzipSync(readFileSync(file)));
   const byName = new Map(files.filter(f => f.type === '0').map(f => [f.name, f]));
   const problems = [];
-  const need = ['app/merkez.mjs', 'app/merkez-sifre-sifirla.mjs', 'app/package.json', 'app/manifest.json', 'app/dist/merkez.html', 'app/node_modules/sharp/package.json', 'app/node_modules/@img/sharp-linux-x64/package.json', 'runtime/node', 'runtime/LICENSE', 'kur.sh', 'sifre-sifirla.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek', 'BENIOKU.txt'];
+  const need = ['app/merkez.mjs', 'app/merkez-sifre-sifirla.mjs', 'app/package.json', 'app/manifest.json', 'app/dist/merkez.html', 'app/node_modules/sharp/package.json', 'app/node_modules/@img/sharp-linux-x64/package.json', 'runtime/node', 'runtime/LICENSE', 'kur.sh', 'sifre-sifirla.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek', 'BENIOKU.txt', 'mola-oku', 'mola-okuma.sudoers.ornek'];
   for (const name of need) if (!byName.has(`${BASE}/${name}`)) problems.push(`eksik: ${name}`);
-  for (const name of ['runtime/node', 'kur.sh', 'sifre-sifirla.sh']) { const f = byName.get(`${BASE}/${name}`); if (f && !(f.mode & 0o100)) problems.push(`çalıştırılabilir değil: ${name}`); }
+  for (const name of ['runtime/node', 'kur.sh', 'sifre-sifirla.sh', 'mola-oku']) { const f = byName.get(`${BASE}/${name}`); if (f && !(f.mode & 0o100)) problems.push(`çalıştırılabilir değil: ${name}`); }
   const node = byName.get(`${BASE}/runtime/node`);
   if (node && node.data.subarray(0, 4).toString('latin1') !== '\x7fELF') problems.push('runtime/node bir Linux programı değil');
   for (const name of byName.keys()) if (/(^|\/)(veri|merkez-yedek)\/|development\.key|anahtar(\.yedek)?\.json|merkez\.sqlite|\.exe$|node\.exe$/.test(name)) problems.push(`pakete girmemeli: ${name}`);
-  for (const name of ['kur.sh', 'sifre-sifirla.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek']) { const f = byName.get(`${BASE}/${name}`); if (f?.data.includes('\r\n')) problems.push(`Windows satır sonu: ${name}`); }
+  for (const name of ['kur.sh', 'sifre-sifirla.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek', 'mola-oku', 'mola-okuma.sudoers.ornek']) { const f = byName.get(`${BASE}/${name}`); if (f?.data.includes('\r\n')) problems.push(`Windows satır sonu: ${name}`); }
   const service = byName.get(`${BASE}/mola-merkez.service`)?.data.toString('utf8') ?? '';
   if (!/ExecStart=\/opt\/mola-merkez\/runtime\/node .*merkez\.mjs/.test(service) || !/MERKEZ_HOST=127\.0\.0\.1/.test(service)) problems.push('mola-merkez.service beklenen ExecStart/MERKEZ_HOST satırlarını içermiyor');
+  const workFolder = /^(Environment=)?MERKEZ_CALISMA_KLASORU=\/var\/lib\/mola-merkez\/calisma$/m;
+  if (!workFolder.test(service) || !workFolder.test(byName.get(`${BASE}/ayarlar.env.ornek`)?.data.toString('utf8') ?? '')) problems.push('MERKEZ_CALISMA_KLASORU (servis ve ayarlar.env.ornek) eksik');
+  if (!(byName.get(`${BASE}/mola-oku`)?.data.toString('utf8') ?? '').startsWith('#!/bin/bash\n')) problems.push('mola-oku bir bash betiği değil');
   if (problems.length) throw new Error(`Linux Merkez paketi hatalı:\n  ${problems.join('\n  ')}`);
   return { files: byName.size, size: statSync(file).size };
 }
@@ -383,6 +399,9 @@ const entries = [
   { path: `${BASE}/ayarlar.env.ornek`, data: Buffer.from(unix(SETTINGS)) },
   { path: `${BASE}/Caddyfile.ornek`, data: Buffer.from(unix(CADDYFILE)) },
   { path: `${BASE}/BENIOKU.txt`, data: Buffer.from(unix(README)) },
+  // Read-only helper and its sudo rule (npm run vds, npm run vds:cek): kept as real files in scripts/linux/.
+  { path: `${BASE}/mola-oku`, data: Buffer.from(unix(readFileSync('scripts/linux/mola-oku', 'utf8'))), mode: 0o755 },
+  { path: `${BASE}/mola-okuma.sudoers.ornek`, data: Buffer.from(unix(readFileSync('scripts/linux/mola-okuma.sudoers.ornek', 'utf8'))) },
 ];
 const archive = join(out, `Mola-Merkez-Linux-x64-${version}.tar.gz`);
 await writeTarGz(archive, entries);

@@ -1,0 +1,7 @@
+# /etc/sudoers.d/mola-okuma: Mola'nın YALNIZ OKUYAN komutları, parola sormadan ("npm run vds", "npm run vds:cek"; Claude).
+# Kurmak (sunucuda, paketin klasöründe; docs/VDS_KURULUM.md bölüm 15):
+#   sudo install -m 440 -o root -g root mola-okuma.sudoers.ornek /etc/sudoers.d/mola-okuma && sudo visudo -c
+# Kullanıcı adınız "yonetici" değilse iki satırdaki adı değiştirin. Burada yazmayan hiçbir komut parolasız çalışmaz;
+# yazılanlar da yalnız tam bu biçimiyle (başka seçenek eklenirse sudo parola ister, -n ile reddeder).
+yonetici ALL=(mola) NOPASSWD: /usr/local/sbin/mola-oku surum, /usr/local/sbin/mola-oku liste, /usr/local/sbin/mola-oku ozet, /usr/local/sbin/mola-oku paket, /usr/local/sbin/mola-oku yedekler, /usr/local/sbin/mola-oku hatalar, /usr/local/sbin/mola-oku boyut
+yonetici ALL=(root) NOPASSWD: /usr/sbin/ufw status verbose, /usr/bin/fail2ban-client status sshd

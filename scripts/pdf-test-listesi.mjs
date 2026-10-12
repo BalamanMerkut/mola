@@ -15,9 +15,12 @@ import { pathToFileURL } from 'node:url';
 const ROOT = resolve(import.meta.dirname, '..');
 // --kaynak=<md> --cikti=<pdf> --kisa: the same layout for a short sheet (no cover, no table of contents; the title and the
 // first paragraph on top of page 1, a little tighter): npm run pdf:hafta-sonu (docs/HAFTA_SONU_SENARYOSU.md).
+// --kalip=<html>: another cover and footer with the same layout: npm run pdf:vds (docs/VDS_KURULUM.md, docs/pdf/kaynak-vds/).
+// That guide also uses ``` code blocks (<pre>), #### headings, "* " lists, "- [ ]" checklist items (☐) and list items whose
+// text goes on in indented lines.
 const arg = name => process.argv.find(a => a.startsWith(`--${name}=`))?.slice(name.length + 3);
 const SHORT = process.argv.includes('--kisa');
-const SOURCE = arg('kaynak') ?? 'docs/GERCEK_CIHAZ_TESTI.md', TEMPLATE = 'docs/pdf/kaynak-test/test.html', OUT = arg('cikti') ?? 'docs/pdf/Mola-Gercek-Cihaz-Testi.pdf';
+const SOURCE = arg('kaynak') ?? 'docs/GERCEK_CIHAZ_TESTI.md', TEMPLATE = arg('kalip') ?? 'docs/pdf/kaynak-test/test.html', OUT = arg('cikti') ?? 'docs/pdf/Mola-Gercek-Cihaz-Testi.pdf';
 const EM_DASH = '—';
 /** Sections that start on a new page (the long tail: reporting, after the VDS, summary). */
 const NEW_PAGE = new Set(['30', '31', '32']);
@@ -62,7 +65,16 @@ function blocks(lines, top = true) {
       i++; continue;
     }
     if (top && (m = /^### (.+)$/.exec(line))) { out.push(`<h2>${inline(m[1])}</h2>`); i++; continue; }
-    if (/^\*[^*].*\*$/.test(line.trim())) { out.push(`<p class="sure">${inline(line.trim())}</p>`); i++; continue; }
+    if (top && (m = /^#### (.+)$/.exec(line))) { out.push(`<h3>${inline(m[1])}</h3>`); i++; continue; }
+    if (/^---+\s*$/.test(line)) { out.push('<div class="sayfa-sonu" style="break-after: page"></div>'); i++; continue; }
+    if (/^\s*```/.test(line)) {
+      const code = []; i++;
+      while (i < lines.length && !/^\s*```/.test(lines[i])) code.push(lines[i++]);
+      i++;
+      const indent = Math.min(...code.filter(l => l.trim()).map(l => /^ */.exec(l)[0].length), 99);
+      out.push(`<pre><code>${esc(code.map(l => l.slice(indent === 99 ? 0 : indent)).join('\n'))}</code></pre>`); continue;
+    }
+    if (/^\*[^*\s].*\*$/.test(line.trim())) { out.push(`<p class="sure">${inline(line.trim())}</p>`); i++; continue; }
     if (line.startsWith('|')) {
       const t = []; while (i < lines.length && lines[i].startsWith('|')) t.push(lines[i++]);
       out.push(table(t)); continue;
@@ -73,15 +85,23 @@ function blocks(lines, top = true) {
       const kind = { Dikkat: 'uyari', 'Önemli': 'onemli', Bilgi: 'bilgi', 'İpucu': 'ipucu' }[label] ?? '';
       out.push(`<div class="kutu ${kind}">${blocks(q, false)}</div>`); continue;
     }
-    if (/^- /.test(line)) {
-      const items = []; while (i < lines.length && /^- /.test(lines[i])) items.push(lines[i++].slice(2));
-      out.push(`<ul>${items.map(x => `<li>${inline(x)}</li>`).join('')}</ul>`); continue;
+    // Lists: "- " / "* " / "1. " items; an indented line (not a code block) goes on with the item; "[ ]" is a ☐ box.
+    const item = (re, cut) => {
+      const items = [];
+      while (i < lines.length && (re.test(lines[i]) || (items.length && /^ {2,}\S/.test(lines[i]) && !/^\s*```/.test(lines[i])))) {
+        if (re.test(lines[i])) items.push(cut(lines[i++])); else items[items.length - 1] += ` ${lines[i++].trim()}`;
+      }
+      return items.map(x => x.replace(/^\[[ xX]\] /, '☐ '));
+    };
+    if (/^[-*] /.test(line)) {
+      const items = item(/^[-*] /, l => l.slice(2));
+      out.push(`<ul${items.every(x => x.startsWith('☐ ')) ? ' class="kontrol"' : ''}>${items.map(x => `<li>${inline(x)}</li>`).join('')}</ul>`); continue;
     }
     if (/^\d+\. /.test(line)) {
-      const items = []; while (i < lines.length && /^\d+\. /.test(lines[i])) items.push(lines[i++].replace(/^\d+\. /, ''));
-      out.push(`<ol>${items.map(x => `<li>${inline(x)}</li>`).join('')}</ol>`); continue;
+      const start = Number(/^(\d+)\./.exec(line)[1]), items = item(/^\d+\. /, l => l.replace(/^\d+\. /, ''));
+      out.push(`<ol${start !== 1 ? ` start="${start}"` : ''}>${items.map(x => `<li>${inline(x)}</li>`).join('')}</ol>`); continue;
     }
-    const para = []; while (i < lines.length && lines[i].trim() && !/^(\||>|- |\d+\. |#)/.test(lines[i])) para.push(lines[i++].trim());
+    const para = []; while (i < lines.length && lines[i].trim() && !/^(\||>|- |\* |\d+\. |#|\s*```)/.test(lines[i])) para.push(lines[i++].trim());
     if (para.length) out.push(`<p>${inline(para.join(' '))}</p>`); else i++;
   }
   return out.join('\n');

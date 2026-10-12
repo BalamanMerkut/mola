@@ -1,0 +1,48 @@
+<!doctype html>
+<!--
+  Mola VDS Kurulum Rehberi: yazdırılabilir A4 rehberin kalıbı (Gerçek Cihaz Testi ile aynı düzen, ../kaynak-test/test.css).
+  İçerik buraya yazılmaz: scripts/pdf-test-listesi.mjs docs/VDS_KURULUM.md'yi okuyup kapağı ve #icerik'i doldurur,
+  içindekileri sayfa numaralarıyla kurar ve docs/pdf/Mola-VDS-Kurulum-Rehberi.pdf'i basar.
+  Üretmek: npm.cmd run pdf:vds
+-->
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mola VDS Kurulum Rehberi</title>
+<link rel="stylesheet" href="../kaynak-test/test.css">
+<link rel="stylesheet" href="vds.css">
+</head>
+<body>
+<section class="kapak">
+  <div class="kapak-ust">
+    <div class="kapak-marka">Mola</div>
+    <div class="kapak-etiket">Sahibin rehberi · Mola Merkez'i sunucuya taşıma</div>
+    <h1 id="kapak-baslik" data-toc="no">VDS Kurulum Rehberi</h1>
+    <p class="kapak-giris" id="kapak-giris"></p>
+  </div>
+  <div class="kapak-alt">
+    <dl class="kapak-form">
+      <dt>Alan adı</dt><dd class="dolu">molayazilim.com.tr</dd>
+      <dt>Sunucu IP adresi</dt><dd></dd>
+      <dt>Sunucudaki kullanıcı</dt><dd class="dolu">yonetici</dd>
+      <dt>Başlangıç (gün, saat)</dt><dd></dd>
+      <dt>Bitiş (gün, saat)</dt><dd></dd>
+    </dl>
+    <div class="kapak-isaretler">
+      <strong>Nasıl kullanılır?</strong>
+      <p><span class="kutucuk dolu-isaret">✓</span> Her adımı yaptıkça kutusunu işaretleyin. Sıra "Kurulum sırası" bölümündedir.</p>
+      <p><span class="kutucuk dolu-isaret">!</span> Parolaları ve kurtarma kodunu bu kâğıda YAZMAYIN; şifre yöneticisinde ya da kasada saklayın.</p>
+      <p><span class="kutucuk dolu-isaret">?</span> Takıldığınız adımın yanına not alın; Claude'a o adımın numarasıyla sorun.</p>
+    </div>
+    <p class="kapak-imza">Merkut Studios · Hazırlayan: Claude · 12 Ekim 2026</p>
+  </div>
+</section>
+
+<section class="icindekiler">
+  <h1 class="icindekiler-baslik" data-toc="no">İçindekiler</h1>
+  <ol id="icindekiler-liste"></ol>
+</section>
+
+<main id="icerik"></main>
+</body>
+</html>

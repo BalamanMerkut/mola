@@ -1,0 +1,12 @@
+/* Mola VDS Kurulum Rehberi: ../kaynak-test/test.css'in üstüne yalnız farklar (alt bilgi, komut blokları, kontrol listeleri). */
+@page {
+  @bottom-left { content: "Mola · VDS kurulum rehberi · 12 Ekim 2026"; font: 7.5pt "Segoe UI", sans-serif; color: #7a8480; }
+}
+/* Komutlar: kâğıtta da okunur, uzun satırlar kırılır (sayfadan taşmaz). */
+pre { margin: 3pt 0 8pt; padding: 5pt 7pt; background: #f1f4f2; border: 1px solid var(--cizgi); border-left: 3px solid var(--yesil-2); border-radius: 0 3pt 3pt 0; white-space: pre-wrap; overflow-wrap: anywhere; break-inside: avoid; font-size: 7.6pt; line-height: 1.32; }
+pre code { background: none; padding: 0; font-size: inherit; }
+main h3 { font-size: 9.8pt; color: var(--yesil-2); margin: 8pt 0 3pt; break-after: avoid; }
+/* "- [ ]" maddeleri: kutucuklu, madde işaretsiz. */
+ul.kontrol { list-style: none; padding-left: 2pt; }
+ul.kontrol li { margin: 0 0 3pt; padding-left: 15pt; text-indent: -15pt; break-inside: avoid; }
+ul.kontrol li .kutucuk { margin-right: 4pt; text-indent: 0; }

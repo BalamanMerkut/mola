@@ -80,7 +80,9 @@ test('6b: section order and names (İç, Dış, the owner\'s own, bölümsüz la
 });
 
 async function server(t: { after: (fn: () => Promise<void>) => void }, name: string) {
-  const store = new Store(temp(name)); let clock = Date.now();
+  // A start at least an hour clear of 05:00: the tests move the clock forward and would otherwise end the business day.
+  const now = Date.now(), hour = new Date(now).getHours();
+  const store = new Store(temp(name)); let clock = hour >= 3 && hour < 5 ? now + 3 * 3600_000 : now;
   licensed(store); const http = createServer(createApp(store, () => new Date(clock)));
   await new Promise<void>(r => http.listen(0, '127.0.0.1', r));
   t.after(async () => { http.closeAllConnections(); await new Promise<void>(r => http.close(() => r())); store.close(); });
