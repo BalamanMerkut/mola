@@ -26,6 +26,18 @@
       "port": 3003
     },
     {
+      "name": "mola-tanitim-merkez",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set MERKEZ_DATA_DIR=.local\\tanitim-merkez2&& set MERKEZ_BACKUP_DIR=.local\\tanitim-merkez2-yedek&& set MERKEZ_PORT=4100&& set MERKEZ_INITIAL_PASSWORD=TanitimYonetim2026&& npm.cmd run merkez"],
+      "port": 4100
+    },
+    {
+      "name": "mola-tanitim-kafe",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set DATA_DIR=.local\\tanitim-yerel4&& set PORT=3100&& set MOLA_MERKEZ_URL=http://127.0.0.1:4100&& set MOLA_MERKEZ_PUBLIC_KEY=.local\\tanitim-merkez2\\merkez-public-key.txt&& set MOLA_DEMO_SIFRE=molatanitim&& set MOLA_CLEAN_INSTALL=1&& set SERVE_BUILD=1&& npm.cmd run dev:lan"],
+      "port": 3100
+    },
+    {
       "name": "mola-merkez",
       "runtimeExecutable": "cmd.exe",
       "runtimeArgs": ["/c", "npm.cmd run merkez:dev"],

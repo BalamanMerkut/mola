@@ -33,6 +33,8 @@ const sector = ({ kafe: 'cafe', restoran: 'restaurant', tatlici: 'dessert' } as 
 if (!target || !Number.isInteger(days) || days < 3 || days > 90 || !sector) {
   console.error('Kullanım: npx tsx scripts/demo-template.ts <yeni-veri-klasörü> [--gun=30] [--sektor=kafe|restoran|tatlici]  (gün: 3–90)'); process.exit(1);
 }
+// The staff password rule (server/management.ts: 10 to 128 characters), checked before anything is written here or at Merkez.
+if (DEMO_PASSWORD.length < 10 || DEMO_PASSWORD.length > 128) { console.error('Tanıtım şifresi (MOLA_DEMO_SIFRE) 10 ile 128 karakter arası olmalı.'); process.exit(1); }
 const directory = resolve(target);
 if (existsSync(directory) && (!statSync(directory).isDirectory() || readdirSync(directory).length)) {
   console.error(`Hedef klasör boş değil: ${directory}\nÖrnek işletme yalnız yeni veya boş bir klasöre kurulur; mevcut verilere dokunulmaz.`); process.exit(1);
@@ -120,7 +122,8 @@ const merkezUrl = (process.env.MOLA_MERKEZ_URL ?? 'http://127.0.0.1:4000').repla
 const merkezKey = process.env.MOLA_MERKEZ_PUBLIC_KEY ?? readFileSync(join(merkezData, 'merkez-public-key.txt'), 'utf8');
 const merkezJar = new Map<string, string>();
 async function merkez(path: string, body?: unknown): Promise<any> {
-  const response = await fetch(`${merkezUrl}/api/merkez/admin${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json', Cookie: [...merkezJar].map(([k, v]) => `${k}=${v}`).join('; ') }, body: body === undefined ? undefined : JSON.stringify(body) });
+  // An HTTPS Merkez (the VDS, PUBLIC_ORIGIN) takes a POST only with its own Origin, like the browser sends it.
+  const response = await fetch(`${merkezUrl}/api/merkez/admin${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { 'Content-Type': 'application/json', Cookie: [...merkezJar].map(([k, v]) => `${k}=${v}`).join('; '), ...(body !== undefined && merkezUrl.startsWith('https://') ? { Origin: merkezUrl } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
   for (const value of response.headers.getSetCookie()) { const [k, v] = value.split(';')[0].split('='); merkezJar.set(k, v); }
   const data = await response.json() as any;
   if (response.status === 401 && path !== '/login') { await merkezLogin(); return merkez(path, body); }
@@ -128,8 +131,12 @@ async function merkez(path: string, body?: unknown): Promise<any> {
   return data;
 }
 const merkezPassword = process.env.MERKEZ_ADMIN_PASSWORD ?? readFileSync(join(merkezData, 'merkez-first-login.txt'), 'utf8').match(/Şifre: (\S+)/)![1];
-async function merkezLogin() { await merkez('/login', { username: 'admin', password: merkezPassword }); }
-const link = new MerkezLink(store, { now, url: merkezUrl, publicKey: publicKeyFrom(merkezKey) });
+// A Merkez with two-step login (the VDS): the Authenticator code of this minute, MERKEZ_ADMIN_CODE. One login; the session lasts 4 hours.
+const merkezCode = process.env.MERKEZ_ADMIN_CODE?.replace(/\s/g, '') || undefined;
+async function merkezLogin() { await merkez('/login', { username: 'admin', password: merkezPassword, ...(merkezCode ? { code: merkezCode } : {}) }); }
+// The link signs with the real clock: Merkez refuses a request whose time is far from its own (CLOCK_WINDOW_MS), and the
+// played history's clock is weeks behind. A sync "now" also keeps the café's 14-day offline rule quiet while the past plays.
+const link = new MerkezLink(store, { now: () => new Date(), url: merkezUrl, publicKey: publicKeyFrom(merkezKey) });
 {
   const businesses = [mainTenant, otherTenant].map(tenant => ({ tenantId: tenant, name: store.directoryEntry(tenant).name, license: { endsAt: new Date(Date.now() + 365 * DAY).toISOString(), suspended: false, kind: 'subscription', planMonths: 12 } }));
   await merkezLogin();

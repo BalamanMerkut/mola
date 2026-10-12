@@ -11,7 +11,8 @@ const params = { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
  * process.env.MOLA_RELEASE_BUILD as "1" (esbuild define in scripts/build-installer.mjs): the comparison folds at build time,
  * the literal is left out of server.mjs, and any demo account there gets an unguessable password instead.
  */
-export const DEMO_PASSWORD: string = process.env.MOLA_RELEASE_BUILD === '1' ? randomBytes(18).toString('base64url') : 'MolaDemo!2026';
+// MOLA_DEMO_SIFRE: the vendor's own easy password for a sales demo made with scripts/demo-template.ts (development only).
+export const DEMO_PASSWORD: string = process.env.MOLA_RELEASE_BUILD === '1' ? randomBytes(18).toString('base64url') : (process.env.MOLA_DEMO_SIFRE?.trim() || 'MolaDemo!2026');
 export function initialUsers(tenant: string): StaffUser[] {
   const names: [string, string, Role][] = tenant === 'mola-demo' ? [['isletme', 'İşletme sahibi', 'owner'], ['kasiyer', 'Kasiyer', 'cashier'], ['garson', 'Garson', 'waiter'], ['mutfak', 'Mutfak', 'kitchen']] : [['diger', 'Diğer işletme', 'owner']];
   return names.map(([username, name, role]) => { const salt = randomBytes(16).toString('hex'); return { id: username, username, name, role, active: true, version: 1, salt, hash: scryptSync(DEMO_PASSWORD, salt, 32, params).toString('hex'), createdAt: new Date().toISOString() }; });

@@ -11,8 +11,15 @@
   "legalUpdated": "2026-10-07",
   "_indirAciklama": "Uygulamayı indir (/indir/). 'files' bölümünü npm.cmd run site:indir doldurur (dosya adı, boyut, SHA-256) ve dosyaları site/dist/indir'e kopyalar. 'enabled' false iken her platform 'Yakında' görünür; VDS için hazırlanmış kurulum dosyaları olunca true yapın ve npm.cmd run site:build (docs/VDS_KURULUM.md bölüm 13).",
   "downloads": {
-    "enabled": false,
+    "enabled": true,
     "version": "0.1.0",
-    "files": {}
+    "builtAt": "2026-10-12T16:01:45.734Z",
+    "files": {
+      "windows": {
+        "file": "Mola-Windows-0.1.0.zip",
+        "size": 44615683,
+        "sha256": "015d16c23b569662f378911fd9c62d3d7373c05176f9c797792efda4f4a263b2"
+      }
+    }
   }
 }

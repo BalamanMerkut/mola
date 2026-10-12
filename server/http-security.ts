@@ -52,7 +52,11 @@ let machine = { at: -Infinity, hosts: new Set<string>() };
 export function machineHosts(now = Date.now(), refresh = false) {
   if (!refresh && now - machine.at < 30_000) return machine.hosts;
   const hosts = new Set(LOOPBACK_HOSTS);
-  for (const list of Object.values(networkInterfaces())) for (const i of list ?? []) hosts.add(i.family === 'IPv6' ? `[${i.address.split('%')[0].toLowerCase()}]` : i.address);
+  // A sandboxed service (Linux systemd RestrictAddressFamilies without AF_NETLINK) cannot list its addresses: the loopback
+  // names and PUBLIC_ORIGIN still answer, the request never fails on this.
+  let interfaces: ReturnType<typeof networkInterfaces> = {};
+  try { interfaces = networkInterfaces(); } catch { /* no address list here */ }
+  for (const list of Object.values(interfaces)) for (const i of list ?? []) hosts.add(i.family === 'IPv6' ? `[${i.address.split('%')[0].toLowerCase()}]` : i.address);
   try { const name = hostname().toLowerCase(); if (name) { hosts.add(name); hosts.add(`${name}.local`); } } catch { /* no name */ }
   for (const extra of (process.env.MOLA_ALLOWED_HOSTS ?? '').split(',')) if (extra.trim()) hosts.add(hostName(extra));
   machine = { at: now, hosts };
@@ -81,7 +85,7 @@ export function configureHttpSecurity(app: Express, config: HttpSecurity, alsoHo
   // Only an explicitly enabled same-machine TLS proxy may supply forwarded protocol.
   app.set('trust proxy', config.trustLocalProxy ? 'loopback' : false);
   app.use((req, res, next) => {
-    if (hostAllowed(req.headers.host, origin) || (alsoHosts.length && alsoHosts.includes(hostName(req.headers.host)))) return next();
+    if ((alsoHosts.length && alsoHosts.includes(hostName(req.headers.host))) || hostAllowed(req.headers.host, origin)) return next();
     res.status(403);
     if (req.path.startsWith('/api/')) res.json({ code: 'HOST_REJECTED', message: 'Bu adres bu sunucuya ait değil.' }); else res.type('text/plain').send('Bu adres bu sunucuya ait değil.');
   });

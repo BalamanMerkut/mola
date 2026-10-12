@@ -148,8 +148,10 @@ chown -R yonetici:yonetici /home/yonetici/.ssh && chmod 700 /home/yonetici/.ssh 
 Yeni pencerede `ssh yonetici@203.0.113.10` ile girebildiğinizi **deneyin**. Girebiliyorsanız şifreyle ve root ile girişi kapatın:
 
 ```bash
-sudo nano /etc/ssh/sshd_config.d/90-mola.conf
+sudo nano /etc/ssh/sshd_config.d/01-mola.conf
 ```
+
+Dosya adı `01-` ile başlamalı: sshd her ayarın **ilk** okunan değerini kullanır ve firmalar çoğu zaman `50-cloud-init.conf` içine `PasswordAuthentication yes` koyar (Keyubu'da öyleydi). `90-` ile başlayan bir dosya ondan sonra okunur ve hiçbir etkisi olmaz. Doğrulama: `sudo sshd -T | grep -E '^(passwordauthentication|permitrootlogin) '`.
 
 İçine yazın, kaydedin (Ctrl+O, Enter, Ctrl+X):
 
@@ -577,7 +579,7 @@ Masa QR'ları menünün **kendi adresini** taşır: `https://menu.molayazilim.co
 Kurulumdan sonra bir kez, her maddeyi işaretleyerek geçin. Ayrıntılı gerekçe: `docs/GUVENLIK_DENETIMI.md`.
 
 **SSH**
-- [ ] §3'teki `/etc/ssh/sshd_config.d/90-mola.conf` dosyasına şunları da ekleyin, sonra `sudo sshd -t && sudo systemctl restart ssh` (yeni pencerede girişi denemeden eski pencereyi kapatmayın):
+- [ ] §3'teki `/etc/ssh/sshd_config.d/01-mola.conf` dosyasına şunları da ekleyin, sonra `sudo sshd -t && sudo systemctl restart ssh` (yeni pencerede girişi denemeden eski pencereyi kapatmayın):
   ```
   PasswordAuthentication no
   KbdInteractiveAuthentication no
