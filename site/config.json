@@ -13,12 +13,17 @@
   "downloads": {
     "enabled": true,
     "version": "0.1.0",
-    "builtAt": "2026-10-12T16:01:45.734Z",
+    "builtAt": "2026-10-12T16:28:01.078Z",
     "files": {
       "windows": {
         "file": "Mola-Windows-0.1.0.zip",
         "size": 44615683,
-        "sha256": "015d16c23b569662f378911fd9c62d3d7373c05176f9c797792efda4f4a263b2"
+        "sha256": "f8e0727ca054f933cb7e21c99ad2be36a85db08d1f629f7f08ea395a0dbbac1f"
+      },
+      "android": {
+        "file": "Mola-Android-0.1.0.apk",
+        "size": 103873,
+        "sha256": "be237d2a2919e247d00c4c43b3832852ff917e06db03d5226f961f602c160458"
       }
     }
   }

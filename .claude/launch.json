@@ -38,6 +38,12 @@
       "port": 3100
     },
     {
+      "name": "mola-tanitim-vds",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "set DATA_DIR=.local\\tanitim-vds&& set PORT=3200&& set MOLA_MERKEZ_URL=https://merkez.molayazilim.com.tr&& set MOLA_MERKEZ_PUBLIC_KEY=MCowBQYDK2VwAyEA9+7e1Pb0EnUeJBM4obQKMk4HuSdTossMin/kaRnzyD8=&& set MOLA_DEMO_SIFRE=molatanitim&& set MOLA_CLEAN_INSTALL=1&& set SERVE_BUILD=1&& npm.cmd run dev:lan"],
+      "port": 3200
+    },
+    {
       "name": "mola-merkez",
       "runtimeExecutable": "cmd.exe",
       "runtimeArgs": ["/c", "npm.cmd run merkez:dev"],

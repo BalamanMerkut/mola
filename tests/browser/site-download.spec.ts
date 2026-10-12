@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { test, expect } from '@playwright/test';
@@ -24,12 +24,13 @@ async function serve(port: number, dist: string, config: string) {
     await new Promise(r => setTimeout(r, 250));
   }
 }
-const fake = { windows: 'Mola-Windows-0.1.0.zip', 'macos-arm64': 'Mola-macOS-AppleSilicon-0.1.0.tar.gz', 'macos-x64': 'Mola-macOS-Intel-0.1.0.tar.gz', 'linux-x64': 'Mola-Linux-x64-0.1.0.tar.gz' };
+const fake = { windows: 'Mola-Windows-0.1.0.zip', 'macos-arm64': 'Mola-macOS-AppleSilicon-0.1.0.tar.gz', 'macos-x64': 'Mola-macOS-Intel-0.1.0.tar.gz', 'linux-x64': 'Mola-Linux-x64-0.1.0.tar.gz', android: 'Mola-Android-0.1.0.apk' };
 test.beforeAll(async () => {
   test.setTimeout(180000);
   mkdirSync('.local/e2e', { recursive: true }); scratch = mkdtempSync(resolve('.local/e2e/site-indir-'));
-  const soonConfig = join(scratch, 'config-yakinda.json'); copyFileSync('site/config.json', soonConfig);
+  // The "Yakında" build turns downloads off itself: the real config has them on since the VDS (12 Ekim).
   const config = JSON.parse(readFileSync('site/config.json', 'utf8'));
+  const soonConfig = join(scratch, 'config-yakinda.json'); writeFileSync(soonConfig, JSON.stringify({ ...config, downloads: { enabled: false, version: '', files: {} } }));
   const openDist = join(scratch, 'acik'); mkdirSync(join(openDist, 'indir'), { recursive: true });
   const files: Record<string, { file: string; size: number; sha256: string }> = {};
   for (const [p, file] of Object.entries(fake)) {
@@ -51,8 +52,8 @@ test('Uygulamayı indir: every platform says "Yakında" until downloads.enabled;
   await expect(page.getByRole('heading', { level: 1, name: 'Mola’yı kafenizin bilgisayarına kurun' })).toBeVisible();
   await expect(page.locator('.main-nav a[aria-current="page"]')).toHaveText('Uygulamayı indir');
   const cards = page.locator('.dl-card');
-  await expect(cards).toHaveCount(4);
-  await expect(cards.locator('h3')).toHaveText(['Windows 10 / 11', 'Mac · Apple Silicon', 'Mac · Intel', 'Linux']);
+  await expect(cards).toHaveCount(5);
+  await expect(cards.locator('h3')).toHaveText(['Windows 10 / 11', 'Mac · Apple Silicon', 'Mac · Intel', 'Linux', 'Android · personel']);
   for (const card of await cards.all()) await expect(card.locator('.dl-soon')).toHaveText('Yakında');
   await expect(page.locator('a[download]')).toHaveCount(0);
   await expect(page.locator('.dl-notes')).toContainText('Android telefon ve tablet');

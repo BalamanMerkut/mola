@@ -25,6 +25,8 @@ const SOURCES: Record<Platform, { folder: string; file: (v: string) => string }>
   'macos-arm64': { folder: 'macOS-Apple-Silicon', file: v => `Mola-macOS-AppleSilicon-${v}.tar.gz` },
   'macos-x64': { folder: 'macOS-Intel', file: v => `Mola-macOS-Intel-${v}.tar.gz` },
   'linux-x64': { folder: 'Linux-x64', file: v => `Mola-Linux-x64-${v}.tar.gz` },
+  // The staff app is built beside the installers (npm run installer → .local/android/Mola.apk), not inside the folder.
+  android: { folder: join(ROOT, '.local', 'android'), file: v => `Mola-Android-${v}.apk` },
 };
 
 function sha256(file: string) {
@@ -36,19 +38,22 @@ export function installerMerkez(source: string) {
   return existsSync(cmd) ? /set MOLA_MERKEZ_URL=(\S+)/.exec(readFileSync(cmd, 'utf8'))?.[1] ?? null : null;
 }
 
-export async function publishDownloads(o: { source: string; dist?: string; config?: string; enable?: boolean; build?: boolean; quiet?: boolean }) {
+export async function publishDownloads(o: { source: string; dist?: string; config?: string; enable?: boolean; build?: boolean; quiet?: boolean; android?: string }) {
   const version = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version as string;
   const dist = o.dist ? resolve(o.dist) : DIST, configFile = o.config ? resolve(o.config) : join(SITE, 'config.json');
   const source = resolve(o.source), out = join(dist, 'indir');
   if (!existsSync(source)) throw new Error(`Kurulum klasörü yok: ${source}. Önce npm.cmd run installer çalıştırın.`);
   mkdirSync(out, { recursive: true });
   // Earlier files of any version go: only the current ones are offered.
-  for (const f of readdirSync(out)) if (/^Mola-.*\.(zip|tar\.gz)$/.test(f) || f === 'SHA256SUMS.txt') rmSync(join(out, f), { force: true });
+  for (const f of readdirSync(out)) if (/^Mola-.*\.(zip|tar\.gz|apk)$/.test(f) || f === 'SHA256SUMS.txt') rmSync(join(out, f), { force: true });
   const files: Partial<Record<Platform, DownloadFile>> = {}, missing: string[] = [];
   for (const p of PLATFORMS) {
-    const s = SOURCES[p], folder = join(source, s.folder), name = s.file(version), target = join(out, name);
-    if (!existsSync(folder)) { missing.push(s.folder); continue; }
-    if (p === 'windows') {
+    const s = SOURCES[p], folder = p === 'android' ? (o.android ?? s.folder) : join(source, s.folder), name = s.file(version), target = join(out, name);
+    if (!existsSync(folder)) { missing.push(p === 'android' ? 'Android (Mola.apk)' : s.folder); continue; }
+    if (p === 'android') {
+      if (!existsSync(join(folder, 'Mola.apk'))) { missing.push('Android (Mola.apk yok)'); continue; }
+      copyFileSync(join(folder, 'Mola.apk'), target);
+    } else if (p === 'windows') {
       if (!existsSync(join(folder, 'Mola Kurulum.exe'))) { missing.push(`${s.folder} (Mola Kurulum.exe yok)`); continue; }
       // Windows' own tar writes the ZIP (-a: by the extension); entries at the top, so "Tümünü ayıkla" makes one folder.
       execFileSync('tar.exe', ['-a', '-c', '-f', target, '-C', folder, ...readdirSync(folder)], { stdio: 'ignore' });
