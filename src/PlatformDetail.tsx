@@ -365,6 +365,27 @@ function SocialSection({ l }: { l: Business }) {
 }
 
 /**
+ * İşletmem var (13 Ekim): which e-mail the new-computer code goes to (the owner's verified one, else the invoice e-mail),
+ * whether the owner's password lock has reached Merkez, and "Kaldır" when the owner lost the verified address (check who
+ * calls first; then the café's first-time flow sets a new one).
+ */
+function OwnerLoginCard({ l, disabled, mutate }: { l: Business; disabled: boolean; mutate: Mutate }) {
+  const [asking, setAsking] = useState(false);
+  const rows: Row[] = [
+    { label: 'Kod gidecek adres', value: l.ownerEmail ? l.ownerEmail.email : l.invoice?.email ?? 'Yok', ...(l.ownerEmail ? { copy: l.ownerEmail.email, copyLabel: 'Adresi kopyala' } : {}), tone: !l.ownerEmail && !l.invoice?.email ? 'warn' : undefined },
+    { label: 'Kaynak', value: l.ownerEmail ? `Kafede doğrulandı · ${dateTime(l.ownerEmail.verifiedAt)}` : l.invoice?.email ? 'Başvurudaki fatura e-postası' : 'İşletme sahibi Ayarlar → Güvenlik ve yedek’ten yazmalı' },
+    { label: 'Sahip şifre kilidi', value: l.ownerLoginReady ? 'Merkez’de var' : 'Henüz yok (sahip 0.1.1+ sürümde bir kez giriş yapmalı)', tone: l.ownerLoginReady ? undefined : 'warn' },
+  ];
+  return <DCard title="İşletmem var" icon={<KeyRound size={20} />} tone={l.ownerEmail || l.invoice?.email ? 'ok' : 'warn'} tip="Yeni bilgisayarda sahibin kullanıcı adı, şifresi ve bu adrese gelen 6 haneli kodla verilerini geri alması. Adres kafede doğrulanır; değiştirmek için sahibin şifresi ve iki adrese gelen kod gerekir. Sahip eski adresine erişemiyorsa, kim olduğunu doğruladıktan sonra burada “Kaldır”.">
+    <DefList rows={rows} label="İşletmem var" />
+    {l.ownerEmail && (asking
+      ? <div className="dconfirm"><p>Doğrulanmış adres kaldırılsın mı? Arayanın işletme sahibi olduğundan emin olun. Sonra sahip kafede yeni adresi yazıp doğrular{l.invoice?.email ? '; o zamana kadar fatura e-postası geçerlidir' : ''}.</p>
+          <div className="dactions"><button type="button" className="btn secondary small-btn" disabled={disabled} onClick={() => setAsking(false)}>Vazgeç</button><button type="button" className="btn danger small-btn" disabled={disabled} onClick={() => void mutate(`${ADMIN}/owner-email/clear`, { tenantId: l.tenantId }).then(ok => { if (ok) setAsking(false); })}>Kaldır</button></div></div>
+      : <button type="button" className="btn secondary small-btn" disabled={disabled} onClick={() => setAsking(true)}>Doğrulanmış adresi kaldır</button>)}
+  </DCard>;
+}
+
+/**
  * Bilgiler: how to reach them and where they are, the invoice details (copy and edit), the social links (read-only), the
  * computer and install, possible repeats, and this business's history.
  */
@@ -399,6 +420,7 @@ function Info({ l, disabled, mutate, onOpen, audit, tickets }: { l: Business; di
       </DCard>
     </div>
     <InvoiceSection l={l} disabled={disabled} mutate={mutate} />
+    <OwnerLoginCard l={l} disabled={disabled} mutate={mutate} />
     <div className="dpair">
       <SocialSection l={l} />
       <DCard title="Cihaz ve kurulum" icon={<Monitor size={20} />} tone="idle" tip="İşletmenin bilgisayarının son bağlantıda bildirdikleri. Lisans aynı anda yalnız bir bilgisayarda çalışır (ayrıntı Özet → Bilgisayarlar).">

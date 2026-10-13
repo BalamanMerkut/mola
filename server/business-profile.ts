@@ -99,28 +99,6 @@ export function businessProfileRoutes(app: Express, store: Store, staffActor: (r
     if (found.problem === 'old') throw new DomainError('MERKEZ_OLD', 'Mola Merkez henüz QR yönlendirmesini desteklemiyor. Mola ekibinden Mola Yönetim’i güncellemesini isteyin.', 409);
     throw new DomainError('MERKEZ_UNREACHABLE', 'Mola Merkez’e şu anda ulaşılamadı; QR kodu hazırlanamadı. İnternet bağlantısını kontrol edip tekrar deneyin.', 503);
   });
-  /*
-   * "İşletmem var" e-postası (13 Ekim): the address the 6-digit code goes to when the owner moves to a new computer. The
-   * application's invoice e-mail already counts (Mola Merkez keeps it); a business activated with the Mola team's code (no
-   * application) writes one here, and an owner whose address changed writes the new one. It reaches Merkez with the owners'
-   * password verifiers (heartbeat `owners`). The owner's own account only: not Mola destek, not the Müdür.
-   */
-  app.get('/api/staff/owner-email', (req, res) => {
-    const a = staffActor(req); requireRole(store.read(a.tenantId), a, ['owner']);
-    res.json({ email: store.read(a.tenantId).ownerEmail ?? null });
-  });
-  app.post('/api/staff/owner-email', (req, res) => {
-    const a = staffActor(req); requireRole(store.read(a.tenantId), a, ['owner']);
-    const b = z.object({ requestId, email: z.string().trim().toLowerCase().max(120).email('Geçerli bir e-posta adresi yazın.').or(z.literal('')) }).parse(req.body);
-    const answer = store.mutate(a.tenantId, s => once(s, a, 'owner-email', b.requestId, b, () => {
-      if (b.email) s.ownerEmail = b.email; else delete s.ownerEmail;
-      s.audit.push({ action: b.email ? 'business.owner_email_set' : 'business.owner_email_removed', actor: a.id, target: s.tenantId, at: now().toISOString() });
-      return { email: s.ownerEmail ?? null };
-    }));
-    // Merkez hears it with the next heartbeat, now rather than in a few minutes.
-    link?.nudge();
-    res.json(answer);
-  });
   // Emergency only: a leaked table link. The old QR stops working at once, so the sticker must be reprinted.
   app.post('/api/staff/tables/renew-qr', (req, res) => {
     const a = owner(req); const b = z.object({ requestId, tableId: id }).parse(req.body);

@@ -17,6 +17,7 @@ import { markTableClean, isOrderPaid } from '../packages/domain/engine.js';
 import { MerkezLink } from './kafe-link.js';
 import { kafeRoutes } from './kafe-routes.js';
 import { businessProfileRoutes } from './business-profile.js';
+import { ownerEmailRoutes } from './owner-email.js';
 import { soundSettingsRoutes } from './sound-settings.js';
 import { staffOrders } from './staff-orders.js';
 import { APP_VERSION } from './license.js';
@@ -816,6 +817,8 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   // "İlk adımlar" card: recovery code and second place come from this computer's key protection and backups.
   firstStepsRoutes(app, store, staffActor, now, { recovery: () => { const v = recoveryView(security); return v.protection === 'off' ? null : v.confirmed; }, second: () => backups?.second ? !!backups.second.status().folder : null });
   businessProfileRoutes(app, store, staffActor, now, link);
+  // Ayarlar → Güvenlik ve yedek → Yeni bilgisayar için e-posta (verified by Mola Merkez; server/owner-email.ts).
+  ownerEmailRoutes(app, { store, staffActor, link, confirmPassword });
   // Ajanda ve rezervasyon: masa ayırma, kapora, etkinlikler (server/reservations.ts); before Bildirimler so its reminders are ready when they are read.
   let inbox: ReturnType<typeof notificationRoutes> | undefined;
   const reservations = reservationRoutes(app, store, staffActor, now, () => inbox, undefined, tenant => link.has(tenant, 'reservations'));
@@ -857,7 +860,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     failures: since => failures.since(since),
     // Sosyal medya: the guest menu's public links (Google review included), for the permanent QR codes' short addresses at Merkez.
     social: () => (store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]).map(({ tenant }) => ({ tenantId: tenant, links: socialLinksOf(store.read(tenant)) ?? {} })),
-    owners: () => (security?.vault?.ownerLogins() ?? []).map(o => { let email: string | undefined; try { email = store.read(o.tenantId).ownerEmail; } catch { /* a business no longer here */ } return email ? { ...o, email } : o; }),
+    owners: () => security?.vault?.ownerLogins() ?? [],
   };
   const clean = () => !store.db.prepare('SELECT tenant FROM snapshots LIMIT 1').get() && !link.read();
   restoreRoutes(app, localDesktop, { security, backups, clean });

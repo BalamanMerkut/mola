@@ -11,6 +11,8 @@ export const ADMIN = '/api/merkez/admin';
  * backup health, version, last seen). Never sales, payments, menus or staff accounts: those stay on the café computer.
  */
 export type Business = License & {
+  /** İşletmem var (13 Ekim): the e-mail the owner verified in the café; whether the owner's password lock reached Merkez. */
+  ownerEmail?: { email: string; verifiedAt: string }; ownerLoginReady?: boolean;
   daysRemaining: number; active: boolean; frozen: boolean; setupCompleted: boolean; setupCompletedAt?: string; sector?: Sector;
   appVersion: string; openTickets: number; contactName?: string; formerNames?: string[]; installId?: string; source?: 'trial' | 'code' | 'import' | 'admin' | 'application'; serial?: number;
   activation: 'pending' | 'active'; activatedAt?: string; codeExpiresAt?: string; lastActivityAt?: string;

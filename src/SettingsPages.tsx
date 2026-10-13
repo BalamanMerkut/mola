@@ -288,32 +288,64 @@ function BackupPlaces({ backup }: { backup: Backup }) {
   </div>;
 }
 /**
- * "İşletmem var" e-postası (13 Ekim): where the 6-digit code goes when the owner moves to a new computer, and where the
- * "yeni bilgisayarda açıldı" notice goes. The application's e-mail counts already; a business activated with the Mola
- * team's code (no application) writes one here. The owner's own account only (the server refuses others: card hidden).
+ * "Yeni bilgisayar için e-posta" (13 Ekim, sahibin kararı): the address İşletmem var sends its code to, kept and verified by
+ * Mola Merkez (server/owner-email.ts). No address yet (activated with the Mola team's code): type it, the code sent there
+ * proves it. A change: the owner's password, the code sent to the OLD address, then the NEW address's code. The
+ * application's address shows as "başvurudaki adres". The owner's own account only (others get 403: card hidden).
  */
+type OwnerEmail = { available: boolean; email: string | null; source: 'owner' | 'invoice' | null; reason?: string };
+type EmailStep = { at: 'view' } | { at: 'password' } | { at: 'old'; ticket: string; email: string } | { at: 'confirm'; ticket: string; email: string };
 function OwnerEmailCard() {
-  const id = useId(), [saved, setSaved] = useState<string | null | undefined>(undefined), [value, setValue] = useState(''), [busy, setBusy] = useState(false), [note, setNote] = useState<{ tone: 'error' | 'success'; text: string } | null>(null);
-  useEffect(() => { void api<{ email: string | null }>('/api/staff/owner-email').then(r => { setSaved(r.email); setValue(r.email ?? ''); }, () => setSaved(undefined)); }, []);
-  if (saved === undefined) return null;
-  const changed = value.trim().toLowerCase() !== (saved ?? '');
-  async function save() {
-    setBusy(true); setNote(null);
-    try { const r = await api<{ email: string | null }>('/api/staff/owner-email', { requestId: requestId(), email: value.trim() }); setSaved(r.email); setValue(r.email ?? ''); setNote({ tone: 'success', text: r.email ? 'Kaydedildi. Mola Merkez birkaç saniye içinde öğrenir.' : 'Kaldırıldı. Başvurudaki e-posta kullanılır.' }); }
-    catch (e) { setNote({ tone: 'error', text: (e as Error).message }); } finally { setBusy(false); }
-  }
+  const [view, setView] = useState<OwnerEmail | null | undefined>(undefined), [step, setStep] = useState<EmailStep>({ at: 'view' });
+  const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [code, setCode] = useState(''), [oldCode, setOldCode] = useState('');
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [done, setDone] = useState('');
+  useEffect(() => { void api<OwnerEmail>('/api/staff/owner-email').then(setView, () => setView(null)); }, []);
+  if (view === null || view === undefined) return null;
+  const reset = (next?: OwnerEmail) => { if (next) setView(next); setStep({ at: 'view' }); setEmail(''); setPassword(''); setCode(''); setOldCode(''); setError(''); };
+  const run = async (fn: () => Promise<void>) => { setBusy(true); setError(''); setDone(''); try { await fn(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
+  // First address: a code to it. A change: the old address's code goes with the new address (and the password again).
+  const sendNew = (old?: { ticket: string; code: string }) => run(async () => {
+    const r = await api<{ ticket: string; email: string }>('/api/staff/owner-email/new-code', { email: email.trim(), ...(old ? { old, password } : {}) });
+    setCode(''); setStep({ at: 'confirm', ticket: r.ticket, email: r.email });
+  });
+  const sendOld = () => run(async () => { const r = await api<{ ticket: string; email: string }>('/api/staff/owner-email/old-code', { password }); setOldCode(''); setStep({ at: 'old', ticket: r.ticket, email: r.email }); });
+  const confirm = (ticket: string) => run(async () => { const r = await api<OwnerEmail>('/api/staff/owner-email/confirm', { ticket, code: code.trim() }); reset(r); setDone('E-posta doğrulandı. Bilgisayarınız değişirse kod bu adrese gelir.'); });
+  const codeInput = (value: string, set: (v: string) => void, label: string) => <label className="owner-email-field">{label}<input className="owner-email-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={value} disabled={busy} onChange={e => set(e.target.value.replace(/\D/g, ''))} placeholder="000000" /></label>;
+  const emailInput = (label: string) => <label className="owner-email-field">{label}<input type="email" autoComplete="email" maxLength={120} value={email} disabled={busy} onChange={e => setEmail(e.target.value)} placeholder="ör. ayse@ornekkafe.com" /></label>;
+  const cancel = <button type="button" className="btn secondary small-btn" disabled={busy} onClick={() => reset()}>Vazgeç</button>;
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   return <Card icon={<Mail size={18} aria-hidden="true" />} title="Yeni bilgisayar için e-posta" className="owner-email-card"
-    lead="Bilgisayarınız değişirse “İşletmem var” ile girersiniz; 6 haneli kod bu adrese gelir. Başka bir bilgisayarda açılırsa da buraya haber verilir."
-    tip="Hesap açma başvurusunda yazdığınız e-posta zaten geçerlidir. Mola ekibinin koduyla etkinleştirdiyseniz (başvuru yapmadıysanız) ya da adresiniz değiştiyse buraya yazın. Yalnız işletme sahibi görür ve değiştirir.">
-    <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (changed) void save(); }}>
-      <label htmlFor={id}>E-posta adresi</label>
-      <div className="owner-email-row">
-        <input id={id} type="email" autoComplete="email" maxLength={120} value={value} disabled={busy} onChange={e => { setValue(e.target.value); setNote(null); }} placeholder="ör. ayse@ornekkafe.com" />
-        <button className="btn primary small-btn" disabled={busy || !changed}>{busy ? 'Kaydediliyor…' : value.trim() ? 'Kaydet' : 'Kaldır'}</button>
-      </div>
-      {!saved && <p className="muted small">Boş: hesap açma başvurusundaki e-posta kullanılır. Başvuru yapmadıysanız mutlaka yazın.</p>}
-      {note && <Notice tone={note.tone}>{note.text}</Notice>}
-    </form>
+    lead="Bilgisayarınız değişirse “İşletmem var” ile girersiniz; 6 haneli kod bu adrese gelir. İşletmeniz başka bir bilgisayarda açılırsa da buraya haber verilir."
+    tip="Hesap açma başvurusunda yazdığınız e-posta zaten kayıtlıdır. Mola ekibinin koduyla etkinleştirdiyseniz adres yoktur: buraya yazıp doğrulayın. Değiştirmek için işletme sahibi şifreniz, eski adrese ve yeni adrese gelen kodlar gerekir. Eski adresinize erişemiyorsanız Mola ekibini arayın.">
+    <div className="owner-email">
+      {!view.available ? <p className="muted small">{view.reason}</p>
+      : step.at === 'view' ? (view.email
+        ? <div className="owner-email-current"><span><strong>{view.email}</strong><small>{view.source === 'invoice' ? 'Başvurudaki adres' : 'Doğrulandı'}</small></span><button type="button" className="btn secondary small-btn" onClick={() => { reset(); setDone(''); setStep({ at: 'password' }); }}>Değiştir</button></div>
+        : <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (validEmail) void sendNew(); }}>
+            <Notice>Kayıtlı e-posta yok. Bilgisayarınız bozulursa verilerinizi “İşletmem var” ile geri alabilmek için bir adres yazıp doğrulayın.</Notice>
+            {emailInput('E-posta adresi')}
+            <div className="owner-email-actions"><button className="btn primary small-btn" disabled={busy || !validEmail}>{busy ? 'Gönderiliyor…' : 'Kod gönder'}</button></div>
+          </form>)
+      : step.at === 'password' ? <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (password) void sendOld(); }}>
+          <p className="muted small">1/3 · Güvenlik için işletme sahibi şifrenizi yazın; kayıtlı adrese ({view.email}) bir kod gönderilir.</p>
+          <label className="owner-email-field">İşletme sahibi şifresi<input type="password" autoComplete="current-password" value={password} disabled={busy} onChange={e => setPassword(e.target.value)} /></label>
+          <div className="owner-email-actions">{cancel}<button className="btn primary small-btn" disabled={busy || !password}>{busy ? 'Gönderiliyor…' : 'Eski adrese kod gönder'}</button></div>
+        </form>
+      : step.at === 'old' ? <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (oldCode.length === 6 && validEmail) void sendNew({ ticket: step.ticket, code: oldCode }); }}>
+          <p className="muted small">2/3 · {step.email} adresine gelen kodu ve yeni adresi yazın.</p>
+          {codeInput(oldCode, setOldCode, 'Eski adrese gelen kod')}
+          {emailInput('Yeni e-posta adresi')}
+          <div className="owner-email-actions">{cancel}<button className="btn primary small-btn" disabled={busy || oldCode.length !== 6 || !validEmail}>{busy ? 'Gönderiliyor…' : 'Yeni adrese kod gönder'}</button></div>
+          <p className="muted small">Eski adresinize erişemiyorsanız Mola ekibini arayın; kim olduğunuzu doğrulayıp kaldırırlar.</p>
+        </form>
+      : step.at === 'confirm' ? <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (code.length === 6) void confirm(step.ticket); }}>
+          <p className="muted small">{view.email ? '3/3 · ' : ''}{step.email} adresine 6 haneli kod gönderildi. Kod 10 dakika geçerlidir.</p>
+          {codeInput(code, setCode, 'Yeni adrese gelen kod')}
+          <div className="owner-email-actions">{cancel}<button className="btn primary small-btn" disabled={busy || code.length !== 6}>{busy ? 'Doğrulanıyor…' : 'Doğrula'}</button></div>
+        </form> : null}
+      {error && <Notice tone="error">{error}</Notice>}
+      {done && <Notice tone="success">{done}</Notice>}
+    </div>
   </Card>;
 }
 /** Güvenlik ve yedek → Yedek: the backup state and the rail's tools; the "Tanıtım işletmesi" reset; "Açık oturumlar" link. */

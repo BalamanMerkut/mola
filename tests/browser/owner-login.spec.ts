@@ -1,7 +1,7 @@
 import { test, expect, request as playwrightRequest, type APIRequestContext } from '@playwright/test';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
-import { merkezPort } from './helpers';
+import { merkezPort, openSettings } from './helpers';
 import { protectedPort, protectedServer, scenario } from './protected-server';
 import { AGREEMENT_VERSION } from '../../packages/domain/agreement';
 import { decodeParts, fakeSmtp } from '../fake-smtp';
@@ -51,6 +51,41 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     expect((await old.desktop<{ lastError: string | null }>('/api/desktop/backup', {})).data.lastError).toBeNull();
     await expect.poll(async () => (await old!.desktop<{ backup: { cloud?: { lastSuccessAt: string | null } } }>('/api/desktop/status')).data.backup.cloud?.lastSuccessAt ?? null, { timeout: 60000 }).not.toBeNull();
 
+    // Ayarlar → Güvenlik ve yedek → Yeni bilgisayar için e-posta (13 Ekim): the application's address shows; a change needs
+    // the owner's password, the old address's code and the new address's code; the old address is told.
+    const NEW = 'yeni.sahip@example.com';
+    // A new business opens on the setup wizard first: done here as in the other specs.
+    const st = await (await owner.get('/api/staff/state')).json();
+    expect((await owner.post('/api/staff/setup', { data: { requestId: 'sahip-kurulum-1', version: st.businessRevision ?? 0, name: st.name, tableCount: st.tables.length, changeSeconds: st.changeSeconds, commissionBps: st.commissionBps } })).ok()).toBe(true);
+    const ownerPage = await (await page.context().browser()!.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+    await ownerPage.goto(old.base);
+    await ownerPage.getByLabel('Kullanıcı adı', { exact: true }).fill(USER);
+    await ownerPage.getByLabel('Şifre', { exact: true }).fill(PASSWORD);
+    await ownerPage.getByRole('button', { name: 'Çalışma alanını aç' }).click();
+    await openSettings(ownerPage, 'Yedek');
+    const card = ownerPage.locator('.owner-email-card');
+    await expect(card).toContainText('s****@example.com'); await expect(card).toContainText('Başvurudaki adres');
+    await card.getByRole('button', { name: 'Değiştir' }).click();
+    await card.getByLabel('İşletme sahibi şifresi').fill('YanlisSifre!2026');
+    await card.getByRole('button', { name: 'Eski adrese kod gönder' }).click();
+    await expect(card.getByRole('alert')).toContainText('Şifre yanlış');
+    await card.getByLabel('İşletme sahibi şifresi').fill(PASSWORD);
+    await card.getByRole('button', { name: 'Eski adrese kod gönder' }).click();
+    await expect(card).toContainText('2/3');
+    const lastCode = async (to: string) => { await expect.poll(() => smtp.received.filter(m => m.to.some(t => t.includes(to))).length, { timeout: 15000 }).toBeGreaterThan(0); return /\b(\d{6})\b/.exec(decodeParts(smtp.received.filter(m => m.to.some(t => t.includes(to))).at(-1)!.data).find(p => !p.name)?.text ?? '')![1]; };
+    await card.getByLabel('Eski adrese gelen kod').fill(await lastCode(EMAIL));
+    await card.getByLabel('Yeni e-posta adresi').fill(NEW);
+    await card.getByRole('button', { name: 'Yeni adrese kod gönder' }).click();
+    await expect(card).toContainText('3/3');
+    await card.getByLabel('Yeni adrese gelen kod').fill(await lastCode(NEW));
+    await ownerPage.screenshot({ path: info.outputPath('5-eposta-degistir.png') });
+    await card.getByRole('button', { name: 'Doğrula' }).click();
+    await expect(card.getByText('E-posta doğrulandı.')).toBeVisible();
+    await expect(card).toContainText('y******@example.com'); await expect(card).toContainText('Doğrulandı');
+    await ownerPage.context().close();
+    // The İşletmem var code mails below are counted from here (the old-address code above went to the same address).
+    const earlier = codes().length;
+
     // A clean install on another computer. The welcome window offers "İşletmem var"; here it is put off and taken from the
     // activation screen instead (the other way in).
     fresh = await protectedServer(join(root, 'yeni'), protectedPort(5), 'yeni-pc', true, env);
@@ -70,7 +105,7 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     await page.screenshot({ path: info.outputPath('2-giris.png') });
     await dialog.getByRole('button', { name: 'Kod gönder' }).click();
     await expect(dialog.getByText(/Bilgiler eşleşmedi/)).toBeVisible();
-    expect(codes()).toHaveLength(0);
+    expect(codes()).toHaveLength(earlier);
     await dialog.getByLabel('Şifre').fill(PASSWORD);
     for (let i = 0; ; i++) {
       await dialog.getByRole('button', { name: 'Kod gönder' }).click();
@@ -80,7 +115,7 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     }
     // Where the code went, masked; the business's name.
     await expect(dialog).toContainText(NAME); await expect(dialog).toContainText('s****@example.com');
-    await expect.poll(() => codes().length, { timeout: 15000 }).toBeGreaterThan(0);
+    await expect.poll(() => codes().length, { timeout: 15000 }).toBeGreaterThan(earlier);
     const code = codes().at(-1)!;
     await dialog.getByLabel('Doğrulama kodu').fill(code);
     await page.screenshot({ path: info.outputPath('3-eposta-kodu.png') });

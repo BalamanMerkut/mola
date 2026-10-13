@@ -230,7 +230,7 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   app.locals.backupVault = vault;
   backupVaultRoutes(app, () => ({ ...releaseDeps(), vault, sendSigned }));
   // "İşletmem var" (server/merkez/owner-login.ts): the owner's own sign-in on a new computer, a code to the business's e-mail.
-  ownerLoginRoutes(app, () => ({ ...releaseDeps(), vault, ...(options.ownerLoginMail ? { send: options.ownerLoginMail } : {}) }));
+  ownerLoginRoutes(app, () => ({ ...releaseDeps(), vault, sendSigned, ...(options.ownerLoginMail ? { send: options.ownerLoginMail } : {}) }));
   { const t = setInterval(() => { try { sweepVault(vault, store, now()); } catch { /* closed or busy: next time */ } }, 10 * 60_000); t.unref(); }
   // Köprü (server/merkez/relay.ts): uzaktan destek and uzaktan raporlar. Before the JSON-only rule and the 64 kB parser (held
   // polls, relayed photos); its postbox is beside the data folder (<data>-kutu/), never in a backup.
@@ -435,6 +435,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
       // Install last seen (any heartbeat) next to the business report: one connection time on every screen.
       installSeenAt: seen,
       licenseDelivered: !!b.installId && !!r && r.deliveredSerial === b.serial, services: servicesView(d, b), ...(b.notes ? { notes: b.notes } : {}), ...(b.suspendReason ? { suspendReason: b.suspendReason } : {}), ...demoView(b), ...socialView(b),
+      // İşletmem var: the address the owner verified in the café (Bilgiler shows it, with Kaldır) and whether the owner's sign-in lock reached us.
+      ...(b.ownerEmail ? { ownerEmail: b.ownerEmail } : {}), ownerLoginReady: !!b.ownerLogin,
       // İnternetten menü: the menu code and, live, whether the café's tunnel is up (counters only, nothing of the traffic).
       ...(b.menu && b.installId ? { menu: { code: b.menu.code, since: b.menu.since, open: menuOpen(b, d, now()), ...(({ online, connectedAt, requests, errors, timeouts }) => ({ online, ...(connectedAt ? { connectedAt } : {}), requests, errors, timeouts }))(guestTunnel.view(b.installId)),
         // QR siparişleri as the café said it over the tunnel (null: not in its service; missing: not told: café away or older) and the menu copy.

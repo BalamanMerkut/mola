@@ -249,3 +249,8 @@
   .yonetim .dsheet .license-days { width:96px; height:96px; }
   .yonetim .dsheet .license-days strong { font-size:30px; }
 }
+
+/* Bilgiler → İşletmem var (13 Ekim): the "Kaldır" question in place. */
+.dconfirm{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fbf1ec;border:1px solid #f0d7cc}
+.dconfirm p{margin:0 0 8px;font-size:13px}
+.dactions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}

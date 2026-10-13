@@ -320,9 +320,13 @@ input[type="checkbox"]{border-radius:4px}
 .backup-place-state.ok{background:#e7f4ec;color:#2f6b55}.backup-place-state.bad{background:#fdecea;color:#a3352b}.backup-place-state.off{background:#f1f3f0;color:#7b867f}
 .backup-places-error{margin:0 0 8px;color:#a3352b;font-size:13px}
 @media (max-width:640px){.backup-place{grid-template-columns:auto 1fr;grid-template-areas:'i t' 's a'}.backup-place-icon{grid-area:i}.backup-place-text{grid-area:t}.backup-place-state{grid-area:s;justify-self:start}.backup-place-action{grid-area:a;justify-self:end}}
-/* Güvenlik ve yedek → Yeni bilgisayar için e-posta (13 Ekim): one field and its button on one line; stacked on a phone. */
-.owner-email-form{display:flex;flex-direction:column;gap:8px}
-.owner-email-form label{font-weight:600}
-.owner-email-row{display:flex;gap:8px}
-.owner-email-row input{flex:1;min-width:0;min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;font:inherit}
-@media(max-width:520px){.owner-email-row{flex-direction:column}}
+/* Güvenlik ve yedek → Yeni bilgisayar için e-posta (13 Ekim): the current address with Değiştir, or one step of the
+   verification at a time (password, old code + new address, new code). */
+.owner-email,.owner-email-form{display:flex;flex-direction:column;gap:10px}
+.owner-email-current{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#f6f8f4}
+.owner-email-current span{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
+.owner-email-current small{color:var(--green);font-weight:600}
+.owner-email-field{display:flex;flex-direction:column;gap:6px;font-weight:600}
+.owner-email-field input{min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;font:inherit;width:100%;min-width:0}
+.owner-email-field input.owner-email-code{font:600 20px Consolas,'Courier New',monospace;letter-spacing:6px;max-width:200px}
+.owner-email-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}

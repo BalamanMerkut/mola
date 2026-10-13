@@ -29,6 +29,8 @@ export const NOT_A_CHANGE: readonly string[] = [
   '/api/desktop/restore/merkez/open', '/api/desktop/recovery/show', '/api/desktop/second-backup', '/api/desktop/open-second',
   // İşletmem var: the sign-in and the e-mail code on a clean install (the restore itself replaces the data folder).
   '/api/desktop/owner-login/start', '/api/desktop/owner-login/verify',
+  // Yeni bilgisayar için e-posta: kept by Mola Merkez, not in this computer's data.
+  '/api/staff/owner-email/old-code', '/api/staff/owner-email/new-code', '/api/staff/owner-email/confirm',
 ];
 /** Orders, payments, menu, tables, settings, staff, expenses, cash, stock, shifts, reservations, platforms, licence, support… */
 export const REAL_CHANGES: readonly string[] = [
@@ -42,7 +44,7 @@ export const REAL_CHANGES: readonly string[] = [
   '/api/staff/products', '/api/staff/products/discard-draft', '/api/staff/photos', '/api/staff/catalog/remove', '/api/staff/photo-trash', '/api/staff/photo-trash/restore',
   '/api/staff/categories', '/api/staff/campaigns', '/api/staff/vat', '/api/staff/vat/apply', '/api/staff/approval-mode', '/api/staff/settings', '/api/staff/qr-printed', '/api/staff/qr-ordering',
   '/api/staff/tables/add', '/api/staff/tables/area', '/api/staff/tables/layout', '/api/staff/tables/area-rename', '/api/staff/table-reminder',
-'/api/staff/tables/remove', '/api/staff/tables/renew-qr', '/api/staff/business-profile', '/api/staff/social-links', '/api/staff/owner-email',
+'/api/staff/tables/remove', '/api/staff/tables/renew-qr', '/api/staff/business-profile', '/api/staff/social-links',
   '/api/staff/sounds', '/api/staff/assignments', '/api/staff/printers', '/api/staff/printers/delete', '/api/staff/kitchen-mode', '/api/staff/first-steps',
   '/api/staff/email-reports', '/api/staff/email-reports/retry', '/api/staff/lock/settings', '/api/staff/update/settings', '/api/staff/demo/reset',
   // Staff and security

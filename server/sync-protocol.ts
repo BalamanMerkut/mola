@@ -116,9 +116,7 @@ export const syncRequest = z.object({
    * a one-time code to the business's e-mail. Sent only to a Merkez that listed 'owner.login'.
    */
   owners: z.array(z.object({ tenantId: id, username: z.string().min(1).max(50), stamp: z.string().regex(/^[a-f0-9]{8,64}$/),
-    verifier: z.object({ salt: z.string().regex(/^[A-Za-z0-9+/=]{16,64}$/), N: z.number().int(), r: z.number().int(), p: z.number().int(), hash: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
-    // The owner's own e-mail for the code (Ayarlar; a business with no application). Only to a Merkez that lists 'owner.email'.
-    email: z.string().trim().toLowerCase().max(120).email().optional() }).strict()).max(50).optional(),
+    verifier: z.object({ salt: z.string().regex(/^[A-Za-z0-9+/=]{16,64}$/), N: z.number().int(), r: z.number().int(), p: z.number().int(), hash: z.string().regex(/^[a-f0-9]{64}$/) }).strict() }).strict()).max(50).optional(),
 }).strict();
 export type SyncRequest = z.infer<typeof syncRequest>;
 export type BusinessReport = z.infer<typeof businessReport>;
@@ -180,7 +178,7 @@ export type UpdateOffer = { id: string; version: string; size: number; notes: st
  */
 export const MENU_ORIGIN_FLAG = 'guest.menu-origin';
 // 'owner.login' (13 Ekim): this Merkez keeps the owners' password verifiers (`owners`) for "İşletmem var" on a new computer;
-// 'owner.email': it also takes the owner's own e-mail with them (a business with no application).
+// 'owner.email' (13 Ekim): it keeps a verified e-mail per business for İşletmem var (POST /owner-email/*, server/merkez/owner-login.ts).
 export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login', 'owner.email'];
 /** Activation answer: the install credentials (kept only on the café computer, sealed) and the first signed licence. */
 export type ActivationResult = { installId: string; secret: string; tenantId: string; name: string; sector?: typeof sectors[number]; license: SignedLicense; serverTime: string };

@@ -49,6 +49,8 @@ export type MerkezBusiness = License & {
   activationId?: string;
   /** "İşletmem var" (13 Ekim): the owner's username and password verifier from the café (server/merkez/owner-login.ts). */
   ownerLogin?: import('./owner-login.js').OwnerLogin;
+  /** The e-mail the owner verified in the café's Ayarlar (İşletmem var code and notices), next to the invoice e-mail. */
+  ownerEmail?: import('./owner-login.js').OwnerEmail;
   /** The vendor's own notes about this business (never sent to the café). */
   notes?: string;
   /** Why the vendor suspended it (shown in Mola Yönetim and the history). */
