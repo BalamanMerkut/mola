@@ -2,7 +2,7 @@
 
 **TASLAK — yürürlüğe girmeden önce avukat tarafından kontrol edilmelidir.**
 
-Sürüm: 3
+Sürüm: 4
 
 Bu sözleşme, Mola adisyon ve QR menü programının kullanım şartlarını anlatır. Lütfen etkinleştirmeden önce okuyun.
 
@@ -36,7 +36,7 @@ Bu sözleşme, Mola adisyon ve QR menü programının kullanım şartlarını an
 
 ## 5. Bilgisayar değişikliği
 
-Kasa bilgisayarı değişecekse İşletme bunu Mola ekibine bildirir. Lisans aynı anda yalnız bir bilgisayarda çalışır; program bunu kendisi denetler. Lisans yeni bir bilgisayarda kullanılmaya başlanınca eski bilgisayarda yeni sipariş kapanır.
+Kasa bilgisayarı değişecekse İşletme bunu Mola ekibine bildirir. Lisans aynı anda yalnız bir bilgisayarda çalışır; program bunu kendisi denetler. Lisans yeni bir bilgisayarda kullanılmaya başlanınca eski bilgisayarda yeni sipariş kapanır. İşletme sahibi verilerini yeni bilgisayara kendi kullanıcı adı, şifresi ve işletmenin kayıtlı e-posta adresine gelen doğrulama koduyla taşıyabilir ("İşletmem var"); bu durumda işletmenin e-posta adreslerine bildirim gönderilir.
 
 ## 6. Program dosyalarının denetimi
 
@@ -57,13 +57,15 @@ Program, kendi dosyalarının Merkut Studios'un yayımladığı hâliyle aynı o
 ## 9. Veriler
 
 1. Satış, ödeme, menü, çalışan ve müşteri bilgileri İşletme'ye aittir.
-2. Satış, ödeme, çalışan ve müşteri bilgileri İşletme'nin bilgisayarında şifreli olarak saklanır ve Mola Merkez'e okunabilir hâlde gönderilmez. İşletme bulutta şifreli yedek hizmetini almışsa Mola Merkez'de tutulan yedekleri de şifrelidir; Merkut Studios bunları açamaz.
+2. Satış, ödeme, çalışan ve müşteri bilgileri İşletme'nin bilgisayarında şifreli olarak saklanır ve Mola Merkez'e okunabilir hâlde gönderilmez. İşletme bulutta şifreli yedek hizmetini almışsa Mola Merkez'de tutulan yedekleri de şifrelidir; Merkut Studios bunları açamaz. Yedekler kurtarma koduyla ve, yeni bilgisayara geçişi kolaylaştırmak için, işletme sahibinin şifresiyle açılabilir. Bu nedenle işletme sahibinin şifresi Mola Merkez'e saklanmak üzere gönderilmez; Mola Merkez yalnız şifrenin doğruluğunu denetlemeye yarayan tek yönlü bir özeti tutar. Şifreli yedeklerin kopyaları Merkut Studios'un bilgisayarında da saklanabilir; bu kopyalar da şifrelidir.
 3. Mola Merkez'e yalnız hizmet için gerekenler gider: lisans ve bağlantı bilgisi, program sürümü ve güncelleme durumu, bilgisayarın kimliğinin tek yönlü özeti (kimliğin kendisi gitmez), masa, çalışan ve ürün sayıları, yedeğin durumu, hata kayıtları (yalnız programdaki yeri), destek mesajları ve dondurma talebinin gerekçesi, duyuruların okunduğu bilgisi, hesap açarken verilen fatura bilgileri ve sözleşmeyi kabul edenin adı. Mola Merkez, kendisine yapılan işlemleri değiştirilemez bir kayıtta tutar; bu kayıtta isteğin geldiği IP adresi de bulunabilir. Ayrıca, kullanıldıkları ölçüde:
    - **İnternetten QR menü:** müşterinin menüyü kendi mobil verisiyle açabilmesi için menü, sipariş, garson çağrısı ve hesap isteği Mola Merkez üzerinden İşletme'nin bilgisayarına iletilir; Mola Merkez bu trafiği saklamaz ve kaydetmez.
    - **Menünün kopyası:** İşletme'nin bilgisayarı kapalıyken de menünün görünebilmesi için menünün herkese açık içeriği (ürün adları, açıklamaları, fiyatları, kampanyaları, fotoğrafları, "tükendi" bilgisi, masa adları, işletmenin görünümü) Mola Merkez'de şifreli olarak tutulur. Bu kopyada satış, sipariş, müşteri ya da çalışan bilgisi yoktur; işletme kaydı silinince kopya da silinir.
    - **Sosyal medya kısa adresleri:** kalıcı QR kartlarının yönlendirebilmesi için işletmenin herkese açık sosyal medya ve Google değerlendirme bağlantıları.
    - **Uzaktan destek:** yalnız işletme sahibi izin verdiğinde ve izin açıkken; Mola ekibi satış ve kişisel verileri göremez, oturumun ne zaman açılıp kapandığı ve yapılan değişiklikler kaydedilir.
    - **Raporlarım ve uzaktan yönetim:** işletme sahibinin eşleştirdiği cihazla İşletme'nin bilgisayarı arasında uçtan uca şifreli gider; Mola Merkez içeriği okuyamaz, yalnız şifreli aktarımı yapar.
+   - **Yeni bilgisayara geçiş ("İşletmem var"):** işletme sahibinin kullanıcı adı, şifresinin tek yönlü doğrulama özeti ve doğrulama kodlarının gönderileceği doğrulanmış e-posta adresi. Şifrenin kendisi saklanmaz.
+   - **Mola Merkez'in yedekleri:** Mola Merkez kendi verilerini şifreli olarak yedekler; bu şifreli kopyalar Merkut Studios'un bilgisayarında ve bir bulut depolama hizmetinde (Google Drive) saklanabilir. Bulut hizmetinin sunucuları yurt dışında bulunabilir; kopyalar şifreli olduğundan hizmet sağlayıcı içeriği okuyamaz.
 4. Kapanan bir yıl paketlenirken müşterilerin kişisel bilgileri (rezervasyon adı, telefonu ve notu; masaya oturan müşterinin adı; platform siparişindeki müşteri adı ve notu; sipariş notları; QR misafirinin tarayıcı kimliği) silinir; satış, ödeme, kasa ve stok rakamları aynen korunur. Paket servis siparişlerinde teslimat adresi ve telefon hiçbir zaman saklanmaz.
 5. Saklama süreleri: Mola Merkez'deki işlem kayıtlarında IP adresleri 1 yıl, kapanan destek görüşmeleri 2 yıl, reddedilen hesap açma başvuruları 1 yıl sonra silinir; destek ekleri 14 gün sonra silinir. İşletme'nin engellediği bir müşteri telefonunun engeli 90 gün sonra kalkar.
 6. Kişisel verilerin işlenmesiyle ilgili ayrıntılar ayrı aydınlatma metnindedir.
@@ -76,7 +78,7 @@ Destek talepleri Mola içindeki Destek ekranından yazılır. Mola ekibinin tele
 
 1. Merkut Studios programın düzgün çalışması için makul özeni gösterir; programın hiç hata içermeyeceğini garanti etmez.
 2. Yürürlükteki mevzuatın izin verdiği ölçüde Merkut Studios dolaylı zararlardan (kâr kaybı, iş kaybı gibi) sorumlu değildir. Merkut Studios'un toplam sorumluluğu, İşletme'nin son 12 ayda ödediği abonelik bedeliyle sınırlıdır.
-3. Verilerin düzenli yedeklenmesi ve kurtarma kodunun güvenli bir yerde saklanması İşletme'nin sorumluluğundadır. Program her gece kendiliğinden yedek alır; ikinci bir yedek yeri seçilmesi önerilir.
+3. Verilerin düzenli yedeklenmesi, kurtarma kodunun güvenli bir yerde saklanması ve işletme sahibi şifresinin tahmin edilmesi zor seçilip kimseyle paylaşılmaması İşletme'nin sorumluluğundadır. Program her gece kendiliğinden yedek alır; ikinci bir yedek yeri seçilmesi önerilir.
 4. Vergi, yazar kasa ve e-fatura gibi mali yükümlülükler İşletme'ye aittir.
 5. Mevzuatın değiştirilemeyen hükümleri saklıdır.
 

@@ -113,7 +113,7 @@ export function OwnerRestoreDialog({ token, onClose }: { token: string; onClose:
       <label>Şifre<input type="password" required autoComplete="current-password" disabled={busy} value={password} onChange={e => setPassword(e.target.value)} /></label>
       {error && <Notice tone="error">{error}</Notice>}
       <div className="recovery-actions"><button type="button" className="btn secondary" disabled={busy} onClick={onClose}>Vazgeç</button><button className="btn primary" disabled={busy || !email.includes('@') || !username.trim() || !password}><Mail size={16} />{busy ? 'Kontrol ediliyor…' : 'Kod gönder'}</button></div>
-      <p className="muted small">E-posta, Mola’ya kaydolurken yazdığınız fatura e-postasıdır. Şifreniz bu bilgisayardan çıkmaz; Mola Merkez yalnız doğru olup olmadığına bakar.</p>
+      <p className="muted small">E-posta, işletmenizin Mola’da kayıtlı adresidir: başvuruda yazdığınız fatura e-postası ya da Ayarlar’da doğruladığınız adres. Şifreniz yalnız doğrulamak için şifreli bağlantıyla Mola Merkez’e gider ve orada saklanmaz.</p>
     </form>
     : step === 'code' ? <form className="owner-form" onSubmit={e => { e.preventDefault(); void verify(); }}>
       <p><strong>{started?.name}</strong> için doğrulama kodu <strong>{started?.email}</strong> adresine gönderildi. Kod 10 dakika geçerlidir.</p>

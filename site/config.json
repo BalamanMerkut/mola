@@ -8,37 +8,37 @@
   "hours": "Hafta içi 09:00–18:00, cumartesi 10:00–16:00",
   "company": "Merkut Studios",
   "legalDraft": true,
-  "legalUpdated": "2026-10-07",
+  "legalUpdated": "2026-10-14",
   "_indirAciklama": "Uygulamayı indir (/indir/). 'files' bölümünü npm.cmd run site:indir doldurur (dosya adı, boyut, SHA-256) ve dosyaları site/dist/indir'e kopyalar. 'enabled' false iken her platform 'Yakında' görünür; VDS için hazırlanmış kurulum dosyaları olunca true yapın ve npm.cmd run site:build (docs/VDS_KURULUM.md bölüm 13).",
   "downloads": {
     "enabled": true,
-    "version": "0.1.9",
-    "builtAt": "2026-10-13T18:24:24.097Z",
+    "version": "0.1.10",
+    "builtAt": "2026-10-13T20:14:50.225Z",
     "files": {
       "windows": {
-        "file": "Mola-Windows-0.1.9.zip",
-        "size": 44641650,
-        "sha256": "ddb09d644470727e65e486ef11fb517a6e03859a5c48fa892763ae12db2d3c60"
+        "file": "Mola-Windows-0.1.10.zip",
+        "size": 44642175,
+        "sha256": "ab36edda9f95afcb3dc5e0fa99ee43769c4954e0a4e6efa814aed5d969ad9df7"
       },
       "macos-arm64": {
-        "file": "Mola-macOS-AppleSilicon-0.1.9.tar.gz",
-        "size": 49810336,
-        "sha256": "4d3565768ff7846efafc260706613dc8de9fec31aea6efde1504763333cd7f87"
+        "file": "Mola-macOS-AppleSilicon-0.1.10.tar.gz",
+        "size": 49811867,
+        "sha256": "c72f9dc962c27bb4cddc9860c16c7178e261e9fe03b12d9314f04a07182d0bc0"
       },
       "macos-x64": {
-        "file": "Mola-macOS-Intel-0.1.9.tar.gz",
-        "size": 51381415,
-        "sha256": "cdbfef61c6841a85e478d807b5671608832f3503fd76bec2d0e92e648dfc932e"
+        "file": "Mola-macOS-Intel-0.1.10.tar.gz",
+        "size": 51381582,
+        "sha256": "80718b59ef97d3c9e516d0e0d7e7863ffbc1ab2caf3194381acafe32cb327cdd"
       },
       "linux-x64": {
-        "file": "Mola-Linux-x64-0.1.9.tar.gz",
-        "size": 54886545,
-        "sha256": "44dcac75593c48291a53951a221988765af89db0b4e8c1353faf9b0ba228d65d"
+        "file": "Mola-Linux-x64-0.1.10.tar.gz",
+        "size": 54886667,
+        "sha256": "f64867b437e263b14d819e8e57215fe3f964a60acbf0f11f52fc47b27c7cca53"
       },
       "android": {
-        "file": "Mola-Android-0.1.9.apk",
+        "file": "Mola-Android-0.1.10.apk",
         "size": 103873,
-        "sha256": "c8b0fc00dfaaf21f3d79434b55d383cb51ae2322e94d1ab0bcd3b6cb805e49fb"
+        "sha256": "c27bf7c7b71751b95aef81c2136696c7b96d5c6ec0d765a9c5f1c9abda29f5d0"
       }
     }
   }

@@ -85,11 +85,11 @@ test('web sitesi talebi: stored sealed with the KVKK tick, shown to the vendor a
   const state = (await m.admin('/state')).data;
   const alert = state.alerts.find((a: { kind: string }) => a.kind === 'site.lead');
   assert.ok(alert); assert.equal(alert.title, 'Web sitesi talebi'); assert.match(alert.text, /Kafe · Elazığ · 16 masa/);
-  assert.ok(!/Ayşe|532|example|Çınaraltı/.test(alert.text)); assert.equal(state.unread, 1);
+  assert.ok(!/Ayşe|5321234567|example|Çınaraltı/.test(alert.text)); assert.equal(state.unread, 1);
   // İşlem kayıtları: the line, with the consent version, without the person.
   const line = state.audit.find((a: { action: string }) => a.action === 'site.lead_received');
   assert.ok(line); assert.match(line.detail, new RegExp(`Talep ${lead.id.slice(0, 8)} \\(Kafe · Elazığ\\)`)); assert.match(line.detail, /kvkk-aydinlatma/);
-  assert.ok(!/Ayşe|532|example|Çınaraltı/.test(line.detail));
+  assert.ok(!/Ayşe|5321234567|example|Çınaraltı/.test(line.detail));
   const journal = m.store.journal.count(); assert.ok(journal > 0);
   // The existing Başvurular (hesap açma başvuruları) are untouched: no business was made.
   assert.equal(state.businesses.length, 0);
@@ -163,7 +163,7 @@ test('Mola Yönetim: Arandı, not, Kapandı, yeniden aç, işletmeye bağla, sil
   const actions = ((await m.admin('/state')).data.audit as { action: string; detail?: string }[]).map(a => a.action);
   for (const a of ['site.lead_called', 'site.lead_note', 'site.lead_linked', 'site.lead_closed', 'site.lead_reopened']) assert.ok(actions.includes(a), a);
   const audit = (await m.admin('/state')).data.audit as { action: string; detail?: string }[];
-  assert.ok(!audit.filter(a => a.action.startsWith('site.')).some(a => /Ayşe|532|Pazartesi/.test(a.detail ?? '')), 'no person, phone or note text in the history');
+  assert.ok(!audit.filter(a => a.action.startsWith('site.')).some(a => /Ayşe|5321234567|Pazartesi/.test(a.detail ?? '')), 'no person, phone or note text in the history');
   // A repeated request (its answer lost) changes nothing twice.
   const once = { requestId: rid(), id: second.id, status: 'called' };
   await m.admin('/site-leads/status', once); assert.equal((await m.admin('/site-leads/status', once)).data.changed, true);

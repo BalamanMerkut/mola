@@ -5,7 +5,7 @@
  * Acceptance is kept on the café computer and told to Mola Merkez with the activation and the heartbeat; it is never part of
  * the signed licence.
  */
-export const AGREEMENT_VERSION = 3;
+export const AGREEMENT_VERSION = 4;
 export const AGREEMENT_NAME = 'Mola Lisans Sözleşmesi';
 /** Who accepted which version, when (the owner's own name, when one was typed). */
 export type AgreementAcceptance = { version: number; acceptedAt: string; name?: string };

@@ -19,7 +19,7 @@
     <dl class="kapak-bilgi">
       <dt>Hazırlayan</dt><dd>Merkut Studios (Mola yazılımının sahibi ve satıcısı)</dd>
       <dt>Kime</dt><dd>Merkut Studios'un avukatı; mali konular (bölüm 10 ve 17.2) için mali müşavir</dd>
-      <dt>Tarih ve sürüm</dt><dd>13 Ekim 2026 · Dosya sürümü 3 · Program sürümü Mola 0.1.9</dd>
+      <dt>Tarih ve sürüm</dt><dd>14 Ekim 2026 · Dosya sürümü 4 · Program sürümü Mola 0.1.10</dd>
       <dt>Gizlilik</dt><dd>Yalnız avukat ve mali müşavir için</dd>
     </dl>
     <p class="kapak-not">Bu dosya hukuki görüş değildir. Programın hukuki sonuç doğuran işlevlerini ve verinin yerini sade bir dille anlatır; değerlendirmeyi ve metinlerin yazılmasını avukata bırakır. Bilgiler programın kaynak koduyla karşılaştırılarak yazıldı; doğrulanamayanlar metinde ayrıca işaretlidir.</p>
@@ -54,7 +54,7 @@
   <li><strong>Satıcı şimdilik şahıstır.</strong> Merkut Studios bir marka adıdır; satışlar başlayınca şirket kurulması planlanıyor (bölüm 16.12).</li>
   <li><strong>Mola Merkez</strong> (satıcının sunucusu) 12 Ekim 2026'dan beri çalışıyor: sanal sunucu (VDS), sağlayıcı Keyubu/Datacasa, veri merkezi İstanbul. Merkez verisi Türkiye'de durur; sunucu dışındaki kopyalar bölüm 3.4 ve 12'de.</li>
   <li>Alan adı <code>molayazilim.com.tr</code> (kayıt firması Metunic); DNS hizmeti Cloudflare, yalnız ad çözümlemesi. Sitedeki KVKK, gizlilik ve çerez sayfaları taslaktır (Ek B).</li>
-  <li>Mola Lisans Sözleşmesi'nin taslağı (sürüm 3) programda zorunlu onay olarak kullanılıyor (Ek A). Avukat onayı bekliyor.</li>
+  <li>Mola Lisans Sözleşmesi'nin taslağı (sürüm 4) programda zorunlu onay olarak kullanılıyor (Ek A). Avukat onayı bekliyor.</li>
 </ul>
 
 <h2 id="b1-3">1.3 Tek sayfada özet</h2>
@@ -75,7 +75,7 @@
     <li>Taraflardan hangisinin hangi veri için veri sorumlusu ya da veri işleyen olduğunun değerlendirilmesi (bölüm 2).</li>
     <li>Aydınlatma metinleri: misafirler, rezervasyon müşterileri, çalışanlar, web sitesi ziyaretçileri ve form dolduranlar, işletme sahipleri. Gerekiyorsa açık rıza metinleri.</li>
     <li>Gizlilik politikası ve çerez politikası (site ve program).</li>
-    <li>Mola Lisans Sözleşmesi taslağının gözden geçirilmesi (Ek A; program ile metin arasındaki farklar bölüm 16'nın başında).</li>
+    <li>Mola Lisans Sözleşmesi taslağının gözden geçirilmesi (Ek A; programla uyumu bölüm 16'nın başında).</li>
     <li>Abonelik ve hizmet sözleşmesi, veri işleme sözleşmesi (satıcı ile işletme arasında), uzaktan destek onay metni, web formu metni, satıcı tarafındaki yetkililer için gizlilik taahhüdü.</li>
     <li>VERBİS kaydı, "Mola" marka araştırması ve şirket kuruluşunun etkileri hakkında görüş.</li>
   </ol>
@@ -418,7 +418,7 @@
     <tr><td>Web sitesi talepleri</td><td>Merkez</td><td>Kapandıktan 2 yıl sonra</td></tr>
     <tr><td>Reddedilen başvuru</td><td>Merkez</td><td>Karardan 1 yıl sonra <span class="rozet karar">Karar</span></td></tr>
     <tr><td>Merkez işlem kayıtları</td><td>Merkez, satıcının bilgisayarı</td><td>Varsayılan 10 yıl, ayarlanabilir, en az 2 yıl</td></tr>
-    <tr><td>İşlem kayıtlarındaki IP adresleri</td><td>Merkez</td><td>1 yıl (bir istisna: bölüm 9.1)</td></tr>
+    <tr><td>İşlem kayıtlarındaki IP adresleri</td><td>Merkez</td><td>1 yıl</td></tr>
     <tr><td>Menünün kopyası ve fotoğrafları</td><td>Merkez</td><td>Kafe güncelledikçe değişir; işletme kaydı silinince hemen</td></tr>
     <tr><td>Sahip şifresinin doğrulama özeti, doğrulanmış e-posta</td><td>Merkez</td><td>İşletme kaydıyla</td></tr>
     <tr><td>Merkez gece yedekleri</td><td>Sunucu, satıcının bilgisayarı, Google Drive</td><td>En yeni 14</td></tr>
@@ -473,15 +473,15 @@
   <span class="kutu-baslik">"Mola yedeği açamaz" ifadesinin sınırları</span>
   <ul>
     <li>Merkez'de yedeğin anahtarı, kurtarma kodu ya da sahibin şifresi durmaz. Ancak Merkez'de hem şifreli yedek hem de sahip şifresinin doğrulama özeti bulunur. Şifre zayıfsa, bu ikisine erişen biri şifreyi deneme yanılmayla bulup yedeği açabilir. Bu yüzden ifade bugün "sahibin şifresini bilmeden açamaz" anlamında doğrudur.</li>
-    <li>"İşletmem var" girişinde şifre Merkez'e açık hâlde (HTTPS içinde) ulaşır ve bellekte doğrulanır. Programın giriş ekranındaki "Şifreniz bu bilgisayardan çıkmaz" cümlesi bu yüzden doğru değildir; düzeltilmesi gerekir.</li>
-    <li>Lisans sözleşmesi madde 9.2 ("Merkut Studios bunları açamaz") ve site gizlilik sayfasındaki benzer cümle bu ayrıntıyı anmaz.</li>
+    <li>"İşletmem var" girişinde şifre Merkez'e açık hâlde (HTTPS içinde) ulaşır ve bellekte doğrulanır. Giriş ekranı da bunu böyle anlatır: şifre doğrulama için şifreli bağlantıyla Merkez'e gider ve orada saklanmaz.</li>
+    <li>Lisans sözleşmesi (madde 5, 9.2, 9.3, 11.3; sürüm 4) ve site gizlilik sayfası bu sınırı anlatır: yedekler sahibin şifresiyle de açılabilir, Merkez yalnız tek yönlü özet tutar, şifrenin güçlü seçilmesi işletmenin sorumluluğundadır.</li>
   </ul>
 </div>
 <div class="kutu soru">
   <span class="kutu-baslik">Avukata soru: İşletmem var</span>
   <ol>
     <li>Sahip şifresinin doğrulama özetinin Merkez'de tutulması ve şifre kilidinin sahibe sorulmadan kendiliğinden kurulması için ayrı bir bilgilendirme ya da onay gerekir mi?</li>
-    <li>Lisans 9.2, 9.3 ve 11.3 ile gizlilik sayfasındaki ifadeler nasıl yazılmalı?</li>
+    <li>Lisans 9.2, 9.3 ve 11.3 ile gizlilik sayfasına eklenen ifadeler yeterli mi?</li>
     <li>Bir e-posta kodu ve şifreyle başka bir bilgisayara veri taşınabilmesi, işletme sahibinin hesabını ele geçiren birinin işletme verisine ulaşması riskini doğurur. Sözleşmede bu riskin ve sahibin şifre ile e-posta güvenliği yükümlülüğünün yazılması gerekir mi?</li>
   </ol>
 </div>
@@ -527,7 +527,7 @@
   <li>Mola Yönetim'deki her işlem ve güvenlik olayı (giriş, başarısız giriş, lisans, fiyat, ödeme kaydı, silme, uzaktan destek, yetkili ekleme) kim, ne, hangi işletme, eski ve yeni değer bilgisiyle yazılır.</li>
   <li>Kayıtlar yalnız eklenebilir: veritabanı değiştirmeyi ve silmeyi reddeder; her kayıt bir öncekinin özetini taşır (hash zinciri) ve zincirin başı saatte bir dijital olarak imzalanır. Mola'dan bağımsız bir doğrulama komutu vardır. Amaç: bir uyuşmazlıkta satıcının bile kaydı sonradan değiştiremediğini gösterebilmek.</li>
   <li>IP adresi kaydın içinde değil, ayrı bir tabloda durur; 1 yıl sonra adres silinir, zincir bozulmaz.</li>
-  <li><strong>Bilinen istisna:</strong> "İşletmem var" kodu gönderildiğinde yazılan kaydın açıklama metninde isteğin IP adresi (IPv6'da adres bloğu) ve maskeli e-posta (ör. "y***@gmail.com") yer alıyor. Bu metin zincirin parçası olduğu için 1 yıl sonra silinmiyor ve satıcının bilgisayarındaki kopyaya da gidiyor. Programda düzeltilmesi gereken bir fark olarak not edildi.</li>
+  <li><strong>"İşletmem var" kod kaydı:</strong> kodun gönderildiği maskeli e-posta adresiyle (ör. "y***@gmail.com") yazılır; isteğin IP adresi kaydın metnine yazılmaz, diğer kayıtlar gibi ayrı tutulur ve 1 yıl sonra silinir.</li>
 </ul>
 <h2 id="b9-2">9.2 Kafedeki işlem geçmişi</h2>
 <p>Kafede de işletmenin işlemleri (iptal, iade, ödeme türü düzeltmesi, fiyat değişikliği, uzaktan destek değişiklikleri, gün sonunu geri alma gibi) yapanın adıyla şifreli bir tabloya yazılır. Bu kayıtta Merkez'deki gibi bir hash zinciri yoktur.</p>
@@ -612,7 +612,7 @@
   <span class="kutu-baslik">Avukata soru: yurt dışı</span>
   <ol>
     <li>Cloudflare yalnız alan adı çözümlemesi yapıyor. Ziyaretçinin cihazının Cloudflare'e adres sorması yurt dışı aktarım sayılır mı; aydınlatma metinlerinde anılmalı mı?</li>
-    <li>Şifreli Merkez yedeklerinin Google Drive'da tutulması yurt dışı aktarım sayılır mı? Site KVKK metni bugün "Yurt dışına aktarım yapılmaz" diyor.</li>
+    <li>Şifreli Merkez yedeklerinin Google Drive'da tutulması yurt dışı aktarım sayılır mı? Site KVKK metni, gizlilik sayfası ve lisans bu kopyaları ve sunucuların yurt dışında olabileceğini yazıyor; bu aktarımın hukuki dayanağı ne olmalı?</li>
     <li>Satıcının e-postası için Gmail kullanılması (işletme sahiplerinin adresleri ve kodlar bu yoldan gider) yurt dışı aktarım sayılır mı; Türkiye'de bir e-posta sağlayıcısı mı seçilmeli?</li>
   </ol>
 </div>
@@ -658,7 +658,7 @@
   <li>"Yeni bilgisayar için e-posta" adresi sahibin şifresi ve adrese gelen kodla doğrulanır. Şifre kilidinin kurulması ve doğrulama özetinin Merkez'e gitmesi için sahibe bir bilgilendirme ya da onay gösterilmez (bölüm 7.3).</li>
 </ul>
 <h2 id="b14-6">14.6 Web sitesi formu</h2>
-<p>Zorunlu onay kutusu ("KVKK Aydınlatma Metni'ni okudum; bilgilerimin bu talebe dönüş yapılması için işlenmesini kabul ediyorum.") ve metne bağlantı. Gönderilen her talepte onayın zamanı ve metnin sürümü (<code>kvkk-aydinlatma-2026-10-08</code>) saklanır. Metin esastan değişince sürüm artırılır. E-posta alanı artık zorunludur; aydınlatma metni hâlâ "isteğe bağlı" diyor ve sürümü değişmedi (bölüm 16).</p>
+<p>Zorunlu onay kutusu ("KVKK Aydınlatma Metni'ni okudum; bilgilerimin bu talebe dönüş yapılması için işlenmesini kabul ediyorum.") ve metne bağlantı. Gönderilen her talepte onayın zamanı ve metnin sürümü (<code>kvkk-aydinlatma-2026-10-14</code>) saklanır. Metin esastan değişince sürüm artırılır. E-posta alanı artık zorunludur; aydınlatma metni hâlâ "isteğe bağlı" diyor ve sürümü değişmedi (bölüm 16).</p>
 
 <!-- ============================================================ 15 -->
 <h1 id="b15" class="akis"><span class="no">15</span>Lisans, abonelik ve sorumluluk</h1>
@@ -674,7 +674,7 @@
   <li><strong>Program dosyası denetimi:</strong> fark varsa yalnız dosya adları Merkez'e bildirilir; program hiçbir şeyi kilitlemez (lisans madde 6).</li>
 </ul>
 <h2 id="b15-2">15.2 Mola Lisans Sözleşmesi taslağının özeti</h2>
-<p>Taslak sürüm 3 programda kullanılıyor; tam metin Ek A'da.</p>
+<p>Taslak sürüm 4 programda kullanılıyor; tam metin Ek A'da.</p>
 <ul>
   <li>Taraflar Merkut Studios ve işletme; işletme başına ve bilgisayar başına, münhasır olmayan, devredilemeyen kullanım hakkı; program satılmaz.</li>
   <li>Yasaklar: tersine mühendislik, lisans denetimini aşma, başka bilgisayarda ya da VDS'te çalıştırma, alt lisans.</li>
@@ -696,18 +696,11 @@
 
 <!-- ============================================================ 16 -->
 <h1 id="b16" class="akis"><span class="no">16</span>Hazırlanması istenen metinler</h1>
-<p class="giris">Her metin için kimin okuyacağını, nerede gösterileceğini ve bilmeniz gereken teknik girdileri yazdık. Önce, bugünkü metinlerle programın davranışı arasında bildiğimiz farklar.</p>
+<p class="giris">Her metin için kimin okuyacağını, nerede gösterileceğini ve bilmeniz gereken teknik girdileri yazdık. Önce, metinlerin programla uyumu.</p>
 <div class="kutu uyari">
-  <span class="kutu-baslik">Program ile mevcut metinler arasındaki farklar</span>
+  <span class="kutu-baslik">Program ile metinler</span>
   <ol>
-    <li><strong>Lisans madde 9.2</strong> ("Merkut Studios bunları açamaz") ve site gizlilik sayfası ("içeriği bizim tarafımızdan okunamaz"): bölüm 7.3'teki sınırı anmıyor.</li>
-    <li><strong>Lisans madde 9.3</strong> Merkez'e gidenleri sayıyor; sahibin kullanıcı adı ile şifre doğrulama özeti ve doğrulanmış e-posta listede yok. Site gizlilik sayfasındaki "Mola Merkez'e gidenler" listesinde de yok.</li>
-    <li><strong>Lisans madde 11.3</strong> veriye dönüşü yalnız kurtarma koduna bağlı anlatıyor; sahip şifresiyle taşıma ("İşletmem var") anılmıyor.</li>
-    <li><strong>Programdaki "İşletmem var" ekranı</strong> "Şifreniz bu bilgisayardan çıkmaz" diyor; şifre doğrulama için Merkez'e gidiyor (saklanmıyor).</li>
-    <li><strong>Site KVKK metni</strong> e-postayı "isteğe bağlı" sayıyor; formda e-posta zorunlu. Onaylanan metnin sürümü (<code>kvkk-aydinlatma-2026-10-08</code>) değişmedi.</li>
-    <li><strong>Site KVKK metni</strong> "Yurt dışına aktarım yapılmaz" diyor; şifreli Merkez yedeklerinin Google Drive'a gitmesi bununla birlikte değerlendirilmeli (bölüm 12).</li>
-    <li><strong>İşlem kayıtlarında IP için 1 yıl kuralı</strong> (lisans 9.5, gizlilik sayfası): "İşletmem var" kod kaydının metnindeki IP adresi bu kurala uymuyor (bölüm 9.1).</li>
-    <li><strong>Başvuru aydınlatma metni</strong> (bölüm 14.1) e-postanın kimlik doğrulama ve güvenlik bildirimi amacını yazmıyor.</li>
+    <li>Lisans sözleşmesi (sürüm 4), site KVKK metni (<code>kvkk-aydinlatma-2026-10-14</code>), site gizlilik sayfası ve programdaki başvuru aydınlatma metni programın bugünkü davranışını anlatır: "İşletmem var" (kullanıcı adı, şifrenin tek yönlü özeti, doğrulanmış e-posta; şifre saklanmaz), şifreli yedek kopyalarının satıcının bilgisayarında ve Google Drive'da tutulması, sitede e-postanın zorunlu olması, e-postanın kimlik doğrulama ve güvenlik bildirimi amacı. Bu ifadelerin hukuken yeterliliği sizin kontrolünüzü bekliyor.</li>
     <li>Ücret, ödeme, deneme, paket değişikliği ve dondurma lisans sözleşmesinde yok; abonelik sözleşmesine bırakıldı (madde 7.1). Uzaktan destek, uzaktan yönetim ve internetten menünün kapsamını anlatan ayrı maddeler sizin önerinize bırakıldı.</li>
   </ol>
 </div>
@@ -725,7 +718,7 @@
 <h2 id="b16-4">16.4 İşletme sahibi / yetkili aydınlatma metni (satıcının)</h2>
 <p>Bugünkü kısa metin bölüm 14.1'de. Eklenmesi gerekenler: lisans ve kalp atışıyla giden bilgiler (bölüm 3.2), destek mesajları ve ekler, sözleşme kabulü, duyuru okundu bilgisi, şifreli sunucu yedeği, "İşletmem var" (şifre doğrulama özeti, doğrulanmış e-posta, e-posta kodları ve bildirimleri), uzaktan destek ve uzaktan yönetim, Raporlarım posta kutusu, işlem kayıtlarında IP, satıcının bilgisayarındaki ve Google Drive'daki kopyalar, e-posta sağlayıcısı, satıcının yetkilileri, saklama süreleri, başvuru kanalı.</p>
 <h2 id="b16-5">16.5 Mola Lisans Sözleşmesi</h2>
-<p>Taslak Ek A'da; özeti bölüm 15.2'de, programla farkları bu bölümün başında. Metin değişince sürüm numarası artırılır ve her işletme sahibine bir sonraki girişte yeniden sorulur.</p>
+<p>Taslak Ek A'da; özeti bölüm 15.2'de, programla uyumu bu bölümün başında. Metin değişince sürüm numarası artırılır ve her işletme sahibine bir sonraki girişte yeniden sorulur.</p>
 <h2 id="b16-6">16.6 Abonelik ve hizmet sözleşmesi</h2>
 <p>Girdiler bölüm 15.1 ve 15.3'te: deneme, planlar, hizmet paketleri, fiyatların KDV hariç gösterimi ve değişebilmesi, dondurma, askı, elle ödeme kaydı, 14 gün internetsizlik ve "bir lisans bir bilgisayar" kuralı, sona ermede verinin durumu.</p>
 <h2 id="b16-7">16.7 Veri işleme sözleşmesi (satıcı ile işletme arasında)</h2>
@@ -776,7 +769,7 @@
 </ol>
 
 <!-- ============================================================ Ekler -->
-<h1 id="ek-a">Ek A: Mola Lisans Sözleşmesi taslağı (sürüm 3)</h1>
+<h1 id="ek-a">Ek A: Mola Lisans Sözleşmesi taslağı (sürüm 4)</h1>
 <p class="kucuk gri">Metin <code>docs/hukuk/MOLA_LISANS_SOZLESMESI.md</code> dosyasından aynen alınmıştır; yalnız başlıktaki uzun tire iki nokta ile gösterilmiştir. Programda etkinleştirmede gösterilen metin budur.</p>
 <div class="ek ek-cerceve" data-ek="lisans"></div>
 

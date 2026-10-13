@@ -12,7 +12,7 @@ export const SITE_LEAD_SECTOR: Record<SiteLeadType, 'cafe' | 'restaurant' | 'des
  * The version of the KVKK Aydınlatma Metni the form links to. Kept with each lead (with the time of the tick) so it is
  * known later which text the person saw. Change it whenever site/src/pages/kvkk.html changes in substance.
  */
-export const SITE_CONSENT_VERSION = 'kvkk-aydinlatma-2026-10-08';
+export const SITE_CONSENT_VERSION = 'kvkk-aydinlatma-2026-10-14';
 export const SITE_LEAD_LIMITS = {
   business: { min: 2, max: 80 }, person: { min: 2, max: 80 }, phone: { max: 20 }, email: { max: 120 },
   city: { min: 2, max: 40 }, tables: { min: 1, max: 500 }, message: { max: 1500 },

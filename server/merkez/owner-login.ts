@@ -94,7 +94,7 @@ export function ownerLoginRoutes(app: Express, deps: () => Deps) {
     try { await send(mail, email, 'Mola · İşletmem var doğrulama kodu', `Merhaba,\n\nMola'yı yeni bir bilgisayarda "${found.name}" işletmesine bağlamak için doğrulama kodunuz:\n\n${code}\n\nKod 10 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı dikkate almayın ve işletme sahibi şifrenizi değiştirin.\n\nMola`); }
     catch { throw new DomainError('MAIL_FAILED', 'Doğrulama kodu e-postası gönderilemedi. Biraz sonra yeniden deneyin ya da Mola ekibine ulaşın.', 502); }
     pending.set(ticket, { tenantId: found.tenantId, email, codeHash: hash(code), until: t + CODE_MS, tries: 0 });
-    store.mutate(d => { d.audit.push({ action: 'owner_login.code_sent', target: found.tenantId, at: now().toISOString(), by: 'cafe', detail: `İşletmem var: doğrulama kodu ${maskEmail(email)} adresine gönderildi (${clientKey(req)})` }); });
+    store.mutate(d => { d.audit.push({ action: 'owner_login.code_sent', target: found.tenantId, at: now().toISOString(), by: 'cafe', detail: `İşletmem var: doğrulama kodu ${maskEmail(email)} adresine gönderildi` }); });
     res.json({ ticket, email: maskEmail(email), name: found.name });
   });
   app.post(`${MERKEZ_API}/owner-login/verify`, (req, res) => {
