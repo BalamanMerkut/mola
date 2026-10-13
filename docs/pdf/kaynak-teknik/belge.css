@@ -6,16 +6,17 @@
   --metin: #1d2321; --gri: #5d6763; --cizgi: #d5dbd8; --zemin: #f6f7f4;
 }
 @page {
-  size: A4; margin: 19mm 17mm 21mm 17mm;
+  size: A4; margin: 19mm 17mm 21mm 17mm; background: #f5efe3;
   @bottom-left { content: "Mola · Teknik Anlatım · Merkut Studios"; font: 7.5pt "Segoe UI", sans-serif; color: #7a8480; }
   @bottom-right { content: "Sayfa " counter(page) " / " counter(pages); font: 7.5pt "Segoe UI", sans-serif; color: #7a8480; }
-  @top-right { content: "Merkut Studios · 7 Ekim 2026"; font: 7pt "Segoe UI", sans-serif; color: #9aa39f; }
+  @top-right { content: "Merkut Studios · Ekim 2026"; font: 7pt "Segoe UI", sans-serif; color: #9aa39f; }
 }
 @page kapak { margin: 0; @bottom-left { content: none } @bottom-right { content: none } @top-right { content: none } }
 
 * { box-sizing: border-box; }
-html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; font-family: "Segoe UI", "Segoe UI Variable", Calibri, Arial, sans-serif; font-size: 9.6pt; line-height: 1.5; color: var(--metin); background: #fff; hyphens: manual; }
+/* 14 Ekim (sahibin isteği): a matte cream page instead of bright white (the root background fills the whole sheet, margins too). */
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #f5efe3; }
+body { margin: 0; font-family: "Segoe UI", "Segoe UI Variable", Calibri, Arial, sans-serif; font-size: 9.6pt; line-height: 1.5; color: var(--metin); background: #f5efe3; hyphens: manual; }
 main { display: block; }
 p { margin: 0 0 6pt; orphans: 3; widows: 3; }
 ul, ol { margin: 0 0 7pt; padding-left: 15pt; }

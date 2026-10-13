@@ -70,7 +70,7 @@ export type PackageTemplate = { id: string; name: string; features: FeatureId[] 
 export const defaultPackages: PackageTemplate[] = [
   { id: 'cay-bahcesi', name: 'Çay bahçesi', features: ['core', 'qr-menu', 'email-reports'] },
   { id: 'kafe-standart', name: 'Kafe Standart', features: ['core', 'qr-menu', 'qr-order', 'stock', 'remote-reports', 'email-reports'] },
-  { id: 'restoran-pro', name: 'Restoran Pro', features: ['core', 'qr-menu', 'qr-order', 'stock', 'remote-reports', 'remote-admin', 'email-reports', 'reservations', 'shifts', 'split-screen', 'reports-advanced', 'social'] },
+  { id: 'restoran-pro', name: 'Restoran Pro', features: ['core', 'qr-menu', 'qr-order', 'stock', 'remote-reports', 'remote-admin', 'email-reports', 'reservations', 'shifts', 'split-screen', 'reports-advanced', 'social', 'cloud-backup'] },
 ];
 
 /** Adds what a choice needs (core, and each requirement) so a package is always valid. */

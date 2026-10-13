@@ -96,8 +96,8 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   for (const name of ['Çay bahçesi', 'Kafe Standart', 'Restoran Pro']) await expect(list.getByRole('article', { name })).toBeVisible();
   await expect(list.getByRole('article', { name: 'Kafe Standart' })).toContainText('₺1.625');
   // 6 Ekim: Restoran Pro without Bulutta şifreli yedek (sold apart) and without a separate Müdür rolü (in the core), with
-  // Sosyal medya ve QR kartları (paid since 6 Ekim, ₺75): 2.350 TL/ay.
-  await expect(list.getByRole('article', { name: 'Restoran Pro' })).toContainText('₺2.350');
+  // Sosyal medya ve QR kartları (₺75) and Bulutta şifreli yedek (₺100, 14 Ekim): 2.450 TL/ay.
+  await expect(list.getByRole('article', { name: 'Restoran Pro' })).toContainText('₺2.450');
   await expect(page.locator('main')).not.toContainText('Müdür rolü');
   await expect(list.getByRole('region', { name: 'Eski planlar' })).toContainText('Tam sistem (eski plan)');
   await list.getByRole('button', { name: 'Yeni paket' }).first().click();

@@ -41,12 +41,12 @@ test('prices: package totals follow the services, their requirements and discoun
   // The old plans: everything sellable; menu only = everything but QR ordering.
   assert.deepEqual(legacyFeatures('full'), features.filter(f => !f.soon).map(f => f.id));
   assert.deepEqual(legacyFeatures('menu'), sellableFeatures().filter(f => f !== 'qr-order'));
-  // 6 Ekim: the Müdür account is in the core (no separate service); Bulutta şifreli yedek is sold on its own, not in Restoran Pro.
+  // 6 Ekim: the Müdür account is in the core (no separate service). 14 Ekim (sahibin kararı): Bulutta şifreli yedek is in Restoran Pro too.
   assert.equal(features.some(f => (f.id as string) === 'manager-role'), false);
   const pro = defaultPackages.find(p => p.id === 'restoran-pro')!;
-  assert.equal(pro.features.includes('cloud-backup'), false);
+  assert.equal(pro.features.includes('cloud-backup'), true);
   // 6 Ekim: Sosyal medya ve QR kartları (₺75) is a paid service, in Restoran Pro.
-  assert.equal(monthlyTotal(pro.features), 2350 * TL);
+  assert.equal(monthlyTotal(pro.features), 2450 * TL);
   assert.ok(legacyFeatures('full').includes('cloud-backup'), 'Tam sistem (eski plan) keeps every sellable service');
   // "Yakında" (Paket servis platformları) is in no licence, the trial's neither; only the browser tests' Merkez opens it on old plans.
   for (const b of [{ kind: 'trial' as const }, { kind: 'subscription' as const, service: 'full' as const }]) assert.equal(licenseFeatures(b).includes('integrations'), false);
@@ -73,7 +73,7 @@ test('old data with the retired "manager-role" (prices, packages, Özel, old pla
   const cat = (await pair.admin('/catalog')).data;
   assert.ok(!cat.features.some((f: any) => f.id === 'manager-role'));
   const pro = cat.packages.find((p: any) => p.id === 'restoran-pro');
-  assert.equal(pro.price.monthly, 2350 * TL);
+  assert.equal(pro.price.monthly, 2450 * TL);
   // The package comes back from the screen as it was shown and saves; the business's price leaves the old service out.
   assert.equal((await pair.admin('/packages', { requestId: rid(), id: pro.id, name: pro.name, features: pro.features, discount: { kind: 'percent', value: 5 }, expectedUpdatedAt: pro.updatedAt })).status, 200);
   const b = (await pair.admin('/state')).data.businesses.find((x: any) => x.tenantId === 'mola-demo');

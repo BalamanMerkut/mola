@@ -1,10 +1,11 @@
 @page { size: A4; margin: 0; }
-:root { --yesil: #234c3e; --koyu: #24382e; --gri: #6d756e; --cizgi: #e2e6dd; --kagit: #f6f7f4; --vurgu: #b96844; --kirmizi: #d7261e; }
+:root { --zemin: #f5efe3; --yesil: #234c3e; --koyu: #24382e; --gri: #6d756e; --cizgi: #e2e6dd; --kagit: #f6f7f4; --vurgu: #b96844; --kirmizi: #d7261e; }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: #fff; }
+/* 14 Ekim (sahibin isteği): a matte cream page instead of bright white, easier on the eyes. */
+html, body { margin: 0; padding: 0; background: var(--zemin); }
 body { font-family: "Segoe UI", "Noto Sans", Arial, sans-serif; color: var(--koyu); font-size: 10.5pt; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 #kaynak { width: 176mm; }
-.sayfa { width: 210mm; height: 297mm; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: #fff; }
+.sayfa { width: 210mm; height: 297mm; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: var(--zemin); }
 .sayfa:last-child { page-break-after: auto; break-after: auto; }
 .icerik { padding: 17mm 17mm 16mm; }
 .ust-serit { position: absolute; top: 7mm; left: 17mm; right: 17mm; display: flex; justify-content: space-between; font-size: 8pt; color: var(--gri); border-bottom: 0.6pt solid var(--cizgi); padding-bottom: 1.5mm; }

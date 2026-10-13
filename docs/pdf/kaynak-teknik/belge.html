@@ -19,10 +19,10 @@
     <dl class="kapak-bilgi">
       <dt>Hazırlayan</dt><dd>Emirhan İspir, Merkut Studios (bilgisayar programcılığı öğrencisi)</dd>
       <dt>Kime</dt><dd>Yapay zekâ ve web tasarımı derslerindeki hocalarım</dd>
-      <dt>Tarih ve sürüm</dt><dd>12 Ekim 2026 · Mola 0.1.0</dd>
+      <dt>Tarih ve sürüm</dt><dd>Ekim 2026 · Mola 0.1.9</dd>
       <dt>Kapsam</dt><dd>Ayrıntılı ama sade anlatım; kod yolları dipnot gibi verilmiştir</dd>
     </dl>
-    <p class="kapak-not">Bu belgedeki her teknik bilgi projenin kaynak koduyla karşılaştırılarak yazıldı; dosya ve klasör adları verildi. Gerçek cihazda ya da gerçek sunucuda henüz denenmemiş konular "Doğrulanmadı" diye işaretlidir.</p>
+    <p class="kapak-not">Bu belgedeki her teknik bilgi projenin kaynak koduyla karşılaştırılarak yazıldı; dosya ve klasör adları verildi. Gerçek ortamda henüz ölçülmemiş konular "Doğrulanmadı" diye işaretlidir.</p>
   </div>
   <div class="kapak-alt">
     <img src="../../../brand/merkut-studios/merkut-studios-logo.jpg" alt="Merkut Studios">
@@ -44,30 +44,30 @@
 <ul>
   <li><strong>İnternet kesilince iş durmamalı.</strong> Bu yüzden sistem bulutta değil, işletmenin kendi kasa bilgisayarında çalışır. Tabletler ona kafenin Wi-Fi'si üzerinden bağlanır.</li>
   <li><strong>İşletmenin verisi işletmede kalmalı.</strong> Satışlar, misafir ve çalışan bilgileri yalnız işletmenin bilgisayarında, şifreli olarak durur. Bunun hem güvenlik hem de kişisel verilerin korunması (KVKK) açısından anlamı var.</li>
-  <li><strong>Yine de uzaktan hizmet verilebilmeli.</strong> Lisans, destek, güncelleme, sahibin telefonundan raporlar ve misafirin mobil veriyle menü açabilmesi için satıcı tarafında bir sunucu (Mola Merkez) var. Bu sunucu satış verisini görmeyecek şekilde tasarlandı.</li>
-  <li><strong>Ucuz bir kafe bilgisayarında 5 yıl hızlı çalışmalı.</strong> Bunun için ayrı bir yük testi yapıldı (bölüm 21).</li>
+  <li><strong>Yine de uzaktan hizmet verilebilmeli.</strong> Lisans, destek, güncelleme, sahibin telefonundan raporlar, yeni bilgisayara geçiş ve misafirin mobil veriyle menü açabilmesi için satıcı tarafında bir sunucu (Mola Merkez) var. Bu sunucu satış verisini görmeyecek şekilde tasarlandı.</li>
+  <li><strong>Ucuz bir kafe bilgisayarında 5 yıl hızlı çalışmalı.</strong> Bunun için ayrı bir yük testi yapıldı (bölüm 23).</li>
 </ul>
 <h2 id="t1-2">Rakamlarla proje</h2>
 <div class="sayilar">
-  <div><b>≈ 100.000</b><span>satır; bunun ≈ 36.000'i test kodu</span></div>
-  <div><b>744</b><span>birim testi (159 dosya)</span></div>
-  <div><b>241</b><span>tarayıcı testi (111 dosya)</span></div>
+  <div><b>≈ 122.000</b><span>satır; bunun ≈ 44.000'i test kodu</span></div>
+  <div><b>≈ 850</b><span>birim testi (184 dosya)</span></div>
+  <div><b>290</b><span>tarayıcı testi (126 dosya)</span></div>
   <div><b>5 rol</b><span>sahip, müdür, kasiyer, garson, mutfak</span></div>
 </div>
 <table class="dar">
   <thead><tr><th>Alan</th><th>Klasör</th><th>Dosya</th><th>Satır</th></tr></thead>
   <tbody>
-    <tr><td>Kafe sunucusu</td><td><code>server/</code></td><td>109</td><td>17.286</td></tr>
-    <tr><td>Mola Merkez sunucusu</td><td><code>server/merkez/</code></td><td>31</td><td>6.878</td></tr>
-    <tr><td>Ortak iş kuralları</td><td><code>packages/domain/</code></td><td>64</td><td>6.599</td></tr>
-    <tr><td>Ekranlar (React, TypeScript)</td><td><code>src/</code></td><td>215</td><td>17.458</td></tr>
-    <tr><td>Stiller (CSS)</td><td><code>src/</code></td><td>67</td><td>5.563</td></tr>
-    <tr><td>Testler</td><td><code>tests/</code></td><td>274</td><td>35.822</td></tr>
-    <tr><td>Betikler, kurulum programı (C#)</td><td><code>scripts/</code></td><td>55</td><td>9.193</td></tr>
+    <tr><td>Kafe sunucusu</td><td><code>server/</code></td><td>113</td><td>19.124</td></tr>
+    <tr><td>Mola Merkez sunucusu</td><td><code>server/merkez/</code></td><td>37</td><td>8.025</td></tr>
+    <tr><td>Ortak iş kuralları</td><td><code>packages/domain/</code></td><td>73</td><td>7.742</td></tr>
+    <tr><td>Ekranlar (React, TypeScript)</td><td><code>src/</code></td><td>250</td><td>21.442</td></tr>
+    <tr><td>Stiller (CSS)</td><td><code>src/</code></td><td>83</td><td>7.186</td></tr>
+    <tr><td>Testler</td><td><code>tests/</code></td><td>322</td><td>44.444</td></tr>
+    <tr><td>Betikler, kurulum programı (C#)</td><td><code>scripts/</code></td><td>73</td><td>12.076</td></tr>
     <tr><td>Android kabuğu (Java)</td><td><code>mobile/android/</code></td><td>6</td><td>1.943</td></tr>
   </tbody>
 </table>
-<p class="tablo-not">Satırlar 7 Ekim 2026'da sayıldı (boş satırlar dahil, <code>node_modules</code> ve arşiv hariç). Test kodu ürün kodundan fazladır; bu bilinçli bir tercihtir (bölüm 21).</p>
+<p class="tablo-not">Satırlara boş satırlar dahildir; <code>node_modules</code> ve arşiv hariçtir. Bütün kodun yaklaşık üçte biri testtir; bu bilinçli bir tercihtir (bölüm 23).</p>
 
 <h2 id="t1-3">Kimler kullanır</h2>
 <table class="dar bolunmez">
@@ -76,9 +76,9 @@
     <tr><td>Misafir</td><td>Kendi telefonu (tarayıcı)</td><td>Menü, sepet, sipariş, garson çağırma, hesap isteme. Hesap açmaz.</td></tr>
     <tr><td>Garson</td><td>Telefon (tarayıcı ya da Android uygulaması)</td><td>Sipariş alır, QR siparişini onaylar, servis eder, masayı temizler.</td></tr>
     <tr><td>Mutfak</td><td>Tablet ya da fiş yazıcısı</td><td>Siparişi görür, "Hazırlanıyor" ve "Hazır" der; stok sayımı.</td></tr>
-    <tr><td>Kasiyer</td><td>Kasa bilgisayarı ya da tablet</td><td>Ödeme, iade (sınırlı), gün sonu kasa sayımı.</td></tr>
-    <tr><td>Müdür ve sahip</td><td>Kasa bilgisayarı, tablet, kendi telefonu</td><td>Menü, raporlar, stok, rezervasyon, ayarlar; sahip ayrıca uzaktan rapor ve uzaktan yönetim.</td></tr>
-    <tr><td>Satıcı (ben)</td><td>Mola Yönetim paneli</td><td>Lisans, paket, destek, güncelleme yayını, duyurular.</td></tr>
+    <tr><td>Kasiyer</td><td>Kasa bilgisayarı ya da tablet</td><td>Ödeme, iade (sınırlı), gün sonu kasa sayımı (kör sayım).</td></tr>
+    <tr><td>Müdür ve sahip</td><td>Kasa bilgisayarı, tablet, kendi telefonu</td><td>Menü, raporlar, stok, rezervasyon, ayarlar; sahip ayrıca uzaktan rapor, uzaktan yönetim ve kasa sonuçları.</td></tr>
+    <tr><td>Satıcı (ben) ve yetkililer</td><td>Mola Yönetim paneli (tarayıcı, Merkez'den HTTPS ile)</td><td>Lisans, paket, destek, güncelleme yayını, duyurular, site iletişim bilgisi.</td></tr>
   </tbody>
 </table>
 
@@ -148,7 +148,7 @@
   <text x="464" y="260" font-size="10.5" fill="#5d6763">merkez.sqlite · gece yedeği 03:45</text>
   <rect x="452" y="282" width="286" height="44" rx="6" fill="#fff" stroke="#1f3b5c"/>
   <text x="464" y="301" font-size="11.5" font-weight="600">Web sitesi: düz HTML/CSS (Caddy sunar)</text>
-  <text x="464" y="317" font-size="10.5">iletişim formu → Merkez /api/site</text>
+  <text x="464" y="317" font-size="10.5">form ve canlı iletişim bilgisi → /api/site</text>
 
   <rect x="438" y="360" width="152" height="60" rx="8" fill="#fff" stroke="#b8661f"/>
   <text x="450" y="382" font-size="11.5" font-weight="600">Misafirin telefonu</text>
@@ -186,8 +186,8 @@
     <tr><td>Kafe sunucusu</td><td>Bütün iş kuralları, veri, yazdırma, yedek. Tabletlere ekranları ve API'yi sunar.</td><td><code>server/app.ts</code>, <code>server/runtime.ts</code></td></tr>
     <tr><td>Ekranlar</td><td>Tek sayfalı React uygulaması; rol ve ekran genişliğine göre düzen değiştirir (360 px telefondan 1280 px kasaya).</td><td><code>src/</code>, giriş <code>index.html</code></td></tr>
     <tr><td>Misafir sayfası</td><td>Yalnız misafir menüsünü içeren ayrı, küçük paket (~150 kB sıkıştırılmış).</td><td><code>menu.html</code> → <code>src/guest-main.tsx</code></td></tr>
-    <tr><td>Mola Merkez</td><td>Lisans, destek, güncelleme, tünel, köprü, şifreli yedek, web formu.</td><td><code>server/merkez/</code></td></tr>
-    <tr><td>Mola Yönetim</td><td>Satıcının paneli (React).</td><td><code>merkez.html</code>, <code>src/Platform*.tsx</code></td></tr>
+    <tr><td>Mola Merkez</td><td>Lisans, kalp atışı, destek, güncelleme, tünel, köprü, şifreli yedek, "İşletmem var" girişi, web formu ve site iletişim bilgisi.</td><td><code>server/merkez/</code></td></tr>
+    <tr><td>Mola Yönetim</td><td>Satıcının paneli (React); Merkez'den sunulur. Sahip ("admin") ve yetkili hesaplar (bölüm 21).</td><td><code>merkez.html</code>, <code>src/Platform*.tsx</code></td></tr>
     <tr><td>Raporlarım</td><td>Sahibin telefonundaki rapor ve uzaktan yönetim sayfası.</td><td><code>raporlarim.html</code>, <code>src/ReportsPhone.tsx</code>, <code>src/RemoteAdmin.tsx</code></td></tr>
     <tr><td>Masaüstü başlatıcıları</td><td>Kurulum, başlatma, kaldırma, güvenlik duvarı kuralı (Windows); Mac ve Linux için kabuk betikleri.</td><td><code>scripts/desktop/*.cs</code>, <code>*.sh</code></td></tr>
     <tr><td>Android uygulaması</td><td>Tam ekran WebView; kafe bilgisayarını ağda bulur, ekranı açık tutar, kütüphanesiz QR okur.</td><td><code>mobile/android/</code></td></tr>
@@ -204,7 +204,7 @@
     <tr><td colspan="3" class="grup">Diller</td></tr>
     <tr><td>TypeScript 7.0</td><td>Bütün sunucu, ekran ve iş kuralı kodu. Tip denetimi <code>npm run typecheck</code>.</td><td><code>server/</code>, <code>src/</code>, <code>packages/domain/</code></td></tr>
     <tr><td>HTML</td><td>Dört uygulama girişi (personel, misafir, Mola Yönetim, Raporlarım) ve web sitesi sayfaları; bu belgenin kendisi de HTML'den basıldı.</td><td><code>index.html</code>, <code>menu.html</code>, <code>merkez.html</code>, <code>raporlarim.html</code>, <code>site/src/pages/</code></td></tr>
-    <tr><td>CSS</td><td>Çatı (framework) yok; 67 elle yazılmış stil dosyası. Duyarlı düzen, telefonda alt menü, yazdırma stilleri (@page).</td><td><code>src/*.css</code>, <code>site/src/assets/site.css</code></td></tr>
+    <tr><td>CSS</td><td>Çatı (framework) yok; 83 elle yazılmış stil dosyası. Duyarlı düzen, telefonda alt menü, yazdırma stilleri (@page).</td><td><code>src/*.css</code>, <code>site/src/assets/site.css</code></td></tr>
     <tr><td>SQL (SQLite)</td><td>Tablolar, dizinler, tetikleyiciler (değiştirilemez işlem kaydı), yıl paketlerinde <code>ATTACH</code> + <code>INSERT…SELECT</code>.</td><td><code>server/store.ts</code>, <code>server/history.ts</code>, <code>server/merkez/journal.ts</code></td></tr>
     <tr><td>C# 5 (.NET Framework 4)</td><td>Windows kurulum programı, <code>Mola.exe</code> başlatıcısı ve kaldırıcı. Ayrı bir derleyici kurmamak için Windows'un içindeki <code>csc.exe</code> ile derlenir.</td><td><code>scripts/desktop/Kurulum.cs</code>, <code>Mola.cs</code>, <code>Kaldir.cs</code>, <code>Ortak.cs</code>, <code>Urun.cs</code></td></tr>
     <tr><td>Java</td><td>Android kabuğu (6 dosya): WebView, ağda kafe arama, dosya indirme, kütüphanesiz QR çözücü (Reed-Solomon dahil).</td><td><code>mobile/android/src/com/merkutstudios/mola/</code></td></tr>
@@ -227,8 +227,8 @@
     <tr><td>tsx + node:test</td><td>Birim testleri (Node'un kendi test koşucusu).</td><td><code>tests/*.test.ts</code></td></tr>
     <tr><td>Playwright 1.63</td><td>Gerçek Chrome'da tarayıcı testleri; site videolarının kaydı; bu belgenin PDF'e basılması.</td><td><code>tests/browser/</code>, <code>scripts/pdf-belgeler.mjs</code></td></tr>
     <tr><td>Android SDK araçları</td><td>Gradle olmadan: <code>aapt2</code>, <code>javac</code>, <code>d8</code>, <code>zipalign</code>, <code>apksigner</code>. Çıktı yaklaşık 100 kB.</td><td><code>scripts/build-apk.mjs</code></td></tr>
-    <tr><td colspan="3" class="grup">Sunucu ortamı (12 Ekim 2026'dan beri canlı; İstanbul, Keyubu/Datacasa)</td></tr>
-    <tr><td>Ubuntu 24.04, systemd, ufw</td><td>VDS işletim sistemi; Merkez servisi kum havuzunda (bölüm 20.1), çökünce 5 sn'de yeniden başlar; güvenlik duvarı yalnız 22, 80, 443.</td><td><code>scripts/merkez-linux-paket.mjs</code>, <code>docs/VDS_KURULUM.md</code></td></tr>
+    <tr><td colspan="3" class="grup">Sunucu ortamı (VDS, İstanbul)</td></tr>
+    <tr><td>Ubuntu 24.04, systemd, ufw</td><td>VDS işletim sistemi; Merkez servisi kum havuzunda (bölüm 21), çökünce 5 sn'de yeniden başlar; güvenlik duvarı yalnız 22, 80, 443.</td><td><code>scripts/merkez-linux-paket.mjs</code>, <code>docs/VDS_KURULUM.md</code></td></tr>
     <tr><td>Caddy</td><td>4 adın (site, www, merkez, menu) HTTPS sertifikasını otomatik alır ve yeniler, istekleri Merkez'e iletir, siteyi sunar, WebSocket taşır.</td><td><code>Caddyfile.ornek</code></td></tr>
   </tbody>
 </table>
@@ -263,7 +263,7 @@
 <ul>
   <li><strong>Sunucuya asla güvenmeyen ekran, ekrana asla güvenmeyen sunucu.</strong> Örneğin misafirin sepetindeki fiyat sunucuda yeniden hesaplanır (<code>quote</code>); fark varsa sipariş <code>PRICE_CHANGED</code> ile geri döner. Her işlem rol listesiyle sunucuda ayrıca denetlenir; izinsiz istek 403 alır.</li>
   <li><strong>Tekrar gönderime dayanıklı yazma.</strong> Her yazma isteği bir <code>requestId</code> taşır. Ağ koptu diye aynı istek iki kez gelirse ikincisi aynı sonucu döndürür, çift sipariş ya da çift ödeme oluşmaz. 5 yıllık testte sunucu yoğun anda iki kez zorla kapatıldı: onaylanan hiçbir kayıt kaybolmadı ya da ikilenmedi.</li>
-  <li><strong>Ekranlar sorarak güncellenir.</strong> Personel ve misafir ekranları 2 saniyede bir sunucuya sorar (<code>poll</code>); sunucu ekrandaki sürümün etiketini (ETag) karşılaştırır, değişiklik yoksa gövdesiz 204 döner. Arka plandaki sekme sormaz. Sunucunun gönderdiği anlık durum rol başına kırpılır: derbi günü örneğinde garsona giden veri 196 kB'tan 114 kB'a, mutfağa giden 179 kB'tan 48 kB'a indi.</li>
+  <li><strong>Ekranlar sorarak güncellenir.</strong> Personel ve misafir ekranları 2 saniyede bir sunucuya sorar (<code>poll</code>); sunucu ekrandaki sürümün etiketini (ETag) karşılaştırır, değişiklik yoksa gövdesiz 204 döner. Arka plandaki sekme sormaz. Sunucunun gönderdiği anlık durum rol başına kırpılır: yoğun bir "derbi günü" örneğinde tam durum yaklaşık 190 kB iken garsona 114 kB, mutfağa 48 kB gider.</li>
 </ul>
 
 <!-- ============================================================ 5 -->
@@ -307,13 +307,12 @@
   <li><strong>Durumlar:</strong> <code>awaiting_approval</code> → <code>new</code> → <code>preparing</code> → <code>ready</code> → <code>served</code> (ya da <code>cancelled</code>). Kurallar tek dosyada: <code>packages/domain/engine.ts</code>.</li>
   <li><strong>Değiştirme süresi:</strong> misafir siparişini süre dolana kadar değiştirebilir ya da iptal edebilir. Fiş yazıcısı ancak süre dolunca basar; böylece boşa fiş çıkmaz.</li>
   <li><strong>Mutfak "Fiş" modu:</strong> mutfak ekran yerine yazıcı kullanıyorsa sipariş basılınca "Hazırlanıyor" olur. Yazıcı hatası (kâğıt bitti, kapalı, ağdan ulaşılamıyor) ESC/POS durum sorgusu ve ağ hata kodlarından ayırt edilip kasada kalıcı uyarı olarak gösterilir.</li>
-  <li><strong>"Geri al":</strong> mutfak yanlış bir düğmeye bastıysa 5 saniye içinde geri alabilir; sunucu yalnız son adımı, aynı sürümde ve süre içinde kabul eder.</li>
   <li><strong>Hesap fişi</strong> yasal fiş değildir; yazar kasaya giriş için ödeme penceresinde KDV oranlarına bölünmüş bir "yazar kasa yardımcısı" kartı çıkar.</li>
 </ul>
 
 <!-- ============================================================ 6 -->
 <h1 id="t6"><span class="no">6</span>İş günü 05:00'te döner</h1>
-<p>Gece 01:30'da kapanan bir hesap "dün"ün değil "bu gecenin" satışıdır. Bu yüzden takvim günü yerine tek bir sabitle tanımlanan bir <strong>iş günü</strong> kullanılır: <code>DAY_START_HOUR = 5</code> (<code>packages/domain/business-day.ts</code>). Kasa günü, bütün raporlar, stok günü, rezervasyon günü, e-posta dönem raporları ve personel oturumlarının bitişi bu sabitten türer. Sabit değişirse hepsi birlikte kayar. Testler 23:00–02:00 gecesini, 04:59 ve 05:00'i, 29 Şubat 2028'i ve farklı saat dilimlerini ayrıca dener; tarayıcı test koşucusu 05:00'e 4 dakikadan az kala yeni test başlatmaz, çünkü o anda oturumlar gerçekten kapanır.</p>
+<p>Gece 01:30'da kapanan bir hesap "dün"ün değil "bu gecenin" satışıdır. Bu yüzden takvim günü yerine tek bir sabitle tanımlanan bir <strong>iş günü</strong> kullanılır: <code>DAY_START_HOUR = 5</code> (<code>packages/domain/business-day.ts</code>). Kasa günü, bütün raporlar, stok günü, rezervasyon günü, e-posta dönem raporları ve personel oturumlarının bitişi bu sabitten türer. Sabit değişirse hepsi birlikte kayar. Testler 23:00–02:00 gecesini, 04:59 ve 05:00'i, 29 Şubat 2028'i ve farklı saat dilimlerini ayrıca dener.</p>
 
 <!-- ============================================================ 7 -->
 <h1 id="t7" class="akis"><span class="no">7</span>Veri saklama: mühürlü satırlar</h1>
@@ -321,18 +320,22 @@
 <figure>
 <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">
   <defs><marker id="k1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
-  <rect x="20" y="20" width="200" height="56" rx="8" fill="#fbefe3" stroke="#b8661f"/>
-  <text x="120" y="44" text-anchor="middle" font-size="12" font-weight="700">Windows DPAPI</text>
-  <text x="120" y="62" text-anchor="middle" font-size="10.5">o kullanıcı + şifresi</text>
-  <rect x="20" y="96" width="200" height="56" rx="8" fill="#fbefe3" stroke="#b8661f"/>
-  <text x="120" y="120" text-anchor="middle" font-size="12" font-weight="700">Kurtarma kodu</text>
-  <text x="120" y="138" text-anchor="middle" font-size="10.5">24 karakter · scrypt + AES-GCM</text>
+  <rect x="20" y="12" width="200" height="46" rx="8" fill="#fbefe3" stroke="#b8661f"/>
+  <text x="120" y="31" text-anchor="middle" font-size="12" font-weight="700">Windows DPAPI</text>
+  <text x="120" y="48" text-anchor="middle" font-size="10.5">o kullanıcı + şifresi</text>
+  <rect x="20" y="64" width="200" height="46" rx="8" fill="#fbefe3" stroke="#b8661f"/>
+  <text x="120" y="83" text-anchor="middle" font-size="12" font-weight="700">Kurtarma kodu</text>
+  <text x="120" y="100" text-anchor="middle" font-size="10.5">24 karakter · scrypt + AES-GCM</text>
+  <rect x="20" y="116" width="200" height="46" rx="8" fill="#fbefe3" stroke="#b8661f"/>
+  <text x="120" y="135" text-anchor="middle" font-size="12" font-weight="700">İşletme sahibinin şifresi</text>
+  <text x="120" y="152" text-anchor="middle" font-size="10.5">scrypt + AES-GCM ("İşletmem var")</text>
   <rect x="280" y="56" width="200" height="60" rx="8" fill="#e7efe9" stroke="#234c3e" stroke-width="1.8"/>
   <text x="380" y="82" text-anchor="middle" font-size="12.5" font-weight="700" fill="#234c3e">Ana anahtar</text>
-  <text x="380" y="100" text-anchor="middle" font-size="10.5">anahtar.json'da iki kez kilitli</text>
-  <line x1="222" y1="48" x2="278" y2="76" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
-  <line x1="222" y1="124" x2="278" y2="98" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
-  <text x="246" y="90" text-anchor="middle" font-size="10" fill="#5d6763">biri yeter</text>
+  <text x="380" y="100" text-anchor="middle" font-size="10.5">anahtar.json'da ayrı ayrı kilitli</text>
+  <line x1="222" y1="35" x2="278" y2="72" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
+  <line x1="222" y1="87" x2="278" y2="87" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
+  <line x1="222" y1="139" x2="278" y2="102" stroke="#3a4642" stroke-width="1.5" marker-end="url(#k1)"/>
+  <text x="380" y="134" text-anchor="middle" font-size="10" fill="#5d6763">kilitlerden biri açmaya yeter</text>
   <rect x="540" y="20" width="200" height="56" rx="8" fill="#fff" stroke="#234c3e"/>
   <text x="640" y="44" text-anchor="middle" font-size="12" font-weight="700">İşletme anahtarı</text>
   <text x="640" y="62" text-anchor="middle" font-size="10.5">rastgele 256 bit, sarılı</text>
@@ -358,7 +361,7 @@
   <li><strong>AES-256-GCM</strong> hem gizlilik hem bütünlük sağlar: bir bayt değişirse satır açılmaz. AAD'ye satırın kapsamını yazmak, şifreli bir satırı başka bir kaydın yerine kopyalama saldırısını engeller.</li>
   <li><strong>Sıkıştırma şifrelemeden önce</strong> yapılır (deflate-raw, sabit bir sözlükle; kapanan hesaplar yaklaşık 3,6 kat küçülür). Şifreli veri sıkışmadığı için sıra önemlidir (<code>server/packing.ts</code>).</li>
   <li><strong>Anlık durum küçük tutulur:</strong> açık masalar, menü ve ayarlar işletme başına tek bir satırda (yaklaşık 20 kB) durur ve her işlemde yeniden yazılır. Kapanan hesaplar 6 saat sonra <code>history_*</code> tablolarına taşınır.</li>
-  <li><strong>Kurtarma kodu</strong> yalnız kasa bilgisayarının ekranında bir kez gösterilir; kaydedildiği, koddan rastgele iki parça sorularak doğrulanır. Kod hiçbir yerde saklanmaz; satıcı da bilmez. Windows şifresi unutulursa program "Veriler kilitli" açılır ve kâğıttaki kodla açılır.</li>
+  <li><strong>Kurtarma kodu</strong> yalnız kasa bilgisayarının ekranında bir kez gösterilir; kaydedildiği, koddan rastgele iki parça sorularak doğrulanır. Kod hiçbir yerde saklanmaz; satıcı da bilmez. Windows şifresi unutulursa program "Veriler kilitli" açılır ve kâğıttaki kodla açılır. Üçüncü kilit, yeni bilgisayara geçişte kod yerine sahibin kendi şifresini kullanmak içindir (bölüm 11).</li>
 </ul>
 
 <!-- ============================================================ 8 -->
@@ -379,9 +382,9 @@
 </figure>
 <ul>
   <li><strong>Geçersiz kılma:</strong> geçmiş bir günü değiştiren her işlem (geç kapanan hesap, eski hesaba iade, yöntem düzeltmesi, geriye tarihli gider, kasa düzeltmesi, vardiya düzeltmesi) o ayın ve yılın özetini siler; sonraki rapor onu parça parça yeniden kurar. Doğruluk testi: iki 5 yıllık kafede "Tümü", her yıl ve 12 rastgele dönem için özetten okunan her rakam gün gün toplanan rakamla kuruşu kuruşuna aynı çıktı.</li>
-  <li><strong>Parça parça çalışma:</strong> Node.js tek iş parçacıklıdır; uzun bir hesap bütün tabletleri bekletir. Bu yüzden özetler 12–15 ms'lik dilimlerle kurulur (<code>drainSlowly</code>), arada tabletlerin istekleri yanıtlanır. Program başlatmak gibi işletim sistemini bekleten işler ayrı iş parçacığına taşındı (<code>server/programs.ts</code>).</li>
+  <li><strong>Parça parça çalışma:</strong> Node.js tek iş parçacıklıdır; uzun bir hesap bütün tabletleri bekletir. Bu yüzden özetler 12–15 ms'lik dilimlerle kurulur (<code>drainSlowly</code>), arada tabletlerin istekleri yanıtlanır. Program başlatmak gibi işletim sistemini bekleten işler ayrı iş parçacığında çalışır (<code>server/programs.ts</code>).</li>
   <li><strong>KDV satıldığı orandan:</strong> her sipariş satırı satıldığı andaki KDV oranını taşır; aylık ve yıllık özetler oranları dondurur. Bir ürünün oranı bugün değişse de geçmişin KDV dökümü değişmez.</li>
-  <li><strong>Sonuç (5 yıllık orta kafe):</strong> "Tümü" özeti 1,2 sn → 0,03 sn; Excel "Tümü" 3,2 sn → 0,2 sn; raporlar sırasında bir tabletin en uzun beklemesi 3,2 sn → 0,28 sn; bellek 919 → 371 MB.</li>
+  <li><strong>Etkisi (5 yıllık orta kafe, özetsiz → özetli):</strong> "Tümü" özeti 1,2 sn → 0,03 sn; Excel "Tümü" 3,2 sn → 0,2 sn; raporlar sırasında bir tabletin en uzun beklemesi 3,2 sn → 0,28 sn; bellek 919 → 371 MB.</li>
 </ul>
 
 <!-- ============================================================ 9 -->
@@ -455,11 +458,26 @@
 <ul>
   <li><strong>Değişiklik işareti:</strong> veritabanında tek bir sayaç satırı. Her başarılı yazma isteği sayaçı ilerletir (giriş, okundu işaretleri, yazdırma ve arka plan işleri sayılmaz). Yedek, veritabanını okumadan hemen önce sayacı "silahlar"; sayacı tutan doğrulanmış bir yedek varsa gece yedeği gereksizdir. Bir test, uygulamadaki her yazma yolunun iki listeden birinde (değişiklik / değişiklik değil) olduğunu denetler; listede olmayan yeni bir yol testi bozar.</li>
   <li><strong>Saklama algoritması:</strong> önce iş günü başına en yeni yedek seçilir; sonra yedeği olan son 7 iş günü, bitmiş son 4 ISO haftasının ve son 12 ayın en yenisi tutulur. "Yedeği olan son günler" kuralı, haftalarca kapalı kalan bir bilgisayarda eski yedeklerin toptan silinmesini önler.</li>
-  <li><strong>Merkez'de yer hesabı:</strong> sabit kota yerine işletmenin kendi boyutundan: (kopya sayısı + 1) × en büyük kopya + her yıl paketi bir kez. Eski sabit 2 GB kuralı yoğun bir kafede yaklaşık 2,8. yılda yüklemeyi tamamen durdururdu; 5 yıllık test bunu ortaya çıkardı.</li>
+  <li><strong>Merkez'de yer hesabı:</strong> sabit kota yerine işletmenin kendi boyutundan: (kopya sayısı + 1) × en büyük kopya + her yıl paketi bir kez. Neden: 5 yıllık test, 2 GB gibi sabit bir kotanın yoğun bir kafede üçüncü yıla varmadan yüklemeyi tamamen durduracağını gösterdi.</li>
 </ul>
 
 <!-- ============================================================ 11 -->
-<h1 id="t11" class="akis"><span class="no">11</span>Lisans, kalp atışı ve paketler</h1>
+<h1 id="t11" class="akis"><span class="no">11</span>Yeni bilgisayara geçiş: "İşletmem var"</h1>
+<p class="giris">Kasa bilgisayarı bozulur ya da değişirse veri yeni bilgisayarda açılabilmelidir. Veri şifreli ve anahtar kafede durduğu için bu aslında bir anahtar sorunudur: yeni bilgisayar ana anahtarı açabilmeli, Mola Merkez ise açamamalıdır.</p>
+<ul>
+  <li><strong>Yedek kendi kilidini taşır:</strong> her yedeğin içindeki <code>anahtar-kurtarma.json</code>, ana anahtarın kurtarma koduyla ve sahibin şifresiyle kilitlenmiş kopyalarını içerir; kodun ya da şifrenin kendisini içermez (<code>server/backup-key.ts</code>). Bu yüzden yedek klasörü ile kurtarma kodu ya da sahibin şifresi, yeni bilgisayarda veriyi açmaya yeter.</li>
+  <li><strong>Kurtarma kodu:</strong> 32 harfli bir alfabeden 24 karakter (0/O ve 1/I gibi karışan harfler yok), yani 120 bit. scrypt ile anahtara çevrilir, ana anahtarı AES-256-GCM ile açar (<code>server/key-vault.ts</code>).</li>
+</ul>
+<h3>Kod yerine sahibin şifresiyle giriş</h3>
+<ol>
+  <li><strong>Doğrulayıcı:</strong> kafe bilgisayarı kalp atışıyla her işletme sahibinin kullanıcı adını ve şifresinin scrypt doğrulayıcısını Merkez'e gönderir. Doğrulayıcının tuzu, ana anahtarı kilitleyen anahtarın tuzundan farklıdır: Merkez şifreyi denetleyebilir ama hiçbir şeyi açamaz.</li>
+  <li><strong>Giriş:</strong> yeni bilgisayarda "İşletmem var" denir; sahip işletmenin doğrulanmış e-posta adresini, kullanıcı adını ve şifresini yazar. Merkez şifreyi doğrulayıcıyla denetler ve o adrese 6 haneli bir kod gönderir (10 dakika, 5 deneme).</li>
+  <li><strong>Taşıma:</strong> kod doğruysa yeni bilgisayar Merkez'deki şifreli yedekleri indirir ve sahibin şifresiyle kendi içinde açar. Merkez'de yedek yoksa flash bellekteki ya da eşitlenen klasördeki yedek aynı şifreyle açılır. Açılan anahtar hemen yeni bilgisayarın Windows kilidine bağlanır.</li>
+</ol>
+<p>Her yanlış cevap aynı cümleyle reddedilir; deneyen kişi hangi parçanın yanlış olduğunu öğrenmez. İki adım da hem adres hem işletme başına yavaşlatılır. Şifre değişince ana anahtar yeni şifreyle yeniden kilitlenir. Merkez'de şifreli yedek ve doğrulayıcı durur, anahtarı açan şifre durmaz; doğrulayıcıdan şifreyi tahminle bulmak scrypt yüzünden pahalıdır, yine de bu yol sahibin güçlü bir şifre seçmesine dayanır (<code>server/merkez/owner-login.ts</code>).</p>
+
+<!-- ============================================================ 12 -->
+<h1 id="t12" class="akis"><span class="no">12</span>Lisans, kalp atışı ve paketler</h1>
 <figure>
 <svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg">
   <defs><marker id="l1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2321"/></marker></defs>
@@ -492,15 +510,15 @@
 </figure>
 <ul>
   <li><strong>İmza türleri ayrı:</strong> aynı Ed25519 anahtarı lisans, nabız (<code>mola-nabiz-1</code>), iletişim bilgisi, güncelleme, adres değişikliği, kapanış ve işlem kaydı mühürü için kullanılır; her birinin mesajı farklı bir amaç etiketiyle başlar. Böylece bir türün imzası başka bir tür yerine kullanılamaz.</li>
-  <li><strong>Saat penceresi:</strong> Merkez, saati kendi saatinden 5 dakikadan fazla farklı imzalı isteği reddeder (<code>CLOCK_WINDOW_MS</code>, <code>server/install-auth.ts</code>); böylece yakalanan eski bir istek sonradan tekrar oynatılamaz. Bir yan etkisi tanıtım verisi üreticisinde çıktı: üretici geçmişi geçmiş tarihli saatle oynattığı için Merkez'e giden istekler reddediliyordu. Düzeltme: bağlantı her zaman gerçek saatle imzalar, geçmiş yalnız kafe verisinde oynar (<code>scripts/demo-template.ts</code>).</li>
+  <li><strong>Saat penceresi:</strong> Merkez, saati kendi saatinden 5 dakikadan fazla farklı imzalı isteği reddeder (<code>CLOCK_WINDOW_MS</code>, <code>server/install-auth.ts</code>); böylece yakalanan eski bir istek sonradan tekrar oynatılamaz. Aynı nonce ikinci kez kabul edilmez; bir kurulum dakikada en çok 30 kalp atışı gönderebilir.</li>
   <li><strong>14 gün çevrimdışı:</strong> son imzalı nabızdan sonra 7. günde uyarı, 14. günde misafir menüsü ve yeni sipariş kapanır; bağlantı gelince açılır.</li>
   <li><strong>Bir lisans, bir bilgisayar:</strong> kalp atışı bilgisayar kimliğinin (Windows MachineGuid) kurulum sırrıyla HMAC'ını taşır. Başka bilgisayardan bağlanılınca yeni bilgisayar etkin olur, eskisi imzalı "başka bilgisayar" yanıtı alır.</li>
   <li><strong>Paketler (özellik kapıları):</strong> lisans <code>features</code> listesini taşır (14 hizmet kimliği, <code>packages/domain/features.ts</code>). Sunucu bütün personel ve misafir yollarından önce bir bekçi çalıştırır: kapalı hizmetin yolu <code>403 FEATURE_NOT_IN_PACKAGE</code> döner (<code>server/feature-guard.ts</code>). Ekran kapalı yeri soluk ve bulanık gösterir. Hiçbir veri silinmez; hizmet geri gelince kaldığı yerden döner.</li>
-  <li><strong>Geriye uyumluluk:</strong> eski kafe sürümleri bilmedikleri bir alanı olan lisansı reddeder. Bu yüzden Merkez her lisansı aynı sıra numarasıyla iki kez imzalar (özellik listeli ve listesiz); yeni kafe birincisini, eski kafe ikincisini alır. Kafe ve Merkez her yeni yetenek için birbirine <code>accepts</code> listesiyle haber verir; karşı taraf bilmiyorsa alan gönderilmez.</li>
+  <li><strong>Sürüm farkına dayanıklılık:</strong> her kafe aynı anda güncellenmez. Kafe ve Merkez yeni bir yeteneği birbirine <code>accepts</code> listesiyle bildirir; karşı taraf bilmiyorsa o alan gönderilmez. Bilinmeyen alanı reddeden eski kafeler için Merkez her lisansı aynı sıra numarasıyla iki kez imzalar (özellik listeli ve listesiz).</li>
 </ul>
 
-<!-- ============================================================ 12 -->
-<h1 id="t12" class="akis"><span class="no">12</span>Uzaktan raporlar: uçtan uca şifreleme</h1>
+<!-- ============================================================ 13 -->
+<h1 id="t13" class="akis"><span class="no">13</span>Uzaktan raporlar: uçtan uca şifreleme</h1>
 <p class="giris">İşletme sahibi raporlarına telefonundan bakmak istiyor; ama raporlar Merkez'den geçerken Merkez'in onları okumaması gerekiyor. Çözüm, kafe bilgisayarı ile telefon arasında uçtan uca şifrelemedir (<code>packages/domain/remote-crypto.ts</code>; aynı kod sunucuda Node 24'ün, telefonda tarayıcının WebCrypto'suyla çalışır).</p>
 <figure>
 <svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg">
@@ -539,8 +557,8 @@
   <li><strong>Test:</strong> <code>tests/remote-reports.test.ts</code> Merkez'in aldığı ve gönderdiği her baytı ve iki veritabanındaki her satırı ürün adı, tutar ve rapor alan adları için tarar; hiçbiri bulunmamalı.</li>
 </ul>
 
-<!-- ============================================================ 13 -->
-<h1 id="t13" class="akis"><span class="no">13</span>Uzaktan yönetim ve iki adımlı doğrulama</h1>
+<!-- ============================================================ 14 -->
+<h1 id="t14" class="akis"><span class="no">14</span>Uzaktan yönetim ve iki adımlı doğrulama</h1>
 <p>Sahip, eşleştirdiği cihazdan kafenin bütün ekranlarını uzaktan açabilir. Bu, raporlardan daha tehlikeli bir yetki olduğu için kurallar daha sıkıdır (<code>server/remote-admin.ts</code>, <code>packages/domain/remote-admin-crypto.ts</code>):</p>
 <ol>
   <li><strong>Giriş:</strong> cihaz yeni bir geçici X25519 anahtarı E<sub>d</sub> üretir. k1 = HKDF(DH(E<sub>d</sub>, C) ‖ DH(P, C)); C kafenin sabit anahtarı, P cihazın dışa aktarılamaz anahtarı. Şifre ve telefondaki 6 haneli kod (TOTP) k1 altında AES-256-GCM ile gönderilir. k1'i yalnız bu cihaz ve bu kafe hesaplayabilir; Merkez için doğru ve yanlış şifre aynı görünür.</li>
@@ -549,15 +567,15 @@
   <li><strong>Oturum gerçek bir personel oturumudur:</strong> aynı 05:00 sonu, aynı 10 dakikalık otomatik kilit. Jeton kafeden hiç çıkmaz; çözülen istek kafenin içinde, yalnız bu sürecin rastgele sırrını taşıyan bir işaretle yeniden oynatılır.</li>
   <li><strong>Uzaktan yapılamayanlar:</strong> yedekten geri yükleme, kurtarma kodu, cihaz eşleştirme, uzaktan erişim izinlerini açmak, güncelleme kurmak (403 <code>REMOTE_FORBIDDEN</code>).</li>
 </ol>
-<h3>TOTP ve "adım onayı"</h3>
-<p>Doğrulama kodları RFC 6238 TOTP'dir: HMAC-SHA1, 30 saniyelik adım, 6 hane, ±1 adım tolerans ve aynı adımın ikinci kez kullanılmasının reddi (<code>server/totp.ts</code>). Mola Yönetim'de fiyat, paket, ödeme, duyuru ve güncelleme yayını gibi işlemler oturum açık olsa bile ayrıca güncel bir kod ister; doğru kod o oturuma 10 dakikalık bir "yetki penceresi" açar (<code>server/merkez/step-up.ts</code>). Yanlış denemeler adres başına iki katına çıkan bekleme süresiyle sınırlanır.</p>
-
-<!-- ============================================================ 14 -->
-<h1 id="t14" class="akis"><span class="no">14</span>Uzaktan destek köprüsü</h1>
-<p>Kafe modemin arkasında olduğu için Merkez kafeye bağlanamaz. Kafe, yalnız gerektiğinde (uzaktan destek izni açık, eşleşmiş bir telefon var ya da eşleştirme QR'ı ekranda) Merkez'e tek bir uzun bekleyen istek (long-poll, en çok 25 sn) açık tutar; Merkez beklettiği istekleri bu cevaba koyar, kafe sonuçları ayrı imzalı bir istekle geri yollar (<code>server/relay.ts</code>, <code>server/merkez/relay.ts</code>). "Mola destek" rolü sunucuda bir izin listesiyle sınırlanır: menü, masa, yazıcı gibi ekranlar açık; satış, ödeme, kasa, çalışan şifreleri, misafir telefonları kapalıdır (403). Oturum açıkken bütün personel ekranlarında "Mola ekibi bağlı" bandı görünür ve her değişiklik sahibin kaydına düz Türkçe yazılır.</p>
+<h3>TOTP</h3>
+<p>Doğrulama kodları RFC 6238 TOTP'dir: HMAC-SHA1, 30 saniyelik adım, 6 hane, ±1 adım tolerans ve aynı adımın ikinci kez kullanılmasının reddi (<code>server/totp.ts</code>). Uzaktan girişte yanlış cevaplar cihaz başına sayılır: 5 serbest deneme, sonra 1, 2, 4 dakika diye iki katına çıkan bekleme (en çok 15 dakika); işletme başına 15 dakikada 20 yanlış bütün cihazları durdurur. Aynı kod düzeni Mola Yönetim'in girişinde ve adım onayında da kullanılır (bölüm 21).</p>
 
 <!-- ============================================================ 15 -->
-<h1 id="t15"><span class="no">15</span>İnternetten menü: misafir tüneli</h1>
+<h1 id="t15" class="akis"><span class="no">15</span>Uzaktan destek köprüsü</h1>
+<p>Kafe modemin arkasında olduğu için Merkez kafeye bağlanamaz. Kafe, yalnız gerektiğinde (uzaktan destek izni açık, eşleşmiş bir telefon var ya da eşleştirme QR'ı ekranda) Merkez'e tek bir uzun bekleyen istek (long-poll, en çok 25 sn) açık tutar; Merkez beklettiği istekleri bu cevaba koyar, kafe sonuçları ayrı imzalı bir istekle geri yollar (<code>server/relay.ts</code>, <code>server/merkez/relay.ts</code>). "Mola destek" rolü sunucuda bir izin listesiyle sınırlanır: menü, masa, yazıcı gibi ekranlar açık; satış, ödeme, kasa, çalışan şifreleri, misafir telefonları kapalıdır (403). Oturum açıkken bütün personel ekranlarında "Mola ekibi bağlı" bandı görünür ve her değişiklik sahibin kaydına düz Türkçe yazılır.</p>
+
+<!-- ============================================================ 16 -->
+<h1 id="t16"><span class="no">16</span>İnternetten menü: misafir tüneli</h1>
 <p class="giris">Misafir masadaki QR'ı kendi mobil verisiyle açabilmeli. Ama kafe bilgisayarı internete açık değil ve açılmamalı. Çözüm: kafe, Merkez'e dışa doğru <strong>tek bir WebSocket</strong> bağlantısı açık tutar; Merkez misafirin isteklerini bu bağlantının içinden kafeye taşır.</p>
 <figure>
 <svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg">
@@ -595,22 +613,21 @@
   <li><strong>Neden WebSocket, neden kendi yazdığım?</strong> Kalıcı, çift yönlü ve çoklanmış tek bir bağlantı; uzun bekleyen istek (köprü) 30 misafirde sıraya girerdi. Yalnız ikili mesajlar, ping/pong ve kapanış gerektiği için RFC 6455'in bu kısmı 200 satırın altında yazıldı.</li>
   <li><strong>Mesaj biçimi:</strong> her mesaj <code>[4 bayt başlık uzunluğu][başlık JSON][gövde]</code>. Türler: <code>hello</code>, <code>req</code>, <code>res</code>, <code>data</code>, <code>cancel</code>. Kafe büyük bir fotoğrafın parçalarını istekler arasında sırayla gönderir; büyük yanıt küçükleri bekletmez.</li>
   <li><strong>İmza:</strong> bağlantı anahtarı = HMAC(kurulum anahtarı, bu bağlantının nonce'u); her istek bu anahtarla imzalanır (kimlik, yöntem, yol, misafir adresi, işletme, gövde özeti). Kafe misafirin IP adresine yalnız bu imzayla inanır; böylece hız sınırları Merkez'in tek adresine değil her misafire ayrı çalışır.</li>
-  <li><strong>Ayrı adres (11 Ekim):</strong> menü yalnız <code>menu.molayazilim.com.tr</code>'de açılır (<code>MERKEZ_MENU_ORIGIN</code>); eski adreslerdeki <code>/q/*</code> buraya yönlenir. <code>mola_browser</code> çerezi Domain'siz yazılır, yani yalnız bu ada ve o kafenin yoluna aittir; Mola Yönetim ve site onu görmez (<code>server/merkez/guest-tunnel.ts</code>).</li>
+  <li><strong>Ayrı adres:</strong> menü yalnız <code>menu.molayazilim.com.tr</code>'de açılır (<code>MERKEZ_MENU_ORIGIN</code>). Kafelerin gönderdiği içerik böylece Mola Yönetim'in adresinde hiç çalışmaz. <code>mola_browser</code> çerezi Domain'siz yazılır, yani yalnız bu ada ve o kafenin yoluna aittir; Mola Yönetim ve site onu görmez (<code>server/merkez/guest-tunnel.ts</code>).</li>
   <li><strong>İki uçta izin listesi:</strong> yalnız misafir sayfası, onun dosyaları, <code>/api/guest/*</code> ve ürün fotoğrafları. Personel yolları, giriş, masaüstü araçları Merkez'de 404'tür ve kafeye hiç gitmez; kafe aynı listeyi kendi koduyla bir kez daha denetler.</li>
   <li><strong>Adalet:</strong> kafe başına aynı anda en çok 48 istek, fazlası o kafenin kendi sırasında (300) bekler; yanıt vermeyen bir kafe diğerlerini etkilemez. 20 saniyede yanıt gelmezse misafire "Menü şu anda açılamıyor" sayfası.</li>
   <li><strong>İçerikle adreslenen önbellek:</strong> misafir sayfası ve dosyaları SHA-256'larıyla tanınır; Merkez bunları bir kez alır, bütün kafeler için ortak tutar, tarayıcıya "immutable" önbellek başlığıyla verir. Kafenin yüklemesi çoğunlukla yalnız küçük JSON'lardır.</li>
   <li><strong>Web tasarımı tarafı:</strong> misafir sayfası ayrı bir Vite girişidir (<code>menu.html</code>): personel ekranları, giriş ve şerit içinde yoktur (~505 kB ham, ~150 kB sıkıştırılmış). Sayfa <code>/q/&lt;kod&gt;/</code> alt yolunda çalıştığı için betik ve stil adresleri göreli üretilir (<code>vite.config.ts</code> <code>renderBuiltUrl</code>), API adreslerine önek eklenir (<code>src/basePath.ts</code>). Çerezin yolu da Merkez'de <code>/q/&lt;kod&gt;/</code>'a daraltılır; aynı sitedeki iki kafe çerez paylaşmaz.</li>
 </ul>
-<h3>Kafe kapalıyken: menünün kopyası (8 Ekim)</h3>
-<p>Kafe bilgisayarı kapalıyken QR'ı okutan misafir eskiden yalnız "Menü şu anda açılamıyor" görürdü. Artık Merkez menünün <strong>herkese açık bir kopyasını</strong> tutar ve onu gösterir; sipariş verilemez (<code>server/menu-mirror.ts</code>, <code>server/merkez/menu-mirror.ts</code>, <code>packages/domain/menu-mirror.ts</code>).</p>
+<h3>Kafe kapalıyken: menünün kopyası</h3>
+<p>Kafe bilgisayarı kapalıyken QR'ı okutan misafir boş bir hata sayfası görmesin diye Merkez menünün <strong>herkese açık bir kopyasını</strong> tutar ve onu gösterir; sipariş verilemez (<code>server/menu-mirror.ts</code>, <code>server/merkez/menu-mirror.ts</code>, <code>packages/domain/menu-mirror.ts</code>).</p>
 <ul>
   <li><strong>Ne gider:</strong> misafirin göreceği her şey ve fazlası değil: işletme adı, logo, tema, kategoriler, ürünler, seçenekler, "tükendi", kampanyalar (zaman pencereleri ve kota için satılan <em>adet</em>), masa adları. Masa kodunun kendisi değil, yalnız tek yönlü özeti (<code>SHA-256("mola-masa:v1:" + kod)</code>, 160 bit) gider; Merkez kopyayı gösterirken adresteki kodu özetleyip listede arar. Satış, sipariş, misafir, çalışan bilgisi kopyada yoktur.</li>
   <li><strong>Ne zaman:</strong> veritabanına her yazmadan sonra (3 sn birleştirerek), tünel her yeniden bağlandığında ve 10 dakikada bir. Kopya değişmediyse Merkez "aynı" der. Fotoğraflar SHA-256'larıyla adreslenir: Merkez eksik olanları ister, kafe yalnız onları gönderir; menüden çıkan fotoğraf Merkez'den hemen silinir.</li>
-  <li><strong>Uyumluluk:</strong> kafe kopyayı yalnız Merkez'in yetenek listesinde <code>menu.mirror</code> varsa gönderir. Eski Merkez'e eski davranış, eski kafeye eski sayfa.</li>
-  <li><strong>Saklama:</strong> kopya ve fotoğraflar AES-256-GCM ile mühürlü; işletme başına 64 MB, toplam 1 GB sınırı; işletme silinince hemen silinir. Menü metni <code>merkez.sqlite</code>'ta olduğu için Merkez'in gece yedeğine girer, fotoğraf dosyaları girmez; geri yüklemeden sonra Merkez eksik fotoğrafları kafeden yeniden ister.</li>
+  <li><strong>Saklama:</strong> kopya ve fotoğraflar AES-256-GCM ile mühürlü; fotoğraflar için işletme başına 64 MB sınırı var, diskte 1 GB'tan az yer kalınca Merkez yeni fotoğraf almaz; işletme silinince hepsi hemen silinir. Menü metni <code>merkez.sqlite</code>'ta olduğu için Merkez'in gece yedeğine girer, fotoğraf dosyaları girmez; geri yüklemeden sonra Merkez eksik fotoğrafları kafeden yeniden ister.</li>
   <li><strong>Gösterim:</strong> kopyadan açılan sayfaya imzalı, durumsuz bir oturum verilir (<code>mirror</code> + kimlik + HMAC). Kafe dönünce bu oturumla gelen istek <code>409 SESSION_RENEW</code> alır; sayfa gerçek oturum açar, misafirin sepeti sekme deposunda taşınır. Kafe siparişi her zaman kendi verisiyle yeniden doğrular; ürün bu arada tükendiyse "Bu ürün az önce tükendi" der.</li>
 </ul>
-<h3>QR siparişleri açık mı? (8 Ekim)</h3>
+<h3>QR siparişleri açık mı?</h3>
 <p>Menü hep görünür; telefondan sipariş yalnız üç koşul birlikte sağlanırsa açıktır (<code>server/qr-ordering.ts</code>, <code>packages/domain/qr-ordering.ts</code>):</p>
 <ol>
   <li><strong>Bir personel ekranı bağlı:</strong> son 90 saniyede bir personel ekranı sunucuya sormuş olmalı (her ekran birkaç saniyede bir sorar). Kimse yokken gelen sipariş görülmezdi.</li>
@@ -618,7 +635,7 @@
   <li><strong>Elle durdurulmamış:</strong> sahip, müdür ya da kasiyer "QR siparişlerini durdur" diyebilir; 30 dakika sonra ekranlarda hatırlatma çıkar.</li>
 </ol>
 <p>Kapalıyken misafir "Şu an sipariş almıyoruz, lütfen garsonunuza sorun." görür; sunucu da siparişi <code>409 ORDERING_CLOSED</code> ile reddeder. "Garson çağır" yalnız 1. koşula bağlıdır. Kafe durumu tünelden Merkez'e bildirir; tünel koptuysa Merkez "Şu an sipariş alınamıyor" der. Kapanış saati ayarı bilerek yok: her kafede farklı ve unutulur; gün sonu zaten "kapandık" demektir. Platform siparişleri bu kuraldan etkilenmez.</p>
-<h3>Ölçüm (yerel bilgisayar, 7 Ekim)</h3>
+<h3>Ölçüm (yerel bilgisayar)</h3>
 <table class="dar bolunmez">
   <thead><tr><th>Deney</th><th>Sonuç</th></tr></thead>
   <tbody>
@@ -627,18 +644,18 @@
     <tr><td>Aynı yük, bir kafe hiç yanıt vermiyor</td><td>Diğer kafeler p95 40 ms, hata 0</td></tr>
   </tbody>
 </table>
-<p class="kucuk"><span class="rozet dogrulanmadi">Doğrulanmadı</span> VDS 12 Ekim'de canlıya alındı; gerçek internette misafir → VDS → kafe gidiş-dönüş süreleri (Türkiye içinde tipik 10–40 ms) henüz ölçülmedi.</p>
-
-<!-- ============================================================ 16 -->
-<h1 id="t16" class="akis"><span class="no">16</span>Sosyal medya kısa adresleri</h1>
-<p>Kafenin "Bizi Instagram'da takip edin" QR kartı bağlantının kendisini değil, Merkez'deki kalıcı bir kısa adresi taşır: <code>/s/&lt;kod&gt;/&lt;platform&gt;</code>. Kod 62 harfli alfabeden 10 karakterdir (≈ 59 bit, sırasız, tahmin edilemez) ve hiç değişmez; sahip bağlantıyı değiştirse de basılı QR yeni bağlantıyı açar. Lisans etkin ve paket bu hizmeti içeriyorsa 302 yönlendirmesi, değilse "Bu işletmenin bu hizmeti şu anda kullanılamıyor." sayfası döner; ziyaretçiden hiçbir şey kaydedilmez (<code>server/merkez/social.ts</code>). Bağlantılar ayrıca her platformun kendi alan adına göre denetlenir (yalnız https; <code>javascript:</code> gibi şemalar reddedilir).</p>
+<p class="kucuk"><span class="rozet dogrulanmadi">Doğrulanmadı</span> Gerçek internette misafir → VDS → kafe gidiş-dönüş süreleri (Türkiye içinde tipik 10–40 ms) henüz ölçülmedi.</p>
 
 <!-- ============================================================ 17 -->
-<h1 id="t17" class="akis"><span class="no">17</span>Program dosyası denetimi</h1>
-<p>Kurulum paketi her dosyanın SHA-256'sını <code>app/butunluk.json</code>'a yazar. Bu listenin kendisi, Merkez'in güncelleme paketine attığı Ed25519 imzanın içindedir; yani listeyi değiştiren de yakalanır. Kafe açılıştan 20 saniye sonra ve günde bir dosyaları özetleyip karşılaştırır; fark varsa yalnız dosya adlarını Merkez'e bildirir (<code>server/integrity.ts</code>). Kasıtlı olarak hiçbir şeyi kilitlemez: virüs programının karantinaya aldığı bir dosya yüzünden bir kafenin işi durmamalı.</p>
+<h1 id="t17" class="akis"><span class="no">17</span>Sosyal medya kısa adresleri</h1>
+<p>Kafenin "Bizi Instagram'da takip edin" QR kartı bağlantının kendisini değil, Merkez'deki kalıcı bir kısa adresi taşır: <code>/s/&lt;kod&gt;/&lt;platform&gt;</code>. Kod 62 harfli alfabeden 10 karakterdir (≈ 59 bit, sırasız, tahmin edilemez) ve hiç değişmez; sahip bağlantıyı değiştirse de basılı QR yeni bağlantıyı açar. Lisans etkin ve paket bu hizmeti içeriyorsa 302 yönlendirmesi, değilse "Bu işletmenin bu hizmeti şu anda kullanılamıyor." sayfası döner; ziyaretçiden hiçbir şey kaydedilmez (<code>server/merkez/social.ts</code>). Bağlantılar ayrıca her platformun kendi alan adına göre denetlenir (yalnız https; <code>javascript:</code> gibi şemalar reddedilir).</p>
 
 <!-- ============================================================ 18 -->
-<h1 id="t18" class="akis"><span class="no">18</span>Otomatik güncelleme</h1>
+<h1 id="t18" class="akis"><span class="no">18</span>Program dosyası denetimi</h1>
+<p>Kurulum paketi her dosyanın SHA-256'sını <code>app/butunluk.json</code>'a yazar. Bu listenin kendisi, Merkez'in güncelleme paketine attığı Ed25519 imzanın içindedir; yani listeyi değiştiren de yakalanır. Kafe açılıştan 20 saniye sonra ve günde bir dosyaları özetleyip karşılaştırır; fark varsa yalnız dosya adlarını Merkez'e bildirir (<code>server/integrity.ts</code>). Kasıtlı olarak hiçbir şeyi kilitlemez: virüs programının karantinaya aldığı bir dosya yüzünden bir kafenin işi durmamalı.</p>
+
+<!-- ============================================================ 19 -->
+<h1 id="t19" class="akis"><span class="no">19</span>Otomatik güncelleme</h1>
 <figure>
 <svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
   <defs><marker id="u1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
@@ -666,67 +683,88 @@
 <ul>
   <li><strong>Çalışan program kendini değiştiremez</strong> (Windows açık dosyayı taşıtmaz). Bu yüzden sunucu, kuruluma hazır olunca özel bir çıkış koduyla (75) kapanır; onu izleyen "nöbetçi" süreç işi ayrı bir "uygulayıcı" sürece devreder.</li>
   <li><strong>Günlük önce yazılır:</strong> uygulayıcı her adımı önce <code>gunluk.json</code>'a yazıp diske zorlar (fsync), sonra yapar. Elektrik kesilirse sonraki açılış kaldığı adımdan devam eder; testler her adımda kesintiyi dener.</li>
-  <li><strong>Geri sürüme inme yoktur;</strong> yalnız daha yeni sürüm kabul edilir. Satıcı tarafında yayın, iki adımlı doğrulama kodu ister; önce pilot işletmelere, sonra herkese yayınlanır.</li>
+  <li><strong>Geri sürüme inme yoktur;</strong> yalnız daha yeni sürüm kabul edilir. Satıcı tarafında yayın adım onayı ister (bölüm 21.2); önce pilot işletmelere, sonra herkese yayınlanır.</li>
   <li>Gerçek kurulumla uçtan uca denendi: bilerek bozulmuş bir sürüm 90 saniye sonra kendiliğinden geri alındı, veri her adımda yerindeydi.</li>
 </ul>
 
-<!-- ============================================================ 19 -->
-<h1 id="t19" class="akis"><span class="no">19</span>Web sitesi ve iletişim formu</h1>
+<!-- ============================================================ 20 -->
+<h1 id="t20" class="akis"><span class="no">20</span>Web sitesi, iletişim bilgisi ve form</h1>
 <ul>
-  <li><strong>Statik site:</strong> sayfalar düz HTML parçalarıdır; <code>scripts/site-build.ts</code> ortak üst ve alt bölümü ekler, simgeleri derleme anında React'in sunucu tarafı çizimiyle SVG'ye çevirir, hizmet listesini programın kendi katalogundan alır (fiyat asla yazılmaz), site haritası ve iç bağlantı denetimi yapar. Tarayıcıya giden tek betik yaklaşık 9 kB'tır.</li>
+  <li><strong>Statik site:</strong> sayfalar düz HTML parçalarıdır; <code>scripts/site-build.ts</code> ortak üst ve alt bölümü ekler, simgeleri derleme anında React'in sunucu tarafı çizimiyle SVG'ye çevirir, hizmet listesini programın kendi katalogundan alır (fiyat asla yazılmaz), site haritası ve iç bağlantı denetimi yapar. Tarayıcıya giden tek bir küçük betik vardır (yaklaşık 11 kB).</li>
+  <li><strong>Canlı iletişim bilgisi:</strong> sitedeki telefon, WhatsApp, e-posta ve çalışma saatleri Mola Yönetim'de girilir. Sayfa açılınca betik bunları <code>GET /api/site/iletisim</code>'den okur ve yalnız düz metin olarak yazar; bağlantı ancak numaranın rakamlarından ya da denetlenmiş bir adresten kurulur. Yanıt gelmezse derlemedeki bilgi kalır. Site ile Merkez aynı adı paylaşır (Caddy <code>/api/site/*</code>'ı Merkez'e iletir), bu yüzden siteyi yeniden derlemeden bilgi değişir (<code>server/merkez/site-leads.ts</code>, <code>site/src/assets/site.js</code>).</li>
   <li><strong>Gizlilik tasarımı:</strong> çerez yok, analiz aracı yok, dış yazı tipi ya da CDN yok. Caddy'nin içerik güvenlik politikası (<code>default-src 'self'</code>) dışarıdan yüklemeyi zaten engeller.</li>
   <li><strong>Tanıtım videoları:</strong> gerçek programdan, örnek bir kafeyle, Chrome'un ekran yayını (DevTools protokolü) ve ffmpeg ile otomatik kaydedilir (<code>npm run site:videos</code>).</li>
   <li><strong>Form ve robotlar:</strong> form önce kısa ömürlü, saklanmayan bir anahtar (HMAC) alır; 4 saniyeden hızlı gönderim, gizli "website" alanını dolduran gönderim ve adres başına sınırı aşan gönderim kaydedilmez. Kayıt Merkez'de mühürlü durur, kapandıktan 2 yıl sonra silinir.</li>
 </ul>
 
-<!-- ============================================================ 20 -->
-<h1 id="t20" class="akis"><span class="no">20</span>Güvenlik modeli</h1>
-<table class="dar">
-  <thead><tr><th style="width:26%">Tehdit</th><th>Önlem</th></tr></thead>
-  <tbody>
-    <tr><td>Kasa bilgisayarı ya da diski çalınır</td><td>Satırlar AES-256-GCM ile şifreli; anahtar o bilgisayarın Windows kilidine (DPAPI) ve 24 karakterlik kurtarma koduna kilitli. Başka bilgisayara taşınan veri yalnız kurtarma koduyla açılır; yeni bilgisayarda anahtar yeniden o bilgisayara kilitlenir. Disk şifrelemesi (BitLocker) ayrıca önerilir.</td></tr>
-    <tr><td>Kafe Wi-Fi'sindeki biri başka masanın siparişini görmek ister</td><td>Masa kodları 144 bit rastgele; misafir yalnız kendi masasına ve kendi işletmesine erişir. Kurtarma kodu ağdan hiç gösterilmez.</td></tr>
-    <tr><td>Kaba kuvvet şifre denemesi</td><td>scrypt ile saklanan şifreler; cihaz ve hesap başına deneme sınırı; yalnız yanlış denemeler sayılır, gerçek kullanıcı kilitlenmez.</td></tr>
-    <tr><td>DNS rebinding, başka siteden istek (CSRF)</td><td>Host başlığı denetimi; çerezler SameSite=Strict ve HttpOnly; sıkı CSP; "yalnız bu bilgisayar" işlemleri ayrıca loopback ister.</td></tr>
-    <tr><td>Ağda dinleme, tekrar oynatma</td><td>Kafe–Merkez HTTPS; her istek HMAC, ±5 dk zaman ve tek kullanımlık nonce.</td></tr>
-    <tr><td>Sahte lisans, eski yedekten eski lisans</td><td>Ed25519 imza ve gömülü açık anahtar; sıra numarası ve "lisans izi" dosyası; saati geri almak işe yaramaz.</td></tr>
-    <tr><td>Satıcının sunucusu ele geçirilir</td><td>Satış verisi orada yok; yedekler kafenin anahtarıyla şifreli; raporlar uçtan uca şifreli. Misafir menü trafiği orada açık hâlde görünür (bilinen sınır).</td></tr>
-    <tr><td>Satıcı kayıtlarının sessizce değiştirilmesi</td><td>İşlem kayıtları hash zinciri + saatlik Ed25519 mühür; bağımsız denetleyici <code>scripts/islem-dogrula.mjs</code>. IP adresleri 1 yıl sonra silinir ama zincir bozulmaz: kayıt adresin kendisini değil tuzlu bir özetini (<code>SHA-256("mola-islem-adres-1" + tuz + adres)</code>) taşır, adres ayrı tabloda durur. 8 Ekim'den önceki kayıtlar zincire eklenen bir "IP adresleri silindi" kaydıyla, eski özetleri listelenerek temizlenir; denetleyici ikisini de doğrular.</td></tr>
-    <tr><td>Program dosyasının değiştirilmesi (lisans denetimini kaldırmak)</td><td>İmzalı SHA-256 listesiyle günlük denetim; satıcıya bildirim.</td></tr>
-  </tbody>
-</table>
-<p class="kucuk gri">Bilinen sınırlar: kafe içi ağ düz HTTP'dir (yerel ağda TLS sertifikası dağıtmak kafeler için pratik değil). Program dosyaları kod imzalama sertifikasıyla imzalı değil. Bilgisayarda yönetici yetkisi olan biri programı değiştirebilir; denetim yalnız bunu görünür kılar.</p>
-<h2 id="t20-1">20.1 Canlı sunucu (12 Ekim 2026)</h2>
+<!-- ============================================================ 21 -->
+<h1 id="t21" class="akis"><span class="no">21</span>Mola Merkez sunucusu ve Mola Yönetim</h1>
+<p class="giris">Mola Merkez internette bir VDS'te çalışır; satıcının paneli Mola Yönetim de buradan sunulur. Bu sunucuda satış verisi yoktur, ama lisanslar, işletme kayıtları ve şifreli yedekler vardır. Bu yüzden hem sunucunun kendisi hem panele kimin girebildiği ayrı ayrı korunur.</p>
+<h2 id="t21-1">21.1 Sunucu ortamı</h2>
 <ul>
-  <li><strong>Ortam:</strong> Ubuntu 24.04 VDS, İstanbul. Caddy 4 adın (site, www, merkez, menu) HTTPS'ini otomatik alır; Merkez'in kendi portu dışarıya kapalı.</li>
-  <li><strong>Kum havuzu:</strong> <code>mola-merkez</code> servisi yetkisiz <code>mola</code> kullanıcısıyla çalışır: <code>NoNewPrivileges</code>, <code>ProtectSystem=strict</code>, <code>PrivateTmp</code>, <code>PrivateDevices</code>, <code>RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX</code> (<code>scripts/merkez-linux-paket.mjs</code>).</li>
-  <li><strong>Erişim:</strong> SSH yalnız anahtarla (şifreyle giriş ve root girişi kapalı), root şifresi kilitli; ufw yalnız 22/80/443; fail2ban SSH denemelerini engeller; güvenlik güncellemeleri kendiliğinden kurulur (<code>unattended-upgrades</code>).</li>
-  <li><strong>Yalnız okuyan yardımcı:</strong> bakım araçları sunucuda yalnız <code>/usr/local/sbin/mola-oku</code>'yu çalıştırabilir; sudoers izin listesinde onun yedi komutu ile <code>ufw status</code> ve <code>fail2ban-client status</code> vardır, başka bir şey yoktur. Yardımcı anahtarları ve veritabanını hiçbir zaman vermez.</li>
-  <li><strong>Yedek zinciri:</strong> Merkez gece 03:45'te şifreli yedek alır; <code>npm run vds:cek</code> (<code>scripts/vds-cek.ts</code>) her gün yedekleri bilgisayara, ayrıca yalnız şifreli yedekleri Google Drive'a çeker. Sunucunun parmak izi ilk bağlantıda onaylanır, değişirse araç bağlanmaz.</li>
+  <li><strong>Ortam:</strong> Ubuntu 24.04 VDS, İstanbul. Caddy 4 adın (site, www, merkez, menu) HTTPS sertifikasını Let's Encrypt'ten kendiliğinden alır ve yeniler; Merkez yalnız 127.0.0.1:4000'i dinler, dışarıdan yalnız Caddy üzerinden ulaşılır.</li>
+  <li><strong>Kum havuzu:</strong> <code>mola-merkez</code> servisi yetkisiz <code>mola</code> kullanıcısıyla çalışır: <code>NoNewPrivileges</code>, <code>ProtectSystem=strict</code>, <code>PrivateTmp</code>, <code>PrivateDevices</code>, <code>RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX</code>; çökerse systemd 5 saniyede yeniden başlatır (<code>scripts/merkez-linux-paket.mjs</code>).</li>
+  <li><strong>Erişim:</strong> SSH yalnız anahtarla (şifreyle giriş ve root girişi kapalı); ufw yalnız 22/80/443; fail2ban SSH denemelerini engeller; güvenlik güncellemeleri kendiliğinden kurulur. Bakım araçları sunucuda yalnız okuyan bir yardımcıyı (<code>mola-oku</code>) çalıştırabilir; o da anahtarları ve veritabanını vermez.</li>
+  <li><strong>Yedek zinciri:</strong> Merkez gece 03:45'te kendi şifreli yedeğini alır; <code>npm run vds:cek</code> her gün yedekleri satıcının bilgisayarına, ayrıca yalnız şifreli yedekleri Google Drive'a çeker. Sunucunun parmak izi ilk bağlantıda onaylanır, değişirse araç bağlanmaz.</li>
+</ul>
+<h2 id="t21-2">21.2 Mola Yönetim hesapları ve adım onayı</h2>
+<ul>
+  <li><strong>Birden çok hesap:</strong> bir sahip hesabı ("admin") ve en çok 10 yetkili. Her kişinin kendi şifresi (scrypt) ve kendi doğrulayıcı uygulaması (TOTP) vardır; ortak şifre yoktur. İşlem kayıtları her satırda kimin yaptığını adıyla yazar (<code>server/admin-auth.ts</code>, <code>server/merkez/admin-users.ts</code>).</li>
+  <li><strong>Yalnız sahibin yapabildikleri:</strong> kullanıcı eklemek ve silmek, e-posta ayarları, Merkez kurtarma kodu ve geliştirici erişim anahtarları. E-posta ayarının sahipte kalmasının nedeni: sahibin "Şifremi unuttum" kodu o adrese gider; bir yetkili adresi değiştirebilseydi sahibin hesabını alabilirdi. Kullanıcı işlemleri sahibin şifresini yeniden ister; silinen yetkilinin oturumları hemen biter.</li>
+  <li><strong>Adım onayı:</strong> güncelleme yüklemek ve yayınlamak, hizmet fiyatları, paketler, ödeme kaydı ve duyurular, oturum açık olsa bile doğrulayıcıdan güncel bir kod ister. Doğru kod o oturuma 10 dakikalık bir yetki penceresi açar; pencere yalnız bellekte tutulur, oturumla ve doğrulayıcı değişince biter. Doğrulayıcısı kapalı bir hesap bu işlemleri hiç yapamaz. Yanlış kodlarda 5 serbest denemeden sonra bekleme iki katına çıkarak uzar (<code>server/merkez/step-up.ts</code>).</li>
+</ul>
+<h2 id="t21-3">21.3 İşlem kayıtları: değiştirildiği anlaşılan kayıt</h2>
+<p>Satıcının her işlemi ve güvenlikle ilgili her olay (girişler, destek oturumları, gece yedekleri) <code>merkez.sqlite</code>'ta yalnız eklenebilen bir tabloya yazılır (<code>server/merkez/journal.ts</code>):</p>
+<ul>
+  <li><strong>Değiştirilemez tablo:</strong> SQLite tetikleyicileri satırı güncellemeyi ve silmeyi reddeder.</li>
+  <li><strong>Hash zinciri:</strong> her satırın özeti = SHA-256(satırın içeriği + bir önceki satırın özeti). Ortadaki bir satır değişirse ondan sonraki bütün özetler tutmaz.</li>
+  <li><strong>Mühür:</strong> saatte bir zincirin son özeti Merkez'in Ed25519 anahtarıyla imzalanır. Böylece en yeni satırları silmek ya da bütün zinciri baştan yazmak da bir mührü bozar. Bağımsız bir betik (<code>scripts/islem-dogrula.mjs</code>) zinciri ve mühürleri tek tek doğrular ve sorun varsa hangi satırda olduğunu söyler.</li>
+  <li><strong>Kişisel veri ile zincir:</strong> zincir IP adresinin kendisini değil, tuzlu bir özetini taşır; adres ayrı tabloda durur ve 1 yıl sonra silinir, zincir bozulmaz. Şifre, kod, anahtar ve satış verisi bu kayda hiç yazılmaz.</li>
 </ul>
 <div class="kutu uyari">
-  <span class="kutu-baslik">Canlıda bulunan hata: neden canlı ortamla aynı koşulda test gerekir</span>
+  <span class="kutu-baslik">Ortam farkının yakaladığı bir hata: neden canlıyla aynı koşulda test gerekir</span>
   <ul>
-    <li><strong>Belirti:</strong> canlıya alındığı gün <code>menu.molayazilim.com.tr</code> adresindeki istekler 500 hatası döndü.</li>
-    <li><strong>Neden:</strong> sunucu, gelen isteğin adını (Host) denetlerken kendi ağ adreslerini <code>os.networkInterfaces()</code> ile listeliyordu. Kum havuzu <code>AF_NETLINK</code>'i kapattığı için bu çağrı hata verdi. Testler Windows'ta koştuğu için hata hiç görülmemişti.</li>
-    <li><strong>Düzeltme</strong> (<code>server/http-security.ts</code>): çağrının hatası yutulur (yerel adlar ve <code>PUBLIC_ORIGIN</code> yine geçerli), menü adı listeden önce denetlenir.</li>
+    <li><strong>Belirti:</strong> Merkez VDS'te ilk çalıştığında <code>menu.molayazilim.com.tr</code> adresindeki istekler 500 hatası döndü.</li>
+    <li><strong>Neden:</strong> sunucu, gelen isteğin adını (Host) denetlerken kendi ağ adreslerini <code>os.networkInterfaces()</code> ile listeliyordu. Kum havuzu <code>AF_NETLINK</code>'i kapattığı için bu çağrı hata verdi. Testler Windows'ta koştuğu için hata görünmemişti.</li>
+    <li><strong>Çözüm</strong> (<code>server/http-security.ts</code>): çağrının hatası yutulur (yerel adlar ve <code>PUBLIC_ORIGIN</code> yine geçerli), menü adı listeden önce denetlenir.</li>
     <li><strong>Ders:</strong> güvenlik kısıtları da ortamın parçasıdır. Testler canlıyla aynı işletim sisteminde ve aynı kum havuzu ayarlarıyla da koşmalı.</li>
   </ul>
 </div>
 
-<!-- ============================================================ 21 -->
-<h1 id="t21"><span class="no">21</span>Performans ve testler</h1>
-<h2 id="t21-1">21.1 Test türleri</h2>
+<!-- ============================================================ 22 -->
+<h1 id="t22" class="akis"><span class="no">22</span>Güvenlik modeli</h1>
+<table class="dar">
+  <thead><tr><th style="width:26%">Tehdit</th><th>Önlem</th></tr></thead>
+  <tbody>
+    <tr><td>Kasa bilgisayarı ya da diski çalınır</td><td>Satırlar AES-256-GCM ile şifreli; anahtar o bilgisayarın Windows kilidine (DPAPI), 24 karakterlik kurtarma koduna ve sahibin şifresine kilitli. Başka bilgisayara taşınan veri yalnız kurtarma koduyla ya da sahibin şifresiyle açılır; yeni bilgisayarda anahtar yeniden o bilgisayara kilitlenir. Disk şifrelemesi (BitLocker) ayrıca önerilir.</td></tr>
+    <tr><td>Kafe Wi-Fi'sindeki biri başka masanın siparişini görmek ister</td><td>Masa kodları 144 bit rastgele; misafir yalnız kendi masasına ve kendi işletmesine erişir. Kurtarma kodu ağdan hiç gösterilmez.</td></tr>
+    <tr><td>Kaba kuvvet şifre denemesi</td><td>scrypt ile saklanan şifreler; cihaz ve hesap başına deneme sınırı; yalnız yanlış denemeler sayılır, gerçek kullanıcı kilitlenmez.</td></tr>
+    <tr><td>Kasadan para eksilmesi (iç tehdit)</td><td>Kasiyer ve müdür kör sayar: sunucu beklenen tutarı ve farkı onlara hiç göndermez, sonucu yalnız sahip görür (<code>packages/domain/cash.ts</code>). İşletme isterse altı "Kasa güvenliği" önlemini ayrı ayrı açar: açılışta kör sayım, gün sonunda kasadan çıkarılan paranın sahibe sayılarak teslimi, vardiya devrini alanın da sayması, sayımı sıkılaştırma (gün sonunu yalnız sahip geri alır), kartlı ödemede banka POS toplamının zorunlu olması, ödeme türü değişince sahibe bildirim.</td></tr>
+    <tr><td>Başkası "İşletmem var" ile bir kafenin verisini almak ister</td><td>Sahibin şifresi ve işletmenin doğrulanmış e-postasına giden 6 haneli kod birlikte gerekir; yanlış cevap hangi parçanın yanlış olduğunu söylemez; adres ve işletme başına yavaşlatma. Merkez yalnız doğrulayıcıyı tutar, yedeği açamaz (bölüm 11).</td></tr>
+    <tr><td>DNS rebinding, başka siteden istek (CSRF)</td><td>Host başlığı denetimi; çerezler SameSite=Strict ve HttpOnly; sıkı CSP; "yalnız bu bilgisayar" işlemleri ayrıca loopback ister.</td></tr>
+    <tr><td>Ağda dinleme, tekrar oynatma</td><td>Kafe–Merkez HTTPS; her istek HMAC, ±5 dk zaman ve tek kullanımlık nonce.</td></tr>
+    <tr><td>Sahte lisans, eski yedekten eski lisans</td><td>Ed25519 imza ve gömülü açık anahtar; sıra numarası ve "lisans izi" dosyası; saati geri almak işe yaramaz.</td></tr>
+    <tr><td>Satıcının sunucusu ele geçirilir</td><td>Satış verisi orada yok; yedekler kafenin anahtarıyla şifreli; raporlar uçtan uca şifreli. Misafir menü trafiği orada açık hâlde görünür (bilinen sınır).</td></tr>
+    <tr><td>Satıcı paneline yetkisiz giriş</td><td>Her kişinin kendi şifresi ve doğrulayıcısı; fiyat, paket, ödeme, duyuru ve güncelleme için adım onayı; kullanıcı ve e-posta ayarları yalnız sahipte (bölüm 21.2).</td></tr>
+    <tr><td>Satıcı kayıtlarının sessizce değiştirilmesi</td><td>İşlem kayıtları hash zinciri + saatlik Ed25519 mühür; bağımsız denetleyici <code>scripts/islem-dogrula.mjs</code> (bölüm 21.3).</td></tr>
+    <tr><td>Program dosyasının değiştirilmesi (lisans denetimini kaldırmak)</td><td>İmzalı SHA-256 listesiyle günlük denetim; satıcıya bildirim.</td></tr>
+  </tbody>
+</table>
+<p class="kucuk gri">Bilinen sınırlar: kafe içi ağ düz HTTP'dir (yerel ağda TLS sertifikası dağıtmak kafeler için pratik değil). Program dosyaları kod imzalama sertifikasıyla imzalı değil. Bilgisayarda yönetici yetkisi olan biri programı değiştirebilir; denetim yalnız bunu görünür kılar.</p>
+
+<!-- ============================================================ 23 -->
+<h1 id="t23"><span class="no">23</span>Performans ve testler</h1>
+<h2 id="t23-1">23.1 Test türleri</h2>
 <table class="dar">
   <thead><tr><th style="width:22%">Tür</th><th style="width:14%">Sayı</th><th>Ne denetler</th></tr></thead>
   <tbody>
-    <tr><td>Birim ve entegrasyon testleri (node:test)</td><td>744 test, 159 dosya</td><td>İş kuralları, şifreleme, yedek ve geri yükleme, lisans, kalp atışı, tünel, yıl paketleri, rol × işlem tabloları. Çoğu gerçek bir sunucuyu geçici klasörde başlatıp HTTP ile konuşur. 8 Ekim'deki koşu: 743 geçti, 1 atlandı (PowerShell 7 gerektiren yerel HTTPS denetimi), süre yaklaşık 3 dakika. Tarayıcı testlerinin 8 Ekim'deki tam turu: 111 dosyadan 110'u ilk koşuda geçti; kalan 1 dosya (yük altında zamanlama) tek başına yeniden koşulunca geçti.</td></tr>
-    <tr><td>Tarayıcı testleri (Playwright, gerçek Chrome)</td><td>241 test, 111 dosya</td><td>Kullanıcı gibi tıklar: QR siparişi → mutfak → ödeme, gün sonu, iade, rezervasyon, uzaktan yönetim, Mola Yönetim. 360, 390, 768, 820, 1024, 1280 px genişliklerde yana taşma olmadığını ve dokunma hedeflerinin en az 44 px olduğunu ölçer. Her dosya kendi temiz sunucusuyla çalışır; tam tur yaklaşık 30–50 dakika.</td></tr>
+    <tr><td>Birim ve entegrasyon testleri (node:test)</td><td>≈ 850 test, 184 dosya</td><td>İş kuralları, şifreleme, yedek ve geri yükleme, lisans, kalp atışı, tünel, yıl paketleri, rol × işlem tabloları. Çoğu gerçek bir sunucuyu geçici klasörde başlatıp HTTP ile konuşur. Dosyalar paralel koşar; tam koşu birkaç dakika sürer.</td></tr>
+    <tr><td>Tarayıcı testleri (Playwright, gerçek Chrome)</td><td>290 test, 126 dosya</td><td>Kullanıcı gibi tıklar: QR siparişi → mutfak → ödeme, gün sonu, iade, rezervasyon, uzaktan yönetim, Mola Yönetim. 360, 390, 768, 820, 1024, 1280 px genişliklerde yana taşma olmadığını ve dokunma hedeflerinin en az 44 px olduğunu ölçer. Her dosya kendi temiz sunucusuyla çalışır.</td></tr>
     <tr><td>Gizlilik testleri</td><td>(yukarıdakilerin içinde)</td><td>"Kafeden asla satış verisi çıkmaz": Merkez'in gördüğü her bayt ve veritabanı satırı ürün adı, tutar, şifre için taranır.</td></tr>
     <tr><td>5 yıllık yük testi</td><td>ayrı betikler</td><td>Aşağıda.</td></tr>
   </tbody>
 </table>
-<h2 id="t21-2">21.2 5 yıllık hız ve doğruluk testi</h2>
+<h2 id="t23-2">23.2 5 yıllık hız ve doğruluk testi</h2>
 <p><strong>Yöntem:</strong> iki sahte kafenin 5 yılı (1.826 gün) programın kendi kurallarıyla gün gün üretildi: orta kafe günde 160 hesap, yoğun kafe 640 hesap (Elazığ'da hafta sonu ve maç akşamları dolu). Her gün menü değişiklikleri, fiyat artışları, kampanyalar, iptaller, masa taşıma, bölünmüş ödemeler, iadeler, rezervasyonlar, etkinlikler, kasa sayımları, vardiyalar, stok alışları üretildi. Rastgelelik gün başına sabit tohumla yapıldı (aynı komut aynı sayıları verir). Yanında senaryonun kendi "defteri" tutuldu. Sonra gerçek sunucu bu veriyle açıldı ve yoğun bir akşam taklit edildi: 10 personel tableti, mutfak ekranı, 20 misafir telefonu, raporlara bakan sahip, saatin 4 katı hızda sipariş.</p>
 <table class="dar">
   <thead><tr><th></th><th>Orta kafe</th><th>Yoğun kafe</th></tr></thead>
@@ -742,7 +780,7 @@
   </tbody>
 </table>
 <p>Test sırasında 10 yavaşlık bulunup düzeltildi. En büyüğü: her raporda, okunan her satır için işletmenin anahtarı yeniden açılıyordu; işlemci profili rapor süresinin %46'sının buradan geldiğini gösterdi. Anahtar bir kez açılınca raporlar yaklaşık iki kat hızlandı.</p>
-<h2 id="t21-3">21.3 Zayıf bilgisayar son kontrolü</h2>
+<h2 id="t23-3">23.3 Zayıf bilgisayar son kontrolü</h2>
 <p>Ucuz kafe bilgisayarlarını (Celeron, 4–8 GB RAM) taklit etmek için sunucu yalnız 2 mantıksal çekirdek ve düşük öncelikle çalıştırıldı. Kural: yılda bir yapılan yıl paketleme dışında hiçbir tablet 0,5 saniyeden uzun beklememeli. Ölçüm, her 0,25–0,5 saniyede bir sunucuya sorulan boş bir isteğin yanıt süresiyle yapıldı.</p>
 <table class="dar">
   <thead><tr><th>Aşama (zayıf mod)</th><th>p50</th><th>p95</th><th>p99</th><th>En uzun</th></tr></thead>
@@ -754,18 +792,18 @@
     <tr><td>Yıl paketleme (yılda bir, kural dışı)</td><td>10 ms</td><td>65 ms</td><td>104 ms</td><td>647 ms</td></tr>
   </tbody>
 </table>
-<p>Bu turda iki sorun bulundu: kampanya raporu bütün tabletleri 3,6 sn bekletiyordu (parçalara bölündü, 0,19 sn); Windows'un bir program başlatması zayıf bilgisayarda sunucuyu yarım saniyeden fazla durduruyordu (işlemci profiliyle bulundu; program başlatmalar ayrı iş parçacığına taşındı). Öneri: kafe bilgisayarında SSD şart, 8 GB RAM.</p>
+<p>Bu ölçüm iki sorunu ortaya çıkardı ve ikisi de giderildi: kampanya raporu bütün tabletleri 3,6 sn bekletiyordu (parçalara bölündü: 0,19 sn); Windows'un bir program başlatması zayıf bilgisayarda sunucuyu yarım saniyeden fazla durduruyordu (işlemci profiliyle bulundu; program başlatma ayrı iş parçacığında çalışır). Öneri: kafe bilgisayarında SSD şart, 8 GB RAM.</p>
 <p class="kucuk gri">Ölçüm makinesi: AMD Ryzen 5 5600X, 32 GB RAM, NVMe disk, Windows 11, Node 24. Ayrıntılar: <code>docs/HIZ_TESTI_5_YIL.md</code>.</p>
 
-<!-- ============================================================ 22 -->
-<h1 id="t22"><span class="no">22</span>Yapay zekâ ile geliştirme</h1>
+<!-- ============================================================ 24 -->
+<h1 id="t24"><span class="no">24</span>Yapay zekâ ile geliştirme</h1>
 <p class="giris">Bu bölümü abartmadan, olduğu gibi yazmak istedim. Mola'nın kodunun, testlerinin ve belgelerinin büyük bölümünü yapay zekâ yazdı. Ürünü, kararları ve sorumluluğu ise ben taşıdım.</p>
-<h2 id="t22-1">22.1 Nasıl başladı, nasıl sürdü</h2>
+<h2 id="t24-1">24.1 Nasıl başladı, nasıl sürdü</h2>
 <ul>
-  <li><strong>Eylül 2026:</strong> proje OpenAI'ın Codex aracıyla başladı. Sipariş, menü, şifreli yedek, raporlar ve rapor güvenliği gibi ilk parçalar bu dönemde yazıldı (proje arşivindeki teslim notları 21 Eylül'den başlıyor).</li>
-  <li><strong>2 Ekim 2026'dan beri:</strong> geliştirme Anthropic'in Claude modeliyle, Claude Code aracı üzerinden sürüyor. Bu dönemde mimari iki sunucuya ayrıldı (kafe ve Mola Merkez), masaüstü kurulum paketi, anahtar koruması, otomatik güncelleme, uzaktan raporlar, paketler, 5 yıllık test, yıl paketleri, internetten menü ve web sitesi eklendi. Bu belge de Claude'un hazırladığı ve kodla karşılaştırdığı bir metindir.</li>
+  <li><strong>Başlangıç:</strong> proje OpenAI'ın Codex aracıyla başladı. Sipariş, menü, şifreli yedek, raporlar ve rapor güvenliği gibi ilk parçalar bu dönemde yazıldı.</li>
+  <li><strong>Sonrası:</strong> geliştirme Anthropic'in Claude modeliyle, Claude Code aracı üzerinden sürüyor. Bu dönemde mimari iki sunucuya ayrıldı (kafe ve Mola Merkez), masaüstü kurulum paketi, anahtar koruması, otomatik güncelleme, uzaktan raporlar, paketler, 5 yıllık test, yıl paketleri, internetten menü ve web sitesi eklendi. Bu belge de Claude'un hazırladığı ve kodla karşılaştırdığı bir metindir.</li>
 </ul>
-<h2 id="t22-2">22.2 İş bölümü</h2>
+<h2 id="t24-2">24.2 İş bölümü</h2>
 <div class="iki-sutun">
   <div class="kutu">
     <span class="kutu-baslik">Benim yaptıklarım</span>
@@ -781,34 +819,34 @@
     <ul>
       <li>Kodun büyük bölümünü, testleri ve belgeleri yazdı.</li>
       <li>Rakip fiyat araştırması, rol rol denetimler (müşteri, garson, mutfak, kasiyer, sahip, satıcı gözüyle gece boyu test), güvenlik denetimleri yaptı.</li>
-      <li>Birbirinden bağımsız işleri paralel alt ajanlara (sub-agent) böldü; örneğin 5 Ekim'de dört düzeltme turu aynı anda yürüdü, bu belgenin teknik iddiaları da iki ayrı alt ajana kodda tek tek doğrulatıldı.</li>
-      <li>Her turu otomatik testler, 5 yıllık yük testi ve gerçek kurulum denemesiyle doğruladı; sonuçları tarih ve sayılarla <code>docs/</code> klasörüne yazdı.</li>
+      <li>Birbirinden bağımsız işleri paralel alt ajanlara (sub-agent) böldü; örneğin dört düzeltme turu aynı anda yürüdü, bu belgenin teknik iddiaları da alt ajanlara kodda tek tek doğrulatıldı.</li>
+      <li>Her turu otomatik testler, 5 yıllık yük testi ve gerçek kurulum denemesiyle doğruladı; sonuçları sayılarla <code>docs/</code> klasörüne yazdı.</li>
     </ul>
   </div>
 </div>
-<h2 id="t22-3">22.3 Çalışma yöntemi</h2>
+<h2 id="t24-3">24.3 Çalışma yöntemi</h2>
 <ul>
   <li><strong>Kararlar yazılı:</strong> her karar ve "durum" notu <code>docs/TOPARLAMA_PLANI.md</code> ve <code>docs/GELISTIRICI_REHBERI.md</code>'ye işlendi. Yapay zekâ her oturumda baştan başlamadığı için bu belgeler ortak hafızadır.</li>
   <li><strong>Küçük turlar:</strong> bir özellik, testleri, belgesi ve ekran görüntüleriyle birlikte biter; sonra bir sonrakine geçilir.</li>
-  <li><strong>Test bir güvenlik ağıdır:</strong> test kodu ürün kodundan fazla. Yapay zekânın bir değişikliği başka bir yeri bozduğunda bunu hemen görmemizi sağlayan şey testler oldu.</li>
-  <li><strong>Ölç, sonra düzelt:</strong> yavaşlıklar tahminle değil işlemci profili ve ölçümle bulundu (bölüm 21).</li>
+  <li><strong>Test bir güvenlik ağıdır:</strong> bütün kodun yaklaşık üçte biri test. Yapay zekânın bir değişikliği başka bir yeri bozduğunda bunu hemen görmemizi sağlayan şey testler oldu.</li>
+  <li><strong>Ölç, sonra düzelt:</strong> yavaşlıklar tahminle değil işlemci profili ve ölçümle bulundu (bölüm 23).</li>
 </ul>
-<h2 id="t22-4">22.4 İyi çalışanlar</h2>
+<h2 id="t24-4">24.4 İyi çalışanlar</h2>
 <ul>
   <li><strong>Hız:</strong> tek bir öğrencinin aylar sürecek işi haftalar içinde ilerledi; ama bu hız ancak testler ve yazılı kararlarla güvenli oldu.</li>
   <li><strong>Gerçek hatalar testlerle bulundu.</strong> Bir örnek: bir test yalnız Türkiye saatiyle 18:00'den sonra başarısız oluyordu. İncelenince gerçek bir hata çıktı: teslim edilen bir platform siparişi, hesap aynı anda geçmişe taşınırsa platforma hiç "teslim edildi" diye bildirilmiyordu. Düzeltildi ve saatten bağımsız yeni bir test eklendi.</li>
   <li><strong>Denetim turları:</strong> "derbi günü" gibi senaryolar ve rol rol denetimler, tek başıma düşünemeyeceğim kadar çok kenar durumu ortaya çıkardı (bir turda 40'tan fazla hata).</li>
   <li><strong>Belgeler:</strong> her şeyin nerede olduğunu anlatan geliştirici rehberi sayesinde sahada bir sorun çıkınca nereye bakacağımı biliyorum.</li>
 </ul>
-<h2 id="t22-5">22.5 Sınırlar ve dikkat edilmesi gerekenler</h2>
+<h2 id="t24-5">24.5 Sınırlar ve dikkat edilmesi gerekenler</h2>
 <ul>
   <li><strong>Açık gereksinim şart.</strong> Kısa sorular yanlış anlaşıldı: bir gün üç karar ("menü" hangi ekran, ayarlar solda mı üstte mi, kira aya yayılsın mı) kısa sorulduğu için yanlış verildi ve geri alındı. O günden sonra her soru "şu an nasıl, her seçenek günlük kullanımda ne demek, önerim ne" biçiminde soruluyor.</li>
   <li><strong>Daha önce verilmiş kararı yeniden sormak güveni sarsıyor.</strong> Yapay zekâ bir kez, en baştan kararlaştırılmış bir konuyu (misafirin menüyü mobil veriyle açması) yeniden sordu; bu, programın doğru çalışıp çalışmadığından şüphe etmeme yol açtı. Çözüm yine yazılı kararlar oldu.</li>
-  <li><strong>Gerçek cihaz ve gerçek ortam testinin yerini tutmaz.</strong> Bugün hâlâ denenmemiş olanlar: Android uygulaması gerçek telefonda, gerçek fiş yazıcısı, Mac ve Linux kafe paketleri gerçek bilgisayarda, iPhone'da Safari'nin kendisi. Mola Merkez 12 Ekim'de VDS'e geçti ve ilk gün, Windows'taki testlerin göremediği bir hata çıktı (bölüm 20.1).</li>
-  <li><strong>İnsan incelemesi gerekir.</strong> Örneğin lisans sözleşmesi ve web sitesinin yasal sayfaları yapay zekânın taslağıdır ve avukata gidiyor. Bu belge için yapılan kod doğrulaması da iki yerde taslakla programın uyuşmadığını buldu (gizlilik taslağı sunucunun IP kaydı tuttuğunu söylüyor, sunucu ayarı tutmuyor; satıcı tarafındaki işlem kayıtları ise IP adresi tutuyor). Yapay zekâ kendinden emin ama yanlış bir cümle kurabilir; kodla karşılaştırmak gerekir.</li>
-  <li><strong>Paralel çalışmanın riski:</strong> iki alt ajan aynı dosyalara dokunurken başlatılan bir test, yarım düzenlenmiş kodu yükleyip hata verdi; sorun koddaydı sanıldı, aslında zamanlamadaydı. Bu belge hazırlanırken de birim testlerinin ilk koşusunda, aynı bilgisayarda başka işler sürerken bir test dosyası zaman aşımına uğradı; ikinci koşuda hepsi geçti. Kararsız testler ayrıca incelenmeli.</li>
+  <li><strong>Gerçek cihaz ve gerçek ortam testinin yerini tutmaz.</strong> Henüz gerçek ortamda denenmemiş olanlar: Android uygulaması gerçek telefonda, gerçek fiş yazıcısı, Mac ve Linux kafe paketleri gerçek bilgisayarda, iPhone'da Safari'nin kendisi. Mola Merkez VDS'te ilk çalıştığında da Windows'taki testlerin göremediği bir hata çıktı (bölüm 21).</li>
+  <li><strong>İnsan incelemesi gerekir.</strong> Örneğin lisans sözleşmesi ve web sitesinin yasal sayfaları yapay zekânın taslağıdır ve avukata gidiyor. Bu belge için yapılan kod doğrulaması da hukuki taslakla programın bazı yerlerde uyuşmadığını buldu. Yapay zekâ kendinden emin ama yanlış bir cümle kurabilir; kodla karşılaştırmak gerekir.</li>
+  <li><strong>Paralel çalışmanın riski:</strong> iki alt ajan aynı dosyalara dokunurken başlatılan bir test, yarım düzenlenmiş kodu yükleyip hata verdi; sorun koddaydı sanıldı, aslında zamanlamadaydı. Kararsız testler ayrıca incelenmeli.</li>
 </ul>
-<h2 id="t22-6">22.6 Öğrenciler için çıkardığım dersler</h2>
+<h2 id="t24-6">24.6 Öğrenciler için çıkardığım dersler</h2>
 <ol>
   <li>Yapay zekâ bir yazılım ekibi gibi çalışabiliyor, ama ürün sahibi siz olmalısınız: neyi istemediğinizi de yazın.</li>
   <li>Kararları ve durumu bir belgede tutun; yapay zekânın hafızası o belgedir.</li>
@@ -818,8 +856,8 @@
   <li>Sorulara uzun ve somut cevap verin; belirsiz bir kelime bir günü boşa harcatabilir.</li>
 </ol>
 
-<!-- ============================================================ 23 -->
-<h1 id="t23"><span class="no">23</span>Ekran görüntüleri</h1>
+<!-- ============================================================ 25 -->
+<h1 id="t25"><span class="no">25</span>Ekran görüntüleri</h1>
 <figure><img src="../../ekran/kafe/masalar-sahip.png" alt="Masalar ekranı"><figcaption><b>Kasa bilgisayarı:</b> işletme sahibinin Masalar ekranı.</figcaption></figure>
 <div class="uc-sutun">
   <figure><img src="../../ekran/misafir/internetten-menu.png" alt="Misafir menüsü"><figcaption><b>Misafir:</b> internetten açılan QR menü.</figcaption></figure>
@@ -828,8 +866,8 @@
 </div>
 <figure><img src="../../ekran/kafe/mutfak-modu.png" alt="Mutfak ekranı"><figcaption><b>Mutfak modu:</b> Yeni, Hazırlanıyor, Hazır sütunları; gecikmeler renkle.</figcaption></figure>
 
-<!-- ============================================================ 24 -->
-<h1 id="t24"><span class="no">24</span>Sözlük</h1>
+<!-- ============================================================ 26 -->
+<h1 id="t26"><span class="no">26</span>Sözlük</h1>
 <dl class="sozluk">
   <dt>Adisyon</dt><dd>Masanın sipariş ve hesap kaydı.</dd>
   <dt>API</dt><dd>Ekranların sunucuyla konuştuğu adresler (ör. <code>POST /api/staff/payments</code>).</dd>
@@ -837,11 +875,13 @@
   <dt>Diffie-Hellman (X25519)</dt><dd>İki tarafın, gizli bilgiyi ağdan göndermeden ortak bir anahtar hesaplamasını sağlayan yöntem.</dd>
   <dt>Ed25519</dt><dd>Dijital imza algoritması; Merkez imzalar, kafe açık anahtarla doğrular.</dd>
   <dt>ETag / 204</dt><dd>Sunucunun "ekrandaki veri hâlâ güncel" demesi; gereksiz veri gönderilmez.</dd>
+  <dt>Hash zinciri</dt><dd>Her kaydın özetinin bir önceki kaydın özetini de içerdiği dizi; aradaki bir kaydı değiştirmek sonraki bütün özetleri bozar.</dd>
   <dt>HKDF</dt><dd>Bir ortak sırdan amaç başına farklı anahtarlar türeten fonksiyon.</dd>
   <dt>HMAC</dt><dd>Gizli anahtarla üretilen doğrulama kodu.</dd>
   <dt>İleriye dönük gizlilik</dt><dd>Kalıcı anahtarlar sonradan çalınsa bile geçmiş oturumların açılamaması.</dd>
   <dt>İş günü</dt><dd>05:00'ten ertesi 05:00'e kadar süren gün.</dd>
   <dt>Kalp atışı</dt><dd>Kafenin Merkez'e 10 dakikada bir gönderdiği imzalı durum mesajı.</dd>
+  <dt>Kör sayım</dt><dd>Kasayı sayan kişinin beklenen tutarı görmeden saydığı sayım; farkı yalnız sahip görür.</dd>
   <dt>Köprü (long-poll)</dt><dd>İstemcinin açık tuttuğu, sunucunun iş geldiğinde yanıtladığı uzun bekleyen istek.</dd>
   <dt>Nonce</dt><dd>Bir kez kullanılan rastgele sayı; tekrar oynatmayı engeller.</dd>
   <dt>p50 / p95 / p99</dt><dd>Ölçümlerin yüzde 50, 95, 99'unun altında kaldığı değer.</dd>

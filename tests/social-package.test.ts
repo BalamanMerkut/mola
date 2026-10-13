@@ -29,13 +29,13 @@ const TL = 100, rid = () => randomUUID().replace(/-/g, '');
 const WITHOUT_SOCIAL = sellableFeatures().filter(id => id !== 'social');
 const strip = (ids: readonly FeatureId[]) => ids.filter(id => id !== 'social');
 
-test('the catalogue: ₺75/ay in Ekler, yearly ×10; Restoran Pro 2.350 TL/ay with it; Kafe Standart and Çay bahçesi without; old plans and the trial hold it', () => {
+test('the catalogue: ₺75/ay in Ekler, yearly ×10; Restoran Pro 2.450 TL/ay with it (and Bulutta şifreli yedek); Kafe Standart and Çay bahçesi without; old plans and the trial hold it', () => {
   const f = featureById.get('social')!;
   assert.equal(f.name, 'Sosyal medya ve QR kartları'); assert.equal(f.group, 'Ekler'); assert.equal(f.monthly, 75 * TL); assert.ok(!f.soon && !f.required);
   assert.equal(yearlyFromMonthly(f.monthly), 750 * TL);
   const pkg = (id: string) => defaultPackages.find(p => p.id === id)!.features;
   assert.ok(pkg('restoran-pro').includes('social'));
-  assert.equal(monthlyTotal(pkg('restoran-pro')), 2350 * TL);
+  assert.equal(monthlyTotal(pkg('restoran-pro')), 2450 * TL);
   assert.equal(pkg('kafe-standart').includes('social'), false); assert.equal(pkg('cay-bahcesi').includes('social'), false);
   assert.ok(legacyFeatures('full').includes('social')); assert.ok(legacyFeatures('menu').includes('social'));
   assert.ok(licenseFeatures({ kind: 'trial' }).includes('social'));
