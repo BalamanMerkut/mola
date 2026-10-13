@@ -8,16 +8,16 @@
 .release-list p { margin:0; overflow-wrap:anywhere; }
 .release-head { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
 .release-head strong { font-size:18px; }
-.release-chip { font-size:13px; font-weight:600; padding:3px 10px; border-radius:12px; background:#eef1ec; color:#5f6b63; }
+.release-chip { font-size:13px; font-weight:600; padding:3px 10px; border-radius:12px; background:var(--y-soft,#f1f5ee); color:#5f6b63; }
 .release-chip.all { background:#e3f0df; color:#2d5a3a; }
 .release-chip.pilot { background:#fff3dc; color:#6b4a0e; }
 .release-note { white-space:pre-line; }
-.release-pilot { padding:12px; border:1px solid var(--line); border-radius:10px; background:#fafbf8; }
+.release-pilot { padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--y-soft,#f1f5ee); }
 .release-cafes td.ok { color:#366046; } .release-cafes td.warn { color:#7c520f; } .release-cafes td.bad { color:#9d442e; } .release-cafes td.muted { color:var(--muted); }
 .release-settings .application-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .release-settings .application-actions .btn { min-height:44px; }
 /* Güncelleme yetkisi (server/merkez/step-up.ts): the code box, "açık · saat …’e kadar", or "önce iki adımlı doğrulamayı açın". */
-.release-right { display:grid; gap:8px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:#fafbf8; }
+.release-right { display:grid; gap:8px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--y-soft,#f1f5ee); }
 .release-right p { margin:0; overflow-wrap:anywhere; } .release-right svg { vertical-align:-3px; }
 .release-right form { display:grid; gap:8px; }
 .release-right.open { border-color:#a9cfa9; background:#eef6ec; color:#22442c; }

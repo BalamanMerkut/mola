@@ -37,6 +37,7 @@ import { api, ApiError, money, requestId } from './api';
 import { Notice, Modal } from './components';
 import { YonetimBrand } from './MolaLogo';
 import { AppVersion } from './AppVersion';
+import { serverVersion, useServerVersion } from './versionReload';
 // Local-only hints (prefilled admin name, first-login file) must not appear on the public domain.
 const localDev = /^(localhost|127\.|\[::1\]|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
 type Page = 'today' | 'businesses' | 'applications' | 'support' | 'announcements' | 'sales' | 'packages' | 'settings' | 'alerts';
@@ -54,6 +55,9 @@ const blankInvoice: Invoice = { legalName: '', taxOffice: '', taxType: 'company'
 export function Platform() {
   const [data, setData] = useState<Snapshot | null>(null), [error, setError] = useState(''), [info, setInfo] = useState(''), [password, setPassword] = useState(''), [busy, setBusy] = useState(false), [page, setPageName] = useState<Page>('today'), [ticketId, setTicketId] = useState('');
   const [loginUsername, setLoginUsername] = useState(localDev ? 'admin' : '');
+  // After a Merkez update the open tab reloads itself at a quiet moment (src/versionReload.ts): the sign-in page asks Merkez's
+  // health, the signed-in page learns the version from every /state (10 s).
+  useServerVersion(() => fetch('/api/merkez/v1/health', { cache: 'no-store' }).then(r => r.json()).then((h: { version?: string }) => h.version));
   const [factorCode, setFactorCode] = useState('');
   const [factorStep, setFactorStep] = useState(false), [mustChange, setMustChange] = useState(false), [resetting, setResetting] = useState(false);
   // "Yerel test ortamı" only for a Merkez started from the project (npm run merkez); the installed Mola Yönetim says MOLA_MODE=installed.
@@ -105,7 +109,7 @@ export function Platform() {
     if (!guard.mounted || !guard.enabled || (background && guard.pending > 0)) return;
     const sequence = ++guard.sequence; guard.pending++;
     const current = () => guard.mounted && guard.enabled && sequence === guard.sequence;
-    try { const snapshot = await api<Snapshot>(`${ADMIN}/state`); if (current()) { setData(snapshot); setMustChange(false); } }
+    try { const snapshot = await api<Snapshot>(`${ADMIN}/state`); if (current()) { setData(snapshot); setMustChange(false); serverVersion(snapshot.version); } }
     catch (e) {
       if (!current()) return;
       if (e instanceof ApiError && e.status === 401) endSession();

@@ -12,15 +12,15 @@ span.desktop-rail-logo { flex:none; aspect-ratio:1; border-radius:24%; }
 /* The line under "mola." was 6–7 px with wide spacing: unreadable and soft. Now 8 px, a little bolder. */
 .brand>div>small:not(.x) { font-size:8px; letter-spacing:2px; font-weight:600; }
 
-/* Mola Yönetim: the same cup on near-black, "Mola Yönetim" beside it. */
+/* Mola Yönetim: the same cup, walnut on brass (14 Ekim), "Mola Yönetim" beside it. */
 .ybrand { display:flex; align-items:center; gap:12px; min-width:0; color:#1c1f1e; }
-.ybrand-mark { width:40px; height:40px; flex:0 0 40px; aspect-ratio:1; display:grid; place-items:center; border-radius:10px; background:#1c1f1e; color:#f3ebdd; }
+.ybrand-mark { width:40px; height:40px; flex:0 0 40px; aspect-ratio:1; display:grid; place-items:center; border-radius:10px; background:#c9a368; color:#3a281e; }
 .ybrand-word { font-size:19px; line-height:1.15; letter-spacing:-.2px; white-space:nowrap; min-width:0; }
 .ybrand-word strong { font-weight:700; }
 .ybrand-word span { font-weight:500; color:#5f6b63; }
 .ybrand.light { color:#fff; }
-.ybrand.light .ybrand-word span { color:#d6e0d3; }
-.ybrand.light .ybrand-mark { box-shadow:0 0 0 1px #ffffff33; }
+.ybrand.light .ybrand-word span { color:#d8c7ad; }
+.ybrand.light .ybrand-mark { box-shadow:0 0 0 1px #ffffff26; }
 /* Mola Yönetim's phone/tablet top bar (src/platform-workspace.css shows it under 900 px). */
 .yonetim-topbar-brand .ybrand { gap:10px; }
 .yonetim-topbar-brand .ybrand-mark { width:36px; height:36px; flex-basis:36px; border-radius:9px; }

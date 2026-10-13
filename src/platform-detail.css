@@ -61,12 +61,12 @@
 
 /* Small icon buttons: 44 px to touch, a 16-px icon, quiet until hovered. */
 .yonetim .dicon-btn { flex:none; display:inline-grid; place-items:center; width:44px; height:44px; padding:0; margin:0; border:0; border-radius:12px; background:transparent; color:var(--y-muted); cursor:pointer; text-decoration:none; }
-.yonetim .dicon-btn:hover:not(:disabled) { background:var(--y-soft); color:var(--green); }
+.yonetim .dicon-btn:hover:not(:disabled) { background:var(--y-soft,#f1f5ee); color:var(--green); }
 .yonetim .dicon-btn:disabled { opacity:.45; cursor:default; }
 
 /* Sıradaki işler */
 .yonetim .dsheet .detail-next ul { margin:-4px 0; }
-.yonetim .dsheet .detail-next .next-go { display:inline-flex; align-items:center; gap:2px; margin-left:auto; padding:4px 6px 4px 12px; border-radius:999px; background:var(--y-soft); color:var(--green); font-size:13px; font-weight:600; white-space:nowrap; }
+.yonetim .dsheet .detail-next .next-go { display:inline-flex; align-items:center; gap:2px; margin-left:auto; padding:4px 6px 4px 12px; border-radius:999px; background:var(--y-soft,#f1f5ee); color:var(--green); font-size:13px; font-weight:600; white-space:nowrap; }
 
 /* Diğer bilgiler and Hata kayıtları: a card that opens. */
 .yonetim .dsheet .dmore>details>summary, .yonetim .dsheet details.detail-errors>summary { display:flex; align-items:center; gap:12px; min-height:44px; list-style:none; cursor:pointer; font-size:17px; font-weight:650; color:var(--y-text); }
@@ -114,7 +114,7 @@
 .yonetim .ddefs-value { min-width:0; overflow-wrap:anywhere; font-weight:500; }
 .yonetim .ddefs-value a { display:inline-flex; align-items:center; min-height:44px; color:var(--green); text-decoration:none; font-weight:600; }
 .yonetim .ddefs-actions { flex:none; display:flex; align-items:center; margin-right:-8px; }
-.yonetim .ddefs code { font-size:13px; background:var(--y-soft); padding:2px 6px; border-radius:6px; }
+.yonetim .ddefs code { font-size:13px; background:var(--y-soft,#f1f5ee); padding:2px 6px; border-radius:6px; }
 /* Fatura bilgileri: two columns of rows, each value with its copy button. */
 .yonetim .dsheet .invoice-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 28px; margin:0; }
 .yonetim .dsheet .invoice-facts>div { min-width:0; padding:8px 0; border-top:1px solid var(--y-line-soft); }
@@ -125,7 +125,7 @@
 .yonetim .dsheet .detail-social-list { margin:0; gap:0; }
 .yonetim .dsheet .detail-social-list li { display:grid; grid-template-columns:32px minmax(84px,auto) minmax(0,1fr) 16px; gap:12px; align-items:center; min-height:48px; border-top:1px solid var(--y-line-soft); flex-wrap:nowrap; }
 .yonetim .dsheet .detail-social-list li:first-child { border-top:0; }
-.yonetim .dsheet .social-icon-tile { width:32px; height:32px; border-radius:10px; display:grid; place-items:center; background:var(--y-soft); color:var(--y-text); }
+.yonetim .dsheet .social-icon-tile { width:32px; height:32px; border-radius:10px; display:grid; place-items:center; background:var(--y-soft,#f1f5ee); color:var(--y-text); }
 /* The older list rule (platform-workspace.css: li > span { min-width:120px }) stretched the tile over the name. */
 .yonetim .dsheet .detail-social-list li > .social-icon-tile { min-width:0; }
 .yonetim .dsheet .detail-social-list .social-name { min-width:0; font-weight:600; font-size:14px; }
@@ -138,7 +138,7 @@
 
 /* ---------- Destek ---------- */
 .yonetim .dsheet .detail-support .tc-shell, .yonetim .dsheet .detail-support>.ticket-chat { margin:0; }
-.yonetim .dsheet .dsupport-empty { display:flex; flex-direction:column; align-items:center; gap:6px; padding:28px 16px; text-align:center; background:var(--y-soft); border-radius:16px; }
+.yonetim .dsheet .dsupport-empty { display:flex; flex-direction:column; align-items:center; gap:6px; padding:28px 16px; text-align:center; background:var(--y-soft,#f1f5ee); border-radius:16px; }
 .yonetim .dsheet .dsupport-empty-icon { width:56px; height:56px; border-radius:18px; display:grid; place-items:center; background:var(--y-card); color:var(--green); margin-bottom:6px; box-shadow:0 1px 3px #1c2e2412; }
 .yonetim .dsheet .dsupport-empty strong { font-size:16px; }
 .yonetim .dsheet .dsupport-empty p { margin:0; color:var(--y-muted); font-size:14px; max-width:420px; }
@@ -161,7 +161,7 @@
 .yonetim .did-card .detail-title h1 { font-size:26px; line-height:1.2; }
 .yonetim .did-card .detail-line { font-size:14px; }
 .yonetim .did-facts { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 0; }
-.yonetim .did-facts > div { display:flex; flex-direction:column; gap:0; min-width:0; padding:7px 12px; border-radius:12px; background:var(--y-soft); }
+.yonetim .did-facts > div { display:flex; flex-direction:column; gap:0; min-width:0; padding:7px 12px; border-radius:12px; background:var(--y-soft,#f1f5ee); }
 .yonetim .did-facts dt { font-size:11.5px; font-weight:600; color:var(--y-faint); }
 .yonetim .did-facts dd { margin:0; display:flex; align-items:center; gap:6px; font-size:14px; font-weight:650; color:var(--y-text); overflow-wrap:anywhere; }
 .yonetim .did-facts dd.did-sub { font-size:12px; font-weight:400; color:var(--y-muted); }
@@ -194,7 +194,7 @@
 .yonetim .dsheet .dsum-lines dd.fact-bad .fact-dot { background:var(--bad-dot); } .yonetim .dsheet .dsum-lines dd:is(.fact-idle, .fact-info) .fact-dot { background:var(--idle-dot); }
 .yonetim .dsum-action { display:flex; margin-top:auto; padding-top:4px; }
 .yonetim .dsum-action .btn { margin:0; flex:1; justify-content:center; gap:4px; min-height:44px; }
-.yonetim .detail-sheet.dsheet > .dcalm { display:flex; align-items:center; gap:12px; padding:14px 20px; background:#f3f8f1; border-color:#d6e6d0; color:var(--ok-fg); }
+.yonetim .detail-sheet.dsheet > .dcalm { display:flex; align-items:center; gap:12px; padding:14px 20px; background:var(--y-soft,#f1f5ee); border-color:#d6e6d0; color:var(--ok-fg); }
 .yonetim .dcalm p { margin:0; font-size:14.5px; color:#3d5a42; }
 .yonetim .dcalm svg { flex:none; }
 /* Short lines with a state dot (Uzaktan destek). */

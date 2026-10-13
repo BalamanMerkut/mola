@@ -13,11 +13,11 @@
 
 .yonetim .alert-day { display:flex; flex-direction:column; gap:8px; min-width:0; }
 .yonetim .alert-day-title { display:flex; align-items:center; gap:8px; margin:6px 2px 0; font-size:13px; font-weight:650; letter-spacing:.2px; color:var(--y-muted); text-transform:none; }
-.yonetim .alert-day-title span { min-width:22px; padding:0 7px; border-radius:999px; background:var(--y-soft); font-size:12px; font-weight:600; text-align:center; line-height:20px; }
+.yonetim .alert-day-title span { min-width:22px; padding:0 7px; border-radius:999px; background:var(--y-soft,#f1f5ee); font-size:12px; font-weight:600; text-align:center; line-height:20px; }
 .yonetim .alert-center-v2 .alert-list.alert-rows { margin:0; padding:4px 0; list-style:none; display:flex; flex-direction:column; background:var(--y-card); border:1px solid var(--y-line); border-radius:18px; overflow:hidden; }
 .yonetim .alert-center-v2 .alert-list li.alert-row { position:relative; display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:12px; align-items:center; min-height:64px; padding:10px 12px 10px 16px; border:0; border-top:1px solid var(--y-line-soft); background:transparent; }
 .yonetim .alert-center-v2 .alert-list li.alert-row:first-child { border-top:0; }
-.yonetim .alert-center-v2 .alert-list li.alert-row.unread { background:#f7fbf5; }
+.yonetim .alert-center-v2 .alert-list li.alert-row.unread { background:var(--y-soft,#f1f5ee); }
 .yonetim .alert-center-v2 .alert-list li.alert-row.unread.high { background:#fffaf7; }
 .yonetim .alert-center-v2 .alert-list li.alert-row.unread::before { content:''; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:0 3px 3px 0; background:#5f9a5c; }
 .yonetim .alert-center-v2 .alert-list li.alert-row.unread.high::before { background:#c0623f; }
@@ -31,7 +31,7 @@
 .yonetim .alert-center-v2 .alert-row.high .alert-dot { background:#c0623f; }
 .yonetim .alert-body p { margin:0; font-size:13.5px; color:#56625a; line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .yonetim .alert-meta { display:flex; align-items:center; gap:4px 6px; flex-wrap:wrap; margin-top:3px; font-size:12px; color:var(--y-muted); }
-.yonetim .alert-meta > span { display:inline-flex; align-items:center; gap:4px; padding:0 8px; border-radius:999px; background:var(--y-soft); font-weight:600; line-height:20px; max-width:100%; overflow-wrap:anywhere; }
+.yonetim .alert-meta > span { display:inline-flex; align-items:center; gap:4px; padding:0 8px; border-radius:999px; background:var(--y-soft,#f1f5ee); font-weight:600; line-height:20px; max-width:100%; overflow-wrap:anywhere; }
 .yonetim .alert-meta .alert-level.high { background:var(--bad-bg); color:var(--bad-fg); }
 .yonetim .alert-meta .alert-level.low { background:var(--idle-bg); color:var(--idle-fg); }
 .yonetim .alert-meta .alert-business { background:#eef3f8; color:#2d5579; }
@@ -39,7 +39,7 @@
 .yonetim .alert-center-v2 .alert-actions { display:flex; flex-direction:row; align-items:center; gap:2px; flex-wrap:nowrap; }
 /* The one action: a quiet text button (green), "Uzaktan bağlan" with its screen icon in a soft green pill. */
 .yonetim .alert-center-v2 .alert-open { display:inline-flex; align-items:center; gap:4px; min-height:44px; margin:0; padding:0 8px 0 12px; border:0; border-radius:12px; background:transparent; color:var(--green); font:inherit; font-size:13.5px; font-weight:650; white-space:nowrap; cursor:pointer; }
-.yonetim .alert-center-v2 .alert-open:hover { background:var(--y-soft); }
+.yonetim .alert-center-v2 .alert-open:hover { background:var(--y-soft,#f1f5ee); }
 .yonetim .alert-center-v2 .alert-open.remote { background:#e6f1e3; padding-left:10px; }
 .yonetim .alert-center-v2 .alert-open.remote:hover { background:#d9ead4; }
 .yonetim .alert-center-v2 .alert-read { color:var(--y-faint); }

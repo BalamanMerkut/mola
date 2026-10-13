@@ -4,7 +4,7 @@
 
 /* ---------- Chips ---------- */
 .yonetim .feature-chips { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
-.yonetim .feature-chips li { font-size:12.5px; line-height:1.4; padding:3px 10px; border-radius:999px; background:#eef3eb; color:#3d5a45; max-width:100%; overflow-wrap:anywhere; }
+.yonetim .feature-chips li { font-size:12.5px; line-height:1.4; padding:3px 10px; border-radius:999px; background:var(--y-soft,#f1f5ee); color:#3d5a45; max-width:100%; overflow-wrap:anywhere; }
 .yonetim .feature-chips li.more { background:transparent; color:var(--y-muted); border:1px dashed #cdd8c9; }
 .yonetim .feature-chips.on li { background:var(--ok-bg); color:var(--ok-fg); }
 .yonetim .feature-chips.off li { background:var(--idle-bg); color:var(--idle-fg); text-decoration:line-through; text-decoration-color:#b4bbb4; }
@@ -13,7 +13,7 @@
 .yonetim .discount-chip { align-self:flex-start; font-size:12.5px; font-weight:600; color:#7a4b12; background:#fdf1dc; border-radius:999px; padding:3px 10px; }
 .yonetim .field-problem { color:var(--bad-fg); font-size:13px; }
 .yonetim .affix { color:var(--y-muted); font-weight:600; padding:0 0 0 12px; }
-.yonetim .money-input { display:flex; align-items:center; border:1px solid #d9e0d5; border-radius:10px; background:var(--y-card,#fff); min-width:0; }
+.yonetim .money-input { display:flex; align-items:center; border:1px solid #d9e0d5; border-radius:10px; background:var(--y-field,#fff); min-width:0; }
 .yonetim .money-input:focus-within { border-color:var(--green); box-shadow:0 0 0 3px #234c3e1a; }
 .yonetim .money-input input { border:0 !important; box-shadow:none !important; margin:0; min-width:0; width:100%; padding-left:6px; background:transparent; }
 .yonetim .money-input input[aria-invalid=true] { color:var(--bad-fg); }
@@ -30,11 +30,11 @@
 .yonetim .feature-card input { position:absolute; opacity:0; width:1px; height:1px; margin:0; }
 .yonetim .feature-card:focus-within { outline:3px solid #a4bda0; outline-offset:2px; }
 .yonetim .feature-tick { width:22px; height:22px; margin-top:1px; border-radius:7px; border:1.5px solid #c3cfbf; display:grid; place-items:center; color:transparent; background:var(--y-card,#fff); transition:background .15s, border-color .15s; }
-.yonetim .feature-card.on { border-color:var(--green); background:#f5f9f3; }
+.yonetim .feature-card.on { border-color:var(--green); background:var(--y-soft,#f1f5ee); }
 .yonetim .feature-card.on .feature-tick { background:var(--green); border-color:var(--green); color:#fff; }
-.yonetim .feature-card.locked { cursor:default; background:#f3f7f1; border-style:solid; }
+.yonetim .feature-card.locked { cursor:default; background:var(--y-soft,#f1f5ee); border-style:solid; }
 .yonetim .feature-card.locked .feature-tick { background:#dfe9dc; border-color:#dfe9dc; color:var(--green); }
-.yonetim .feature-card.soon { cursor:default; border-style:dashed; background:#fafbf9; color:#7a847c; }
+.yonetim .feature-card.soon { cursor:default; border-style:dashed; background:var(--y-soft,#f1f5ee); color:#7a847c; }
 .yonetim .feature-card.soon .feature-tick { border-style:dashed; }
 .yonetim .feature-card:has(input:disabled):not(.locked):not(.soon) { cursor:default; opacity:.75; }
 .yonetim .feature-body { display:flex; flex-direction:column; gap:3px; min-width:0; }
@@ -51,11 +51,11 @@
 .yonetim .discount-label { font-size:14px; font-weight:600; }
 .yonetim .discount-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .yonetim .discount-kind button { padding:0 14px; font-size:14px; }
-.yonetim .discount-input { display:flex; align-items:center; margin:0; border:1px solid #d9e0d5; border-radius:10px; background:var(--y-card,#fff); flex:1 1 120px; max-width:200px; }
+.yonetim .discount-input { display:flex; align-items:center; margin:0; border:1px solid #d9e0d5; border-radius:10px; background:var(--y-field,#fff); flex:1 1 120px; max-width:200px; }
 .yonetim .discount-input:focus-within { border-color:var(--green); box-shadow:0 0 0 3px #234c3e1a; }
 .yonetim .discount-input input { border:0 !important; box-shadow:none !important; margin:0; min-width:0; width:100%; background:transparent; }
 .yonetim .price-block { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.yonetim .price-block>div { display:flex; flex-direction:column; gap:2px; padding:12px 14px; border-radius:14px; background:var(--y-soft); min-width:0; }
+.yonetim .price-block>div { display:flex; flex-direction:column; gap:2px; padding:12px 14px; border-radius:14px; background:var(--y-soft,#f1f5ee); min-width:0; }
 .yonetim .price-block span { font-size:12.5px; color:var(--y-muted); font-weight:600; }
 .yonetim .price-block strong { font-size:24px; font-weight:700; letter-spacing:-.5px; line-height:1.15; color:var(--green); overflow-wrap:anywhere; }
 .yonetim .price-block s, .yonetim .price-block small { font-size:12.5px; color:var(--y-faint); }
@@ -71,7 +71,7 @@
 .yonetim .price-row { display:grid; grid-template-columns:minmax(0,1fr) 150px 150px 150px; gap:6px 14px; align-items:center; padding:12px 14px; border:1px solid var(--y-line-soft); border-radius:14px; background:var(--y-card,#fff); transition:background .15s, border-color .15s; }
 .yonetim .price-row+.price-row { margin-top:8px; }
 .yonetim .price-row.changed { border-color:#e2c48a; background:#fffbf2; }
-.yonetim .price-row.soon { background:#fafbf9; border-style:dashed; }
+.yonetim .price-row.soon { background:var(--y-soft,#f1f5ee); border-style:dashed; }
 .yonetim .price-name { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .yonetim .price-name strong { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; }
 .yonetim .price-name small { font-size:13px; color:var(--y-muted); }
@@ -106,10 +106,10 @@
 .yonetim .package-actions .btn { margin:0; gap:6px; padding-left:12px; padding-right:12px; }
 .yonetim .package-actions .btn.grow { flex:1 1 auto; }
 .yonetim .package-actions .btn.icon-only { width:44px; padding:0; justify-content:center; flex:none; }
-.yonetim .package-card.archived, .yonetim .package-card.legacy { background:#fafbf9; }
+.yonetim .package-card.archived, .yonetim .package-card.legacy { background:var(--y-soft,#f1f5ee); }
 .yonetim .package-card.archived .package-price strong, .yonetim .package-card.legacy .package-price strong { color:#5f6d63; }
 .yonetim .package-new { align-items:center; justify-content:center; text-align:center; min-height:220px; border:1.5px dashed #c3d1bd; background:transparent; color:var(--green); font:inherit; cursor:pointer; }
-.yonetim .package-new:hover { background:#fbfcfa; border-color:var(--green); }
+.yonetim .package-new:hover { background:var(--y-soft,#f1f5ee); border-color:var(--green); }
 .yonetim .package-new strong { font-size:17px; }
 .yonetim .package-new small { color:var(--y-muted); font-size:13px; max-width:220px; }
 .yonetim .package-more summary { cursor:pointer; font-weight:600; color:var(--green); min-height:44px; display:flex; align-items:center; }
@@ -150,14 +150,14 @@
 .yonetim .service-card.custom.selected { border-style:solid; }
 .yonetim .service-sheet .service-packages { margin-top:4px; }
 .yonetim .service-sheet .service-card { min-height:200px; }
-.yonetim .service-sheet .feature-picker { margin-top:12px; padding:20px; border-radius:18px; background:#f8faf6; border:1px solid var(--y-line-soft); }
+.yonetim .service-sheet .feature-picker { margin-top:12px; padding:20px; border-radius:18px; background:var(--y-soft,#f1f5ee); border:1px solid var(--y-line-soft); }
 .yonetim .service-price-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:20px 28px; align-items:start; }
 .yonetim .service-price { display:flex; flex-direction:column; gap:10px; min-width:0; }
 .yonetim .price-steps { margin:0; display:grid; gap:4px; font-size:14px; }
 .yonetim .price-steps div { display:flex; justify-content:space-between; gap:12px; color:var(--y-muted); }
 .yonetim .price-steps dd { margin:0; font-weight:600; color:var(--y-text); }
 .yonetim .service-split { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.yonetim .service-split>div { display:flex; flex-direction:column; gap:10px; padding:16px 18px; border-radius:16px; background:#f8faf6; border:1px solid var(--y-line-soft); min-width:0; }
+.yonetim .service-split>div { display:flex; flex-direction:column; gap:10px; padding:16px 18px; border-radius:16px; background:var(--y-soft,#f1f5ee); border:1px solid var(--y-line-soft); min-width:0; }
 .yonetim .service-split h3 { display:flex; align-items:center; gap:6px; font-size:15px; }
 .yonetim .service-split p { margin:0; }
 .yonetim .detail-sheet>.service-confirm { margin:0 -40px; padding:28px 40px 32px; background:#fffbf2; border-top:1px solid #f0dfb8; animation:mola-fade-in .2s ease-out; }
@@ -171,8 +171,8 @@
 .yonetim .package-choice .feature-chips li { font-size:11.5px; padding:2px 8px; }
 
 /* ---------- Lisans → Ödeme alındı ---------- */
-.yonetim .payment-card { display:flex; flex-direction:column; gap:14px; padding:16px 18px; border:1px solid var(--y-line); border-radius:16px; background:#fafbf8; transition:background .15s, border-color .15s; }
-.yonetim .payment-card.on { background:#f5f9f3; border-color:#c9dbc3; }
+.yonetim .payment-card { display:flex; flex-direction:column; gap:14px; padding:16px 18px; border:1px solid var(--y-line); border-radius:16px; background:var(--y-soft,#f1f5ee); transition:background .15s, border-color .15s; }
+.yonetim .payment-card.on { background:var(--y-soft,#f1f5ee); border-color:#c9dbc3; }
 .yonetim .switch-line { display:flex; align-items:center; gap:12px; margin:0; cursor:pointer; min-height:44px; font-weight:400; }
 .yonetim .switch-line input { position:absolute; opacity:0; width:1px; height:1px; }
 .yonetim .switch { flex-shrink:0; position:relative; width:44px; height:26px; border-radius:13px; background:#cfd8cb; transition:background .15s; }
@@ -221,8 +221,8 @@
 .yonetim .sales-list { display:flex; flex-direction:column; border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); overflow:hidden; }
 .yonetim .sales-row { display:grid; grid-template-columns:96px minmax(0,1.6fr) 64px minmax(0,1fr) minmax(0,1fr) 100px 156px; gap:12px; align-items:center; padding:14px 20px; border-bottom:1px solid var(--y-line-soft); min-width:0; }
 .yonetim .sales-row:last-child { border-bottom:0; }
-.yonetim .sales-row.head { padding-top:10px; padding-bottom:10px; background:#f7f9f5; font-size:12.5px; font-weight:700; color:#6c7a70; letter-spacing:.3px; text-transform:uppercase; }
-.yonetim .sales-row:not(.head):hover { background:#fbfcfa; }
+.yonetim .sales-row.head { padding-top:10px; padding-bottom:10px; background:var(--y-soft,#f1f5ee); font-size:12.5px; font-weight:700; color:#6c7a70; letter-spacing:.3px; text-transform:uppercase; }
+.yonetim .sales-row:not(.head):hover { background:var(--y-soft,#f1f5ee); }
 .yonetim .sales-row>span { display:flex; flex-direction:column; gap:2px; min-width:0; overflow-wrap:anywhere; }
 .yonetim .sales-row small { font-size:12.5px; color:var(--y-faint); }
 .yonetim .sales-row .r { text-align:right; align-items:flex-end; }
@@ -251,13 +251,13 @@
 .yonetim .sale-fields>label input, .yonetim .sale-fields>label select { margin:0; width:100%; }
 .yonetim .sale-fields small { font-weight:400; }
 .yonetim .sale-fields .span-2 { grid-column:1/-1; }
-.yonetim .sale-amount { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px 16px; align-items:end; padding:16px; border-radius:16px; background:#f5f9f3; border:1px solid #d7e5d2; }
+.yonetim .sale-amount { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px 16px; align-items:end; padding:16px; border-radius:16px; background:var(--y-soft,#f1f5ee); border:1px solid #d7e5d2; }
 .yonetim .sale-amount .segmented { grid-column:1/-1; }
 .yonetim .sale-amount label { display:flex; flex-direction:column; gap:6px; margin:0; font-weight:600; min-width:0; }
 .yonetim .sale-amount .payment-total { grid-column:1/-1; grid-template-columns:repeat(3,auto 1fr); }
 .yonetim .sale-history summary { cursor:pointer; color:var(--green); font-weight:600; min-height:44px; display:flex; align-items:center; }
 .yonetim .sale-history ul { margin:0; padding:0; list-style:none; display:grid; gap:8px; font-size:13.5px; }
-.yonetim .sale-history li { display:flex; flex-direction:column; gap:2px; padding:8px 12px; border-radius:10px; background:var(--y-soft); }
+.yonetim .sale-history li { display:flex; flex-direction:column; gap:2px; padding:8px 12px; border-radius:10px; background:var(--y-soft,#f1f5ee); }
 .yonetim .sale-error { padding:0 24px 12px; }
 
 /* ---------- The sixth item in the compact top bar (Satışlarım) ---------- */

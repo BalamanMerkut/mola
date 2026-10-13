@@ -5,6 +5,7 @@ import { DesktopRail } from './DesktopRail';
 import { LockedScreen, useLocked } from './Locked';
 import { guestPageHead } from './molaApp';
 import { pane } from './pane';
+import { useServerVersion } from './versionReload';
 const Workspace = lazy(() => import('./Workspace').then(module => ({ default: module.Workspace })));
 const MenuPreviewPage = lazy(() => import('./MenuPreview').then(module => ({ default: module.MenuPreviewPage })));
 // /uygulama: installing Mola on phones and tablets; needs no data and no sign-in.
@@ -13,6 +14,9 @@ const InstallPage = lazy(() => import('./InstallPage').then(module => ({ default
 const RemoteShell = lazy(() => import('./RemoteAdmin').then(module => ({ default: module.RemoteShell })));
 export function App() {
   const locked = useLocked();
+  // After a café update the window, tablets and phones reload themselves at a quiet moment (src/versionReload.ts). Never the
+  // guests' menu (a cart in progress) or the owner's tunnelled screens (/yonet, their own server).
+  useServerVersion(() => /^\/(m|yonet)(\/|$)/.test(location.pathname) ? Promise.resolve(undefined) : fetch('/api/health', { cache: 'no-store' }).then(r => r.json()).then((h: { version?: string }) => h.version));
   if (/^\/uygulama\/?$/.test(location.pathname)) return <DeferredPanel><InstallPage /></DeferredPanel>;
   if (/^\/yonet\/?$/.test(location.pathname)) return <DeferredPanel><RemoteShell /></DeferredPanel>;
   if (locked) return <LockedScreen guest={location.pathname.startsWith('/m/')} />;

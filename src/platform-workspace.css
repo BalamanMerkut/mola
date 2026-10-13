@@ -148,18 +148,18 @@
 .yonetim .business-tiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:16px; min-width:0; }
 .yonetim .business-tile-cell { display:flex; min-width:0; }
 .yonetim .business-tile { flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; min-height:196px; margin:0; padding:20px 20px 16px; border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); color:var(--y-text); font:inherit; text-align:left; cursor:pointer; transition:border-color .15s, box-shadow .15s, transform .15s; }
-.yonetim .business-tile:hover { border-color:#bccdb6; box-shadow:var(--y-shadow); transform:translateY(-1px); }
+.yonetim .business-tile:hover { border-color:#c7b089; box-shadow:var(--y-shadow); transform:translateY(-1px); }
 .yonetim .business-tile:focus-visible { outline:3px solid #a4bda0; outline-offset:2px; }
 .yonetim .platform-business-name { font-size:19px; font-weight:650; line-height:1.25; letter-spacing:-.2px; overflow-wrap:anywhere; max-width:100%; }
 .yonetim .tile-place { font-size:14px; color:var(--y-muted); overflow-wrap:anywhere; }
 .yonetim .business-tile .status-chip { margin-top:8px; white-space:normal; text-align:left; }
 .yonetim .tile-meta { margin-top:12px; padding-top:14px; width:100%; border-top:1px solid var(--y-line-soft); display:flex; flex-direction:column; gap:2px; font-size:13px; color:var(--y-faint); overflow-wrap:anywhere; }
 .yonetim .tile-flags { color:var(--warn-fg); font-weight:600; }
-.yonetim .add-tile { align-items:center; justify-content:center; text-align:center; gap:8px; background:transparent; border:1.5px dashed #c3d1bd; color:var(--green); }
-.yonetim .add-tile:hover { background:#fbfcfa; border-color:var(--green); }
+.yonetim .add-tile { align-items:center; justify-content:center; text-align:center; gap:8px; background:transparent; border:1.5px dashed #cdbb98; color:var(--green); }
+.yonetim .add-tile:hover { background:var(--y-soft,#f1f5ee); border-color:var(--green); }
 .yonetim .add-tile strong { font-size:17px; }
 .yonetim .add-tile small { font-size:13px; color:var(--y-muted); }
-.yonetim .add-tile-icon { width:52px; height:52px; border-radius:50%; display:grid; place-items:center; background:#e6efe3; color:var(--green); }
+.yonetim .add-tile-icon { width:52px; height:52px; border-radius:50%; display:grid; place-items:center; background:#efe2c9; color:var(--green); }
 
 /* ---------- Business page: centred header, centred tabs, one flat sheet per tab ---------- */
 .platform-detail-page { display:flex; flex-direction:column; min-width:0; }
@@ -231,9 +231,9 @@
 .yonetim .license-freeze { margin:0; padding:0; border:0; display:flex; flex-direction:column; gap:12px; }
 .yonetim .license-freeze h3 { font-size:19px; margin:0; }
 .yonetim .license-freeze>p { margin:0; font-size:14px; }
-.yonetim .license-freeze .freeze-request { margin:0; border-radius:var(--y-radius-sm); background:var(--y-soft); border-color:var(--y-line-soft); }
+.yonetim .license-freeze .freeze-request { margin:0; border-radius:var(--y-radius-sm); background:var(--y-soft,#f1f5ee); border-color:var(--y-line-soft); }
 .yonetim .license-freeze .btn { align-self:flex-start; margin:0; }
-.yonetim .owner-reset-issued { display:grid; gap:8px; padding:16px 20px; border:1px solid var(--y-line); border-radius:var(--y-radius-sm); background:var(--y-soft); }
+.yonetim .owner-reset-issued { display:grid; gap:8px; padding:16px 20px; border:1px solid var(--y-line); border-radius:var(--y-radius-sm); background:var(--y-soft,#f1f5ee); }
 .yonetim .owner-reset-issued .activation-code { margin:0; overflow-wrap:anywhere; }
 /* "Dikkat": a quiet red zone across the bottom of the sheet, not a box inside a box. */
 .yonetim .detail-sheet>.detail-danger { margin:0 -40px; padding:28px 40px 32px; background:#fdf6f3; border-top:1px solid #efd6cc; display:flex; flex-direction:column; gap:16px; }
@@ -254,9 +254,9 @@
 .yonetim .service-card { display:flex; flex-direction:column; align-items:stretch; gap:10px; min-height:250px; margin:0; padding:22px 22px 18px; border:1.5px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); color:var(--y-text); font:inherit; text-align:left; cursor:pointer; min-width:0; transition:border-color .15s, box-shadow .15s; }
 .yonetim .service-card:hover:not(:disabled) { border-color:#a9bfa3; box-shadow:var(--y-shadow); }
 .yonetim .service-card:disabled { opacity:1; cursor:default; }
-.yonetim .service-card.selected { border:2px solid var(--green); background:#f5f9f3; }
+.yonetim .service-card.selected { border:2px solid var(--green); background:var(--y-soft,#f1f5ee); }
 .yonetim .service-card.asking { border-color:var(--warn-dot); background:#fffbf2; }
-.yonetim .service-card.soon { background:#fafbf9; color:#7a847c; border-style:dashed; }
+.yonetim .service-card.soon { background:var(--y-soft,#f1f5ee); color:#7a847c; border-style:dashed; }
 .yonetim .service-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
 .yonetim .service-card-head strong { font-size:18px; }
 .yonetim .service-summary { font-size:14px; color:var(--y-muted); }
@@ -276,7 +276,7 @@
 .yonetim .detail-ticket-list { display:grid; border:1px solid var(--y-line); border-radius:var(--y-radius-sm); overflow:hidden; }
 .yonetim .detail-ticket-list button { display:grid; grid-template-columns:minmax(0,1fr) auto auto 16px; gap:12px; align-items:center; min-height:52px; padding:12px 16px; border:0; border-bottom:1px solid var(--y-line-soft); background:var(--y-card); font:inherit; text-align:left; cursor:pointer; color:var(--y-text); }
 .yonetim .detail-ticket-list button:last-child { border-bottom:0; }
-.yonetim .detail-ticket-list button:hover { background:#f8faf6; }
+.yonetim .detail-ticket-list button:hover { background:var(--y-soft,#f1f5ee); }
 .yonetim .detail-ticket-list strong { font-weight:500; overflow-wrap:anywhere; }
 .yonetim .detail-ticket-list small { color:var(--y-faint); white-space:nowrap; }
 .yonetim .detail-errors summary { cursor:pointer; font-weight:600; color:var(--green); min-height:44px; display:flex; align-items:center; }
@@ -296,7 +296,7 @@
 .yonetim .platform-create-section p { margin:8px 0 0; }
 .yonetim .create-sector { display:grid; gap:8px; margin-top:10px; }
 .yonetim .create-sector-label { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:600; }
-.yonetim .platform-create-actions { display:flex; justify-content:flex-end; gap:10px; padding:14px 24px calc(14px + var(--safe-b)); border-top:1px solid var(--y-line); background:#fafbf8; position:sticky; bottom:0; }
+.yonetim .platform-create-actions { display:flex; justify-content:flex-end; gap:10px; padding:14px 24px calc(14px + var(--safe-b)); border-top:1px solid var(--y-line); background:var(--y-soft,#f1f5ee); position:sticky; bottom:0; }
 .yonetim .platform-create-actions .btn { margin:0; }
 
 /* ---------- Destek, Bildirim merkezi, İşlem geçmişi, Ayarlar ---------- */
@@ -349,8 +349,8 @@
 .yonetim .alert-center .alert-list:empty { display:none; }
 .yonetim .alert-center .alert-list li { border:0; border-radius:0; border-bottom:1px solid var(--y-line-soft); padding:16px 20px; background:var(--y-card); }
 .yonetim .alert-center .alert-list li:last-child { border-bottom:0; }
-.yonetim .alert-center .alert-list li.unread { background:#f7faf3; }
-.yonetim .alert-center .alert-list li.low { background:#fafaf8; }
+.yonetim .alert-center .alert-list li.unread { background:var(--y-soft,#f1f5ee); }
+.yonetim .alert-center .alert-list li.low { background:var(--y-soft,#f1f5ee); }
 .yonetim .alert-actions { gap:0 8px; }
 
 /* ---------- Başvurular, fatura bilgileri, olası tekrar ---------- */
@@ -431,7 +431,7 @@
 .auth-card .reset-proof span { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .auth-card .reset-proof strong { font-size:15px; font-weight:600; }
 .auth-card .reset-proof small { font-size:13px; color:var(--y-muted); line-height:1.45; }
-.auth-card .reset-authenticator { display:flex; flex-direction:column; gap:8px; padding:12px 14px; border-radius:14px; background:#f6f7f4; }
+.auth-card .reset-authenticator { display:flex; flex-direction:column; gap:8px; padding:12px 14px; border-radius:14px; background:var(--y-soft,#f1f5ee); }
 .auth-card .reset-authenticator .text-btn { align-self:flex-start; padding:0; min-height:36px; }
 .auth-card .reset-authenticator .checkbox-label { flex-direction:row; align-items:center; gap:10px; }
 .auth-card .reset-authenticator .checkbox-label input { width:18px; height:18px; margin:0; accent-color:var(--green); }
@@ -574,5 +574,9 @@
 .yonetim .panel, .yonetim .modal, .yonetim-auth .panel { background:var(--y-card); }
 .yonetim :is(input:not([type=checkbox]):not([type=radio]), select, textarea), .yonetim-auth :is(input:not([type=checkbox]):not([type=radio]), select, textarea) { background:var(--y-field); }
 .yonetim .btn.secondary, .yonetim-auth .btn.secondary { background:var(--y-field); }
-.yonetim .btn.secondary:hover, .yonetim-auth .btn.secondary:hover { background:var(--y-soft); }
+.yonetim .btn.secondary:hover, .yonetim-auth .btn.secondary:hover { background:var(--y-soft,#f1f5ee); }
 .yonetim .btn.primary:hover, .yonetim-auth .btn.primary:hover { background:#36241a; }
+/* Hover and the support chat inside Mola Yönetim: a shade darker than the card, never white (14 Ekim). */
+.yonetim .icon-btn:hover, .yonetim .tc-item:hover, .yonetim .tc-upload-btn:hover, .yonetim .ticket-inbox-row:hover, .yonetim .ticket-inbox-row.selected { background:var(--y-soft); }
+.yonetim .tc-main, .yonetim .tc-list, .yonetim .tc-filter button[aria-pressed="true"] { background:var(--y-card); }
+.yonetim .tc-search, .yonetim .tc-input, .yonetim .tc .tc-new-body input, .yonetim .tc .tc-new-body textarea { background:var(--y-field); }

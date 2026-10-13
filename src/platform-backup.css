@@ -3,7 +3,7 @@
  * cafés' cloud backups), the cafés' list under it (read only), and the rest folded under "Ayrıntılar".
  */
 .yonetim .bk-places { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; min-width:0; }
-.yonetim .bk-place { display:flex; align-items:center; gap:14px; min-width:0; padding:12px 14px; border-radius:16px; background:var(--y-soft); }
+.yonetim .bk-place { display:flex; align-items:center; gap:14px; min-width:0; padding:12px 14px; border-radius:16px; background:var(--y-soft,#f1f5ee); }
 .yonetim .bk-place:has(> .bk-place-open) { padding:0; }
 .yonetim .bk-place-body { flex:1 1 220px; min-width:0; display:flex; flex-direction:column; gap:2px; text-align:left; }
 .yonetim .bk-place-body strong { font-size:15px; font-weight:650; color:var(--y-text); }
@@ -12,7 +12,7 @@
 .yonetim .bk-place-side { flex:0 1 auto; display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-left:auto; min-width:0; }
 .yonetim .bk-place-side .btn { margin:0; }
 .yonetim .bk-place-open { flex:1; display:flex; align-items:center; gap:14px; min-width:0; min-height:64px; padding:12px 14px; border:0; border-radius:16px; background:transparent; font:inherit; color:inherit; text-align:left; cursor:pointer; }
-.yonetim .bk-place-open:hover { background:#eef3ec; }
+.yonetim .bk-place-open:hover { background:var(--y-soft,#f1f5ee); }
 .yonetim .bk-place-open:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
 .yonetim .bk-open-label { font-size:13.5px; font-weight:600; color:var(--green); white-space:nowrap; }
 .yonetim .bk-chevron { flex:none; color:var(--y-faint); transition:transform .15s; }
@@ -65,4 +65,4 @@
 }
 
 /* The server command for a new Merkez recovery code (VDS): one line, selectable, wraps on a phone. */
-.bk-command{display:block;margin-top:8px;padding:8px 10px;border-radius:8px;background:#f3f5f1;font:12px/1.5 Consolas,'Courier New',monospace;word-break:break-all;user-select:all}
+.bk-command{display:block;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--y-soft,#f1f5ee);font:12px/1.5 Consolas,'Courier New',monospace;word-break:break-all;user-select:all}

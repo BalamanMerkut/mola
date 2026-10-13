@@ -14,7 +14,7 @@
 .journal-filters .journal-search { grid-column:span 2; }
 .journal-bar { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; justify-content:space-between; }
 .journal-bar .platform-count { margin:0; } .journal-bar .btn { min-height:44px; }
-.journal-report { display:grid; gap:8px; padding:12px 14px; border:1px solid var(--y-line, #e3e8df); border-radius:12px; background:#fafbf8; }
+.journal-report { display:grid; gap:8px; padding:12px 14px; border:1px solid var(--y-line, #e3e8df); border-radius:12px; background:var(--y-soft,#f1f5ee); }
 .journal-report p { margin:0; } .journal-report .application-actions { display:flex; flex-wrap:wrap; gap:8px; } .journal-report .btn { min-height:44px; }
 .yonetim .journal-list article small, .journal-list article small { white-space:normal; }
 .journal-list article.journal-bad strong { color:var(--bad-fg, #983f28); }
@@ -44,10 +44,10 @@
 
 .release-steps { margin:0; padding-left:20px; display:grid; gap:4px; } .release-steps code { overflow-wrap:anywhere; }
 .release-safety { margin:0; padding:10px 12px; border-radius:10px; background:var(--ok-bg, #e6f1e3); color:var(--ok-fg, #2c6436); font-size:14px; }
-.release-drop { position:relative; display:grid; justify-items:center; gap:6px; padding:26px 16px; border:2px dashed #b9c8bd; border-radius:14px; background:#fafbf8; text-align:center; color:#22362b; }
+.release-drop { position:relative; display:grid; justify-items:center; gap:6px; padding:26px 16px; border:2px dashed #b9c8bd; border-radius:14px; background:var(--y-soft,#f1f5ee); text-align:center; color:#22362b; }
 .release-drop strong { font-size:16px; overflow-wrap:anywhere; } .release-drop.dragging { border-color:#3f8a4c; background:#eef6ec; } .release-drop.chosen { border-style:solid; border-color:#3f8a4c; }
 .release-drop .btn { min-height:44px; }
 .release-upload .release-file { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); border:0; }
-.release-progress { position:relative; height:22px; border-radius:11px; background:#eef1ec; overflow:hidden; }
+.release-progress { position:relative; height:22px; border-radius:11px; background:var(--y-soft,#f1f5ee); overflow:hidden; }
 .release-progress span { position:absolute; inset:0 auto 0 0; background:#3f8a4c; transition:width .2s; } .release-progress b { position:relative; display:block; text-align:center; font-size:12px; line-height:22px; color:#22362b; mix-blend-mode:multiply; }
 .release-folder { display:grid; gap:8px; } .release-folder p { margin:0; } .release-folder code { overflow-wrap:anywhere; }
