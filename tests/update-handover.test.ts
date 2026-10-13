@@ -119,4 +119,9 @@ test('Windows: through the real Mola-Sunucu.cmd (output appended to sunucu.log) 
   assert.equal(readFileSync(join(root, 'veri', 'merchant.sqlite'), 'utf8'), 'satışlar');
   // The watchdog's own lines are kept: in sunucu.log, or in the fallback file while the applier held it.
   assert.match(readdirSync(join(root, 'logs')).join(' '), /sunucu(-\d+)?\.log/);
+  // No console window (13 Ekim: the black "node.exe nobetci.mjs" window after an update): none of this installation's
+  // processes has a visible window once the applier is done.
+  await until('applier done', () => /Bitti: installed/.test(readFileSync(join(root, 'logs', 'guncelleme.log'), 'utf8')) || undefined, 60_000);
+  const windows = execFileSync('powershell.exe', ['-NoProfile', '-Command', `Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq '${node}' -and $_.MainWindowHandle -ne 0 } | ForEach-Object { $_.MainWindowTitle }`], { encoding: 'utf8' }).trim();
+  assert.equal(windows, '', `a visible window: ${windows}`);
 });

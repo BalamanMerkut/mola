@@ -30,7 +30,7 @@ export const NOT_A_CHANGE: readonly string[] = [
   // İşletmem var: the sign-in and the e-mail code on a clean install (the restore itself replaces the data folder).
   '/api/desktop/owner-login/start', '/api/desktop/owner-login/verify',
   // Yeni bilgisayar için e-posta: kept by Mola Merkez, not in this computer's data.
-  '/api/staff/owner-email/old-code', '/api/staff/owner-email/new-code', '/api/staff/owner-email/confirm',
+  '/api/staff/owner-email/old-code', '/api/staff/owner-email/new-code', '/api/staff/owner-email/confirm', '/api/staff/owner-email/lock',
 ];
 /** Orders, payments, menu, tables, settings, staff, expenses, cash, stock, shifts, reservations, platforms, licence, support… */
 export const REAL_CHANGES: readonly string[] = [

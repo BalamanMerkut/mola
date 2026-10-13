@@ -32,8 +32,8 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     expect((await admin('/login', { username: 'admin', password: adminPassword })).status).toBe(200);
     expect((await admin('/email', { enabled: true, host: '127.0.0.1', port: smtp.port, security: 'none', user: '', to: 'bildirim@example.com', from: 'mola@example.com' })).status).toBe(200);
 
-    // The old computer: an approved application (its invoice e-mail is the business's), the owner account, one sign-in
-    // (it writes the owner's password lock), a backup that goes to Mola Merkez.
+    // The old computer: an approved application (its invoice e-mail is the business's), the owner account, the owner's
+    // password lock (made from Ayarlar here, a sign-in makes it too), a backup that goes to Mola Merkez.
     old = await protectedServer(join(root, 'eski'), protectedPort(4), 'eski-pc', true, env);
     // Its own request context: both cafés are 127.0.0.1, and cookies do not tell ports apart.
     owner = await playwrightRequest.newContext({ baseURL: old.base });
@@ -46,7 +46,14 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     await expect.poll(async () => (await (await owner!.get('/api/activation')).json()).state, { timeout: 20000 }).toBe('owner');
     expect((await local('/api/activation/owner', { username: USER, password: PASSWORD })).ok()).toBe(true);
     await old.desktop('/api/desktop/recovery/show', {}); await old.desktop('/api/desktop/recovery/confirm', {});
-    expect((await local('/api/login', { username: USER, password: PASSWORD })).ok()).toBe(true);
+    // A new business opens on the setup wizard first: done here as in the other specs.
+    const st = await (await owner.get('/api/staff/state')).json();
+    expect((await owner.post('/api/staff/setup', { data: { requestId: 'sahip-kurulum-1', version: st.businessRevision ?? 0, name: st.name, tableCount: st.tables.length, changeSeconds: st.changeSeconds, commissionBps: st.commissionBps } })).ok()).toBe(true);
+    // Signed in by the activation, the password never typed at a sign-in (13 Ekim, DenemeKafe: the owner stayed signed in
+    // across the update): no lock yet, so Ayarlar asks for the password once. A wrong one makes none.
+    expect(await (await owner.get('/api/staff/owner-email')).json()).toMatchObject({ lock: false, username: USER });
+    expect((await local('/api/staff/owner-email/lock', { password: 'YanlisSifre!2026' })).status()).toBe(403);
+    expect(await (await local('/api/staff/owner-email/lock', { password: PASSWORD })).json()).toEqual({ lock: true, username: USER });
     await expect.poll(async () => !!(await old!.desktop<{ backup: { cloud?: unknown } }>('/api/desktop/status')).data.backup.cloud, { timeout: 30000 }).toBe(true);
     expect((await old.desktop<{ lastError: string | null }>('/api/desktop/backup', {})).data.lastError).toBeNull();
     await expect.poll(async () => (await old!.desktop<{ backup: { cloud?: { lastSuccessAt: string | null } } }>('/api/desktop/status')).data.backup.cloud?.lastSuccessAt ?? null, { timeout: 60000 }).not.toBeNull();
@@ -54,9 +61,6 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     // Ayarlar → Güvenlik ve yedek → Yeni bilgisayar için e-posta (13 Ekim): the application's address shows; a change needs
     // the owner's password, the old address's code and the new address's code; the old address is told.
     const NEW = 'yeni.sahip@example.com';
-    // A new business opens on the setup wizard first: done here as in the other specs.
-    const st = await (await owner.get('/api/staff/state')).json();
-    expect((await owner.post('/api/staff/setup', { data: { requestId: 'sahip-kurulum-1', version: st.businessRevision ?? 0, name: st.name, tableCount: st.tables.length, changeSeconds: st.changeSeconds, commissionBps: st.commissionBps } })).ok()).toBe(true);
     const ownerPage = await (await page.context().browser()!.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
     await ownerPage.goto(old.base);
     await ownerPage.getByLabel('Kullanıcı adı', { exact: true }).fill(USER);
@@ -65,6 +69,8 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     await openSettings(ownerPage, 'Yedek');
     const card = ownerPage.locator('.owner-email-card');
     await expect(card).toContainText('s****@example.com'); await expect(card).toContainText('Başvurudaki adres');
+    // What İşletmem var will ask on a new computer, the sign-in name included.
+    await expect(card.locator('.owner-email-ready')).toContainText(`“İşletmem var” hazır`); await expect(card.locator('.owner-email-ready')).toContainText(USER);
     await card.getByRole('button', { name: 'Değiştir' }).click();
     await card.getByLabel('İşletme sahibi şifresi').fill('YanlisSifre!2026');
     await card.getByRole('button', { name: 'Eski adrese kod gönder' }).click();

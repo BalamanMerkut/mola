@@ -12,18 +12,33 @@
   "_indirAciklama": "Uygulamayı indir (/indir/). 'files' bölümünü npm.cmd run site:indir doldurur (dosya adı, boyut, SHA-256) ve dosyaları site/dist/indir'e kopyalar. 'enabled' false iken her platform 'Yakında' görünür; VDS için hazırlanmış kurulum dosyaları olunca true yapın ve npm.cmd run site:build (docs/VDS_KURULUM.md bölüm 13).",
   "downloads": {
     "enabled": true,
-    "version": "0.1.5",
-    "builtAt": "2026-10-13T07:03:52.668Z",
+    "version": "0.1.6",
+    "builtAt": "2026-10-13T08:03:27.179Z",
     "files": {
       "windows": {
-        "file": "Mola-Windows-0.1.5.zip",
-        "size": 44635550,
-        "sha256": "996810ea799d8ecc1154680a52b9e317d70e3c2ee7b8b38010c66ca27c9c9cad"
+        "file": "Mola-Windows-0.1.6.zip",
+        "size": 44636247,
+        "sha256": "52182385c2148969a97adec40348a67badd6ec58b656dc333c9c3d4d6ffb3999"
+      },
+      "macos-arm64": {
+        "file": "Mola-macOS-AppleSilicon-0.1.6.tar.gz",
+        "size": 49810655,
+        "sha256": "60d9712912d21bc4383a13871eb0572d218378b636a2071f6e7d322feff80218"
+      },
+      "macos-x64": {
+        "file": "Mola-macOS-Intel-0.1.6.tar.gz",
+        "size": 51384667,
+        "sha256": "29791b65c0435ee276fad882f335adc2ee40661adb96a9454112abe882527e10"
+      },
+      "linux-x64": {
+        "file": "Mola-Linux-x64-0.1.6.tar.gz",
+        "size": 54879011,
+        "sha256": "94fd8a1501a6af0aa9c4951a2462df67cc885dd755423ccc610e3189b1bd09ea"
       },
       "android": {
-        "file": "Mola-Android-0.1.5.apk",
+        "file": "Mola-Android-0.1.6.apk",
         "size": 103873,
-        "sha256": "ed3824100b13653ee45174a19fb8dd5cf717966e912943ded707776184e550f5"
+        "sha256": "0b754a73c64a1fa93d231fbacfdf2496980fb27fdea7ef9daeb81bc1b87e8762"
       }
     }
   }

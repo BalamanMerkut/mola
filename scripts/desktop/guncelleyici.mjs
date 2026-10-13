@@ -177,7 +177,11 @@ export function realHooks(job) {
     async startServer() {
       const s = job.start;
       if (s.cmd) {
-        const child = spawn('cmd.exe', ['/d', '/c', `""${s.cmd}""`], { cwd: job.root, detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true, env: s.env ?? process.env });
+        // NOT detached (13 Ekim): a detached cmd has no console at all, so the node it starts opened a console window of its
+        // own (the black "node.exe nobetci.mjs" window after every update; closing it stopped Mola). Not detached,
+        // windowsHide gives cmd a hidden console that node shares. The server still outlives this applier (Windows does not
+        // end a child with its parent).
+        const child = spawn('cmd.exe', ['/d', '/c', `""${s.cmd}""`], { cwd: job.root, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true, env: s.env ?? process.env });
         child.unref(); return;
       }
       mkdirSync(dirname(s.log), { recursive: true });

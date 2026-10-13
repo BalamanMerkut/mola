@@ -357,13 +357,30 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     // "İşletmem var" (13 Ekim): while the owner's password is known, the master key is sealed with it once (again after a
     // password change: the stamp follows the stored salt). After the answer, never slowing the sign-in; backups this
     // computer reaches get the block too, so a new computer can open them with this sign-in.
-    const vault = security?.vault;
-    if (fresh.user.role === 'owner' && vault && vault.protection !== 'off') {
-      void vault.ensureOwner({ tenantId: fresh.tenantId, username: fresh.user.username, password: body.password, stamp: passwordStamp(fresh.user.salt) })
-        .then(async changed => { if (!changed) return; const p = vault.backupProtection(); if (p) await backups?.rewrap(p).catch(() => 0); })
-        .catch(error => console.warn(`Sahip şifre kilidi yazılamadı: ${error instanceof Error ? error.message : error}`));
-    }
+    if (fresh.user.role === 'owner') void sealOwner(fresh.tenantId, fresh.user, body.password)
+      .catch(error => console.warn(`Sahip şifre kilidi yazılamadı: ${error instanceof Error ? error.message : error}`));
   });
+  /**
+   * The owner's "İşletmem var" lock with this (already checked) password; backups get it too. Also from Ayarlar → e-posta
+   * (server/owner-email.ts): an owner who stayed signed in across the update never typed the password, so no lock was made
+   * and the new computer heard "Bilgiler eşleşmedi" (13 Ekim, DenemeKafe).
+   */
+  async function sealOwner(tenantId: string, user: { username: string; salt: string }, password: string) {
+    const vault = security?.vault;
+    if (!vault || vault.protection === 'off') return false;
+    const changed = await vault.ensureOwner({ tenantId, username: user.username, password, stamp: passwordStamp(user.salt) });
+    if (changed) { const p = vault.backupProtection(); if (p) await backups?.rewrap(p).catch(() => 0); }
+    return changed;
+  }
+  /** The signed-in user with the stored salt (the lock's stamp follows it). */
+  function ownerUser(actor: Actor) { const name = store.sessionUser(actor.tenantId, actor.id)?.username, found = name ? store.findUser(name) : undefined; return found && found.tenantId === actor.tenantId && found.user.id === actor.id ? found.user : undefined; }
+  /** Whether this owner's lock holds the current password (null: no protection here, so nothing to lock). */
+  function ownerSealed(actor: Actor) {
+    const vault = security?.vault, me = ownerUser(actor);
+    if (!vault || vault.protection === 'off' || !me) return null;
+    const stamp = passwordStamp(me.salt);
+    return vault.ownerLogins().some(b => b.tenantId === actor.tenantId && b.username === me.username && b.stamp === stamp);
+  }
   /** The login's failed-attempt limit: 12 wrong per user and device, or 60 per user once that device failed too (1 min). */
   function authBlocked(mineKey: string, anyKey: string) {
     const mine = authLimits.get(mineKey)?.count ?? 0, any = authLimits.get(anyKey)?.count ?? 0;
@@ -818,7 +835,10 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   firstStepsRoutes(app, store, staffActor, now, { recovery: () => { const v = recoveryView(security); return v.protection === 'off' ? null : v.confirmed; }, second: () => backups?.second ? !!backups.second.status().folder : null });
   businessProfileRoutes(app, store, staffActor, now, link);
   // Ayarlar → Güvenlik ve yedek → Yeni bilgisayar için e-posta (verified by Mola Merkez; server/owner-email.ts).
-  ownerEmailRoutes(app, { store, staffActor, link, confirmPassword });
+  ownerEmailRoutes(app, { store, staffActor, link, confirmPassword, lock: {
+    ready: ownerSealed,
+    seal: (actor, password) => { const me = ownerUser(actor); return me ? sealOwner(actor.tenantId, me, password) : Promise.resolve(false); },
+  } });
   // Ajanda ve rezervasyon: masa ayırma, kapora, etkinlikler (server/reservations.ts); before Bildirimler so its reminders are ready when they are read.
   let inbox: ReturnType<typeof notificationRoutes> | undefined;
   const reservations = reservationRoutes(app, store, staffActor, now, () => inbox, undefined, tenant => link.has(tenant, 'reservations'));

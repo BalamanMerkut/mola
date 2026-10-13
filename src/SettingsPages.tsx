@@ -292,8 +292,10 @@ function BackupPlaces({ backup }: { backup: Backup }) {
  * Mola Merkez (server/owner-email.ts). No address yet (activated with the Mola team's code): type it, the code sent there
  * proves it. A change: the owner's password, the code sent to the OLD address, then the NEW address's code. The
  * application's address shows as "başvurudaki adres". The owner's own account only (others get 403: card hidden).
+ * `lock` false: the owner never typed the password since İşletmem var came (stayed signed in across the update), so a new
+ * computer would say "Bilgiler eşleşmedi": the card asks for the password once. Shows the sign-in name İşletmem var asks.
  */
-type OwnerEmail = { available: boolean; email: string | null; source: 'owner' | 'invoice' | null; reason?: string };
+type OwnerEmail = { available: boolean; email: string | null; source: 'owner' | 'invoice' | null; lock?: boolean | null; username?: string | null; reason?: string };
 type EmailStep = { at: 'view' } | { at: 'password' } | { at: 'old'; ticket: string; email: string } | { at: 'confirm'; ticket: string; email: string };
 function OwnerEmailCard() {
   const [view, setView] = useState<OwnerEmail | null | undefined>(undefined), [step, setStep] = useState<EmailStep>({ at: 'view' });
@@ -303,11 +305,15 @@ function OwnerEmailCard() {
   if (view === null || view === undefined) return null;
   const reset = (next?: OwnerEmail) => { if (next) setView(next); setStep({ at: 'view' }); setEmail(''); setPassword(''); setCode(''); setOldCode(''); setError(''); };
   const run = async (fn: () => Promise<void>) => { setBusy(true); setError(''); setDone(''); try { await fn(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
-  // First address: a code to it. A change: the old address's code goes with the new address (and the password again).
+  // First address: the password and a code to it. A change: the old address's code goes with the new address (and the password again).
   const sendNew = (old?: { ticket: string; code: string }) => run(async () => {
-    const r = await api<{ ticket: string; email: string }>('/api/staff/owner-email/new-code', { email: email.trim(), ...(old ? { old, password } : {}) });
+    const r = await api<{ ticket: string; email: string }>('/api/staff/owner-email/new-code', { email: email.trim(), password, ...(old ? { old } : {}) });
     setCode(''); setStep({ at: 'confirm', ticket: r.ticket, email: r.email });
   });
+  const makeLock = () => run(async () => { const r = await api<Pick<OwnerEmail, 'lock' | 'username'>>('/api/staff/owner-email/lock', { password }); setPassword(''); setView({ ...view, ...r }); if (r.lock) setDone('Hazır. Yeni bilgisayarda “İşletmem var” ile girebilirsiniz.'); });
+  const passwordInput = <label className="owner-email-field">İşletme sahibi şifresi<input type="password" autoComplete="current-password" value={password} disabled={busy} onChange={e => setPassword(e.target.value)} /></label>;
+  // What İşletmem var will ask on a new computer: shown, the owner may not remember the sign-in name.
+  const ready = view.lock && view.email ? <p className="owner-email-ready muted small">“İşletmem var” hazır: yeni bilgisayarda bu e-posta, <strong>{view.username}</strong> kullanıcı adı ve şifrenizle girersiniz.</p> : null;
   const sendOld = () => run(async () => { const r = await api<{ ticket: string; email: string }>('/api/staff/owner-email/old-code', { password }); setOldCode(''); setStep({ at: 'old', ticket: r.ticket, email: r.email }); });
   const confirm = (ticket: string) => run(async () => { const r = await api<OwnerEmail>('/api/staff/owner-email/confirm', { ticket, code: code.trim() }); reset(r); setDone('E-posta doğrulandı. Bilgisayarınız değişirse kod bu adrese gelir.'); });
   const codeInput = (value: string, set: (v: string) => void, label: string) => <label className="owner-email-field">{label}<input className="owner-email-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={value} disabled={busy} onChange={e => set(e.target.value.replace(/\D/g, ''))} placeholder="000000" /></label>;
@@ -320,15 +326,24 @@ function OwnerEmailCard() {
     <div className="owner-email">
       {!view.available ? <p className="muted small">{view.reason}</p>
       : step.at === 'view' ? (view.email
-        ? <div className="owner-email-current"><span><strong>{view.email}</strong><small>{view.source === 'invoice' ? 'Başvurudaki adres' : 'Doğrulandı'}</small></span><button type="button" className="btn secondary small-btn" onClick={() => { reset(); setDone(''); setStep({ at: 'password' }); }}>Değiştir</button></div>
-        : <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (validEmail) void sendNew(); }}>
+        ? <>
+            <div className="owner-email-current"><span><strong>{view.email}</strong><small>{view.source === 'invoice' ? 'Başvurudaki adres' : 'Doğrulandı'}</small></span><button type="button" className="btn secondary small-btn" onClick={() => { reset(); setDone(''); setStep({ at: 'password' }); }}>Değiştir</button></div>
+            {ready}
+            {view.lock === false && <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (password) void makeLock(); }}>
+              <Notice>“İşletmem var” henüz hazır değil: güncellemeden beri şifrenizi yazmadınız. Bir kez yazın; yeni bilgisayarda girişiniz bu şifreyle açılır.</Notice>
+              {passwordInput}
+              <div className="owner-email-actions"><button className="btn primary small-btn" disabled={busy || !password}>{busy ? 'Hazırlanıyor…' : 'Hazırla'}</button></div>
+            </form>}
+          </>
+        : <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (validEmail && password) void sendNew(); }}>
             <Notice>Kayıtlı e-posta yok. Bilgisayarınız bozulursa verilerinizi “İşletmem var” ile geri alabilmek için bir adres yazıp doğrulayın.</Notice>
             {emailInput('E-posta adresi')}
-            <div className="owner-email-actions"><button className="btn primary small-btn" disabled={busy || !validEmail}>{busy ? 'Gönderiliyor…' : 'Kod gönder'}</button></div>
+            {passwordInput}
+            <div className="owner-email-actions"><button className="btn primary small-btn" disabled={busy || !validEmail || !password}>{busy ? 'Gönderiliyor…' : 'Kod gönder'}</button></div>
           </form>)
       : step.at === 'password' ? <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (password) void sendOld(); }}>
           <p className="muted small">1/3 · Güvenlik için işletme sahibi şifrenizi yazın; kayıtlı adrese ({view.email}) bir kod gönderilir.</p>
-          <label className="owner-email-field">İşletme sahibi şifresi<input type="password" autoComplete="current-password" value={password} disabled={busy} onChange={e => setPassword(e.target.value)} /></label>
+          {passwordInput}
           <div className="owner-email-actions">{cancel}<button className="btn primary small-btn" disabled={busy || !password}>{busy ? 'Gönderiliyor…' : 'Eski adrese kod gönder'}</button></div>
         </form>
       : step.at === 'old' ? <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (oldCode.length === 6 && validEmail) void sendNew({ ticket: step.ticket, code: oldCode }); }}>
