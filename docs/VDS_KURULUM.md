@@ -525,8 +525,10 @@ scp -r .\site\dist yonetici@203.0.113.10:~/site-yeni
 Sunucuda (ilk kez `sudo mkdir -p /var/www/molayazilim` ve `sudo apt -y install rsync`):
 
 ```bash
-sudo rsync -a --delete ~/site-yeni/ /var/www/molayazilim/ && rm -rf ~/site-yeni
+sudo rsync -rt --delete --chown=root:root --chmod=D755,F644 ~/site-yeni/ /var/www/molayazilim/ && rm -rf ~/site-yeni
 ```
+
+`--chmod` şart: Windows'tan `scp -r` ile gelen klasör yalnız sahibine açık (700) olur; `rsync -a` bu izni taşırsa Caddy dosyaları okuyamaz ve site **403** verir (13 Ekim'de oldu; düzeltme: `sudo chown -R root:root /var/www/molayazilim && sudo chmod -R a+rX,go-w /var/www/molayazilim`).
 
 Caddy'yi yeniden başlatmak gerekmez. Telefon, WhatsApp ve e-posta `site/config.json`'dan gelir; değiştirince yeniden derleyip yükleyin. Derleme "telefon numarası henüz doldurulmadı" diyorsa yayından önce doldurun.
 
