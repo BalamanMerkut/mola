@@ -167,3 +167,23 @@ test('outside the café computer\'s window there is no İkiye böl and a frame n
   await page.evaluate(() => { const f = document.createElement('iframe'); f.name = 'mola-pane-2'; f.src = '/?pane=2'; f.style.width = '800px'; f.style.height = '600px'; document.body.append(f); });
   await expect.poll(() => page.frame({ name: 'mola-pane-2' })?.evaluate(() => fetch('/api/staff/me').then(r => r.json()).then((v: { code?: string }) => v.code)).catch(() => undefined)).toBe('PANE_REFUSED');
 });
+
+// 13 Ekim: Menü önizlemesi is a frame of the owner's screen. With "İkiye böl" remembered, the frame took the rail and the
+// split too and showed two staff screens instead of the guest menu.
+test('Menü önizlemesi on the café computer with "İkiye böl" remembered shows the guest menu, not the rail or two panes', async ({ browser }) => {
+  const key = readFileSync(join(e2eRun(), 'masaustu.anahtar'), 'utf8').trim();
+  const context = await browser.newContext({ viewport: VIEWPORT });
+  await context.addInitScript(() => { try { sessionStorage.setItem('mola-welcome', '1'); sessionStorage.setItem('mola-recovery-later', '1'); } catch { /* frames */ } });
+  const page = await context.newPage();
+  try {
+    await page.goto(`/#masaustu=${key}`);
+    const rail = page.getByRole('navigation', { name: 'Mola bilgisayar araçları' });
+    await rail.getByRole('button', { name: 'İkiye böl' }).click();
+    await expect(rail.getByRole('button', { name: 'Tek ekran' })).toBeVisible();
+    expect((await page.request.post('/api/login', { data: { username: 'isletme', password: PASSWORD } })).ok()).toBe(true);
+    await page.goto('/menu-preview');
+    await expect(page.getByText('Önizleme modu. Gerçek sipariş oluşturulmaz.')).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Mola bilgisayar araçları' })).toHaveCount(0);
+    await expect(page.locator('iframe[name^="mola-pane-"]')).toHaveCount(0);
+  } finally { await context.close(); }
+});

@@ -19,6 +19,8 @@ export function App() {
   if (location.pathname.startsWith('/m/')) { guestPageHead(); return <Customer token={location.pathname.slice(3)} />; }
   const page = <DeferredPanel>{location.pathname === '/menu-preview' ? <MenuPreviewPage /> : <Workspace />}</DeferredPanel>;
   // İki ekran: a pane is one plain Mola screen; the rail (and its desktop key) stays with the outer window (src/SplitView.tsx).
-  if (pane) return page;
+  // Menü önizlemesi is a frame inside the owner's screen: never the rail (13 Ekim: on the café computer with "İkiye böl"
+  // remembered, the frame showed two staff screens instead of the guest menu).
+  if (pane || location.pathname === '/menu-preview') return page;
   return <DesktopRail>{page}</DesktopRail>;
 }

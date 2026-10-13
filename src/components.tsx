@@ -171,7 +171,12 @@ export function Composer({ sentOrders, canAdd = false, sentExtra, leading, staff
   useEffect(() => { if (!popular.length) setPopularOnly(false); }, [popular.length]);
   const recent = newProductIds.map(id => products.find(p => p.id === id)).filter((p): p is Product => !!p);
   useEffect(() => { if (!recent.length) setNewOnly(false); }, [recent.length]);
-  const visible = (newOnly ? recent : popularOnly ? popular : products).filter(p => (!campaignOnly || !!p.discounts?.length) && (category === 'Tümü' || p.category === category) && (!subtype || p.subtype === subtype) && matchesSearch(p, search));
+  const filtered = (newOnly ? recent : popularOnly ? popular : products).filter(p => (!campaignOnly || !!p.discounts?.length) && (category === 'Tümü' || p.category === category) && (!subtype || p.subtype === subtype) && matchesSearch(p, search));
+  // "Tümü" follows the owner's category order (Kategoriler ve sıra, the same as the tabs); within a category products keep
+  // their own order. 13 Ekim: the tabs followed it but "Tümü" still listed the first-added category first. "Yeni" and
+  // "Popüler" keep their own order (newest, most ordered).
+  const tabRank = new Map(categories.map((c, i) => [c, i]));
+  const visible = category === 'Tümü' && !newOnly && !popularOnly ? [...filtered].sort((a, b) => (tabRank.get(a.category) ?? 1e6) - (tabRank.get(b.category) ?? 1e6)) : filtered;
   const currentSubtypes = [...new Set(products.filter(p => p.category === category && p.subtype).map(p => p.subtype!))];
   const subtypes = [...new Set([...(subcategoryOrder.find(c => c.category === category)?.names ?? []).filter(n => currentSubtypes.includes(n)), ...currentSubtypes])];
   useEffect(() => { if (subtype && !subtypes.includes(subtype)) setSubtype(''); }, [subtype, subtypes.join('|')]);

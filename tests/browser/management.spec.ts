@@ -169,6 +169,8 @@ test('owner adds custom category, creates a product, renames and reorders the cu
   const state = await (await page.request.get('/api/staff/state')).json();
   const context = await browser.newContext(); const guest = await context.newPage(); await guest.goto(`/m/${state.tables[0].token}`);
   await expect(guest.locator('.category-tabs button').nth(1)).toHaveText('Kahvaltı');
+  // "Tümü" follows the same order (13 Ekim: it still listed the first-added category first).
+  await expect(guest.locator('.product-card').first()).toContainText('Simit tabağı');
   await guest.getByRole('button', { name: 'Kahvaltı', exact: true }).click(); await expect(guest.getByRole('button', { name: /Simit tabağı/ })).toBeVisible();
   await context.close();
 });
