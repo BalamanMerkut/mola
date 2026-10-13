@@ -320,3 +320,9 @@ input[type="checkbox"]{border-radius:4px}
 .backup-place-state.ok{background:#e7f4ec;color:#2f6b55}.backup-place-state.bad{background:#fdecea;color:#a3352b}.backup-place-state.off{background:#f1f3f0;color:#7b867f}
 .backup-places-error{margin:0 0 8px;color:#a3352b;font-size:13px}
 @media (max-width:640px){.backup-place{grid-template-columns:auto 1fr;grid-template-areas:'i t' 's a'}.backup-place-icon{grid-area:i}.backup-place-text{grid-area:t}.backup-place-state{grid-area:s;justify-self:start}.backup-place-action{grid-area:a;justify-self:end}}
+/* Güvenlik ve yedek → Yeni bilgisayar için e-posta (13 Ekim): one field and its button on one line; stacked on a phone. */
+.owner-email-form{display:flex;flex-direction:column;gap:8px}
+.owner-email-form label{font-weight:600}
+.owner-email-row{display:flex;gap:8px}
+.owner-email-row input{flex:1;min-width:0;min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;font:inherit}
+@media(max-width:520px){.owner-email-row{flex-direction:column}}

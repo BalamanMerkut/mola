@@ -1,6 +1,6 @@
 {
   "name": "mola-cafe",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "author": "Merkut Studios",
   "type": "module",
@@ -19,6 +19,7 @@
     "merkez:linux-paket": "node scripts/merkez-linux-paket.mjs",
     "vds": "tsx --disable-warning=ExperimentalWarning scripts/vds.ts",
     "vds:cek": "tsx --disable-warning=ExperimentalWarning scripts/vds-cek.ts",
+    "bilgisayar:yedek": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bilgisayar-yedek.ps1",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "node scripts/browser-tests.mjs",

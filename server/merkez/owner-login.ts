@@ -5,7 +5,7 @@ import { DomainError } from '../../packages/domain/engine.js';
 import { verifierMatches, type OwnerVerifier } from '../key-vault.js';
 import { MERKEZ_API, type SyncRequest } from '../sync-protocol.js';
 import { clientKey } from '../http-security.js';
-import { addAlert } from './alerts.js';
+import { addAlert, queueMail } from './alerts.js';
 import { sendMail } from './mail.js';
 import type { BackupVault } from './backup-vault.js';
 import type { MerkezBusiness, MerkezData, MerkezStore } from './store.js';
@@ -24,7 +24,8 @@ import type { MerkezBusiness, MerkezData, MerkezStore } from './store.js';
  * Every wrong answer is the same sentence (nobody learns which part was wrong), and both steps are slowed per address and
  * per business.
  */
-export type OwnerLogin = { username: string; stamp: string; verifier: OwnerVerifier; updatedAt: string };
+/** `email`: the owner's own address from the café (Ayarlar), next to the application's invoice e-mail (a business with no application). */
+export type OwnerLogin = { username: string; stamp: string; verifier: OwnerVerifier; updatedAt: string; email?: string };
 type Deps = { store: MerkezStore; vault: BackupVault; now: () => Date; limitAddress: (req: Request, purpose: string, max: number, ms: number) => void; send?: typeof sendMail };
 
 /** The heartbeat's verifiers, kept for this install's own businesses (a changed password replaces the old one). */
@@ -32,9 +33,9 @@ export function recordOwners(d: MerkezData, mine: MerkezBusiness[], sent: SyncRe
   for (const o of sent ?? []) {
     const b = mine.find(x => x.tenantId === o.tenantId);
     if (!b) continue;
-    const username = o.username.trim().toLowerCase();
-    if (b.ownerLogin?.stamp === o.stamp && b.ownerLogin.username === username) continue;
-    b.ownerLogin = { username, stamp: o.stamp, verifier: o.verifier, updatedAt: time };
+    const username = o.username.trim().toLowerCase(), email = o.email?.trim().toLowerCase() || undefined;
+    if (b.ownerLogin?.stamp === o.stamp && b.ownerLogin.username === username && b.ownerLogin.email === email) continue;
+    b.ownerLogin = { username, stamp: o.stamp, verifier: o.verifier, updatedAt: time, ...(email ? { email } : {}) };
   }
 }
 
@@ -50,18 +51,24 @@ export function ownerLoginRoutes(app: Express, deps: () => Deps) {
   app.use(`${MERKEZ_API}/owner-login`, express.json({ limit: '4kb' }));
   const pending = new Map<string, Pending>(), perBusiness = new Map<string, { count: number; until: number }>();
   const sweep = (t: number) => { for (const [k, p] of pending) if (p.until <= t) pending.delete(k); for (const [k, v] of perBusiness) if (v.until <= t) perBusiness.delete(k); };
-  /** Businesses whose invoice e-mail is this one (contact index: keyed hashes, never a second plain copy). */
+  /**
+   * Businesses whose invoice e-mail is this one (contact index: keyed hashes, never a second plain copy), or whose owner
+   * wrote it in the café's Ayarlar (`ownerLogin.email`). `to`: where the code goes, the address that matched.
+   */
   function byEmail(store: MerkezStore, email: string) {
     const rows = store.db.prepare("SELECT tenant FROM contact_index WHERE hash=? AND kind='email'").all(store.contactHash('email', email)) as { tenant: string }[];
-    const tenants = new Set(rows.map(r => r.tenant));
-    return store.read().businesses.filter(b => tenants.has(b.tenantId) && !b.suspended && b.installId);
+    const tenants = new Set(rows.map(r => r.tenant)), typed = email.trim().toLowerCase();
+    return store.read().businesses.filter(b => !b.suspended && b.installId).flatMap(b =>
+      tenants.has(b.tenantId) ? [{ b, to: b.invoice?.email ?? email.trim() }] : b.ownerLogin?.email === typed ? [{ b, to: b.ownerLogin.email }] : []);
   }
+  /** Every address of a business, for the "yeni bilgisayar" notice: invoice and the owner's own, once each. */
+  const addresses = (b: MerkezBusiness) => [...new Set([b.invoice?.email, b.ownerLogin?.email].filter((x): x is string => !!x).map(x => x.trim().toLowerCase()))];
   app.post(`${MERKEZ_API}/owner-login/start`, async (req, res) => {
     const { store, now, limitAddress, send = sendMail } = deps(), t = now().getTime();
     limitAddress(req, 'owner-login', 10, 15 * 60_000);
     const b = z.object({ email: z.string().trim().min(3).max(120), username: z.string().trim().min(1).max(50), password: z.string().min(1).max(200) }).strict().parse(req.body);
     sweep(t);
-    const username = b.username.toLowerCase(), found = byEmail(store, b.email).find(x => x.ownerLogin?.username === username);
+    const username = b.username.toLowerCase(), match = byEmail(store, b.email).find(x => x.b.ownerLogin?.username === username), found = match?.b;
     if (found) {
       const n = perBusiness.get(found.tenantId);
       if (n && n.until > t && n.count >= 8) throw new DomainError('RATE_LIMIT', 'Bu işletme için çok fazla deneme yapıldı. Bir saat sonra yeniden deneyin.', 429);
@@ -72,7 +79,7 @@ export function ownerLoginRoutes(app: Express, deps: () => Deps) {
       if (found) { const n = perBusiness.get(found.tenantId); if (n && n.until > t) n.count++; else perBusiness.set(found.tenantId, { count: 1, until: t + 3600_000 }); }
       throw new DomainError('OWNER_LOGIN_FAILED', WRONG, 403);
     }
-    const mail = store.read().mail?.settings, email = found.invoice?.email ?? b.email.trim();
+    const mail = store.read().mail?.settings, email = match!.to;
     if (!mail?.enabled) throw new DomainError('MAIL_OFF', 'Doğrulama kodu e-postayla gönderilemiyor (Mola Merkez’in e-posta ayarı kapalı). Mola ekibine ulaşın.', 503);
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0'), ticket = randomBytes(24).toString('base64url');
     try { await send(mail, email, 'Mola · İşletmem var doğrulama kodu', `Merhaba,\n\nMola'yı yeni bir bilgisayarda "${found.name}" işletmesine bağlamak için doğrulama kodunuz:\n\n${code}\n\nKod 10 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı dikkate almayın ve işletme sahibi şifrenizi değiştirin.\n\nMola`); }
@@ -107,6 +114,8 @@ export function ownerLoginRoutes(app: Express, deps: () => Deps) {
     store.mutate(d => {
       d.audit.push({ action: 'owner_login.verified', target: biz.tenantId, at: time, by: 'cafe', detail: `İşletmem var: sahip yeni bir bilgisayarda doğrulandı${cloud ? ' (sunucu yedeği açıldı)' : ''}` });
       addAlert(d, time, 'cafe.cloud_backup', `${biz.name}: işletme sahibi yeni bir bilgisayarda kendi şifresi ve e-posta koduyla giriş yaptı ("İşletmem var"). Yeni bilgisayar bağlanınca eski bilgisayarda sipariş kapanır.`, { tenantId: biz.tenantId, title: 'İşletmem var: yeni bilgisayar' });
+      // 13 Ekim: the owner hears it too, at every address of the business (the mail queue retries; SMTP off: nothing goes).
+      if (d.mail?.settings?.enabled) for (const to of addresses(biz)) queueMail(d, time, 'Mola · İşletmeniz yeni bir bilgisayarda açıldı', `Merhaba,\n\n"${biz.name}" işletmeniz ${time.slice(0, 16).replace('T', ' ')} (UTC) itibarıyla Mola'da yeni bir bilgisayara taşındı ("İşletmem var": işletme sahibi şifresi ve e-posta koduyla).${cloud ? ' Veriler Mola Merkez\'deki şifreli yedekten indiriliyor.' : ''}\n\nYeni bilgisayar internete bağlanınca eski bilgisayarda sipariş alınmaz.\n\nBunu siz yapmadıysanız hemen Mola ekibini arayın ve işletme sahibi şifrenizle e-posta şifrenizi değiştirin.\n\nMola`, undefined, to);
     });
     res.json({ name: biz.name, tenantId: biz.tenantId, cloud });
   });

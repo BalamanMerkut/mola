@@ -11,7 +11,7 @@ import { bilinenParmakIzleri, hazirIslem, komutSatiri, Ssh, sshArgumanlari, type
 import { tarOku, TarHatasi, tarYaz } from '../scripts/vds/tar.js';
 import { GOREV_ADI, gunlugeYaz, kilitAl, zamanlaKomutu, zamanlamayiKaldirKomutu } from '../scripts/vds/yardimci.js';
 import { WorkFolder } from '../server/merkez/workfolder.js';
-import { agac, calismaYaz, gecici, sha, yaz, yedekAdi, yedekYaz } from './vds-fixture.js';
+import { agac, calismaYaz, gecici, kafeYaz, kurulumAdi, sha, yaz, yedekAdi, yedekYaz } from './vds-fixture.js';
 
 /*
  * "npm run vds" and "npm run vds:cek" without a server: settings (bad host strings, paths with spaces and Turkish letters),
@@ -375,5 +375,50 @@ test('the real read-only helper (Git bash): listing, hashes, tar stream into vds
     const p: Buffer[] = []; const i = c2('liste'); for await (const b of i.cikti) p.push(b as Buffer); await i.bitti;
     const l = listeCoz(Buffer.concat(p));
     assert.equal(l.calismaKok, null, yanlis); assert.ok(!l.dosyalar.some(d => d.kok === 'calisma'));
+  }
+});
+
+test('the real helper (Git bash): the cafés\' copies beside the data folder, never yukleme/ nor the data folder; into kafe-yedekleri\\', { skip: process.platform !== 'win32' || !existsSync(BASH) ? 'Git for Windows bash yok' : false }, async t => {
+  const kok = gecici('yardimci kafe'); t.after(() => rmSync(kok, { recursive: true, force: true }));
+  const merkez = join(kok, 'mola-merkez'), veri = join(merkez, 'veri'), kafe = join(merkez, 'veri-sunucu-yedekleri'), u = kurulumAdi(1);
+  yaz(veri, 'development.key', 'GİZLİ ANAHTAR');
+  const parcalar = kafeYaz(kafe, u, { buyuk: true });
+  const calistir = yardimciKur(kok, `MERKEZ_DATA_DIR=${msys(veri)}\n`);
+  const yaziyla = async (alt: string, girdi?: Buffer) => { const p: Buffer[] = []; const i = calistir(alt, girdi); for await (const b of i.cikti) p.push(b as Buffer); return { ...(await i.bitti), cikti: Buffer.concat(p) }; };
+  assert.match((await yaziyla('surum')).cikti.toString('utf8'), new RegExp(`\\nkafe\\t${msys(kafe).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\n$`));
+  const liste = listeCoz((await yaziyla('liste')).cikti);
+  assert.equal(liste.kafeKok, msys(kafe)); assert.equal(liste.bozuk, 0);
+  assert.deepEqual(liste.dosyalar.filter(d => d.kok === 'kafe').map(d => d.yol).sort(), agac(kafe).filter(f => !f.includes('/yukleme/')), 'everything but uploads in progress');
+  assert.equal(liste.dosyalar.find(d => d.yol === `${u}/parcalar/${parcalar[0]}`)!.ozet, null, 'over 1 MB: the name is the hash');
+  assert.equal(liste.dosyalar.find(d => d.yol === `${u}/parcalar/${parcalar[1]}`)!.ozet, parcalar[1]);
+  // An upload in progress, the data folder, "..": no hash, no tar entry.
+  const yukleme = agac(kafe).filter(f => f.includes('/yukleme/')).map(f => `kafe/${f}`);
+  const kotu = [...yukleme, 'kafe/../veri/development.key', `kafe/${u}/../../veri/development.key`, 'kafe/', `kafe/${u}/parcalar/yok`];
+  assert.equal(yukleme.length, 2);
+  assert.equal((await yaziyla('ozet', Buffer.from(kotu.map(k => `${k}\0`).join('')))).cikti.length, 0);
+  const tar = await yaziyla('paket', Buffer.from(kotu.map(k => `${k}\0`).join('')));
+  assert.equal(tar.cikti.includes(Buffer.from('GİZLİ ANAHTAR')), false); assert.equal(tar.cikti.includes(Buffer.from('yarım yükleme')), false);
+  assert.ok((await yaziyla('ozet', Buffer.from(`kafe/${u}/durum.json\0`))).cikti.toString('utf8').endsWith(`\tkafe/${u}/durum.json\0`));
+
+  // The whole copy through the real helper.
+  const sahteSsh: Calistirici = (_p, args, girdi) => calistir(args.at(-1)!.slice(OKU.length + 1), girdi);
+  const hedef = join(kok, 'Masaüstü', 'vds');
+  const s = await cek(new KaynakSsh(new Ssh(ornek({ hedef }), sahteSsh, 'ssh')), { hedef, ikinci: null, yedekSayisi: 14 });
+  assert.deepEqual(s.hatalar, []); assert.deepEqual(s.atlanan, []);
+  assert.ok(!s.uyarilar.some(x => /kafe yedek|okuma yardımcısı/.test(x)), s.uyarilar.join(' | '));
+  assert.deepEqual(agac(join(hedef, 'kafe-yedekleri')), agac(kafe).filter(f => !f.includes('/yukleme/')));
+  for (const h of parcalar) assert.equal(sha(readFileSync(join(hedef, 'kafe-yedekleri', u, 'parcalar', h))), h);
+
+  // MERKEZ_CLOUD_BACKUP_DIR wins; pointing at (or above) the data folder it is never read.
+  const baska = join(kok, 'baska-yer');
+  kafeYaz(baska, kurulumAdi(2));
+  for (const [ayar, beklenen] of [[msys(baska), msys(baska)], [msys(veri), null], [msys(merkez), null]] as const) {
+    const c2 = yardimciKur(kok, `MERKEZ_DATA_DIR=${msys(veri)}\nMERKEZ_CLOUD_BACKUP_DIR=${ayar}\n`);
+    const p: Buffer[] = []; const i = c2('liste'); for await (const b of i.cikti) p.push(b as Buffer); await i.bitti;
+    const l = listeCoz(Buffer.concat(p));
+    assert.equal(l.kafeKok, beklenen, ayar);
+    assert.ok(!l.dosyalar.some(d => /development\.key/.test(d.yol)));
+    if (beklenen) assert.ok(l.dosyalar.some(d => d.yol.startsWith(`${kurulumAdi(2)}/`)));
+    else assert.ok(!l.dosyalar.some(d => d.kok === 'kafe'));
   }
 });

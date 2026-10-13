@@ -10,7 +10,7 @@ import { cloudFolder } from '../../server/merkez/workfolder.js';
  */
 export const AYAR_DOSYASI = '.local/vds.json';
 export const VARSAYILAN_HEDEF = 'C:\\MolaCalisma\\vds';
-/** The folder made inside the optional second (Google Drive) place: only encrypted Merkez backups go there. */
+/** The folder made inside the optional second (Google Drive) place: only encrypted Merkez backups go there (never the cafés' copies). */
 export const IKINCI_KLASOR = 'Mola-Merkez-VDS';
 export const UZAK_VARSAYILAN = { veri: '/var/lib/mola-merkez/veri', calisma: '/var/lib/mola-merkez/calisma', yedek: '/var/lib/mola-merkez/merkez-yedek' } as const;
 
@@ -29,9 +29,9 @@ export type VdsAyar = {
   merkezPort: number;
   /** The web site's domain: the four certificate names are it, www., merkez., menu. */
   alanAdi: string;
-  /** This PC: the work folder copy and the Merkez backups (not cloud-synced). */
+  /** This PC: the work folder copy, the Merkez backups and the cafés' "Sunucu yedeği" copies (not cloud-synced). */
   hedef: string;
-  /** Optional second place (Google Drive folder): only the encrypted backups, never the work folder (KVKK). */
+  /** Optional second place (Google Drive folder): only the encrypted Merkez backups, never the work folder or the cafés' copies (KVKK). */
   ikinciHedef: string | null;
   /** How many newest Merkez backups are kept (here and in the second place); Merkez keeps 14 too. */
   yedekSayisi: number;
@@ -102,7 +102,7 @@ export function ayarDenetle(girdi: unknown): VdsAyar {
 
 /** The four names Caddy holds a certificate for (docs/VDS_KURULUM.md bölüm 13). */
 export const sertifikaAdlari = (a: Pick<VdsAyar, 'alanAdi'>) => [a.alanAdi, `www.${a.alanAdi}`, `merkez.${a.alanAdi}`, `menu.${a.alanAdi}`];
-/** The local target is cloud-synced (OneDrive, Google Drive…): support tickets (personal data) are then not copied there. */
+/** The local target is cloud-synced (OneDrive, Google Drive…): support tickets (personal data) and the cafés' copies are then not copied there. */
 export const hedefBulutta = (a: Pick<VdsAyar, 'hedef'>, env = process.env) => cloudFolder(a.hedef, env);
 
 export function ayarOku(dosya = AYAR_DOSYASI): VdsAyar | null {

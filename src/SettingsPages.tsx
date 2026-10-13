@@ -1,5 +1,5 @@
 import { lazy, useEffect, useId, useState, type ReactNode } from 'react';
-import { Building2, Check, ClipboardCheck, Cloud, CreditCard, DatabaseBackup, Download, FolderOpen, Footprints, HardDrive, KeyRound, LayoutGrid, Info, MapPin, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone, Usb } from 'lucide-react';
+import { Building2, Check, ClipboardCheck, Mail, Cloud, CreditCard, DatabaseBackup, Download, FolderOpen, Footprints, HardDrive, KeyRound, LayoutGrid, Info, MapPin, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone, Usb } from 'lucide-react';
 import { Moved, PlaceLink } from './Moved';
 import { PhonePairing } from './PhonePairing';
 import QRCode from 'qrcode';
@@ -287,12 +287,42 @@ function BackupPlaces({ backup }: { backup: Backup }) {
     <p className="muted small">İndirilen yedek şifrelidir; yalnız işletmenizin kurtarma koduyla ya da yeni bilgisayarda “İşletmem var” girişiyle açılır.{backup.kept ? ` Bu bilgisayarda ${backup.kept} yedek saklanıyor.` : ''}</p>
   </div>;
 }
+/**
+ * "İşletmem var" e-postası (13 Ekim): where the 6-digit code goes when the owner moves to a new computer, and where the
+ * "yeni bilgisayarda açıldı" notice goes. The application's e-mail counts already; a business activated with the Mola
+ * team's code (no application) writes one here. The owner's own account only (the server refuses others: card hidden).
+ */
+function OwnerEmailCard() {
+  const id = useId(), [saved, setSaved] = useState<string | null | undefined>(undefined), [value, setValue] = useState(''), [busy, setBusy] = useState(false), [note, setNote] = useState<{ tone: 'error' | 'success'; text: string } | null>(null);
+  useEffect(() => { void api<{ email: string | null }>('/api/staff/owner-email').then(r => { setSaved(r.email); setValue(r.email ?? ''); }, () => setSaved(undefined)); }, []);
+  if (saved === undefined) return null;
+  const changed = value.trim().toLowerCase() !== (saved ?? '');
+  async function save() {
+    setBusy(true); setNote(null);
+    try { const r = await api<{ email: string | null }>('/api/staff/owner-email', { requestId: requestId(), email: value.trim() }); setSaved(r.email); setValue(r.email ?? ''); setNote({ tone: 'success', text: r.email ? 'Kaydedildi. Mola Merkez birkaç saniye içinde öğrenir.' : 'Kaldırıldı. Başvurudaki e-posta kullanılır.' }); }
+    catch (e) { setNote({ tone: 'error', text: (e as Error).message }); } finally { setBusy(false); }
+  }
+  return <Card icon={<Mail size={18} aria-hidden="true" />} title="Yeni bilgisayar için e-posta" className="owner-email-card"
+    lead="Bilgisayarınız değişirse “İşletmem var” ile girersiniz; 6 haneli kod bu adrese gelir. Başka bir bilgisayarda açılırsa da buraya haber verilir."
+    tip="Hesap açma başvurusunda yazdığınız e-posta zaten geçerlidir. Mola ekibinin koduyla etkinleştirdiyseniz (başvuru yapmadıysanız) ya da adresiniz değiştiyse buraya yazın. Yalnız işletme sahibi görür ve değiştirir.">
+    <form className="owner-email-form" onSubmit={e => { e.preventDefault(); if (changed) void save(); }}>
+      <label htmlFor={id}>E-posta adresi</label>
+      <div className="owner-email-row">
+        <input id={id} type="email" autoComplete="email" maxLength={120} value={value} disabled={busy} onChange={e => { setValue(e.target.value); setNote(null); }} placeholder="ör. ayse@ornekkafe.com" />
+        <button className="btn primary small-btn" disabled={busy || !changed}>{busy ? 'Kaydediliyor…' : value.trim() ? 'Kaydet' : 'Kaldır'}</button>
+      </div>
+      {!saved && <p className="muted small">Boş: hesap açma başvurusundaki e-posta kullanılır. Başvuru yapmadıysanız mutlaka yazın.</p>}
+      {note && <Notice tone={note.tone}>{note.text}</Notice>}
+    </form>
+  </Card>;
+}
 /** Güvenlik ve yedek → Yedek: the backup state and the rail's tools; the "Tanıtım işletmesi" reset; "Açık oturumlar" link. */
 export function BackupPage({ backup }: { backup: Backup | null }) {
   const desktop = typeof document !== 'undefined' && document.body.classList.contains('desktop-shell'), pk = usePackage();
   return <>
     {backup?.enabled && <Card icon={<MapPin size={18} aria-hidden="true" />} title="Yedekleriniz nerede?" className="backup-places-card"><BackupPlaces backup={backup} /></Card>}
-    <Card icon={<DatabaseBackup size={18} aria-hidden="true" />} title="Yedek" lead="Satışlarınız, menünüz ve ayarlarınız her gece 03:30'da şifreli olarak yedeklenir.">
+    <OwnerEmailCard />
+    <Card icon={<DatabaseBackup size={18} aria-hidden="true" />} title="Yedek" lead="Satışlarınız, menünüz ve ayarlarınız gün sonundan 1 dakika sonra ve gece 03:30'da şifreli olarak yedeklenir (bilgisayar gece kapalıysa açılınca).">
       {!backup ? <p className="settings-card-note" aria-busy="true">Yedek durumu okunuyor…</p> : !backup.enabled ? <div className="settings-status warn"><ShieldAlert size={20} aria-hidden="true" /><div><strong>Bu kurulumda otomatik yedek kapalı.</strong><span>Mola ekibine danışın.</span></div></div>
         : <div className={`settings-status settings-backup ${backup.healthy || !backup.lastSuccessAt ? 'ok' : 'warn backup-warn'}`}>{backup.healthy || !backup.lastSuccessAt ? <ShieldCheck size={20} aria-hidden="true" /> : <ShieldAlert size={20} aria-hidden="true" />}<div>
           <strong>{!backup.lastSuccessAt ? 'İlk otomatik yedek birkaç dakika içinde alınacak.' : backup.healthy ? 'Verileriniz her gece yedekleniyor' : 'Son yedek eski, destekle iletişime geçin.'}</strong>

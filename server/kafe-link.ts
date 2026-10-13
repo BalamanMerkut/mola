@@ -1053,7 +1053,7 @@ export class MerkezLink {
       // İnternetten menü: "this café serves its guest menu through Merkez" (it has the built guest page), only to a Merkez that takes it.
       ...(record.accepts?.includes('guest.tunnel') && !this.closed() && this.tunnelWanted?.() ? { tunnel: { v: 1 as const } } : {}),
       // "İşletmem var": the owners' verifiers, only to a Merkez that keeps them (it checks a sign-in on a new computer with them).
-      ...(record.accepts?.includes('owner.login') && !this.closed() && this.reporter.owners ? { owners: this.reporter.owners().filter(x => open(x.tenantId)).slice(0, 50) } : {}),
+      ...(record.accepts?.includes('owner.login') && !this.closed() && this.reporter.owners ? { owners: this.reporter.owners().filter(x => open(x.tenantId)).slice(0, 50).map(({ email, ...o }) => email && record.accepts?.includes('owner.email') ? { ...o, email } : o) } : {}),
     };
   }
   /** İnternetten menü (server/guest-tunnel.ts): this café can serve its guest menu over the tunnel (the built page is here). */

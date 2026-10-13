@@ -42,7 +42,7 @@ export const REAL_CHANGES: readonly string[] = [
   '/api/staff/products', '/api/staff/products/discard-draft', '/api/staff/photos', '/api/staff/catalog/remove', '/api/staff/photo-trash', '/api/staff/photo-trash/restore',
   '/api/staff/categories', '/api/staff/campaigns', '/api/staff/vat', '/api/staff/vat/apply', '/api/staff/approval-mode', '/api/staff/settings', '/api/staff/qr-printed', '/api/staff/qr-ordering',
   '/api/staff/tables/add', '/api/staff/tables/area', '/api/staff/tables/layout', '/api/staff/tables/area-rename', '/api/staff/table-reminder',
-'/api/staff/tables/remove', '/api/staff/tables/renew-qr', '/api/staff/business-profile', '/api/staff/social-links',
+'/api/staff/tables/remove', '/api/staff/tables/renew-qr', '/api/staff/business-profile', '/api/staff/social-links', '/api/staff/owner-email',
   '/api/staff/sounds', '/api/staff/assignments', '/api/staff/printers', '/api/staff/printers/delete', '/api/staff/kitchen-mode', '/api/staff/first-steps',
   '/api/staff/email-reports', '/api/staff/email-reports/retry', '/api/staff/lock/settings', '/api/staff/update/settings', '/api/staff/demo/reset',
   // Staff and security

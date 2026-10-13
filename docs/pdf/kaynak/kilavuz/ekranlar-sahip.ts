@@ -108,7 +108,8 @@ const garson: Grup = async browser => {
   await sepet.waitFor(); await sleep(400);
   await dene('g-sepet', () => cek(g, 'g-sepet', { isaretler: [
     { n: 1, loc: sepet.getByRole('button', { name: /adedini artır/ }).first(), yon: 'sol' },
-    { n: 2, loc: sepet.getByRole('checkbox', { name: /Paketlensin/ }), yon: 'ust' },
+    // 13 Ekim: "Paket yapılsın" per item and "Hepsini paketle".
+    { n: 2, loc: sepet.getByRole('checkbox', { name: /^Hepsini paketle/ }), yon: 'ust' },
     { n: 3, loc: sepet.getByRole('button', { name: /Gönder|Siparişi gönder/ }).last(), yon: 'ust' },
   ] }));
   await sepet.getByRole('button', { name: /Gönder|Siparişi gönder/ }).last().click();
@@ -126,7 +127,8 @@ const kasiyer: Grup = async (browser, { api, id, ok }) => {
   await giris(k, 'kasiyer'); await sesiAc(k);
   const acilis = k.getByRole('form', { name: 'Kasa açılışı' });
   if (await acilis.isVisible().catch(() => false)) { await acilis.getByRole('textbox').first().fill('500'); await dugme(acilis, 'Açılışı kaydet').click(); await sleep(1000); }
-  // Yazar kasa yardımcısı: bir ödemeden sonra yazar kasaya ne girileceğini söyler.
+  // Yazar kasa yardımcısı: bir ödemeden sonra yazar kasaya ne girileceğini söyler. 11 Ekim'den beri ilk hâli kapalı: çekim için açılır.
+  await ok(await (await api('isletme')).post('/api/staff/cash/settings', { data: { fiscalHelper: true } }), 'yazar kasa yardımcısı');
   const garsonApi = await api('garson');
   const st = await (await garsonApi.get('/api/staff/state')).json();
   const masa = st.tables.find((t: any) => !t.account && !t.needsCleaning && t.name !== 'Masa 05');
@@ -294,7 +296,7 @@ const sahipMenu: Grup = async browser => {
   await git(s, 'Menü yönetimi');
   await dene('s-menu-yonetimi', () => cek(s, 's-menu-yonetimi', { isaretler: [
     { n: 1, loc: dugme(s, 'Ürün ekle'), yon: 'alt' },
-    { n: 2, loc: dugme(s, 'Kategorileri yönet'), yon: 'alt' },
+    { n: 2, loc: dugme(s, 'Kategoriler ve sıra'), yon: 'alt' },
     { n: 3, loc: dugme(s, 'Menüyü önizle'), yon: 'alt' },
     { n: 4, loc: s.getByRole('button', { name: /^Taslaklar/ }).first(), yon: 'alt' },
     { n: 5, loc: s.getByText('Tükendi', { exact: true }).first(), yon: 'sol' },
@@ -384,9 +386,16 @@ const sahipRapor: Grup = async browser => {
     { n: 1, loc: donem, yon: 'alt' },
     { n: 2, loc: s.getByTestId('simple-sentence'), yon: 'alt' },
     { n: 3, loc: dugme(s, 'Detaylı göster'), yon: 'alt' },
-    { n: 4, loc: dugme(s, /Yazdır \/ PDF/, false), yon: 'alt' },
-    { n: 5, loc: dugme(s, /Muhasebeci için indir/, false), yon: 'alt' },
+    // 13 Ekim: Yazdır / PDF, Muhasebeci için indir, Raporları gönder ve telefonda gör tek menüde.
+    { n: 4, loc: dugme(s, 'Yazdır ve paylaş', false), yon: 'alt' },
   ] }));
+  // The menu open: its lines with what each does.
+  await dene('s-rapor-paylas', async () => {
+    await dugme(s, 'Yazdır ve paylaş', false).click(); await sleep(500);
+    const menu = s.getByRole('menu').first();
+    await cek(s, 's-rapor-paylas', { kirp: [dugme(s, 'Yazdır ve paylaş', false), menu], pay: 16, isaretler: [{ n: 1, loc: menu.getByRole('menuitem').first(), yon: 'sol' }] });
+    await s.keyboard.press('Escape'); await sleep(300);
+  });
   await dugme(donem, 'Yıl').click(); await sleep(800);
   const yil = s.getByRole('menu', { name: 'Yıl seçin' });
   await dene('s-rapor-yil', () => cek(s, 's-rapor-yil', { kirp: [donem, yil], pay: 40, isaretler: [{ n: 1, loc: yil, yon: 'sag' }] }));
@@ -405,11 +414,13 @@ const sahipRapor: Grup = async browser => {
   await kdv.scrollIntoViewIfNeeded(); await sleep(500);
   await dene('s-kdv', () => cek(s, 's-kdv', { kirp: kdv, pay: 12 }));
   await s.evaluate(() => scrollTo(0, 0));
-  await dugme(s, /Yazdır \/ PDF/, false).click();
+  await dugme(s, 'Yazdır ve paylaş', false).click(); await sleep(300);
+  await s.getByRole('menuitem', { name: /^Yazdır \/ PDF/ }).click();
   const yaz = s.getByRole('dialog').first(); await yaz.waitFor(); await sleep(1500);
   await dene('s-rapor-yazdir', () => cek(s, 's-rapor-yazdir', { kirp: yaz, pay: 8, isaretler: [{ n: 1, loc: dugme(yaz, 'Yazdır'), yon: 'ust' }, { n: 2, loc: dugme(yaz, 'PDF indir'), yon: 'ust' }] }));
   await s.keyboard.press('Escape'); await sleep(500);
-  await dugme(s, /Muhasebeci için indir/, false).click();
+  await dugme(s, 'Yazdır ve paylaş', false).click(); await sleep(300);
+  await s.getByRole('menuitem', { name: /^Muhasebeci için indir/ }).click();
   const muh = s.getByRole('dialog').first(); await muh.waitFor(); await sleep(800);
   await dene('s-muhasebeci', () => cek(s, 's-muhasebeci', { kirp: muh, pay: 8 }));
   await s.keyboard.press('Escape'); await sleep(500);
@@ -478,11 +489,14 @@ const sahipAyarlar: Grup = async (browser, { sahip }) => {
   await ayar(s, 'İşletme', 'Sosyal medya');
   await dene('s-sosyal', async () => cek(s, 's-sosyal', { kirp: await ayarAlani(s), isaretler: [
     { n: 1, loc: s.getByLabel('Instagram', { exact: true }), yon: 'sag' },
-    { n: 2, loc: dugme(s, 'Instagram için QR oluştur'), yon: 'sol' },
+    // "(pakette yok)" follows the name when the sample's package lacks Sosyal medya.
+    { n: 2, loc: dugme(s, /^Instagram için QR oluştur/, false), yon: 'sol' },
   ] }));
   // E-posta raporları: Satış ve Raporlar → "Raporları gönder" (10 Ekim) opens a window; it is shot and closed again (the
   // Ayarlar crop measured the topic bar, absent there, and the open window then blocked every later shot of this group).
-  await git(s, 'Satış ve Raporlar'); await dugme(s, 'Raporları gönder').click(); await sleep(900);
+  // 13 Ekim: under "Yazdır ve paylaş".
+  await git(s, 'Satış ve Raporlar'); await dugme(s, 'Yazdır ve paylaş', false).click(); await sleep(300);
+  await s.getByRole('menuitem', { name: /^Raporları gönder/ }).click(); await sleep(900);
   const eposta = s.getByRole('dialog').last();
   await dene('s-eposta', async () => cek(s, 's-eposta', { kirp: eposta, pay: 8 }));
   await s.keyboard.press('Escape'); await sleep(400);
@@ -681,7 +695,9 @@ const sahipPaket: Grup = async (browser, { durum }) => {
 };
 
 // ---------------------------------------------------------------- Gün sonu (en son: kasa günü kapanır)
-const gunSonu: Grup = async browser => {
+const gunSonu: Grup = async (browser, { api, ok }) => {
+  // Z raporu karşılaştırması yalnız yazar kasa yardımcısı açıkken çıkar (ilk hâli kapalı; bu grup tek başına da çalışır).
+  await ok(await (await api('isletme')).post('/api/staff/cash/settings', { data: { fiscalHelper: true } }), 'yazar kasa yardımcısı');
   const k = await yeniSayfa(browser, 'masaustu', { yukseklik: 900 });
   await giris(k, 'kasiyer'); await sesiAc(k);
   // The "Girildi işaretlenmemiş" list shows only once the café uses "Girildi" that day: one of today's payments is marked first.
@@ -700,7 +716,7 @@ const gunSonu: Grup = async browser => {
   const z = d.getByRole('region', { name: 'Yazar kasa karşılaştırması' });
   if (await z.isVisible().catch(() => false)) { await z.getByLabel('Z raporu toplamı').fill('560').catch(() => {}); }
   await sleep(500);
-  await dene('c-gun-sonu-sonuc', () => cek(k, 'c-gun-sonu-sonuc', { kirp: d, pay: 10, isaretler: [{ n: 1, loc: d.getByText(/Sayılan/).first(), yon: 'alt' }, { n: 2, loc: d.getByLabel(/Z raporu toplamı/).first(), yon: 'ust' }, { n: 3, loc: d.getByRole('button', { name: 'Girildi' }).first(), yon: 'ust' }] }));
+  await dene('c-gun-sonu-sonuc', () => cek(k, 'c-gun-sonu-sonuc', { kirp: d, pay: 10, isaretler: [{ n: 1, loc: d.getByText(/Sayılan/).first(), yon: 'alt' }, { n: 2, loc: d.getByLabel(/Z raporu toplamı/).first(), yon: 'ust' }] }));
   // Kapanışı tamamla: QR siparişleri gün sonundan sonra durur; sol menünün üstündeki kart (10 Ekim) "QR siparişleri kapalı ·
   // Gün sonu yapıldı" ve "Siparişleri aç" der, Masalar'ın üstünde ince sarı şerit çıkar.
   await dene('c-qr-durumu', async () => {

@@ -1,5 +1,6 @@
-// npm run vds:cek: the VDS's Mola çalışma klasörü and newest Merkez backups → this PC (and the encrypted backups only →
-// Google Drive). Read-only on the server (scripts/linux/mola-oku through sudo -n -u mola). Step by step: docs/VDS_KURULUM.md
+// npm run vds:cek: the VDS's Mola çalışma klasörü, newest Merkez backups and the cafés' encrypted "Sunucu yedeği" copies →
+// this PC (and the encrypted Merkez backups only → Google Drive; the cafés' copies never: KVKK). Read-only on the server
+// (scripts/linux/mola-oku through sudo -n -u mola). Step by step: docs/VDS_KURULUM.md
 // bölüm 15. Logic: scripts/vds/cek.ts; settings: .local/vds.json (scripts/vds/ayar.ts).
 //
 //   npm run vds:cek -- --kur --host yonetici@<IP> [--anahtar C:\Users\…\.ssh\id_ed25519] [--port 22] [--hedef C:\MolaCalisma\vds]
@@ -27,7 +28,8 @@ function deger(ad: string) {
 const BILINEN = ['kur', 'host', 'anahtar', 'port', 'hedef', 'ikinci', 'yedek-sayisi', 'alan-adi', 'merkez-port', 'onayla', 'zamanla', 'zamanlamayi-kaldir', 'yardim'];
 
 function yardim() {
-  console.log(`Mola: VDS'ten çalışma klasörü ve Merkez yedeklerini bu bilgisayara çeker (sunucuda hiçbir şey değiştirmez).
+  console.log(`Mola: VDS'ten çalışma klasörü, Merkez yedekleri ve kafelerin şifreli sunucu yedeklerini bu bilgisayara çeker
+(sunucuda hiçbir şey değiştirmez).
 
   npm run vds:cek -- --kur --host yonetici@<IP> [--anahtar <özel anahtar>] [--port 22] [--hedef C:\\MolaCalisma\\vds]
                        [--ikinci "<Google Drive klasörü>" | --ikinci yok] [--yedek-sayisi 14] [--alan-adi molayazilim.com.tr]
@@ -49,8 +51,8 @@ async function kur() {
   }));
   console.log(`Kaydedildi: .local\\vds.json
   Sunucu:        ${ayar.sunucu} (port ${ayar.port})${ayar.anahtar ? `, anahtar ${ayar.anahtar}` : ', anahtar: ssh-agent / varsayılan'}
-  Bu bilgisayar: ${ayar.hedef}${hedefBulutta(ayar) ? '  (bulut klasörü: destek talepleri buraya kopyalanmaz)' : ''}
-  İkinci yer:    ${ayar.ikinciHedef ? `${ikinciKlasor(ayar)} (yalnız şifreli Merkez yedekleri)` : 'yok'}
+  Bu bilgisayar: ${ayar.hedef}${hedefBulutta(ayar) ? '  (bulut klasörü: destek talepleri ve kafe yedekleri buraya kopyalanmaz)' : ''}
+  İkinci yer:    ${ayar.ikinciHedef ? `${ikinciKlasor(ayar)} (yalnız şifreli Merkez yedekleri; kafe yedekleri gitmez)` : 'yok'}
   Yedek sayısı:  ${ayar.yedekSayisi} · alan adı ${ayar.alanAdi} · parmak izi ${ayar.parmakIzi ?? 'henüz onaylanmadı'}`);
   if (!ayar.ikinciHedef) {
     const drive = (await backupPlaces().catch(() => [])).filter(p => p.kind === 'gdrive');

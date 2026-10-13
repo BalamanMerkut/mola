@@ -23,24 +23,29 @@ export function agac(kok: string, alt = ''): string[] {
   let girdiler: string[]; try { girdiler = readdirSync(join(kok, alt)); } catch { return []; }
   return girdiler.flatMap(f => { const y = alt ? `${alt}/${f}` : f; return statSync(join(kok, y)).isDirectory() ? agac(kok, y) : [y]; }).sort();
 }
-export const UZAK_CALISMA = '/var/lib/mola-merkez/calisma', UZAK_YEDEK = '/var/lib/mola-merkez/merkez-yedek';
+export const UZAK_CALISMA = '/var/lib/mola-merkez/calisma', UZAK_YEDEK = '/var/lib/mola-merkez/merkez-yedek', UZAK_KAFE = '/var/lib/mola-merkez/veri-sunucu-yedekleri';
 
 export class YerelKaynak implements Kaynak {
   /** bozan: changes what the "server" sends for a name (a damaged transfer). */
   bozan?: (ad: string, veri: Buffer) => Buffer;
   istenenPaketler: string[][] = []; istenenOzetler: string[][] = [];
-  constructor(public calisma: string, public yedek: string, public kokler = { calisma: UZAK_CALISMA as string | null, yedek: UZAK_YEDEK as string | null }) {}
-  private tam(ad: string) { const [kok, ...p] = ad.split('/'); return join(kok === 'calisma' ? this.calisma : this.yedek, ...p); }
+  /**
+   * kafe: the folder playing <veri>-sunucu-yedekleri (null: not there). kokler.kafe undefined plays an older helper whose
+   * listing has no third folder (and lists none of its files).
+   */
+  constructor(public calisma: string, public yedek: string, public kokler: { calisma: string | null; yedek: string | null; kafe?: string | null } = { calisma: UZAK_CALISMA, yedek: UZAK_YEDEK, kafe: UZAK_KAFE }, public kafe: string | null = null) {}
+  private tam(ad: string) { const [kok, ...p] = ad.split('/'); return join(kok === 'calisma' ? this.calisma : kok === 'kafe' ? this.kafe ?? '' : this.yedek, ...p); }
   async liste(): Promise<Liste> {
     const dosyalar: UzakDosya[] = [];
-    for (const [kok, klasor, derinlik] of [['calisma', this.calisma, 6], ['yedek', this.yedek, 2]] as const) {
+    const kokler = [['calisma', this.calisma, 6], ['yedek', this.yedek, 2], ...(this.kafe && this.kokler.kafe !== undefined ? [['kafe', this.kafe, 3] as const] : [])] as const;
+    for (const [kok, klasor, derinlik] of kokler) {
       for (const yol of agac(klasor)) {
-        if (yol.split('/').length > derinlik) continue;
+        if (yol.split('/').length > derinlik || (kok === 'kafe' && yol.split('/').includes('yukleme'))) continue;
         const st = statSync(join(klasor, ...yol.split('/')));
         dosyalar.push({ kok, yol, boyut: st.size, zaman: Math.floor(st.mtimeMs / 1000), ozet: st.size <= 1048576 ? sha(readFileSync(join(klasor, ...yol.split('/')))) : null });
       }
     }
-    return { calismaKok: this.kokler.calisma, yedekKok: this.kokler.yedek, dosyalar, bozuk: 0 };
+    return { calismaKok: this.kokler.calisma, yedekKok: this.kokler.yedek, ...(this.kokler.kafe !== undefined ? { kafeKok: this.kokler.kafe } : {}), dosyalar, bozuk: 0 };
   }
   async ozetler(adlar: string[]) {
     this.istenenOzetler.push(adlar);
@@ -52,9 +57,10 @@ export class YerelKaynak implements Kaynak {
     this.istenenPaketler.push(adlar);
     const girdiler: { ad: string; veri: Buffer }[] = [];
     for (const ad of adlar) {
+      if (ad.startsWith('kafe/') && ad.split('/').includes('yukleme')) continue; // as the helper's coz()
       let veri: Buffer; try { veri = readFileSync(this.tam(ad)); } catch { continue; }
       const [kok, ...p] = ad.split('/');
-      girdiler.push({ ad: `${(kok === 'calisma' ? this.kokler.calisma : this.kokler.yedek)!.slice(1)}/${p.join('/')}`, veri: this.bozan ? this.bozan(ad, veri) : veri });
+      girdiler.push({ ad: `${(kok === 'calisma' ? this.kokler.calisma : kok === 'kafe' ? this.kokler.kafe : this.kokler.yedek)!.slice(1)}/${p.join('/')}`, veri: this.bozan ? this.bozan(ad, veri) : veri });
     }
     return hazirIslem(tarYaz(girdiler));
   }
@@ -70,6 +76,22 @@ export function yedekYaz(yedek: string, ad: string, createdAt: string, o: { buyu
   if (o.yarim) yaz(k, 'YEDEK_SURUYOR.txt', 'Yedek henüz tamamlanmadı.');
   else { yaz(k, 'complete.json', JSON.stringify({ format: 1, kind: 'merkez', createdAt, files: 2 })); yaz(k, 'verification.json', JSON.stringify({ verified: true })); }
   return k;
+}
+/**
+ * One café's "Sunucu yedeği" as server/merkez/backup-vault.ts keeps it under <veri>-sunucu-yedekleri: blobs named by their
+ * SHA-256, a copy naming them, durum.json, and an upload in progress (yukleme/, never copied). Returns the blob names.
+ */
+export const kurulumAdi = (n: number) => `${String(n).padStart(8, '0')}-1111-4222-8333-444455556666`;
+export function kafeYaz(kafe: string, kurulum: string, o: { buyuk?: boolean; kopya?: string } = {}) {
+  yaz(kafe, 'BENIOKU.txt', 'MOLA MERKEZ: SUNUCU YEDEKLERİ\r\n');
+  const parcalar = [randomBytes(o.buyuk ? 1_200_000 : 3000), randomBytes(500)].map(veri => { const h = sha(veri); yaz(kafe, `${kurulum}/parcalar/${h}`, veri); return h; });
+  const kopya = o.kopya ?? 'backup-2026-10-12T00-30-00';
+  yaz(kafe, `${kurulum}/kopyalar/${kopya}.json`, JSON.stringify({ id: kopya, installId: kurulum, files: parcalar.map((h, i) => ({ name: `${i}.bin`, sha256: h })) }));
+  yaz(kafe, `${kurulum}/durum.json`, JSON.stringify({ lastUploadAt: '2026-10-12T00:31:00.000Z', lastCopyId: kopya }));
+  const yukleme = randomBytes(16).toString('hex');
+  yaz(kafe, `${kurulum}/yukleme/${yukleme}.json`, JSON.stringify({ id: yukleme }));
+  yaz(kafe, `${kurulum}/yukleme/${yukleme}/${'a'.repeat(64)}.part`, 'yarım yükleme');
+  return parcalar;
 }
 export const yedekAdi = (gun: number, saat = '00-30') => `merkez-yedek-2026-10-${String(gun).padStart(2, '0')}T${saat}-00-000Z-${String(gun).padStart(2, '0')}abcdef`;
 

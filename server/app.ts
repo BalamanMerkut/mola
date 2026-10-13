@@ -857,7 +857,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     failures: since => failures.since(since),
     // Sosyal medya: the guest menu's public links (Google review included), for the permanent QR codes' short addresses at Merkez.
     social: () => (store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]).map(({ tenant }) => ({ tenantId: tenant, links: socialLinksOf(store.read(tenant)) ?? {} })),
-    owners: () => security?.vault?.ownerLogins() ?? [],
+    owners: () => (security?.vault?.ownerLogins() ?? []).map(o => { let email: string | undefined; try { email = store.read(o.tenantId).ownerEmail; } catch { /* a business no longer here */ } return email ? { ...o, email } : o; }),
   };
   const clean = () => !store.db.prepare('SELECT tenant FROM snapshots LIMIT 1').get() && !link.read();
   restoreRoutes(app, localDesktop, { security, backups, clean });

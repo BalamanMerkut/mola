@@ -43,7 +43,8 @@ test('owner block: the password opens the master key, a wrong one or another bus
 });
 
 /** A real Mola Merkez with mail "on" (codes caught here) and a protected café whose owner has signed in once. */
-async function world(name: string, options: { cloud?: boolean } = {}) {
+/** `ownerEmail`: no application (no invoice e-mail at Merkez); the owner wrote this address in the café's Ayarlar instead. */
+async function world(name: string, options: { cloud?: boolean; ownerEmail?: string } = {}) {
   const dir = temp(name), clock = { t: Date.now() }, now = () => new Date(clock.t), mails: { to: string; text: string }[] = [];
   const merkezStore = new MerkezStore(join(dir, 'merkez'), randomBytes(32), { initialPassword: MERKEZ_PASSWORD });
   const merkezApp = createMerkezApp(merkezStore, { now, cloudBackupMinFreeBytes: 0, ownerLoginMail: async (_s, to, _subject, text) => { mails.push({ to, text }); } });
@@ -61,11 +62,14 @@ async function world(name: string, options: { cloud?: boolean } = {}) {
   assert.equal(r.status, 200, JSON.stringify(r.data));
   link.adopt(r.data);
   // The business's invoice e-mail, as an approved application leaves it (contact index: keyed hashes).
-  merkezStore.mutate(d => { const b = d.businesses.find(x => x.tenantId === 'sahip-a')!; b.invoice = { ...(b.invoice ?? {}), email: EMAIL, phone: '05551112233' } as never; });
-  merkezStore.indexContact('sahip-a', { email: EMAIL, phone: '05551112233' });
+  if (!options.ownerEmail) {
+    merkezStore.mutate(d => { const b = d.businesses.find(x => x.tenantId === 'sahip-a')!; b.invoice = { ...(b.invoice ?? {}), email: EMAIL, phone: '05551112233' } as never; });
+    merkezStore.indexContact('sahip-a', { email: EMAIL, phone: '05551112233' });
+  } else store.mutate('sahip-a', s => { s.ownerEmail = options.ownerEmail; });
   assert.equal(await vault.ensureOwner({ tenantId: 'sahip-a', username: USER, password: PASSWORD, stamp: 'a1b2c3d4e5f6' }), true);
   assert.equal(await vault.ensureOwner({ tenantId: 'sahip-a', username: USER, password: PASSWORD, stamp: 'a1b2c3d4e5f6' }), false, 'the same password is not wrapped again');
-  link.reporter = { ...link.reporter, owners: () => vault.ownerLogins() };
+  // As server/app.ts reports them: each owner's verifier, with the business's own e-mail when the owner wrote one.
+  link.reporter = { ...link.reporter, owners: () => vault.ownerLogins().map(o => { const email = store.read(o.tenantId).ownerEmail; return email ? { ...o, email } : o; }) };
   assert.equal((await link.sync()).ok, true);
   assert.equal((await link.sync()).ok, true); // the second heartbeat knows what this Merkez accepts
   const folders = { backups: join(dir, 'eski', 'backups'), keys: join(dir, 'eski', 'keys'), checks: join(dir, 'eski', 'checks') };
@@ -152,4 +156,34 @@ test('İşletmem var with Sunucu yedeği: the e-mail code opens the copies on Mo
     for (let i = 0; i < 9 && !limited; i++) await w.post('/owner-login/start', { email: EMAIL, username: USER, password: `yanlis-${i}-sifre` }).catch((e: DomainError) => { limited = e.code === 'RATE_LIMIT'; });
     assert.ok(limited, 'per-address or per-business limit reached');
   } finally { await w.close(); }
+});
+
+test('İşletmem var without an application: the owner’s own e-mail (Ayarlar) reaches Merkez and takes the code; a successful sign-in is announced at every address', async () => {
+  const OWN = 'sahip.kendisi@example.com';
+  const w = await world('owner-own-email', { ownerEmail: OWN });
+  try {
+    const kept = w.merkezStore.read().businesses.find(b => b.tenantId === 'sahip-a')!;
+    assert.equal(kept.invoice?.email, undefined, 'no application, no invoice e-mail');
+    assert.equal(kept.ownerLogin?.email, OWN);
+    // The application's address (there is none) does not work; the owner's own does.
+    await assert.rejects(w.post('/owner-login/start', { email: EMAIL, username: USER, password: PASSWORD }), (e: DomainError) => e.code === 'OWNER_LOGIN_FAILED');
+    const started = await w.post<{ ticket: string; email: string }>('/owner-login/start', { email: OWN.toUpperCase(), username: USER, password: PASSWORD });
+    assert.equal(w.mails.at(-1)!.to, OWN); assert.equal(started.email, maskEmail(OWN));
+    const code = /\b(\d{6})\b/.exec(w.mails.at(-1)!.text)![1];
+    await w.post('/owner-login/verify', { ticket: started.ticket, code, requester: w.newVault.installId });
+    // "İşletmeniz yeni bir bilgisayarda açıldı": queued for the mail queue, to the business's address.
+    const notice = (w.merkezStore.read().mail?.queue ?? []).filter(m => /yeni bir bilgisayarda açıldı/.test(m.subject));
+    assert.deepEqual(notice.map(m => m.to), [OWN]);
+    assert.match(notice[0].text, /Bunu siz yapmadıysanız/);
+  } finally { await w.close(); }
+});
+
+test('an older Merkez (no "owner.email") never gets the e-mail field, so its strict heartbeat check does not refuse the café', async () => {
+  const { syncRequest } = await import('../server/sync-protocol.js');
+  const owner = { tenantId: 'sahip-a', username: USER, stamp: 'a1b2c3d4e5f6', verifier: { salt: 'AAAAAAAAAAAAAAAAAAAAAA==', N: 32768, r: 8, p: 1, hash: '0'.repeat(64) } };
+  // The new field is accepted by this Merkez's schema…
+  assert.equal(syncRequest.shape.owners.safeParse([{ ...owner, email: 'a@b.co' }]).success, true);
+  // …and the café strips it unless Merkez listed 'owner.email' (server/kafe-link.ts heartbeat).
+  const source = readFileSync('server/kafe-link.ts', 'utf8');
+  assert.match(source, /record\.accepts\?\.includes\('owner\.email'\)/);
 });

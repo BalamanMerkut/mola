@@ -331,7 +331,7 @@ Merkez her gece 03:45'te `/var/lib/mola-merkez/merkez-yedek` içine **doğrulanm
 | Yer | Ne | Kim, ne zaman |
 |---|---|---|
 | Sunucu `/var/lib/mola-merkez/merkez-yedek` | En yeni 14 yedek | Merkez, her gece 03:45 |
-| Bilgisayarınız `C:\MolaCalisma\vds\merkez-yedek` | Aynı en yeni 14 yedek + çalışma klasörü | `npm run vds:cek`, her gün 07:00 (§15) |
+| Bilgisayarınız `C:\MolaCalisma\vds\merkez-yedek` | Aynı en yeni 14 yedek + çalışma klasörü + kafelerin sunucu yedekleri (`kafe-yedekleri\`, yalnız burada) | `npm run vds:cek`, her gün 07:00 (§15) |
 | Google Drive `G:\Drive'ım\Mola-Merkez-VDS` | Yalnız şifreli yedekler (en yeni 14) | Aynı çalıştırma, bilgisayardaki kopyadan |
 | Şifre yöneticisi | Merkez kurtarma kodu, anahtar parolası dosyasının kopyası | Siz, bir kez (değişirse yeniden) |
 
@@ -654,7 +654,7 @@ Kurulumdan sonra bir kez, her maddeyi işaretleyerek geçin. Ayrıntılı gerek�
 
 İki araç, Windows bilgisayarınızdan (kaynak klasöründe) sunucuya **yalnız okumak için** bağlanır. Sunucuda hiçbir şey yazmaz, silmez, yeniden başlatmaz.
 
-* `npm run vds:cek`: sunucudaki Mola çalışma klasörünü ve en yeni 14 Merkez yedeğini bilgisayarınıza (`C:\MolaCalisma\vds`), yedekleri ayrıca Google Drive'a çeker. Yalnız yeni ve değişen dosyalar gelir; her dosya boyutu ve SHA-256 özeti tutarsa yerine konur.
+* `npm run vds:cek`: sunucudaki Mola çalışma klasörünü, en yeni 14 Merkez yedeğini ve kafelerin şifreli "Sunucu yedeği" kopyalarını bilgisayarınıza (`C:\MolaCalisma\vds`), Merkez yedeklerini ayrıca Google Drive'a çeker. Yalnız yeni ve değişen dosyalar gelir; her dosya boyutu ve SHA-256 özeti tutarsa yerine konur.
 * `npm run vds -- <komut>`: sunucunun durumuna sabit bir komut listesiyle bakar (durum, kayıtlar, yedekler, disk, sertifikalar, güvenlik). Serbest komut yoktur.
 
 Bağlantı Windows'un kendi SSH programıyla, sizin anahtarınızla olur. Sunucuda bu araçların okuyabildiği her şey `/usr/local/sbin/mola-oku` adlı küçük, yalnız okuyan bir yardımcıdan geçer: çalışma klasörünü ve yedekleri okur, veri klasörüne (anahtarlar, veritabanı) yalnız boyutuna bakmak için dokunur, içeriğini hiçbir zaman vermez.
@@ -712,7 +712,22 @@ Bilgisayarınızdaki kopya: `C:\MolaCalisma\vds`
 |---|---|
 | `calisma\` | Sunucudaki Mola çalışma klasörünün aynısı: `README.md`, `durum-ozeti.md`, `islem-kayitlari\`, `hata-kayitlari\`, `destek-talepleri\` (**kişisel veri**), `surumler\`. Sunucuda silinen (süresi dolan ek, silinen talep) burada da silinir |
 | `merkez-yedek\` | En yeni 14 Merkez yedeği (şifreli) ve yedek durumu. Daha eskiler yalnız bu klasörde silinir |
+| `kafe-yedekleri\` | Kafelerin "Sunucu yedeği" kopyaları, sunucudaki `/var/lib/mola-merkez/veri-sunucu-yedekleri`'nin aynısı (her kurulum için `parcalar\`, `kopyalar\`, `durum.json`). Şifreli: anahtar kafelerde, Merkez de açamaz. Yarım yüklemeler (`yukleme/`) gelmez; sunucuda silinen parça burada da silinir, ama sunucuda hiç kurulum görünmezse hiçbir şey silinmez. **Yalnız bu bilgisayarda** durur (KVKK): Google Drive'a gitmez, hedef bulut klasöründeyse kopyalanmaz |
 | `vds-cek-durum.json`, `BENIOKU.txt` | Son çalıştırmanın özeti, klasörün anlatımı |
+
+**VDS kaybolursa kafe yedeklerini geri koymak:** yeni sunucuda Merkez'i kurun (§6, §8), sonra Merkez **durdurulmuşken** `kafe-yedekleri\` klasörünü olduğu gibi sunucuya kopyalayıp yerine koyun:
+
+```bash
+sudo systemctl stop mola-merkez
+# kafe-yedekleri klasörünü (ör. scp -r ile) /tmp/kafe-yedekleri olarak sunucuya kopyaladıktan sonra:
+sudo install -d -o mola -g mola -m 700 /var/lib/mola-merkez/veri-sunucu-yedekleri
+sudo cp -a /tmp/kafe-yedekleri/. /var/lib/mola-merkez/veri-sunucu-yedekleri/
+sudo chown -R mola:mola /var/lib/mola-merkez/veri-sunucu-yedekleri
+sudo chmod -R go-rwx /var/lib/mola-merkez/veri-sunucu-yedekleri
+sudo systemctl start mola-merkez
+```
+
+Kafeler kopyalarını eskisi gibi görür; açmak yine işletme sahibinin kurtarma kodunu ister. Veri klasörü başka bir yerdeyse hedef `<veri klasörü>-sunucu-yedekleri`'dir. `/tmp/kafe-yedekleri`'yi iş bitince siz silin.
 
 **Google Drive:** Google Drive masaüstü uygulamasını kurup hesabınızla girin; Windows'ta `G:\Drive'ım` (İngilizce Windows'ta `G:\My Drive`) görünür. Sonra:
 
@@ -720,7 +735,7 @@ Bilgisayarınızdaki kopya: `C:\MolaCalisma\vds`
 npm run vds:cek -- --kur --ikinci "G:\Drive'ım"
 ```
 
-(`--kur`, Google Drive'ı bulursa bu satırı kendisi önerir.) Her çalıştırmada bilgisayardaki doğrulanmış yedekler `G:\Drive'ım\Mola-Merkez-VDS\`'e kopyalanır, her dosya kopyadan sonra yeniden denetlenir; Drive'da da en yeni 14 kalır, yalnız bu klasörde silinir. Drive'a **yalnız şifreli yedekler** gider; çalışma klasörü (destek talepleri, işlem kayıtları) hiçbir zaman gitmez. Hedef klasörü (`--hedef`) OneDrive ya da Google Drive içinde seçerseniz destek talepleri oraya da kopyalanmaz. Drive kapalıysa (oturum yoksa) araç bunu hata olarak yazar, bilgisayardaki kopyayı yine alır.
+(`--kur`, Google Drive'ı bulursa bu satırı kendisi önerir.) Her çalıştırmada bilgisayardaki doğrulanmış yedekler `G:\Drive'ım\Mola-Merkez-VDS\`'e kopyalanır, her dosya kopyadan sonra yeniden denetlenir; Drive'da da en yeni 14 kalır, yalnız bu klasörde silinir. Drive'a **yalnız şifreli Merkez yedekleri** gider; çalışma klasörü (destek talepleri, işlem kayıtları) ve kafe yedekleri hiçbir zaman gitmez. Hedef klasörü (`--hedef`) OneDrive ya da Google Drive içinde seçerseniz destek talepleri ve kafe yedekleri oraya da kopyalanmaz (orada önceden kalan kafe yedeklerine dokunulmaz; siz taşıyın). Drive kapalıysa (oturum yoksa) araç bunu hata olarak yazar, bilgisayardaki kopyayı yine alır.
 
 **Her gün 07:00:** Görev Zamanlayıcı'ya görev eklemek bir sistem ayarıdır; araç eklemez, komutu yazar. Komutu görün ve PowerShell'de **kendiniz** bir kez çalıştırın:
 
@@ -769,6 +784,8 @@ Yazdığı komut şuna benzer: `schtasks --% /Create /TN "Mola\VDS yedek cek" /T
 | "İkinci yer bulunamadı" | Google Drive uygulaması açık ve oturum açık mı |
 | "kayitlar" boş ya da "No journal files" | `systemd-journal` grubu (§15.1); çıkıp yeniden girin |
 | "Yedek dosyası doğrulanamadı" | Bağlantı aktarımı bozdu; ertesi çalıştırma yeniden dener, sürerse Claude'a sorun |
+| "Sunucudaki okuma yardımcısı eski; kafe yedekleri için…" | Sunucudaki `mola-oku` kafe yedeklerini listelemiyor: Merkez'i bu sürümün paketiyle güncelleyin (`sudo ./kur.sh`, §11). Sudo izni değişmez |
+| "Sunucudaki kafe yedeği parçası bozuk" | Sunucudaki bir parçanın içeriği adındaki SHA-256'yla tutmuyor (disk sorunu olabilir); bu bilgisayardaki sağlam kopya silinmez. `npm run vds -- disk` ile bakın, Claude'a sorun |
 
 ## Kısa sözlük
 
