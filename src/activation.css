@@ -1,18 +1,20 @@
-/* "Mola'yı etkinleştir": the first screen of a café computer that is not linked to Mola Merkez yet. */
-.activation-page{min-height:100vh;background:#f6f7f4;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box}
-.activation-card{width:min(520px,100%);background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 24px;box-shadow:0 20px 60px #0c21150f}
+/* "Mola'yı etkinleştir": the first screen of a café computer that is not linked to Mola Merkez yet. Matte cream, no bright
+   white (13 Ekim, like the guides' paper); the version line at the foot of the card. */
+.activation-page{min-height:100vh;background:#ece5d7;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box}
+.activation-card{width:min(520px,100%);background:#f6f0e5;border:1px solid #e0d8c8;border-radius:16px;padding:28px 24px 14px;box-shadow:0 20px 60px #0c21150f}
+.activation-card>.app-version{margin:18px 0 0}
 .activation-card .brand{justify-content:center}
 .activation-card h1{font-family:Georgia,serif;font-weight:400;font-size:28px;margin:14px 0 6px;text-align:center}
 .activation-card>p{text-align:center}
 .activation-card form{display:flex;flex-direction:column;gap:12px;margin-top:14px}
-.activation-choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer}
-.activation-choice:hover{border-color:#91ab91;background:#f4f8f2}
+.activation-choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:#fbf7ef;color:var(--ink);cursor:pointer}
+.activation-choice:hover{border-color:#91ab91;background:#f1f2e7}
 .activation-choice span{display:flex;flex-direction:column;gap:3px}
 .activation-group{margin:18px 0 0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7766}
 .activation-group + .activation-choice{margin-top:8px}
 .activation-choice small{color:var(--muted)}
 .activation-sector{display:flex;gap:8px;flex-wrap:wrap}
-.activation-sector button{flex:1;min-width:110px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.activation-sector button{flex:1;min-width:110px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fbf7ef;color:var(--ink)}
 .activation-sector button[aria-pressed=true]{border-color:var(--primary,#234c3e);background:#eef4ee;font-weight:600}
 .activation-code-input{font:600 20px/1.4 Consolas,monospace;letter-spacing:2px;text-transform:uppercase;text-align:center}
 .activation-actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}

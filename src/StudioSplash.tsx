@@ -26,9 +26,18 @@ function StudioSplash({ onDone }: { onDone: () => void }) {
     // A modal <dialog>: the browser's top layer, above any z-index, and the app beneath is inert (no focus, no typing).
     // Mola's own dialogs are modal too (the window's "Kurtarma kodunuz" can open right at launch): one opened meanwhile would
     // sit above, so the opening moves back to the top at once (before anything is painted).
-    const top = () => { if (!dialog || done.current) return; try { if (dialog.open) dialog.close(); dialog.showModal(); } catch { /* not connected */ } };
-    top();
+    // 13 Ekim: the owner's lock screen (src/OwnerLock.tsx) moves itself back to the top the same way; the two pushed each
+    // other forever and the window froze on the logo after an update. The lock now lets the opening be; and should any other
+    // layer ever do the same, after 20 moves in a second the opening stops moving (its timers still end it).
+    let moves = 0, since = 0;
+    const top = () => {
+      if (!dialog || done.current) return;
+      const t = performance.now(); if (t - since > 1000) { since = t; moves = 0; }
+      if (++moves > 20) { others.disconnect(); return; }
+      try { if (dialog.open) dialog.close(); dialog.showModal(); } catch { /* not connected */ }
+    };
     const others = new MutationObserver(records => { if (records.some(r => r.target !== dialog && (r.target as Element).hasAttribute('open'))) top(); });
+    top();
     others.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
     const finish = () => { if (done.current) return; done.current = true; others.disconnect(); timers.forEach(clearTimeout); try { dialog?.close(); } catch { /* gone */ } onDone(); };
     const skip = () => finish();

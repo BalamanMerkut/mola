@@ -3,6 +3,7 @@ import { ArchiveRestore, ArrowLeft, ClipboardList, CloudDownload, KeyRound, Penc
 import type { Sector } from '../packages/domain/sector';
 import { api, ApiError } from './api';
 import { ApplicationForm, type ApplicationFields } from './ApplicationForm';
+import { AppVersion } from './AppVersion';
 import { Brand, Notice } from './components';
 import { MolaContact, useMolaContact } from './MolaContact';
 import { AGREEMENT_PROBLEM, AgreementCheck, agreementBody } from './LicenseAgreement';
@@ -142,5 +143,5 @@ export function Activation({ onReady }: { onReady: (username: string) => void })
       </form>
       {(retry || /kod/i.test(error)) && <MolaContact note={retry ? help : 'Kod çalışmıyorsa Mola ekibinden yenisini isteyin.'} />}
     </>;
-  return <main className="activation-page"><section className={`activation-card${(mode === 'apply' || editing) && status?.local && (status.state === 'activate' || status.state === 'applied') ? ' wide' : ''}`} aria-label="Mola’yı etkinleştir"><Brand />{body}</section></main>;
+  return <main className="activation-page"><section className={`activation-card${(mode === 'apply' || editing) && status?.local && (status.state === 'activate' || status.state === 'applied') ? ' wide' : ''}`} aria-label="Mola’yı etkinleştir"><Brand />{body}<AppVersion /></section></main>;
 }

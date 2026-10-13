@@ -85,9 +85,17 @@ export function OwnerLock({ name, onLogout }: { name?: string; onLogout: () => v
 function LockLayer({ labelledBy, children }: { labelledBy: string; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    const d = ref.current!, raise = () => { try { if (d.open) d.close(); d.showModal(); } catch { /* not in the document */ } };
+    // Not over the Merkut Studios opening (src/StudioSplash.tsx, ≤ 2.5 s at a Mola.exe launch): both moving back to the top
+    // pushed each other forever and froze the window on the logo (13 Ekim, after an update). And never more than 20 moves a
+    // second, whatever else might push back.
+    let moves = 0, since = 0;
+    const d = ref.current!, raise = () => {
+      const t = performance.now(); if (t - since > 1000) { since = t; moves = 0; }
+      if (++moves > 20) return;
+      try { if (d.open) d.close(); d.showModal(); } catch { /* not in the document */ }
+    };
     raise();
-    const watch = new MutationObserver(list => { if (list.some(m => m.target !== d && m.target instanceof HTMLDialogElement && m.target.open)) raise(); });
+    const watch = new MutationObserver(list => { if (list.some(m => m.target !== d && m.target instanceof HTMLDialogElement && m.target.open && !m.target.classList.contains('studio-splash'))) raise(); });
     watch.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
     return () => { watch.disconnect(); d.close(); };
   }, []);

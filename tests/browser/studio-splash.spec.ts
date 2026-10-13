@@ -99,6 +99,26 @@ test('a click or a key skips the opening; the sign-in is there at once', async (
   }
 });
 
+// 13 Ekim: after an update Mola.exe reopened the window with the owner still signed in but locked (Sahip hesabı kilidi). The
+// opening and the lock screen each moved themselves back to the top whenever another dialog opened, so they pushed each
+// other forever: the page froze on the black logo. Now the opening runs its course above the lock, then the lock is there.
+test('a locked owner session at launch: the opening ends on time, then the lock screen works', async ({ browser }) => {
+  const { context, page } = await person(browser, { viewport: { width: 1280, height: 800 } });
+  expect((await context.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } })).ok()).toBe(true);
+  await ensureSetup(context.request);
+  expect((await context.request.post('/api/staff/lock', { data: {} })).ok()).toBe(true);
+  await page.goto(launch());
+  await expect(splash(page)).toBeVisible();
+  const lock = page.getByRole('dialog', { name: 'Sahip hesabı kilitlendi' });
+  await expect(lock).toBeAttached();
+  await expect(splash(page)).toHaveCount(0, { timeout: 3500 });
+  await expect(lock).toBeVisible();
+  await lock.getByLabel('Şifreniz').fill('MolaDemo!2026');
+  await lock.getByRole('button', { name: 'Kilidi aç' }).click();
+  await expect(lock).toHaveCount(0);
+  await context.close();
+});
+
 test('reduced motion: the logo shows still for 600 ms, no fades', async ({ browser }) => {
   const { context, page } = await person(browser, { reducedMotion: 'reduce' });
   await page.goto(launch());
