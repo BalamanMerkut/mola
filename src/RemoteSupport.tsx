@@ -4,14 +4,13 @@ import { saatEki } from '../packages/domain/saat-eki';
 import { api } from './api';
 import { Notice } from './components';
 import { Card, Row, Toggle } from './SettingsKit';
-import { Moved } from './Moved';
 import './remote-support.css';
 
 /*
  * Destek → Uzaktan erişim (owner only): "Uzaktan destek izni" (the Mola team may open this café's screens, without money and
  * security; server/support-session.ts; turning it on asks the owner's password again, turning it off never does).
  * Everything the Mola team changes is listed here, with who connected when. "Raporlarım telefonda" (src/PhonePairing.tsx)
- * moved to Ayarlar → Güvenlik ve yedek → Telefonum (10 Ekim düzeni); a line here points to it for two releases.
+ * is in Ayarlar → Güvenlik ve yedek → Telefonum.
  */
 type Session = { id: string; startedAt: string; endedAt?: string; endedBy?: 'owner' | 'vendor' | 'timeout' | 'restart' | 'off'; actions: number };
 type View = { on: boolean; since: string | null; by: string | null; active: { since: string } | null; relay: { connected: boolean; error: string | null }; sessions: Session[]; log: { at: string; session: string; text: string }[]; can: string[]; cannot: string[] };
@@ -20,7 +19,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString('tr-TR', { timeZon
 const ended: Record<NonNullable<Session['endedBy']>, string> = { owner: 'siz kestiniz', vendor: 'Mola ekibi kapattı', timeout: '30 dakika işlem yapılmadı', restart: 'bilgisayar yeniden açıldı', off: 'izin kapatıldı' };
 
 export function RemoteAccess() {
-  return <div className="remote-access"><RemoteSupport /><Moved what="Raporlarım telefonda (Telefonu eşleştir)" where="Ayarlar → Güvenlik ve yedek → Telefonum" to={{ view: 'settings', topic: 'security', part: 'phone' }} /></div>;
+  return <div className="remote-access"><RemoteSupport /></div>;
 }
 
 function RemoteSupport() {

@@ -32,7 +32,9 @@ type Deps = {
   store: MerkezStore; now: () => Date; admin: (req: Request) => unknown; releaseAdmin: (req: Request) => unknown;
   /** releaseAdmin plus the Güncelleme yetkisi (server/merkez/step-up.ts): "Klasörde hazır" → "Yükle ve doğrula". */
   releaseChange: (req: Request) => unknown;
-  tokenOrAdmin: (req: Request, scope: TokenScope) => unknown; checkPassword: (req: Request, password: string) => Promise<boolean>;
+  tokenOrAdmin: (req: Request, scope: TokenScope) => unknown;
+  /** The owner's session only (13 Ekim): access keys outlive a yetkili, so only the owner makes and revokes them. */
+  owner: (req: Request) => void; checkPassword: (req: Request, password: string) => Promise<boolean>;
   releases: Releases; workFolder: WorkFolder; version: string;
 };
 const PAGE = 50;
@@ -128,7 +130,7 @@ export function journalRoutes(app: Express, deps: Deps) {
   const tokens = () => (store.read().accessTokens ?? []).map(tokenView).reverse();
   app.get('/api/merkez/admin/access-tokens', (req, res) => { admin(req); res.json({ tokens: tokens(), scopes: SCOPE_NAMES }); });
   app.post('/api/merkez/admin/access-tokens', async (req, res) => {
-    admin(req); const b = z.object({ name: z.string().trim().min(2).max(60), scope: z.enum(['releases', 'calisma']).default('releases'), password: z.string().min(1).max(128) }).strict().parse(req.body);
+    deps.owner(req); const b = z.object({ name: z.string().trim().min(2).max(60), scope: z.enum(['releases', 'calisma']).default('releases'), password: z.string().min(1).max(128) }).strict().parse(req.body);
     if (!await deps.checkPassword(req, b.password)) throw new DomainError('INVALID_PASSWORD', 'Yönetici şifresi yanlış.', 403);
     const made = store.mutate(d => {
       if ((d.accessTokens ?? []).filter(t => !t.revokedAt).length >= 10) throw new DomainError('TOO_MANY_TOKENS', 'En fazla 10 etkin anahtar olabilir. Kullanmadıklarınızı iptal edin.', 409);
@@ -139,7 +141,7 @@ export function journalRoutes(app: Express, deps: Deps) {
     res.json({ token: made.text, view: tokenView(made.record), tokens: tokens() });
   });
   app.post('/api/merkez/admin/access-tokens/revoke', (req, res) => {
-    admin(req); const b = z.object({ id: z.string().uuid() }).strict().parse(req.body);
+    deps.owner(req); const b = z.object({ id: z.string().uuid() }).strict().parse(req.body);
     store.mutate(d => {
       const t = d.accessTokens?.find(x => x.id === b.id); if (!t) throw new DomainError('NOT_FOUND', 'Anahtar bulunamadı.', 404);
       if (!t.revokedAt) { t.revokedAt = now().toISOString(); d.audit.push({ action: 'token.revoked', target: 'admin', at: t.revokedAt, by: 'admin', detail: `${t.name} · ${t.hint}` }); }

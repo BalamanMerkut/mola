@@ -34,6 +34,10 @@ const A: Record<string, [string, JournalGroup]> = {
   'admin.password_reset_offline': ['Yönetici şifresi Sifre-Sifirla komutuyla geçici şifreye çevrildi', 'giris'],
   'admin.reset_code_sent': ['Şifre sıfırlama kodu e-postayla gönderildi', 'giris'],
   'admin.reset_code_failed': ['Şifre sıfırlama kodu e-postayla gönderilemedi', 'giris'],
+  // Kullanıcılar (13 Ekim): the owner's yetkililer
+  'admin.user_added': ['Yetkili kullanıcı eklendi', 'giris'],
+  'admin.user_removed': ['Yetkili kullanıcı silindi', 'giris'],
+  'admin.user_password_set': ['Yetkili kullanıcıya yeni ilk şifre verildi', 'giris'],
   'token.created': ['Geliştirici erişim anahtarı oluşturuldu', 'giris'],
   'token.revoked': ['Geliştirici erişim anahtarı iptal edildi', 'giris'],
   'token.refused': ['Geçersiz ya da iptal edilmiş geliştirici anahtarıyla istek reddedildi', 'giris'],

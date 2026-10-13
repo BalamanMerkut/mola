@@ -9,7 +9,7 @@ import { diskLow, useCloudBackups } from './PlatformCloudBackup';
 import type { DetailTab } from './PlatformDetail';
 import { ADMIN, backupWarning, expiresSoon, filesChanged, longOffline, machineSwapOpen, offlineDays, openApplication, pendingApplication, pendingFreeze, runningPaid, runningTrial, seenAgo, shortDate, type Business, type Tone } from './platformStatus';
 
-export type SettingsSection = 'security' | 'backup' | 'updates' | 'email' | 'contact' | 'audit' | 'workfolder' | 'developer';
+export type SettingsSection = 'security' | 'users' | 'backup' | 'updates' | 'email' | 'contact' | 'audit' | 'workfolder' | 'developer';
 type MerkezBackup = { backup: { auto: boolean; lastSuccessAt?: string; lastError?: string } | null; recovery: { available: boolean; confirmed: boolean } | null; local: boolean };
 type MailQueue = { settings: { enabled: boolean } | null; queue: { id: string; createdAt: string; failed: boolean; error?: string }[] };
 type Todo = { key: string; rank: number; tone: Tone; text: ReactNode; action: string; onAction: () => void; phone?: string };

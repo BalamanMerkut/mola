@@ -1,13 +1,5 @@
-/* "Taşındı → Git" signposts and place links (src/Moved.tsx). */
-.moved-sign{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:0 0 14px;padding:9px 12px;border:1px dashed #cfd8c9;border-radius:12px;background:#f7f9f4;color:#4f5c4b;font-size:13.5px;line-height:1.4}
-.moved-sign>svg{flex:none;color:var(--green)}
-.moved-sign>span{flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
-.moved-sign .text-btn,.place-link{display:inline-flex;align-items:center;gap:4px;min-height:32px}
-.moved-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
-.moved-list .moved-sign{margin:0}
-.moved-fold{margin-top:18px}
-.moved-fold>summary{cursor:pointer;color:#5d6a58;font-size:13.5px;font-weight:600;padding:8px 2px;list-style-position:inside}
-.moved-fold[open]>summary{margin-bottom:8px}
+/* Place links ("Gider kayıtlarını aç", src/Moved.tsx) and the shared bits of the homes. */
+.place-link{display:inline-flex;align-items:center;gap:4px;min-height:32px}
 .home-links{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:-4px 0 12px}
 /* The bell on the top bar (Bildirimler, owner). */
 .topbar-bell{position:relative;display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;flex:none}
@@ -37,8 +29,6 @@
 .campaign-card-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
 .report-period-actions{display:flex;flex-wrap:wrap;gap:8px}
 .report-owner-tools{margin-left:auto}
-.moved-panel h3{margin:0 0 6px}
-.moved-panel .moved-list{margin-top:12px}
 .support-license-line{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
 .vat-manage{display:inline-flex;margin-top:4px}
 .profit-limits-btn{margin-left:auto}

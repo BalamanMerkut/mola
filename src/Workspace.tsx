@@ -71,8 +71,8 @@ import { ExternalCancel, ExternalInbox, PlatformDetails, PlatformHeading } from 
 const SalesReports = lazy(() => import('./SalesReports').then(module => ({ default: module.SalesReports })));
 import type { ReportsOpening, ReportTab } from './SalesReports';
 /** A report id of now or of the earlier reports (its own copy: SalesReports loads only when opened). */
-const REPORT_TABS: ReportTab[] = ['summary', 'products', 'profit', 'campaigns', 'money', 'employees', 'reservations'];
-const reportTabOf = (v?: string): ReportTab | null => !v ? 'summary' : (REPORT_TABS as string[]).includes(v) ? v as ReportTab : v === 'staff' ? 'employees' : ['cash', 'expenses', 'corrections'].includes(v) ? 'money' : null;
+const REPORT_TABS: ReportTab[] = ['summary', 'products', 'profit', 'campaigns', 'employees', 'reservations'];
+const reportTabOf = (v?: string): ReportTab | null => !v ? 'summary' : (REPORT_TABS as string[]).includes(v) ? v as ReportTab : v === 'staff' ? 'employees' : ['cash', 'expenses', 'corrections', 'money'].includes(v) ? 'summary' : null;
 // Stok (owner; the cashier reads Ürünler and Malzemeler): src/Stock.tsx.
 const Stock = lazy(() => import('./Stock').then(module => ({ default: module.Stock })));
 import type { StockOpening } from './Stock';

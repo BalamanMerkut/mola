@@ -120,8 +120,17 @@ export type AuditEntry = { action: string; target: string; at: string; name?: st
  * (releases: Güncellemeler only; calisma: read the Çalışma klasörü snapshot, for the VDS sync).
  */
 export type AccessToken = { id: string; name: string; scope: 'releases' | 'calisma'; hash: string; hint: string; createdAt: string; lastUsedAt?: string; revokedAt?: string };
+/**
+ * Yetkili (13 Ekim, sahibin isteği): a person the owner let into Mola Yönetim. Everything the owner can do except Kullanıcılar
+ * and the e-mail settings (the address "Şifremi unuttum" sends the owner's code to). `record`: own password (the owner's first
+ * one must be changed at the first sign-in) and own two-step login. `username`: lower case, never "admin".
+ */
+export type AdminUser = { id: string; username: string; name: string; createdAt: string; record: AdminRecord };
 export type MerkezData = {
-  admin: AdminRecord; businesses: MerkezBusiness[]; installs: Install[]; codes: ActivationCode[]; tickets: Ticket[];
+  admin: AdminRecord;
+  /** Yetkililer (server/merkez/admin-users.ts); missing in older records. */
+  adminUsers?: AdminUser[];
+  businesses: MerkezBusiness[]; installs: Install[]; codes: ActivationCode[]; tickets: Ticket[];
   /** `name`: kept when the target itself is gone (a deleted record), so the history still says which business it was. */
   audit: AuditEntry[]; notifications: Notification[]; requests: Record<string, { fingerprint: string; at?: string; result: unknown }>;
   /** "Bildirim merkezi" and the e-mail queue (server/merkez/alerts.ts); missing in older records. */

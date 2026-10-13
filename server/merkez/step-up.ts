@@ -29,20 +29,21 @@ export type RightUse = 'release' | 'sales' | 'announce';
 type Who = unknown;
 const sha = (text: string) => createHash('sha256').update(text).digest('hex').slice(0, 32);
 
-export function releaseRight(o: { store: MerkezStore; now: () => Date; confirm: (req: Request, code: string) => void }) {
+/** `secretOf`: the Authenticator of the session that asks (a yetkili has their own, 13 Ekim); an access key: the owner's. */
+export function releaseRight(o: { store: MerkezStore; now: () => Date; confirm: (req: Request, code: string) => void; secretOf?: (who: Who) => string | undefined }) {
   const grants = new ExpiringStore<{ until: number; factor: string }>(v => v.until, () => o.now().getTime(), 1000, true);
   const keyOf = (who: Who) => typeof who === 'string' ? `oturum:${sha(who)}` : `anahtar:${(who as { id?: string }).id ?? ''}`;
   /** The current Authenticator (a fingerprint of its secret): a window from an older one does not count. */
-  const factor = () => { const s = o.store.read().admin.mfa?.secret; return s ? sha(`mola-guncelleme-yetkisi:${s}`) : undefined; };
-  const live = (who: Who) => { const g = grants.get(keyOf(who)), f = factor(); return g && f && g.factor === f ? g : undefined; };
+  const factor = (who: Who) => { const s = typeof who === 'string' && o.secretOf ? o.secretOf(who) : o.store.read().admin.mfa?.secret; return s ? sha(`mola-guncelleme-yetkisi:${s}`) : undefined; };
+  const live = (who: Who) => { const g = grants.get(keyOf(who)), f = factor(who); return g && f && g.factor === f ? g : undefined; };
   const record = (action: string, detail: string) => { try { o.store.journal.append({ action, target: { kind: 'admin', id: 'admin', name: 'Güncelleme yetkisi' }, detail }); } catch { /* the record is secondary to the answer */ } };
   const refusedTold = new Map<string, number>();
   return {
     /** For the screen: is two-step login on, and until when the window is open (null: closed). */
-    status(who: Who) { const g = live(who); return { mfa: !!factor(), until: g ? new Date(g.until).toISOString() : null, minutes: RELEASE_RIGHT_MINUTES }; },
+    status(who: Who) { const g = live(who); return { mfa: !!factor(who), until: g ? new Date(g.until).toISOString() : null, minutes: RELEASE_RIGHT_MINUTES }; },
     /** Checks the code and opens the window; every outcome is recorded. */
     open(req: Request, who: Who, code: string) {
-      const f = factor();
+      const f = factor(who);
       if (!f) { record('release.step_up_refused', 'İki adımlı doğrulama kapalı'); throw new DomainError('MFA_REQUIRED', MFA_FIRST, 403); }
       try { o.confirm(req, code); }
       catch (e) {
@@ -55,14 +56,14 @@ export function releaseRight(o: { store: MerkezStore; now: () => Date; confirm: 
         throw e;
       }
       const until = o.now().getTime() + RELEASE_RIGHT_MINUTES * 60_000;
-      grants.set(keyOf(who), { until, factor: factor() ?? f });
+      grants.set(keyOf(who), { until, factor: factor(who) ?? f });
       record('release.step_up', `Doğrulayıcı koduyla ${RELEASE_RIGHT_MINUTES} dakikalık güncelleme yetkisi açıldı`);
       return new Date(until).toISOString();
     },
     end(who: Who) { if (grants.delete(keyOf(who))) record('release.step_up_ended', 'Güncelleme yetkisi elle kapatıldı'); },
     /** Before an upload, a publish, Durdur, Sil or a note edit (the release is signed again); sales: a price, package or payment change. */
     require(who: Who, use: RightUse = 'release') {
-      if (!factor()) throw new DomainError('MFA_REQUIRED', use === 'sales' ? MFA_FIRST_SALES : use === 'announce' ? MFA_FIRST_ANNOUNCE : MFA_FIRST, 403);
+      if (!factor(who)) throw new DomainError('MFA_REQUIRED', use === 'sales' ? MFA_FIRST_SALES : use === 'announce' ? MFA_FIRST_ANNOUNCE : MFA_FIRST, 403);
       if (!live(who)) throw new DomainError('STEP_UP_REQUIRED', use !== 'release' ? `Bu değişiklik için doğrulayıcı uygulamadaki güncel 6 haneli kodu girin (onay ${RELEASE_RIGHT_MINUTES} dakika geçerli olur).` : `Bu işlem için doğrulayıcı uygulamadaki güncel 6 haneli kodu girin (güncelleme yetkisi ${RELEASE_RIGHT_MINUTES} dakika geçerli olur).`, 403);
     },
   };

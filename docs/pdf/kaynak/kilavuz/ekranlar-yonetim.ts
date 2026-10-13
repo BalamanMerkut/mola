@@ -259,10 +259,12 @@ const yonetim: Grup = async browser => {
   await bolum(p, 'Satışlarım');
   await dene('y-satislarim', () => cek(p, 'y-satislarim', { isaretler: [{ n: 1, loc: dugme(p, 'Excel'), yon: 'alt' }, { n: 2, loc: dugme(p, 'PDF'), yon: 'alt' }] }));
 
-  for (const [ad, dosya] of [['Hesap güvenliği', 'y-hesap-guvenligi'], ['Paketler', 'y-paketler'], ['Hizmet fiyatları', 'y-hizmet-fiyatlari'], ['Yedek', 'y-yedek'], ['Güncellemeler', 'y-guncellemeler'],
+  for (const [ad, dosya] of [['Hesap güvenliği', 'y-hesap-guvenligi'], ['Kullanıcılar', 'y-kullanicilar'], ['Paketler', 'y-paketler'], ['Hizmet fiyatları', 'y-hizmet-fiyatlari'], ['Yedek', 'y-yedek'], ['Güncellemeler', 'y-guncellemeler'],
     ['E-posta bildirimleri', 'y-eposta'], ['İletişim bilgileri', 'y-iletisim'], ['İşlem kayıtları', 'y-islem-kayitlari'], ['Çalışma klasörü', 'y-calisma-klasoru'], ['Geliştirici erişimi', 'y-gelistirici']] as const) {
     await dene(dosya, async () => {
       await ayarBolumu(p, ad);
+      // Kullanıcılar (13 Ekim): an example filled in, never saved.
+      if (dosya === 'y-kullanicilar') { await p.getByLabel('Adı ve soyadı').fill('Prof. Dr. Ayşe Yılmaz').catch(() => {}); await p.getByLabel('Kullanıcı adı', { exact: true }).fill('ayse.yilmaz').catch(() => {}); }
       if (dosya === 'y-iletisim') {
         // Mola ekibinin iletişim bilgileri: kafelerde "Mola ekibine ulaşın" düğmeleri bunlardan çıkar.
         const tel = p.getByLabel(/Telefon/).first();

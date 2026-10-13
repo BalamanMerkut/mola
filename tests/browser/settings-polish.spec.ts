@@ -147,7 +147,7 @@ test('Satış ve Raporlar: four groups over their reports (remembered, fit 360�
   // Top: the four groups in the shared pill bar; under it the chosen group's reports, quieter (smaller, no capsule).
   const groups = reportGroups(page), tabs = reportTabs(page);
   await expect(groups).toHaveClass(/pill-tabs/);
-  await expect(groups.getByRole('button')).toHaveText(['Satış', 'Para', 'Personel', 'Rezervasyon']);
+  await expect(groups.getByRole('button')).toHaveText(['Satış', 'Personel', 'Rezervasyon']);
   await expect(groups.getByRole('button', { name: 'Satış', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(tabs.getByRole('button')).toHaveText(['Özet', 'Ürünler', 'Kârlılık', 'Kampanyalar']);
   await expect(tabs.getByRole('button', { name: 'Özet', exact: true })).toHaveAttribute('aria-current', 'page');
@@ -207,8 +207,8 @@ test('Satış ve Raporlar: four groups over their reports (remembered, fit 360�
   for (const width of [360, 390, 768, 820, 1024, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     for (const name of every) {
-      // Groups with one report (Para's signpost, Personel's Çalışanlar, Rezervasyon) have no second row.
-      const single = ['Rezervasyon', 'Para', 'Çalışanlar'].includes(name);
+      // Groups with one report (Personel's Çalışanlar, Rezervasyon) have no second row.
+      const single = ['Rezervasyon', 'Çalışanlar'].includes(name);
       await openReport(page, name);
       await expect(groups.getByRole('button', { name: reportGroupOf[name], exact: true })).toHaveAttribute('aria-current', 'page');
       if (!single) await expect(tabs.getByRole('button', { name, exact: true })).toHaveAttribute('aria-current', 'page');
@@ -235,27 +235,24 @@ test('Satış ve Raporlar: four groups over their reports (remembered, fit 360�
 
   // Remembered on this device: a group comes back on its last report, and the reports open where they were left.
   await page.setViewportSize({ width: 1280, height: 900 });
-  // Para is the signpost of the moved record books (10 Ekim); it is remembered like any report.
-  const moved = page.getByRole('region', { name: 'Para taşındı' });
-  await openReport(page, 'Kârlılık'); await openReport(page, 'Para');
+  await openReport(page, 'Kârlılık'); await openReport(page, 'Çalışanlar');
   await groups.getByRole('button', { name: 'Satış', exact: true }).click();
   await expect(tabs.getByRole('button', { name: 'Kârlılık', exact: true })).toHaveAttribute('aria-current', 'page');
-  await groups.getByRole('button', { name: 'Para', exact: true }).click();
-  await expect(moved).toBeVisible();
   await page.locator('.sidebar nav').getByRole('button', { name: 'Masalar', exact: true }).click();
   await page.locator('.sidebar nav').getByRole('button', { name: 'Satış ve Raporlar', exact: true }).click();
-  await expect(moved).toBeVisible();
-  await page.reload();
-  await page.locator('.sidebar nav').getByRole('button', { name: 'Satış ve Raporlar', exact: true }).click();
-  await expect(groups.getByRole('button', { name: 'Para', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(moved).toBeVisible();
-  // A device that remembered a moved report (the earlier Para → Giderler) opens the signpost, without an error.
-  await page.evaluate(() => localStorage.setItem('mola-report-place', '{"tab":"expenses","last":{"money":"corrections","sales":"profit"}}'));
-  await page.reload();
-  await page.locator('.sidebar nav').getByRole('button', { name: 'Satış ve Raporlar', exact: true }).click();
-  await expect(moved).toBeVisible();
-  await groups.getByRole('button', { name: 'Satış', exact: true }).click();
   await expect(tabs.getByRole('button', { name: 'Kârlılık', exact: true })).toHaveAttribute('aria-current', 'page');
+  await page.reload();
+  await page.locator('.sidebar nav').getByRole('button', { name: 'Satış ve Raporlar', exact: true }).click();
+  await expect(tabs.getByRole('button', { name: 'Kârlılık', exact: true })).toHaveAttribute('aria-current', 'page');
+  // A device that remembered the old "Para" group (gone 13 Ekim) or one of its books opens Özet, without an error; the
+  // other groups keep their last report.
+  for (const saved of ['{"tab":"expenses","last":{"money":"corrections","sales":"profit"}}', '{"tab":"money","last":{"money":"money"}}']) {
+    await page.evaluate(v => localStorage.setItem('mola-report-place', v), saved);
+    await page.reload();
+    await page.locator('.sidebar nav').getByRole('button', { name: 'Satış ve Raporlar', exact: true }).click();
+    await expect(tabs.getByRole('button', { name: 'Özet', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('region', { name: 'Para taşındı' })).toHaveCount(0);
+  }
   // A broken saved value (another version, a hand edit) is ignored: Satış → Özet.
   await page.evaluate(() => localStorage.setItem('mola-report-place', '{"tab":"eski","last":{"sales":"cash"}}'));
   await page.reload();

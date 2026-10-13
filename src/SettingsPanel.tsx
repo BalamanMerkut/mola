@@ -9,7 +9,6 @@ import { BackupPage, BlockedPage, BusinessPage, DevicesPage, IntegrationsPage, K
 // Sosyal medya (İşletme → Sosyal medya): the business's links and their permanent QR codes, src/SocialSettings.tsx.
 import { SocialSettings } from './SocialSettings';
 import { PillTabs } from './PillTabs';
-import { Moved } from './Moved';
 import './settings-workspace.css';
 // Hizmet paketi: "Paket ve lisans" (İşletme → Paket ve lisans) and the faded parts of closed services (src/FeatureLock.tsx).
 import { PackageCard } from './PackageCard';
@@ -174,23 +173,6 @@ export function SettingsPanel({ data, onSaved, open, onTables }: { data: StaffSn
       <PillTabs label={`${info.title} bölümleri`} className="settings-parts" wrapClassName="settings-parts-wrap" variant="sub" dataAttr="part" value={part} onChange={setPart}
         items={parts.map(p => { const s = partState[p.id]; return { id: p.id, label: p.title, icon: p.icon, title: p.line, locked: !!partLocked(p.id), ...(s?.warn ? { badge: s.text, badgeTone: 'warn' as const } : {}) }; })} />
       <div className="settings-page-body" key={part}>{partLocked(part) ? <FeatureLockView feature={partLocked(part)!} compact onClose={() => setPart(parts[0].id)} /> : pages[part]()}</div>
-      <MovedSettings />
     </section>
   </div></div>;
-}
-
-/** "Taşınan ayarlar": what left Ayarlar on 10 Ekim and where it lives now (two releases; docs/GELISTIRICI_REHBERI.md). */
-function MovedSettings() {
-  return <details className="moved-fold">
-    <summary>Aradığınız ayar burada yok mu? Taşınan ayarlar</summary>
-    <div className="moved-list">
-      <Moved what="Kasa ve ödeme (gün sonu, POS oranı, yazar kasa, kasiyer sınırları)" where="Kasa ve giderler → Kasa ayarları" to={{ view: 'cash', tab: 'settings' }} />
-      <Moved what="Otomatik giderler" where="Kasa ve giderler → Giderler → Otomatik giderler" to={{ view: 'cash', tab: 'expenses', part: 'auto' }} />
-      <Moved what="KDV oranları" where="Menü yönetimi → KDV oranları" to={{ view: 'menu', tab: 'vat' }} />
-      <Moved what="Düşük kâr uyarısı" where="Satış ve Raporlar → Kârlılık → Uyarı sınırları" to={{ view: 'reports', tab: 'profit', margins: true }} />
-      <Moved what="Vardiya ve bahşiş, garson ataması" where="Personel → Personel ayarları" to={{ view: 'users', tab: 'settings' }} />
-      <Moved what="Rezervasyon" where="Ajanda ve rezervasyon → Ayarlar" to={{ view: 'agenda', part: 'settings' }} />
-      <Moved what="Raporlar ve e-posta" where="Satış ve Raporlar → Raporları gönder" to={{ view: 'reports', tab: 'summary', send: true }} />
-    </div>
-  </details>;
 }

@@ -17,7 +17,7 @@ Arkadaşlarla bir saatlik "kalabalık kafe" provası: herkes kendi telefonuyla, 
 ## 2. Hazırlık (başlamadan 20 dakika önce)
 
 1. Bilgisayar ve bütün telefonlar **aynı Wi-Fi**'da. Bilgisayarın ağı "Özel" olmalı (Tabletler penceresinde sarı uyarı çıkmamalı).
-2. Sahip: **Personel → Çalışanlar**'dan hesapları açar, şifreleri kâğıda yazar. **Kasa ve giderler → Kasa ayarları → Kasiyer yetkileri**: kasiyer iade sınırı **50 TL**. (10 Ekim düzeni: her konunun tek evi var; Bildirimler sağ üstteki zilde, Kampanyalar Menü yönetimi'nde, vardiya ve bahşiş Personel'de. Eski yerlerde "Taşındı → Git" satırı var.) Vardiya takibini gün içinde açarsanız "Şu an N kişi çalışıyor…" sorusu gelir; **Bir sonraki girişte** seçili olmalı.
+2. Sahip: **Personel → Çalışanlar**'dan hesapları açar, şifreleri kâğıda yazar. **Kasa ve giderler → Kasa ayarları → Kasiyer yetkileri**: kasiyer iade sınırı **50 TL**. (10 Ekim düzeni: her konunun tek evi var; Bildirimler sağ üstteki zilde, Kampanyalar Menü yönetimi'nde, vardiya ve bahşiş Personel'de.) Vardiya takibini gün içinde açarsanız "Şu an N kişi çalışıyor…" sorusu gelir; **Bir sonraki girişte** seçili olmalı.
 3. Masa 01, 02, 03 ve 09'un QR'ları basılı ya da ekranda açık. Herkes kendi QR'ını önce bir kez okutup menünün açıldığını görür.
 4. Kasa: **Kasa açılışı ₺500**. Kasa ve sahip **elle** her ödemeyi kâğıda da yazar (sonunda karşılaştıracağız).
 5. Mutfak: tablete bir kez dokunur (ses), "Ekranı açık tut"u açar.

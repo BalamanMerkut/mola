@@ -7,7 +7,7 @@ Yeni yerleşimden ("Her şey yerli yerinde") sonra, hafta sonu arkadaş denemesi
 - **Kurulu paket**, geliştirme sunucusu değil: Windows paketi ve Mola Yönetim paketi geçici klasöre kuruldu (3501 / 3591), geçici verilerle. Sizin kurulumunuza ve verinize dokunulmadı.
 - **Hafta sonu senaryosu baştan sona, cihazlar aynı anda:** kasa bilgisayarı (1366 × 768), iki garson telefonu, mutfak tableti (yatay), sahibin telefonu ve bilgisayarı, Müdür telefonu, dört misafir telefonu (biri İngilizce).
 - Her rol günlük işini yeni yerinde buldu mu: kasiyer (Kasa = yalnız Bugün), garson, mutfak, Müdür (Kasa ayarları yok, farkı görmüyor), sahip.
-- Bütün **"Taşındı → Git"** tabelaları (Ayarlar'daki 7 + Sipariş ve onay 2 + Raporlar → Para 3 + Personel 1 + Destek 2), **zil**deki her bildirimin düğmesi, **derin bağlantılar** (Gider kaydet, İadeyi yap, Gün sonuna git, QR kodlarına git, Ödemeyi düzelt), **hatırlanan sekmeler**, **telefon kodu** açıkken taşınan para sekmeleri.
+- (13 Ekim: "Taşındı → Git" tabelaları kaldırıldı; eski hatırlanan yerler yeni yere açılır.) **Zil**deki her bildirimin düğmesi, **derin bağlantılar** (Gider kaydet, İadeyi yap, Gün sonuna git, QR kodlarına git, Ödemeyi düzelt), **hatırlanan sekmeler**, **telefon kodu** açıkken taşınan para sekmeleri.
 - **Elle sağlama** (kâğıt ile Mola aynı mı):
 
 | | Kâğıt | Mola |

@@ -2,7 +2,7 @@ import { FeatureLockView, LockedRow, openFeatureLock, usePackage } from './Featu
 import type { FeatureId } from '../packages/domain/feature-gate';
 import { DateField } from './DateField';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowDownRight, ArrowUpRight, CalendarDays, CalendarRange, Mail, Smartphone, TrendingUp, Users, Wallet, type LucideIcon } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, CalendarDays, CalendarRange, Mail, Smartphone, TrendingUp, Users, type LucideIcon } from 'lucide-react';
 import { ProfitReport } from './ProfitReport';
 import { ReservationReport } from './ReservationReport';
 import { PillTabs } from './PillTabs';
@@ -22,7 +22,7 @@ import { longDay, type AgendaNote } from '../packages/domain/agenda';
 import { ReportTools, SimpleSummary, VatPanel } from './ReportSimple';
 import { YearPicker, yearOf, YearTable } from './ReportYears';
 import { EmailReports } from './EmailReports';
-import { Moved, PlaceLink } from './Moved';
+import { PlaceLink } from './Moved';
 import { goTo } from './navigate';
 import './report-workspace.css';
 
@@ -60,19 +60,18 @@ function soldTotal(rows: Sold[]) {
 /**
  * Satış ve Raporlar is the read-only "işletme nasıl gidiyor?" place (10 Ekim düzeni, docs/BILGI_MIMARISI_ONERISI.md). Two
  * rows of tabs: the groups on top (icons; on a phone the icon sits above the short name, all on one row), the group's
- * reports in a quieter row under them (hidden when the group has a single report). The record books moved to their homes:
- * Kasa kapanışları, Giderler, İade ve düzeltme → Kasa ve giderler; Personel ve bahşiş → Personel → Vardiya ve bahşiş. Their
- * old place keeps a "Taşındı → Git" signpost for two releases (the "Para" group and a line above Çalışanlar).
+ * reports in a quieter row under them (hidden when the group has a single report). The record books live where the work is:
+ * Kasa kapanışları, Giderler, İade ve düzeltme in Kasa ve giderler; Personel ve bahşiş in Personel → Vardiya ve bahşiş (the
+ * old "Para" group and its signposts went on 13 Ekim).
  */
-const TAB_NAMES = { summary: 'Özet', products: 'Ürünler', profit: 'Kârlılık', campaigns: 'Kampanyalar', money: 'Para', employees: 'Çalışanlar', reservations: 'Rezervasyon' } as const;
+const TAB_NAMES = { summary: 'Özet', products: 'Ürünler', profit: 'Kârlılık', campaigns: 'Kampanyalar', employees: 'Çalışanlar', reservations: 'Rezervasyon' } as const;
 export type ReportTab = keyof typeof TAB_NAMES;
 type Tab = ReportTab;
 /** Tabs of the earlier reports, remembered on devices or opened by older links: where they land now. */
-const OLD_TABS: Record<string, Tab> = { cash: 'money', expenses: 'money', corrections: 'money', staff: 'employees' };
-type Group = 'sales' | 'money' | 'people' | 'reservations';
+const OLD_TABS: Record<string, Tab> = { cash: 'summary', expenses: 'summary', corrections: 'summary', money: 'summary', staff: 'employees' };
+type Group = 'sales' | 'people' | 'reservations';
 const GROUPS: { id: Group; label: string; icon: LucideIcon; tabs: Tab[] }[] = [
   { id: 'sales', label: 'Satış', icon: TrendingUp, tabs: ['summary', 'products', 'profit', 'campaigns'] },
-  { id: 'money', label: 'Para', icon: Wallet, tabs: ['money'] },
   { id: 'people', label: 'Personel', icon: Users, tabs: ['employees'] },
   { id: 'reservations', label: 'Rezervasyon', icon: CalendarRange, tabs: ['reservations'] },
 ];
@@ -83,7 +82,7 @@ const TAB_FEATURE: Partial<Record<Tab, FeatureId>> = { profit: 'stock', reservat
 type Place = { tab: Tab; last: Partial<Record<Group, Tab>> };
 const PLACE_KEY = 'mola-report-place';
 const isTab = (v: unknown): v is Tab => typeof v === 'string' && Object.keys(TAB_NAMES).includes(v);
-/** A report id of now or of the earlier reports ("expenses" → the Para signpost); null when unknown. */
+/** A report id of now or of the earlier reports ("expenses" → Özet); null when unknown. */
 export const reportTab = (v: unknown): Tab | null => isTab(v) ? v : typeof v === 'string' && OLD_TABS[v] ? OLD_TABS[v] : null;
 function rememberedPlace(): Place {
   try {
@@ -129,8 +128,8 @@ export function SalesReports({ open, onRecipe }: { open?: ReportsOpening; onReci
   // The plain summary first; a link to one report (ReportsOpening) opens the full reports without changing the remembered choice.
   const [detail, setDetailState] = useState(() => (!!open && !open.send) || rememberedDetail());
   const setDetail = (on: boolean) => { setDetailState(on); try { localStorage.setItem(VIEW_KEY, on ? 'detail' : 'simple'); } catch { /* preference only */ } };
-  // Campaigns are compared on their own dates and the Para signpost has no figures, so the period does not apply there.
-  const usesPeriod = !detail || (tab !== 'campaigns' && tab !== 'money');
+  // Campaigns are compared on their own dates, so the period does not apply there.
+  const usesPeriod = !detail || tab !== 'campaigns';
   const pk = usePackage(), tabLocked = (id: Tab) => { const f = TAB_FEATURE[id]; return !!f && !pk.has(f); }, lockedHere = TAB_FEATURE[tab] && tabLocked(tab) ? TAB_FEATURE[tab] : undefined;
   // The owner's own: "Raporları gönder" (e-posta raporları) and "Raporları telefonda gör" (Ayarlar → Güvenlik ve yedek → Telefonum).
   const owner = pk.owner, [sending, setSending] = useState(!!open?.send && pk.has('email-reports'));
@@ -138,7 +137,7 @@ export function SalesReports({ open, onRecipe }: { open?: ReportsOpening; onReci
     {usesPeriod && <PeriodBar range={range} onChange={setRange} />}
     <div className="report-toolbar">
       {detail && <button type="button" className="btn secondary report-mode-btn" onClick={() => setDetail(false)}>Sade özete dön</button>}
-      <ReportTools view={detail && tab !== 'money' ? tab : 'summary'} viewName={detail && tab !== 'money' ? TAB_NAMES[tab] : 'Satış özeti'} range={range} extra={owner ? [
+      <ReportTools view={detail ? tab : 'summary'} viewName={detail ? TAB_NAMES[tab] : 'Satış özeti'} range={range} extra={owner ? [
         { id: 'email', icon: <Mail size={18} aria-hidden="true" />, label: 'Raporları gönder', sub: 'Günlük, haftalık, aylık özet e-postayla', locked: !pk.has('email-reports'), onClick: () => pk.has('email-reports') ? setSending(true) : openFeatureLock('email-reports') },
         { id: 'phone', icon: <Smartphone size={18} aria-hidden="true" />, label: 'Raporları telefonda gör', sub: 'Telefonunuzu bir kez eşleştirin, her yerden bakın', onClick: () => goTo({ view: 'settings', topic: 'security', part: 'phone' }) },
       ] : []} />
@@ -149,22 +148,9 @@ export function SalesReports({ open, onRecipe }: { open?: ReportsOpening; onReci
       <PillTabs label="Rapor bölümleri" className="report-groups" phoneStack dataAttr="report-group" value={group.id} onChange={setGroup} items={GROUPS.map(g => ({ id: g.id, label: g.label, icon: g.icon, locked: g.tabs.every(tabLocked) }))} />
       {group.tabs.length > 1 && <PillTabs label="Rapor sekmeleri" className="report-tabs" variant="sub" dataAttr="report-tab" value={tab} onChange={setTab} items={group.tabs.map(id => ({ id, label: TAB_NAMES[id], locked: tabLocked(id) }))} />}
     </div>
-    {lockedHere ? <FeatureLockView feature={lockedHere} compact onClose={() => setTab('summary')} /> : tab === 'summary' ? <Summary range={range} onProducts={() => setTab('products')} onRange={setRange} /> : tab === 'products' ? <Products range={range} /> : tab === 'profit' ? <ProfitReport range={range} onRecipe={onRecipe} margins={open?.margins} /> : tab === 'employees' ? <><Moved what="Personel ve bahşiş" where="Personel → Vardiya ve bahşiş" to={{ view: 'users', tab: 'shifts' }} /><EmployeeReports range={range} /></> : tab === 'campaigns' ? <CampaignReports initial={open?.campaign} /> : tab === 'reservations' ? <ReservationReport range={range} /> : <MoneyMoved />}
+    {lockedHere ? <FeatureLockView feature={lockedHere} compact onClose={() => setTab('summary')} /> : tab === 'summary' ? <Summary range={range} onProducts={() => setTab('products')} onRange={setRange} /> : tab === 'products' ? <Products range={range} /> : tab === 'profit' ? <ProfitReport range={range} onRecipe={onRecipe} margins={open?.margins} /> : tab === 'employees' ? <EmployeeReports range={range} /> : tab === 'campaigns' ? <CampaignReports initial={open?.campaign} /> : <ReservationReport range={range} />}
     </>}
   </div>;
-}
-
-/** The old "Para" group: its three record books now live in Kasa ve giderler (signposts for two releases). */
-function MoneyMoved() {
-  return <section className="panel moved-panel" aria-label="Para taşındı">
-    <h3>Para kayıtları taşındı</h3>
-    <p className="muted small">Kasa kapanışları, giderler ve iadeler artık işin yapıldığı yerde: <strong>Kasa ve giderler</strong>. Bu raporlar orada aynı dönem seçimiyle, aynı “Yazdır / PDF” ile açılır. Satış ve Raporlar yalnız okunan sayfalardır.</p>
-    <ul className="moved-list">
-      <li><Moved what="Kasa kapanışları" where="Kasa ve giderler → Kapanışlar" to={{ view: 'cash', tab: 'closings' }} /></li>
-      <li><Moved what="Giderler" where="Kasa ve giderler → Giderler" to={{ view: 'cash', tab: 'expenses', part: 'records' }} /></li>
-      <li><Moved what="İade ve düzeltme" where="Kasa ve giderler → İadeler" to={{ view: 'cash', tab: 'refunds' }} /></li>
-    </ul>
-  </section>;
 }
 
 export function PeriodBar({ range, onChange }: { range: Range; onChange: (r: Range) => void }) {

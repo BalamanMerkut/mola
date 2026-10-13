@@ -194,7 +194,7 @@ test('Mola Yönetim: sidebar, Bugün list, status chips, filters, sorting, pagin
   // Ayarlar: one section at a time.
   await yonetimSettings(page, 'Hesap güvenliği');
   // Paketler and Hizmet fiyatları left Ayarlar for their own place in the menu (13 Ekim); Destek sits right above Ayarlar.
-  await expect(page.getByRole('navigation', { name: 'Ayarlar bölümleri' }).getByRole('button')).toHaveText(['Hesap güvenliği', 'Yedek', 'Güncellemeler', 'E-posta bildirimleri', 'İletişim bilgileri', 'İşlem kayıtları', 'Çalışma klasörü', 'Geliştirici erişimi']);
+  await expect(page.getByRole('navigation', { name: 'Ayarlar bölümleri' }).getByRole('button')).toHaveText(['Hesap güvenliği', 'Kullanıcılar', 'Yedek', 'Güncellemeler', 'E-posta bildirimleri', 'İletişim bilgileri', 'İşlem kayıtları', 'Çalışma klasörü', 'Geliştirici erişimi']);
   expect(await page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' }).getByRole('button').evaluateAll(items => items.map(b => b.getAttribute('aria-label')))).toEqual(['Bugün', 'İşletmeler', 'Başvurular', 'Duyurular', 'Satışlarım', 'Paketler', 'Destek', 'Ayarlar']);
   // Destek and Ayarlar are kept at the bottom of the sidebar, Destek right above Ayarlar.
   const navBox = async (name: string) => (await page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' }).getByRole('button', { name, exact: true }).boundingBox())!;

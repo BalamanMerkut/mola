@@ -16,8 +16,18 @@ import { base32, verifyTotp } from './totp.js';
  * successful login. `mustChange`: the generated first password (merkez-first-login.txt) must be replaced before anything else.
  */
 export type AdminRecord = { salt: string; hash: string; n?: number; mfa?: AdminFactor; mustChange?: boolean };
+type AccountChange<T> = (holder: { admin: AdminRecord }, audit: (action: string, detail?: string) => void) => T;
 /** Reads the record; `change` runs inside the owner's transaction and may replace `holder.admin` or add audit lines. */
-export type AdminAccount = { read(): AdminRecord; change<T>(fn: (holder: { admin: AdminRecord }, audit: (action: string, detail?: string) => void) => T): T };
+export type AdminAccount = { read(): AdminRecord; change<T>(fn: AccountChange<T>): T };
+/**
+ * Yetkili hesaplar (13 Ekim, sahibin isteği): more people in the panel below the owner ("admin"), each with an own name,
+ * password and two-step login. `find`: the id of a sign-in name (lower case); `read`/`change`: that person's record (a removed
+ * one: undefined / UNAUTHORIZED). The owner adds and removes them (server/merkez/admin-users.ts); "Şifremi unuttum" stays
+ * the owner's: a yetkili who forgot asks the owner for a new first password.
+ */
+export type AdminUsers = { find(username: string): string | undefined; read(id: string): AdminRecord | undefined; username(id: string): string | undefined; change<T>(id: string, fn: AccountChange<T>): T };
+/** The owner's own session (the original single account). */
+export const OWNER = 'admin';
 /**
  * How a forgotten password was proven: the Merkez recovery code (Ayarlar → Yedek), one of the MFA backup codes, or a 6-digit
  * code sent to the admin e-mail ("E-postama kod gönder").
@@ -57,25 +67,35 @@ export function newAdmin(password?: string) {
  * Security events for a tamper-evident record (Mola Merkez's İşlem kayıtları): sign-in, a wrong password or code, a refusal
  * for too many tries, sign-out, a failed check inside a session, a failed "Şifremi unuttum" proof. Never a password or code.
  */
-export type AuthEvent = { kind: 'login' | 'login_failed' | 'login_refused' | 'logout' | 'password_change_failed' | 'check_failed' | 'reset_failed'; req: Request; detail?: string };
-type Options = { prefix: string; cookie: string; label: string; issuer: string; now: () => Date; onPasswordChanged?: () => void; weakWords?: () => string[]; reset?: ResetOptions; onEvent?: (event: AuthEvent) => void };
+export type AuthEvent = { kind: 'login' | 'login_failed' | 'login_refused' | 'logout' | 'password_change_failed' | 'check_failed' | 'reset_failed'; req: Request; detail?: string; who?: string };
+type Options = { prefix: string; cookie: string; label: string; issuer: string; now: () => Date; onPasswordChanged?: () => void; weakWords?: () => string[]; reset?: ResetOptions; onEvent?: (event: AuthEvent) => void; users?: AdminUsers };
+type Session = { until: number; who: string };
 type Counter = { count: number; until: number; last: number };
 const MINUTE = 60_000, WINDOW = 15 * MINUTE, MAX_DELAY = 15 * MINUTE, DEVICE_DAYS = 90;
 export function adminAuthRoutes(app: Express, account: AdminAccount, o: Options) {
   const { prefix, cookie, now } = o, deviceCookie = `${cookie}_cihaz`;
-  const sessions = new ExpiringStore<number>(expires => expires, () => now().getTime(), 1000);
-  const setups = new ExpiringStore<{ secret: string; hashes: string[]; hash: string; until: number }>(v => v.until, () => now().getTime(), 1000);
+  const sessions = new ExpiringStore<Session>(s => s.until, () => now().getTime(), 1000);
+  const gone = () => new DomainError('UNAUTHORIZED', `${o.label} hesabıyla giriş yapın.`, 401);
+  /** The record a session or a sign-in name stands for: the owner's, or a yetkili's (removed meanwhile: UNAUTHORIZED). */
+  const accountOf = (who: string): AdminAccount => who === OWNER ? account : {
+    read: () => { const r = o.users?.read(who); if (!r) throw gone(); return r; },
+    change: fn => { if (!o.users) throw gone(); return o.users.change(who, fn); },
+  };
+  /** One person's sessions end (their password or two-step login changed, the owner removed them); the others stay. */
+  const endSessions = (who: string) => sessions.deleteWhere(s => s.who === who);
+  let mfaFailuresOf = new Map<string, Counter>();
+  const setups = new ExpiringStore<{ secret: string; hashes: string[]; hash: string; who: string; until: number }>(v => v.until, () => now().getTime(), 1000);
   // Wrong passwords per address (IPv6 per /64) in their own pool; the account-wide counters are plain fields nothing can evict.
   const addressFailures = new ExpiringStore<Counter>(v => v.until, () => now().getTime(), 5000, true);
-  let accountFailures: Counter = { count: 0, until: 0, last: 0 }, mfaFailures: Counter = { count: 0, until: 0, last: 0 };
+  let accountFailures: Counter = { count: 0, until: 0, last: 0 };
   const cookieOf = (req: Request, name: string) => (req.headers.cookie ?? '').split(';').map(v => v.trim()).find(v => v.startsWith(`${name}=`))?.slice(name.length + 1);
   /**
    * "Known device": a browser that signed in before carries a signed mark (tied to the current password). Account-wide slowing
    * never applies to it or to this computer itself, so strangers guessing from many addresses cannot lock the real vendor out.
    */
   const deviceMac = (issued: string, hash: string) => createHmac('sha256', Buffer.from(hash, 'hex')).update(`mola-cihaz:v1:${issued}`).digest('base64url');
-  function knownDevice(req: Request) {
-    const [issued, mac] = (cookieOf(req, deviceCookie) ?? '').split('.'), hash = account.read().hash;
+  function knownDevice(req: Request, hash: string) {
+    const [issued, mac] = (cookieOf(req, deviceCookie) ?? '').split('.');
     if (!issued || !mac || !/^\d{10,16}$/.test(issued) || now().getTime() - Number(issued) > DEVICE_DAYS * 86400_000) return false;
     const expected = Buffer.from(deviceMac(issued, hash)), given = Buffer.from(mac);
     return expected.length === given.length && timingSafeEqual(expected, given);
@@ -84,42 +104,56 @@ export function adminAuthRoutes(app: Express, account: AdminAccount, o: Options)
   const wait = (c: Counter | undefined, free: number, t: number) => !c || c.until <= t || c.count < free ? 0 : Math.max(0, c.last + Math.min(MAX_DELAY, 1000 * 2 ** (c.count - free)) - t);
   const fail = (c: Counter | undefined, t: number): Counter => c && c.until > t ? { count: c.count + 1, until: t + WINDOW, last: t } : { count: 1, until: t + WINDOW, last: t };
   const slow = (ms: number) => new DomainError('RATE_LIMIT', `Çok fazla yanlış deneme. ${ms > 90_000 ? `${Math.ceil(ms / 60_000)} dakika` : `${Math.ceil(ms / 1000)} saniye`} sonra tekrar deneyin.`, 429);
+  /** The signed-in session: its token and whose it is (OWNER or a yetkili's id). A removed yetkili's session ends here. */
+  function session(req: Request) {
+    const token = cookieOf(req, cookie), s = token ? sessions.get(token) : undefined;
+    if (!token || !s || s.until <= now().getTime()) throw gone();
+    if (s.who !== OWNER && !o.users?.read(s.who)) { sessions.delete(token); throw gone(); }
+    return { token, who: s.who };
+  }
   function admin(req: Request, options: { evenIfMustChange?: boolean } = {}) {
-    const token = cookieOf(req, cookie);
-    if (!token || (sessions.get(token) ?? 0) <= now().getTime()) throw new DomainError('UNAUTHORIZED', `${o.label} hesabıyla giriş yapın.`, 401);
-    if (!options.evenIfMustChange && account.read().mustChange) throw new DomainError('PASSWORD_CHANGE_REQUIRED', 'Devam etmek için önce ilk şifreyi değiştirin.', 403);
+    const { token, who } = session(req);
+    if (!options.evenIfMustChange && accountOf(who).read().mustChange) throw new DomainError('PASSWORD_CHANGE_REQUIRED', 'Devam etmek için önce ilk şifreyi değiştirin.', 403);
     return token;
   }
+  /** Whose session this is: OWNER, or the id of a yetkili. */
+  const whoOf = (req: Request) => session(req).who;
   const clear = (req: Request, res: { clearCookie: (name: string, options: object) => void }) => res.clearCookie(cookie, sessionCookie(req, prefix));
-  const emit = (kind: AuthEvent['kind'], req: Request, detail?: string) => { try { o.onEvent?.({ kind, req, ...(detail ? { detail } : {}) }); } catch { /* the record is secondary to the answer */ } };
+  const emit = (kind: AuthEvent['kind'], req: Request, detail?: string, who?: string) => {
+    let me: string | undefined; try { me = who ?? whoOf(req); } catch { /* no session */ }
+    try { o.onEvent?.({ kind, req, ...(detail ? { detail } : {}), ...(me ? { who: me } : {}) }); } catch { /* the record is secondary to the answer */ }
+  };
   app.post(`${prefix}/login`, async (req, res) => {
-    const b = z.object({ username: z.literal('admin'), password: z.string().max(128), code: z.string().max(32).optional() }).parse(req.body);
-    const key = clientKey(req), t = now().getTime(), local = loopbackRequest(req), trusted = local || knownDevice(req);
+    const b = z.object({ username: z.string().trim().min(1).max(64), password: z.string().max(128), code: z.string().max(32).optional() }).parse(req.body);
+    // The owner signs in as "admin"; a yetkili with the name the owner gave. An unknown name is checked against the owner's
+    // record anyway (the same time and answer), so the answer never tells which names exist.
+    const name = b.username.toLowerCase(), found = name === OWNER ? OWNER : o.users?.find(name), who = found ?? OWNER, acct = accountOf(who), as = found ?? '';
+    const key = clientKey(req), t = now().getTime(), local = loopbackRequest(req), trusted = local || (!!found && knownDevice(req, acct.read().hash));
     // Per address: 5 free tries, then an ever longer wait (this computer too, so a script cannot hammer it).
     const mine = wait(addressFailures.get(key), 5, t);
-    if (mine) { emit('login_refused', req); throw slow(mine); }
+    if (mine) { emit('login_refused', req, undefined, as); throw slow(mine); }
     // Account-wide (many addresses together): from 20 failures on, slowed for strangers only.
     const overall = trusted ? 0 : wait(accountFailures, 20, t);
-    if (overall) { emit('login_refused', req, 'hesap genelinde'); throw slow(overall); }
+    if (overall) { emit('login_refused', req, 'hesap genelinde', as); throw slow(overall); }
     const failed = (error: DomainError) => { addressFailures.set(key, fail(addressFailures.get(key), t)); if (!local) accountFailures = fail(accountFailures, t); return error; };
-    const credential = account.read();
-    if (!await adminMatches(b.password, credential) || account.read().hash !== credential.hash) { emit('login_failed', req, 'Şifre yanlış'); throw failed(new DomainError('INVALID_LOGIN', 'Giriş bilgileri yanlış.', 401)); }
+    const credential = acct.read(), right = await adminMatches(b.password, credential);
+    if (!found || !right || acct.read().hash !== credential.hash) { emit('login_failed', req, found ? 'Şifre yanlış' : 'Kullanıcı adı yanlış', as); throw failed(new DomainError('INVALID_LOGIN', 'Giriş bilgileri yanlış.', 401)); }
     // Authenticator codes: 5 wrong ones in 15 minutes and strangers wait (a stolen password does not open a code-guessing run).
-    if (credential.mfa && b.code && !trusted) { const m = wait(mfaFailures, 5, t); if (m) { emit('login_refused', req, 'iki adımlı kod denemeleri'); throw slow(m); } }
+    if (credential.mfa && b.code && !trusted) { const m = wait(mfaFailuresOf.get(who), 5, t); if (m) { emit('login_refused', req, 'iki adımlı kod denemeleri', who); throw slow(m); } }
     try {
-      account.change((p, audit) => {
+      acct.change((p, audit) => {
         if (p.admin.hash !== credential.hash) throw new DomainError('INVALID_LOGIN', 'Giriş bilgileri değişti. Yeniden deneyin.', 401);
         if (p.admin.mfa && consumeAdminFactor(p.admin.mfa, b.code, now().getTime()) === 'recovery') audit('admin.mfa_recovery_used');
       });
-    } catch (e) { if (e instanceof DomainError && e.code === 'INVALID_CODE') { emit('login_failed', req, 'Şifre doğru, iki adımlı giriş kodu yanlış'); if (!local) mfaFailures = fail(mfaFailures, t); throw failed(e); } throw e; }
+    } catch (e) { if (e instanceof DomainError && e.code === 'INVALID_CODE') { emit('login_failed', req, 'Şifre doğru, iki adımlı giriş kodu yanlış', who); if (!local) { mfaFailuresOf.set(who, fail(mfaFailuresOf.get(who), t)); if (mfaFailuresOf.size > 1000) mfaFailuresOf = new Map(); } throw failed(e); } throw e; }
     addressFailures.delete(key);
-    emit('login', req, credential.mfa ? 'şifre + iki adımlı kod' : 'şifre');
+    emit('login', req, credential.mfa ? 'şifre + iki adımlı kod' : 'şifre', who);
     // An older, cheaper hash is replaced now that the password is known to be right.
     if ((credential.n ?? 2 ** 15) < adminN()) {
       const upgraded = await adminRecord(b.password);
-      try { account.change(p => { if (p.admin.hash === credential.hash) p.admin = { ...p.admin, ...upgraded }; }); } catch { /* next login */ }
+      try { acct.change(p => { if (p.admin.hash === credential.hash) p.admin = { ...p.admin, ...upgraded }; }); } catch { /* next login */ }
     }
-    const current = account.read(), token = randomBytes(32).toString('hex'); sessions.set(token, now().getTime() + 4 * 3600000);
+    const current = acct.read(), token = randomBytes(32).toString('hex'); sessions.set(token, { until: now().getTime() + 4 * 3600000, who });
     const issued = String(now().getTime());
     res.cookie(cookie, token, { ...sessionCookie(req, prefix), maxAge: 4 * 3600000 });
     res.cookie(deviceCookie, `${issued}.${deviceMac(issued, current.hash)}`, { ...sessionCookie(req, prefix), maxAge: DEVICE_DAYS * 86400_000 });
@@ -152,66 +186,71 @@ export function adminAuthRoutes(app: Express, account: AdminAccount, o: Options)
   }
   /** Weak passwords are refused with what to change (first password, a change, any reset). */
   const strong = (password: string) => { const problem = weakAdminPassword(password, o.weakWords?.() ?? []); if (problem) throw new DomainError('WEAK_PASSWORD', problem, 400); };
+  // Each person's own: the password, two-step login and its setup work on the signed-in account (the owner's or a yetkili's);
+  // a change ends that person's sessions only.
   app.post(`${prefix}/password`, async (req, res) => {
     admin(req, { evenIfMustChange: true });
+    const who = whoOf(req), acct = accountOf(who);
     const b = z.object({ currentPassword: z.string().min(1).max(128), newPassword: z.string().max(128) }).strict().parse(req.body);
     const check = guarded(req);
-    const old = account.read();
+    const old = acct.read();
     if (!await adminMatches(b.currentPassword, old)) throw check.failed(new DomainError('INVALID_PASSWORD', 'Mevcut şifre yanlış.', 400));
     check.passed();
     if (b.currentPassword === b.newPassword) throw new DomainError('SAME_PASSWORD', 'Yeni şifre mevcut şifreden farklı olmalı.', 400);
     strong(b.newPassword);
     const credential = await adminRecord(b.newPassword);
     admin(req, { evenIfMustChange: true });
-    account.change((p, audit) => {
+    acct.change((p, audit) => {
       if (p.admin.hash !== old.hash) throw new DomainError('VERSION_CONFLICT', 'Şifre başka bir oturumda değişti. Yeniden giriş yapın.', 409);
       p.admin = { ...credential, ...(p.admin.mfa ? { mfa: p.admin.mfa } : {}) };
       audit('admin.password_changed');
     });
-    sessions.clear(); setups.clear();
-    o.onPasswordChanged?.();
+    endSessions(who); setups.deleteWhere(s => s.who === who);
+    if (who === OWNER) o.onPasswordChanged?.();
     clear(req, res); res.json({ ok: true });
   });
-  app.post(`${prefix}/logout`, (req, res) => { const token = admin(req, { evenIfMustChange: true }); sessions.delete(token); emit('logout', req); clear(req, res); res.json({ ok: true }); });
-  app.get(`${prefix}/mfa`, (req, res) => { admin(req, { evenIfMustChange: true }); const m = account.read().mfa; res.json({ enabled: !!m, recoveryRemaining: m?.recoveryHashes.length ?? 0 }); });
+  app.post(`${prefix}/logout`, (req, res) => { const token = admin(req, { evenIfMustChange: true }); emit('logout', req); sessions.delete(token); clear(req, res); res.json({ ok: true }); });
+  app.get(`${prefix}/mfa`, (req, res) => { admin(req, { evenIfMustChange: true }); const m = accountOf(whoOf(req)).read().mfa; res.json({ enabled: !!m, recoveryRemaining: m?.recoveryHashes.length ?? 0 }); });
   app.post(`${prefix}/mfa/setup`, async (req, res) => {
-    admin(req); const check = guarded(req); const b = z.object({ password: z.string().max(128) }).parse(req.body), credential = account.read();
+    admin(req); const who = whoOf(req), acct = accountOf(who);
+    const check = guarded(req); const b = z.object({ password: z.string().max(128) }).parse(req.body), credential = acct.read();
     if (!await adminMatches(b.password, credential)) throw check.failed(new DomainError('INVALID_PASSWORD', 'Şifre yanlış.', 403));
     check.passed();
-    const token = admin(req), current = account.read();
+    const token = admin(req), current = acct.read();
     if (current.hash !== credential.hash) throw new DomainError('VERSION_CONFLICT', 'Hesap değişti. Yeniden giriş yapın.', 409);
     if (current.mfa) throw new DomainError('MFA_ENABLED', 'İki adımlı giriş zaten açık.', 409);
     const secret = base32(randomBytes(20)), recoveryCodes = Array.from({ length: 8 }, () => randomBytes(16).toString('hex'));
-    setups.set(token, { secret, hashes: recoveryCodes.map(recoveryHash), hash: current.hash, until: now().getTime() + 600000 });
-    const issuer = encodeURIComponent(o.issuer);
-    res.json({ secret, recoveryCodes, uri: `otpauth://totp/${issuer}:admin?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30` });
+    setups.set(token, { secret, hashes: recoveryCodes.map(recoveryHash), hash: current.hash, who, until: now().getTime() + 600000 });
+    const issuer = encodeURIComponent(o.issuer), label = encodeURIComponent(who === OWNER ? OWNER : o.users?.username(who) ?? who);
+    res.json({ secret, recoveryCodes, uri: `otpauth://totp/${issuer}:${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30` });
   });
   app.post(`${prefix}/mfa/enable`, (req, res) => {
-    const token = admin(req), check = guarded(req); const b = z.object({ code: z.string().length(6), saved: z.literal(true) }).parse(req.body), setup = setups.get(token);
-    if (!setup) throw new DomainError('MFA_SETUP_EXPIRED', 'Kurulumu yeniden başlatın.', 409);
+    const token = admin(req), who = whoOf(req), check = guarded(req); const b = z.object({ code: z.string().length(6), saved: z.literal(true) }).parse(req.body), setup = setups.get(token);
+    if (!setup || setup.who !== who) throw new DomainError('MFA_SETUP_EXPIRED', 'Kurulumu yeniden başlatın.', 409);
     const step = verifyTotp(setup.secret, b.code, now().getTime());
     if (step === null) throw check.failed(new DomainError('INVALID_CODE', 'Doğrulama kodu geçersiz.', 403));
     check.passed();
-    account.change((p, audit) => {
+    accountOf(who).change((p, audit) => {
       if (p.admin.mfa || p.admin.hash !== setup.hash) throw new DomainError('VERSION_CONFLICT', 'Güvenlik ayarı değişti. Yeniden giriş yapın.', 409);
       p.admin.mfa = { secret: setup.secret, lastStep: step, recoveryHashes: setup.hashes };
       audit('admin.mfa_enabled');
     });
-    setups.clear(); sessions.clear(); clear(req, res); res.json({ ok: true });
+    setups.deleteWhere(s => s.who === who); endSessions(who); clear(req, res); res.json({ ok: true });
   });
   app.post(`${prefix}/mfa/disable`, async (req, res) => {
-    admin(req); const check = guarded(req); const b = z.object({ password: z.string().max(128), code: z.string().max(32) }).parse(req.body), credential = account.read();
+    admin(req); const who = whoOf(req), acct = accountOf(who);
+    const check = guarded(req); const b = z.object({ password: z.string().max(128), code: z.string().max(32) }).parse(req.body), credential = acct.read();
     if (!await adminMatches(b.password, credential)) throw check.failed(new DomainError('INVALID_PASSWORD', 'Şifre yanlış.', 403));
     admin(req);
     try {
-      account.change((p, audit) => {
+      acct.change((p, audit) => {
         if (p.admin.hash !== credential.hash || !p.admin.mfa) throw new DomainError('VERSION_CONFLICT', 'Güvenlik ayarı değişti.', 409);
         consumeAdminFactor(p.admin.mfa, b.code, now().getTime()); delete p.admin.mfa;
         audit('admin.mfa_disabled');
       });
     } catch (e) { if (e instanceof DomainError && e.code === 'INVALID_CODE') throw check.failed(e); throw e; }
     check.passed();
-    setups.clear(); sessions.clear(); clear(req, res); res.json({ ok: true });
+    setups.deleteWhere(s => s.who === who); endSessions(who); clear(req, res); res.json({ ok: true });
   });
 
   /*
@@ -376,10 +415,18 @@ export function adminAuthRoutes(app: Express, account: AdminAccount, o: Options)
   });
   return {
     admin,
+    /** Whose session: OWNER or a yetkili's id; the owner-only parts (Kullanıcılar, e-posta ayarları) check it. */
+    whoOf,
+    /** Ends one person's sessions (the owner removed them or gave a new first password). */
+    endSessions,
+    /** The password rule of the panel (a yetkili's first password too). */
+    strong,
+    /** The Authenticator secret of a session's own account (step-up windows follow it; server/merkez/step-up.ts). */
+    mfaSecretOf: (token: string) => { const s = sessions.get(token); if (!s) return undefined; try { return accountOf(s.who).read().mfa?.secret; } catch { return undefined; } },
     /** A non-secret action from one address (the test e-mail): at most 5 a minute. */
     throttle,
-    /** The admin password for a sensitive action (a new recovery code): wrong answers count like the others. */
-    checkPassword: async (req: Request, password: string) => { const check = guarded(req); if (!await adminMatches(password, account.read())) { check.failed(new DomainError('INVALID_PASSWORD', '', 403)); return false; } check.passed(); return true; },
+    /** The signed-in person's password for a sensitive action (a new recovery code): wrong answers count like the others. */
+    checkPassword: async (req: Request, password: string) => { const check = guarded(req); if (!await adminMatches(password, accountOf(whoOf(req)).read())) { check.failed(new DomainError('INVALID_PASSWORD', '', 403)); return false; } check.passed(); return true; },
     /**
      * A fresh Authenticator code for a critical action (Güncellemeler, server/merkez/step-up.ts): the 6-digit TOTP only (no
      * backup code), used once (a code already used for a sign-in or an earlier check is refused). Wrong codes count like the
@@ -387,11 +434,14 @@ export function adminAuthRoutes(app: Express, account: AdminAccount, o: Options)
      * two-step login is not set up.
      */
     confirmCode: (req: Request, code: string) => {
-      if (!account.read().mfa) throw new DomainError('MFA_OFF', 'İki adımlı doğrulama açık değil.', 409);
+      // A session: that person's own Authenticator. A "releases" access key (npm run yayinla, no session): the owner's, as before.
+      let who = OWNER; try { who = whoOf(req); } catch { /* an access key */ }
+      const acct = accountOf(who);
+      if (!acct.read().mfa) throw new DomainError('MFA_OFF', 'İki adımlı doğrulama açık değil.', 409);
       const check = guarded(req), value = code.replace(/[\s-]/g, '');
       if (!/^\d{6}$/.test(value)) throw new DomainError('INVALID_CODE', 'Doğrulayıcı uygulamadaki 6 haneli kodu yazın.', 400);
       try {
-        account.change(p => {
+        acct.change(p => {
           const m = p.admin.mfa;
           if (!m) throw new DomainError('MFA_OFF', 'İki adımlı doğrulama açık değil.', 409);
           const step = verifyTotp(m.secret, value, now().getTime(), m.lastStep);

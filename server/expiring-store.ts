@@ -34,6 +34,8 @@ export class ExpiringStore<T> {
     this.entries.set(key, value);
   }
   delete(key: string) { return this.entries.delete(key); }
+  /** Removes every entry the test picks (one person's sessions); how many went. */
+  deleteWhere(test: (value: T) => boolean) { let n = 0; for (const [key, value] of this.entries) if (test(value)) { this.entries.delete(key); n++; } return n; }
   clear() { this.entries.clear(); }
   get size() { this.sweep(); return this.entries.size; }
 }

@@ -91,7 +91,7 @@ export async function yonetimGo(page: Page, name: 'Bugün' | 'İşletmeler' | 'B
  * Çalışma klasörü, Geliştirici erişimi). The old name "İşlem geçmişi" opens İşlem kayıtları (same lines, now tamper-evident).
  * Paketler and Hizmet fiyatları have their own page since 13 Ekim: `yonetimPackages`.
  */
-export async function yonetimSettings(page: Page, section: 'Hesap güvenliği' | 'Yedek' | 'Güncellemeler' | 'E-posta bildirimleri' | 'İletişim bilgileri' | 'İşlem geçmişi' | 'İşlem kayıtları' | 'Çalışma klasörü' | 'Geliştirici erişimi') {
+export async function yonetimSettings(page: Page, section: 'Hesap güvenliği' | 'Kullanıcılar' | 'Yedek' | 'Güncellemeler' | 'E-posta bildirimleri' | 'İletişim bilgileri' | 'İşlem geçmişi' | 'İşlem kayıtları' | 'Çalışma klasörü' | 'Geliştirici erişimi') {
   await yonetimGo(page, 'Ayarlar');
   await page.getByRole('navigation', { name: 'Ayarlar bölümleri' }).getByRole('button', { name: section === 'İşlem geçmişi' ? 'İşlem kayıtları' : section, exact: true }).click();
 }
@@ -254,13 +254,13 @@ export async function openView(page: Page, name: string) {
 /**
  * Satış ve Raporlar (src/SalesReports.tsx): the groups on top ("Rapor bölümleri"), the group's reports in the row under
  * them ("Rapor sekmeleri", absent when the group has a single report). Since 10 Ekim the record books live in their homes:
- * opening "Kasa kapanışları", "Giderler", "İade ve düzeltme" or "Personel ve bahşiş" goes there (`movedReports`); the old
- * "Para" group is a signpost.
+ * opening "Kasa kapanışları", "Giderler", "İade ve düzeltme" or "Personel ve bahşiş" goes there (`movedReports`). The old
+ * "Para" group and its signposts went on 13 Ekim.
  */
-export type ReportTab = 'Özet' | 'Ürünler' | 'Kârlılık' | 'Kampanyalar' | 'Kasa kapanışları' | 'Giderler' | 'İade ve düzeltme' | 'Çalışanlar' | 'Personel ve bahşiş' | 'Bahşiş' | 'Rezervasyon' | 'Para';
-export type ReportGroup = 'Satış' | 'Para' | 'Personel' | 'Rezervasyon';
+export type ReportTab = 'Özet' | 'Ürünler' | 'Kârlılık' | 'Kampanyalar' | 'Kasa kapanışları' | 'Giderler' | 'İade ve düzeltme' | 'Çalışanlar' | 'Personel ve bahşiş' | 'Bahşiş' | 'Rezervasyon';
+export type ReportGroup = 'Satış' | 'Personel' | 'Rezervasyon';
 export const reportGroupOf: Partial<Record<ReportTab, ReportGroup>> = {
-  'Özet': 'Satış', 'Ürünler': 'Satış', 'Kârlılık': 'Satış', 'Kampanyalar': 'Satış', 'Para': 'Para',
+  'Özet': 'Satış', 'Ürünler': 'Satış', 'Kârlılık': 'Satış', 'Kampanyalar': 'Satış',
   'Çalışanlar': 'Personel', 'Rezervasyon': 'Rezervasyon',
 };
 /** Record books that moved from Satış ve Raporlar to their homes (10 Ekim). */

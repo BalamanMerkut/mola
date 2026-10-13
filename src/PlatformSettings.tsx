@@ -1,4 +1,9 @@
-import { Code2, CloudDownload, DatabaseBackup, FolderOpen, Headset, Mail, ScrollText, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Code2, CloudDownload, DatabaseBackup, FolderOpen, Headset, Mail, ScrollText, ShieldCheck, Users, type LucideIcon } from 'lucide-react';
+import { api } from './api';
+import { Notice } from './components';
+import { ADMIN } from './platformStatus';
+import { PlatformUsers, type Me } from './PlatformUsers';
 import { EmailSettings } from './PlatformAlerts';
 import { PlatformBackup } from './PlatformBackup';
 import { ContactSettings } from './PlatformContact';
@@ -14,8 +19,9 @@ import './platform-journal.css';
 import './platform-settings.css';
 
 // Paketler and Hizmet fiyatları have their own page in the left menu since 13 Ekim (src/PlatformCatalogPage.tsx).
-export const settingsSections: [SettingsSection, string][] = [['security', 'Hesap güvenliği'], ['backup', 'Yedek'], ['updates', 'Güncellemeler'], ['email', 'E-posta bildirimleri'], ['contact', 'İletişim bilgileri'], ['audit', 'İşlem kayıtları'], ['workfolder', 'Çalışma klasörü'], ['developer', 'Geliştirici erişimi']];
-const icons: Record<SettingsSection, LucideIcon> = { security: ShieldCheck, backup: DatabaseBackup, updates: CloudDownload, email: Mail, contact: Headset, audit: ScrollText, workfolder: FolderOpen, developer: Code2 };
+// Kullanıcılar (13 Ekim): the owner's only; a yetkili does not see the tab (src/PlatformUsers.tsx).
+export const settingsSections: [SettingsSection, string][] = [['security', 'Hesap güvenliği'], ['users', 'Kullanıcılar'], ['backup', 'Yedek'], ['updates', 'Güncellemeler'], ['email', 'E-posta bildirimleri'], ['contact', 'İletişim bilgileri'], ['audit', 'İşlem kayıtları'], ['workfolder', 'Çalışma klasörü'], ['developer', 'Geliştirici erişimi']];
+const icons: Record<SettingsSection, LucideIcon> = { security: ShieldCheck, users: Users, backup: DatabaseBackup, updates: CloudDownload, email: Mail, contact: Headset, audit: ScrollText, workfolder: FolderOpen, developer: Code2 };
 
 /**
  * Ayarlar: one section at a time, picked from the shared pill tab bar (src/PillTabs.tsx: one row, two centred rows, or on a
@@ -34,16 +40,23 @@ export function PlatformSettings({ section, onSection, disabled, onSessionEnd, s
    */
   security?: { pending?: string; onBack?: () => void; onEnabled?: () => void; onAsk?: (label: string) => void };
 }) {
+  const [me, setMe] = useState<Me | null>(null);
+  useEffect(() => { void api<Me>(`${ADMIN}/me`).then(setMe, () => setMe(null)); }, []);
+  // A yetkili: no Kullanıcılar tab (the owner's), and a line saying whose account this is and what stays the owner's.
+  const sections = settingsSections.filter(([id]) => id !== 'users' || me?.owner);
+  const shown = section === 'users' && !me?.owner ? 'security' : section;
   return <div className="platform-settings">
     <header className="page-head"><div><h1>Ayarlar</h1><p className="page-lead">Hesabınız, Merkez yedeği, güncellemeler ve kayıtlar.</p></div></header>
-    <PillTabs items={settingsSections.map(([id, label]) => ({ id, label, icon: icons[id] }))} value={section} onChange={onSection} label="Ayarlar bölümleri" kind="nav" wrapClassName="settings-pill-tabs" />
-    {section === 'security' && <div className="ps-grid ps-security"><PlatformPassword disabled={disabled} onChanged={message => onSessionEnd(message, /değiştirildi/.test(message) ? 'success' : 'error')} /><PlatformMfa pending={security?.pending} onBack={security?.onBack} onEnabled={security?.onEnabled} onChanged={message => onSessionEnd(message, 'success')} /></div>}
-    {section === 'backup' && <PlatformBackup onOpenBusiness={onOpenBusiness} />}
-    {section === 'updates' && <PlatformReleases onSecurity={() => security?.onAsk ? security.onAsk('Güncelleme yayını') : onSection('security')} />}
-    {section === 'email' && <EmailSettings />}
-    {section === 'contact' && <div className="platform-settings-one"><ContactSettings /></div>}
-    {section === 'audit' && <PlatformJournal />}
-    {section === 'workfolder' && <PlatformWorkFolder />}
-    {section === 'developer' && <PlatformDevAccess />}
+    <PillTabs items={sections.map(([id, label]) => ({ id, label, icon: icons[id] }))} value={shown} onChange={onSection} label="Ayarlar bölümleri" kind="nav" wrapClassName="settings-pill-tabs" />
+    {shown === 'security' && me && !me.owner && <Notice>Yetkili hesabı: <b>{me.name}</b> ({me.username}). Şifreniz ve iki adımlı girişiniz size aittir. Kullanıcılar, e-posta ayarları, Merkez kurtarma kodu ve geliştirici erişim anahtarları Mola Yönetim sahibindedir. Şifrenizi unutursanız sahibinden yeni ilk şifre isteyin.</Notice>}
+    {shown === 'users' && <PlatformUsers />}
+    {shown === 'security' && <div className="ps-grid ps-security"><PlatformPassword disabled={disabled} onChanged={message => onSessionEnd(message, /değiştirildi/.test(message) ? 'success' : 'error')} /><PlatformMfa pending={security?.pending} onBack={security?.onBack} onEnabled={security?.onEnabled} onChanged={message => onSessionEnd(message, 'success')} /></div>}
+    {shown === 'backup' && <PlatformBackup onOpenBusiness={onOpenBusiness} />}
+    {shown === 'updates' && <PlatformReleases onSecurity={() => security?.onAsk ? security.onAsk('Güncelleme yayını') : onSection('security')} />}
+    {shown === 'email' && <EmailSettings />}
+    {shown === 'contact' && <div className="platform-settings-one"><ContactSettings /></div>}
+    {shown === 'audit' && <PlatformJournal />}
+    {shown === 'workfolder' && <PlatformWorkFolder />}
+    {shown === 'developer' && <PlatformDevAccess />}
   </div>;
 }

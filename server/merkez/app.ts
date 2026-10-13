@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { sectors } from '../../packages/domain/sector.js';
 import { DomainError } from '../../packages/domain/engine.js';
-import { adminAuthRoutes } from '../admin-auth.js';
+import { adminAuthRoutes, OWNER } from '../admin-auth.js';
+import { actorOf, adminUserRoutes, adminUsersOf } from './admin-users.js';
 import { ExpiringStore } from '../expiring-store.js';
 import { clientKey, configureHttpSecurity, directLoopback, loopbackRequest, type HttpSecurity } from '../http-security.js';
 // "Göz at": Windows' folder window on this computer (server/merkez/folder-picker.ts), only for a direct loopback admin request.
@@ -276,6 +277,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
     read: () => store.read().admin,
     change: fn => store.mutate(d => fn(d, (action, detail) => d.audit.push({ action, target: 'admin', at: at(), ...(detail ? { detail } : {}) }))),
   }, { prefix: '/api/merkez/admin', cookie: 'mola_merkez', label: 'Mola Yönetim', issuer: 'Mola Yönetim', now,
+    // Yetkililer (Ayarlar → Kullanıcılar, server/merkez/admin-users.ts): own sign-in, password and two-step login.
+    users: adminUsersOf(store, at),
     // A business's name on this Merkez is no password either.
     weakWords: () => store.read().businesses.map(b => b.name),
     // "Şifremi unuttum": only from this computer's own browser, never through a proxy and never on a public (HTTPS) Merkez:
@@ -320,12 +323,14 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
     // Sign-ins, wrong passwords and codes, refusals, sign-outs: İşlem kayıtları only (never the password or the code).
     onEvent: authEvent });
   /** A signed-in admin: the actor of every line this request writes. */
-  const admin = (req: Request, o?: { evenIfMustChange?: boolean }) => { const token = auth.admin(req, o); const ctx = journalContext.getStore(); if (ctx && ctx.actor?.kind !== 'token') ctx.actor = ADMIN_ACTOR; return token; };
+  const admin = (req: Request, o?: { evenIfMustChange?: boolean }) => { const token = auth.admin(req, o); const ctx = journalContext.getStore(); if (ctx && ctx.actor?.kind !== 'token') ctx.actor = actorOf(store, auth.whoOf(req), ADMIN_ACTOR); return token; };
+  // Ayarlar → Kullanıcılar: the owner's yetkililer; `ownerOnly` also guards the e-mail settings (server/merkez/admin-users.ts).
+  const ownerOnly = adminUserRoutes(app, { store, at, admin: req => admin(req), whoOf: auth.whoOf, endSessions: auth.endSessions, checkPassword: auth.checkPassword, strong: auth.strong }).owner;
   const tokenAuth = tokenGuard(store, now);
   /** Güncellemeler: the admin session, or a "releases" token from Geliştirici erişimi. */
   const releaseAdmin = (req: Request) => bearer(req) !== undefined ? tokenAuth(req, 'releases') : admin(req);
   /** Güncelleme yetkisi (server/merkez/step-up.ts): upload, publish, Durdur, Sil need a fresh Authenticator code. */
-  const right = releaseRight({ store, now, confirm: auth.confirmCode });
+  const right = releaseRight({ store, now, confirm: auth.confirmCode, secretOf: who => auth.mfaSecretOf(String(who)) });
   const releaseChange = (req: Request) => { const who = releaseAdmin(req); right.require(who); return who; };
   const tokenOrAdmin = (req: Request, scope: TokenScope) => bearer(req) !== undefined ? tokenAuth(req, scope) : admin(req);
   const refusedTold = new Map<string, number>();
@@ -333,7 +338,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
     const action = { login: 'admin.login', login_failed: 'admin.login_failed', login_refused: 'admin.login_refused', logout: 'admin.logout', password_change_failed: 'admin.password_change_failed', check_failed: 'admin.check_failed', reset_failed: 'admin.reset_failed' }[e.kind];
     // A locked-out address keeps trying: one "durduruldu" line per address every 5 minutes is enough.
     if (e.kind === 'login_refused') { const k = clientKey(e.req), t = now().getTime(); if ((refusedTold.get(k) ?? 0) > t - 300_000) return; refusedTold.set(k, t); if (refusedTold.size > 1000) refusedTold.clear(); }
-    store.journal.append({ action, actor: ADMIN_ACTOR, target: { kind: 'admin', id: 'admin', name: 'Yönetici hesabı' }, ...(e.detail ? { detail: e.detail } : {}) });
+    const actor = e.who ? actorOf(store, e.who, ADMIN_ACTOR) : ADMIN_ACTOR;
+    store.journal.append({ action, actor, target: { kind: 'admin', id: e.who && e.who !== OWNER ? e.who : 'admin', name: e.who && e.who !== OWNER ? actor.name ?? 'Yetkili' : 'Yönetici hesabı' }, ...(e.detail ? { detail: e.detail } : {}) });
   }
   const find = (d: MerkezData, tenantId: string) => { const b = d.businesses.find(x => x.tenantId === tenantId); if (!b) throw new DomainError('NOT_FOUND', 'İşletme bulunamadı.', 404); return b; };
   const activated = (b: MerkezBusiness) => { if (!b.installId) throw new DomainError('NOT_ACTIVATED', 'İşletme Mola’yı henüz etkinleştirmedi. Önce etkinleştirme kodu kullanılmalı.', 409); return b; };
@@ -730,7 +736,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   };
   app.get('/api/merkez/admin/email', (req, res) => { admin(req); res.json(mailView(store.read())); });
   app.post('/api/merkez/admin/email', (req, res) => {
-    admin(req);
+    // The owner's only (13 Ekim): the SMTP server and the addresses decide where the owner's "Şifremi unuttum" code goes.
+    ownerOnly(req);
     const b = z.object({ enabled: z.boolean(), host: z.string().trim().regex(/^[a-z0-9.-]{1,200}$/i), port: z.number().int().min(1).max(65535), security: z.enum(['tls', 'starttls', 'none']), user: z.string().trim().max(200), password: z.string().max(200).optional(), to: z.string().trim().max(200), from: z.string().trim().max(200).optional(), adminEmail: z.string().trim().max(200).optional() }).strict().parse(req.body);
     if (!validAddress(b.to)) throw new DomainError('EMAIL_ADDRESS', 'Bildirimlerin gideceği adresi kontrol edin (ör. ad@ornek.com).', 400);
     if (b.from && !validAddress(b.from)) throw new DomainError('EMAIL_ADDRESS', 'Gönderen adresini kontrol edin (ör. bildirim@ornek.com).', 400);
@@ -801,14 +808,15 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
     catch (e) { if (e instanceof DomainError) throw e; throw new DomainError('PICKER_FAILED', 'Klasör seçme penceresi açılamadı. Klasör yolunu elle yazın.', 409); }
     finally { picking = false; }
   });
-  app.post('/api/merkez/admin/recovery/show', (req, res) => { admin(req); here(req); if (!options.recovery) throw backupOff(); const code = options.recovery.reveal(); store.journal.append({ action: 'merkez.recovery_shown', target: { kind: 'merkez', id: 'merkez', name: 'Mola Merkez' } }); res.json({ code }); });
+  // The Merkez recovery code is the owner's last key (13 Ekim): a yetkili neither sees nor renews it.
+  app.post('/api/merkez/admin/recovery/show', (req, res) => { ownerOnly(req); here(req); if (!options.recovery) throw backupOff(); const code = options.recovery.reveal(); store.journal.append({ action: 'merkez.recovery_shown', target: { kind: 'merkez', id: 'merkez', name: 'Mola Merkez' } }); res.json({ code }); });
   app.post('/api/merkez/admin/recovery/confirm', (req, res) => {
-    admin(req); if (!options.recovery) throw backupOff(); options.recovery.confirm();
+    ownerOnly(req); if (!options.recovery) throw backupOff(); options.recovery.confirm();
     store.mutate(d => { d.audit.push({ action: 'merkez.recovery_confirmed', target: 'admin', at: at(), by: 'admin' }); });
     res.json(options.recovery.view());
   });
   app.post('/api/merkez/admin/recovery/new', async (req, res) => {
-    admin(req); here(req); if (!options.recovery) throw backupOff();
+    ownerOnly(req); here(req); if (!options.recovery) throw backupOff();
     const { password } = z.object({ password: z.string().min(1).max(128) }).strict().parse(req.body);
     if (!await auth.checkPassword(req, password)) throw new DomainError('INVALID_PASSWORD', 'Yönetici şifresi yanlış.', 403);
     const code = await options.recovery.regenerate();
@@ -1220,7 +1228,7 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   // İşlem kayıtları, Çalışma klasörü (written by runtime.ts's timer; tests call run()), Geliştirici erişimi, "Klasörde hazır".
   const workFolder = new WorkFolder({ store, releases, attachments, backups: () => options.backups?.status() ?? null, now, version: APP_VERSION, ...(options.workFolderDefault !== undefined ? { fallback: options.workFolderDefault } : {}) });
   app.locals.workFolder = workFolder;
-  journalRoutes(app, { store, now, admin, releaseAdmin, releaseChange, tokenOrAdmin, checkPassword: auth.checkPassword, releases, workFolder, version: APP_VERSION });
+  journalRoutes(app, { store, now, admin, owner: ownerOnly, releaseAdmin, releaseChange, tokenOrAdmin, checkPassword: auth.checkPassword, releases, workFolder, version: APP_VERSION });
   // Prices, packages and payments: the same Authenticator step-up as Güncellemeler (server/merkez/step-up.ts).
   const salesChange = (req: Request) => { const who = admin(req); right.require(who, 'sales'); return who; };
   catalogRoutes(app, { store, now, admin, change: salesChange, once: (d, scope, b, fn) => once(d, scope, b, fn), find });

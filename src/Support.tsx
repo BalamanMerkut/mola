@@ -8,7 +8,7 @@ import { Notice } from './components';
 import { MolaContact } from './MolaContact';
 import { PillTabs } from './PillTabs';
 import { Megaphone, MessagesSquare, MonitorSmartphone } from 'lucide-react';
-import { Moved, PlaceLink } from './Moved';
+import { PlaceLink } from './Moved';
 import { AnnouncementList } from './Announcements';
 import { RemoteAccess } from './RemoteSupport';
 import './support.css';
@@ -25,9 +25,9 @@ export type SupportTab = 'tickets' | 'notifications' | 'announcements' | 'remote
 /**
  * Destek is only about talking to Mola (10 Ekim düzeni): "Talepler" (support tickets and contact), "Duyurular" (the Mola
  * team's announcements, src/Announcements.tsx; red dot while unread) and "Uzaktan erişim" (the Mola team's remote support
- * permission and who connected when, src/RemoteSupport.tsx). Bildirimler moved to the bell on the top bar, the licence to
- * Ayarlar → İşletme → Paket ve lisans and "Telefonu eşleştir" to Ayarlar → Güvenlik ve yedek → Telefonum: a line here
- * points to each for two releases. An old 'notifications' tab opens Talepler.
+ * permission and who connected when, src/RemoteSupport.tsx). Bildirimler are on the bell of the top bar, the licence in
+ * Ayarlar → İşletme → Paket ve lisans, "Telefonu eşleştir" in Ayarlar → Güvenlik ve yedek → Telefonum. An old
+ * 'notifications' tab opens Talepler.
  */
 /** draft: a new ticket already written ("Mola ekibine yaz" on a service not in the package, src/FeatureLock.tsx). */
 export type TicketDraft = { subject: string; text: string };
@@ -41,7 +41,7 @@ export function Support({ tab = 'tickets', onTab, announcements = 0, onWrite, dr
       { id: 'announcements' as const, label: 'Duyurular', icon: Megaphone, extra: announcements > 0 ? <span className="red-dot" title={`${announcements} okunmamış duyuru`} aria-hidden="true" /> : undefined }, { id: 'remote' as const, label: 'Uzaktan erişim', icon: MonitorSmartphone }]} />;
   if (current === 'announcements') return <>{tabs}<div role="tabpanel" id="support-panel-announcements" aria-labelledby="support-tab-announcements"><AnnouncementList owner onWrite={d => { if (onWrite) onWrite(d); else { setOwnDraft(d); choose('tickets'); } }} /></div></>;
   if (current === 'remote') return <>{tabs}<div role="tabpanel" id="support-panel-remote" aria-labelledby="support-tab-remote"><RemoteAccess /></div></>;
-  return <>{tabs}<div role="tabpanel" id="support-panel-tickets" aria-labelledby="support-tab-tickets"><Moved what="Bildirimler" where="üst çubuktaki zil" to={{ view: 'notifications' }} action="Aç" /><SupportTickets key={ownDraft?.subject} draft={ownDraft} /></div></>;
+  return <>{tabs}<div role="tabpanel" id="support-panel-tickets" aria-labelledby="support-tab-tickets"><SupportTickets key={ownDraft?.subject} draft={ownDraft} /></div></>;
 }
 function SupportTickets({ draft }: { draft?: TicketDraft }) {
   const [data, setData] = useState<{ tickets: Ticket[]; license?: License & { daysRemaining: number; active: boolean; frozen: boolean }; connection?: Connection; merkez?: { notice: string | null; blocked: 'offline' | 'moved' | 'removed' | null } } | null>(null), [error, setError] = useState('');

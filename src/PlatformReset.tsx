@@ -125,7 +125,7 @@ export function PlatformReset({ onDone, onBack }: { onDone: (message: string) =>
   const emailOff = available !== null && !emailOn && <p className="muted small reset-email-off">E-postayla sıfırlama kapalı: Mola Yönetim’de e-posta (SMTP) ayarları yapılmamış (Ayarlar → E-posta bildirimleri).</p>;
 
   if (method === 'email') return <form className="auth-form auth-reset" onSubmit={e => { e.preventDefault(); void (sent ? verifyEmail() : send()); }}>
-    <header className="auth-head"><h1>Şifremi unuttum</h1><p>Yönetici e-postanıza 6 haneli bir kod gönderilir.{available === false ? ' Kodla sıfırlama yalnız Merkez’in kendi bilgisayarında yapılır.' : ''}</p></header>
+    <header className="auth-head"><h1>Şifremi unuttum</h1><p>Yönetici e-postanıza 6 haneli bir kod gönderilir.{available === false ? ' Kodla sıfırlama yalnız Merkez’in kendi bilgisayarında yapılır.' : ''} Yetkili kullanıcıysanız şifrenizi Mola Yönetim sahibi yeniler (Ayarlar → Kullanıcılar).</p></header>
     {methods}
     <label>Kullanıcı adı<input value={username} onChange={e => setUsername(e.target.value)} required maxLength={64} autoComplete="username" autoCapitalize="none" spellCheck={false} disabled={busy || sent} /></label>
     <label>Yönetici e-postası<input type="email" value={address} onChange={e => setAddress(e.target.value)} required maxLength={200} autoComplete="email" disabled={busy || sent} /></label>

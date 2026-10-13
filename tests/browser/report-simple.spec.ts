@@ -99,10 +99,9 @@ test('Satış ve Raporlar: sade özet first, "Detaylı göster" remembered, KDV 
   if (pdf) { expect(pdf.suggestedFilename()).toMatch(/\.pdf$/); expect(readFileSync(await pdf.path()).subarray(0, 5).toString('latin1')).toBe('%PDF-'); }
   await dialog.getByRole('button', { name: 'Kapat' }).first().click();
 
-  // The old "Para" group is a signpost (10 Ekim); a record book prints from its home: Kasa ve giderler → Giderler.
+  // No "Para" group any more (13 Ekim); a record book prints from its home: Kasa ve giderler → Giderler.
   await page.getByRole('button', { name: 'Detaylı göster' }).click();
-  await reportGroups(page).getByRole('button', { name: 'Para', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Para taşındı' })).toBeVisible();
+  await expect(reportGroups(page).getByRole('button', { name: 'Para', exact: true })).toHaveCount(0);
   await openCash(page, 'Giderler', 'Kayıtlar');
   await reportAction(page, 'Yazdır / PDF');
   await expect(paper.locator('h1')).toHaveText(/ · Giderler$/);

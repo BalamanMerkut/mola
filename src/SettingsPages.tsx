@@ -1,6 +1,6 @@
 import { lazy, useEffect, useId, useState, type ReactNode } from 'react';
 import { Building2, Check, ClipboardCheck, Mail, Cloud, CreditCard, DatabaseBackup, Download, FolderOpen, Footprints, HardDrive, KeyRound, LayoutGrid, Info, MapPin, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone, Usb } from 'lucide-react';
-import { Moved, PlaceLink } from './Moved';
+import { PlaceLink } from './Moved';
 import { PhonePairing } from './PhonePairing';
 import QRCode from 'qrcode';
 import { cloudLine, type CloudView } from './cloudBackupText';
@@ -141,11 +141,6 @@ export function OrdersPage({ data, prefs, onSaved }: { data: StaffSnapshot; pref
     </Card>
     </>} />
     <Saving prefs={prefs} />
-    {/* Taşındı (10 Ekim düzeni): the cash and staff parts of the old "Sipariş ve kasa", for two releases. */}
-    <div className="moved-list">
-      <Moved what="Kasa ve ödeme" where="Kasa ve giderler → Kasa ayarları" to={{ view: 'cash', tab: 'settings' }} />
-      <Moved what="Vardiya ve bahşiş, garson ataması" where="Personel → Personel ayarları" to={{ view: 'users', tab: 'settings' }} />
-    </div>
   </form>;
 }
 

@@ -330,8 +330,10 @@ test('the real read-only helper (Git bash): listing, hashes, tar stream into vds
   const kok = gecici('yardimci'); t.after(() => rmSync(kok, { recursive: true, force: true }));
   const merkez = join(kok, 'mola-merkez'), calisma = join(merkez, 'calisma'), yedek = join(merkez, 'merkez-yedek'), veri = join(merkez, 'veri');
   calismaYaz(calisma); yaz(calisma, 'guncellemeler/BENIOKU.txt', 'x');
-  yedekYaz(yedek, yedekAdi(11), '2026-10-11T00:30:00.000Z'); yedekYaz(yedek, yedekAdi(12), '2026-10-12T00:30:00.000Z', { buyuk: true });
-  yaz(yedek, 'merkez-yedek-durum.json', JSON.stringify({ lastSuccessAt: '2026-10-12T00:30:00.000Z' }));
+  // The newest an hour ago (a fixed date turned this into an "eski yedek" warning two days later).
+  const yeni = new Date(Date.now() - 3600_000).toISOString(), onceki = new Date(Date.now() - 25 * 3600_000).toISOString();
+  yedekYaz(yedek, yedekAdi(11), onceki); yedekYaz(yedek, yedekAdi(12), yeni, { buyuk: true });
+  yaz(yedek, 'merkez-yedek-durum.json', JSON.stringify({ lastSuccessAt: yeni }));
   yaz(veri, 'development.key', 'GİZLİ ANAHTAR'); yaz(veri, 'merkez.sqlite', 'veritabanı');
   const calistir = yardimciKur(kok, `MERKEZ_DATA_DIR=${msys(veri)}\nMERKEZ_BACKUP_DIR=${msys(yedek)}\nMERKEZ_CALISMA_KLASORU=${msys(calisma)}\n`);
   // ssh replaced by the helper: the tool's own fixed command decides which part runs.
@@ -364,7 +366,7 @@ test('the real read-only helper (Git bash): listing, hashes, tar stream into vds
   for (const f of agac(yedek)) assert.equal(sha(readFileSync(join(hedef, 'merkez-yedek', ...f.split('/')))), sha(readFileSync(join(yedek, ...f.split('/')))), f);
   const yedekler = bolumler((await yaziyla('yedekler')).cikti.toString('utf8'));
   assert.deepEqual(yedekler.get('yedekler')!.split('\n').map(l => l.split('\t')[0]), [yedekAdi(11), yedekAdi(12)]);
-  assert.equal(JSON.parse(yedekler.get('yedek-durum')!).lastSuccessAt, '2026-10-12T00:30:00.000Z');
+  assert.equal(JSON.parse(yedekler.get('yedek-durum')!).lastSuccessAt, yeni);
   const hatalar = bolumler((await yaziyla('hatalar')).cikti.toString('utf8'));
   assert.match(hatalar.get('hatalar')!, /"groups"/); assert.match(hatalar.get('durum-ozeti')!, /Çay Ocağı/);
   assert.match(bolumler((await yaziyla('boyut')).cikti.toString('utf8')).get('boyut')!, /\d+\t.*merkez-yedek/);
