@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { DomainError } from '../../packages/domain/engine.js';
 import { sqliteJob } from '../backup.js';
@@ -23,6 +23,11 @@ import { MARK_RESTORED } from './store.js';
  * program) with the recovery code: data, signing key and every licence come back as they were.
  */
 export const RECOVERY_FILE = 'merkez-kurtarma.json';
+/**
+ * Merkez's folders next to its data folder: the installed one (…\veri, /var/lib/mola-merkez/veri) has them as siblings
+ * (merkez-yedek, merkez-guncellemeler …), development (.local/merkez) as .local/merkez-yedek, .local/merkez-guncellemeler …
+ */
+export const besideData = (directory: string, name: string) => basename(directory) === 'veri' ? join(dirname(directory), name) : `${directory}-${name.replace(/^merkez-/, '')}`;
 export type RecoveryFile = { v: 1; kind: 'mola-merkez-kurtarma'; merkezId: string; check: string; recovery: RecoveryBlock; createdAt: string; updatedAt: string };
 export type RecoveryState = { available: boolean; shown: boolean; confirmed: boolean; createdAt: string | null };
 /** merkez-kurtarma.json as it is on disk (undefined: missing or damaged). Its `check` says which data key it belongs to. */
@@ -67,6 +72,24 @@ export class MerkezRecovery {
     // A protected key file carries the same block: the new code must open it too, the old one no longer.
     await this.hooks.onChange?.(this.file);
     this.pending = code; return code;
+  }
+  /**
+   * The server's own command (kurtarma-kodu.sh, a VDS where Mola Yönetim never shows the code): a new code made and checked
+   * like regenerate(), but written only by commit(), after the vendor typed parts of it back. Before that nothing changes.
+   * Committed as shown and saved (the command showed it and checked it), so the next start does not replace it.
+   */
+  async prepare() {
+    const code = newRecoveryCode(), recovery = await wrapRecovery(this.key, code, this.file.merkezId, this.kdf ?? await calibrateKdf());
+    if (!(await openRecovery(recovery, code, this.file.merkezId)).equals(this.key)) throw new Error('Yeni kurtarma kodu doğrulanamadı.');
+    return {
+      code,
+      commit: async () => {
+        const at = new Date().toISOString();
+        this.write({ ...this.file, recovery: { ...recovery, shownAt: at, confirmedAt: at }, updatedAt: at });
+        await this.hooks.onChange?.(this.file);
+        this.pending = undefined;
+      },
+    };
   }
   view(): RecoveryState { const r = this.file.recovery; return { available: !!this.pending && !r.confirmedAt, shown: !!r.shownAt, confirmed: !!r.confirmedAt, createdAt: r.createdAt ?? null }; }
   reveal() {

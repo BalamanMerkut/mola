@@ -298,6 +298,10 @@ Mola Yönetim → Ayarlar → Yedek "kurtarma kodunu kaydedin" derse: yedeği a�
 **Çalışma klasörü:** Windows'ta Mola Yönetim → Ayarlar → Çalışma klasörü için bir Windows klasörü (ör. `C:\MolaCalisma`) seçtiyseniz sunucu onu kullanmaz, kendiliğinden `/var/lib/mola-merkez/calisma`'ya yazar. Orada "kapalı" seçtiyseniz sunucuda da kapalı kalır: aynı ekrandan `/var/lib/mola-merkez/calisma` yazıp açın.
 
 > Bazı işlemler güvenlik için yalnız Merkez'in kendi bilgisayarında yapılır (kurtarma kodunu ekranda göstermek, kilit ekranı). Kurtarma kodunu taşımadan **önce** Windows'taki Mola Yönetim'de kaydedin. Şifre unutulursa son çare: `sudo systemctl stop mola-merkez && sudo -u mola /opt/mola-merkez/sifre-sifirla.sh && sudo systemctl start mola-merkez`.
+>
+> **Yeni Merkez kurtarma kodu (sunucuda, 0.1.2'den):** Mola Yönetim kodu sunucuda göstermez. Kod sızdıysa ya da kaybolduysa:
+> `sudo systemctl stop mola-merkez && sudo -u mola /opt/mola-merkez/kurtarma-kodu.sh; sudo systemctl start mola-merkez`.
+> Yeni kod ekrana yazılır; kâğıda yazın, komut iki parçasını geri sorar. Doğru yazılınca geçerli olur (eski kod artık açmaz), sunucudaki Merkez yedekleri yeni kodla açılır, bilgisayarınızdaki ve Drive'daki kopyaları `npm run vds:cek` ertesi sabah günceller. Boş bırakıp Enter: vazgeçilir, hiçbir şey değişmez.
 
 ## 9. Kafeleri yeni adrese geçirin ("Merkez adresi")
 

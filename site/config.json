@@ -12,18 +12,18 @@
   "_indirAciklama": "Uygulamayı indir (/indir/). 'files' bölümünü npm.cmd run site:indir doldurur (dosya adı, boyut, SHA-256) ve dosyaları site/dist/indir'e kopyalar. 'enabled' false iken her platform 'Yakında' görünür; VDS için hazırlanmış kurulum dosyaları olunca true yapın ve npm.cmd run site:build (docs/VDS_KURULUM.md bölüm 13).",
   "downloads": {
     "enabled": true,
-    "version": "0.1.1",
-    "builtAt": "2026-10-13T01:56:39.261Z",
+    "version": "0.1.2",
+    "builtAt": "2026-10-13T04:11:13.347Z",
     "files": {
       "windows": {
-        "file": "Mola-Windows-0.1.1.zip",
-        "size": 44632585,
-        "sha256": "1078aaadf6414464deb323c3ee524cbfe894b834789e489c8493f15dd7d96b49"
+        "file": "Mola-Windows-0.1.2.zip",
+        "size": 44632960,
+        "sha256": "77336b60d119e1a6e95f52afd64d9018091de9e3285f0b9a555573cd06c5752f"
       },
       "android": {
-        "file": "Mola-Android-0.1.1.apk",
+        "file": "Mola-Android-0.1.2.apk",
         "size": 103873,
-        "sha256": "c4e2267c36e167edf223213363972b0d65ecd8ad081f93211a2772874ca3b038"
+        "sha256": "f8b3366b788e50fd1b598e06e1f9a11565247f9fe6eee5efa455a2d1de4c9fc3"
       }
     }
   }

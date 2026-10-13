@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import express, { type Express } from 'express';
 import type { ViteDevServer } from 'vite';
 import { dataLock } from '../data-lock.js';
@@ -9,7 +9,7 @@ import type { KdfParams } from '../key-vault.js';
 import { addAlert } from './alerts.js';
 import { createMerkezApp, sweepAlerts } from './app.js';
 import type { Attachments } from './attachments.js';
-import { MerkezBackups, MerkezRecovery } from './backup.js';
+import { besideData, MerkezBackups, MerkezRecovery } from './backup.js';
 import { MerkezKeyGuard, type MerkezLock } from './key-guard.js';
 import { lockedMerkezApp } from './locked.js';
 import { MailQueue } from './mail.js';
@@ -88,7 +88,7 @@ export async function startMerkez(options: MerkezRuntimeOptions) {
     const code = recovery;
     if (guard.migrated) opened.mutate(d => { d.audit.push({ action: 'merkez.key_protected', target: 'admin', at: new Date().toISOString(), by: 'system', detail: `Veri anahtarı ${guard.lock.kind === 'dpapi' ? 'Windows kullanıcısına (DPAPI)' : guard.lock.kind === 'keychain' ? 'Mac anahtarlığına' : guard.lock.kind === 'parola' ? 'sunucu parolasına' : 'dosyaya (600)'} ve Merkez kurtarma koduna kilitlendi` }); });
     // Installed Mola Yönetim (veri\): ...\Mola Yonetim\merkez-yedek; development (.local/merkez): .local/merkez-yedek.
-    const beside = (name: string) => basename(directory) === 'veri' ? join(dirname(directory), name) : `${directory}-${name.replace(/^merkez-/, '')}`;
+    const beside = (name: string) => besideData(directory, name);
     // İşlem kayıtları: what happened before the data opened (locked start, unlock tries) and the key's state now.
     for (const e of pendingEvents.splice(0)) try { opened.journal.append(e); } catch { /* best effort */ }
     if (guard.warning) try { opened.journal.append({ action: 'merkez.key_warning', detail: guard.warning }); } catch { /* best effort */ }

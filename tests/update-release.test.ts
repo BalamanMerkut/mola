@@ -8,6 +8,7 @@ import { compareVersions as applierCompare } from '../scripts/desktop/guncelleyi
 import { publicKeyFrom, signLicense, licenseClaims } from '../server/license.js';
 import { MERKEZ_API } from '../server/sync-protocol.js';
 import { compareVersions, currentPlatform, safeBundlePath, signRelease, verifyRelease, type ReleaseClaims } from '../server/update-manifest.js';
+import { APP_VERSION } from '../server/license.js';
 import { merkezPair, temp } from './merkez-fixture.js';
 import { adminCall, testBundle, uploadBundle } from './update-fixture.js';
 
@@ -68,6 +69,10 @@ test('Mola Merkez: an uploaded bundle is checked file by file and signed; tamper
   assert.equal(list.data.releases[0].signed, undefined, 'the signed blob is not sent to the screen');
 });
 
+/** Versions relative to this program's own (the test café runs it): the next patch; a later minor that needs a newer one. */
+const [MAJ, MIN, PAT] = APP_VERSION.split('-')[0].split('.').map(Number);
+const NEXT = `${MAJ}.${MIN}.${PAT + 1}`, LATER = `${MAJ}.${MIN + 1}.0`, NEEDS = `${MAJ}.${MIN}.${PAT + 5}`;
+
 test('rollout: nothing until published, pilot only to chosen businesses, Durdur takes it back; downloads only for those cafés', async t => {
   const pair = await merkezPair('update-rollout', { demo: true }); t.after(() => pair.close());
   await pair.importDemo();
@@ -77,14 +82,14 @@ test('rollout: nothing until published, pilot only to chosen businesses, Durdur 
   const beat = async () => { offers.length = 0; const r = await pair.link.sync(); assert.equal(r.ok, true, r.error); return offers.at(-1); };
   assert.equal(await beat(), undefined, 'the first heartbeat learns that Merkez takes the update field');
   assert.equal(await beat(), null, 'nothing published');
-  const bundle = await testBundle(temp('update-bundles'), '0.1.1', { big: 50_000 });
+  const bundle = await testBundle(temp('update-bundles'), NEXT, { big: 50_000 });
   const up = await uploadBundle(pair.merkezBase, bundle.file, pair.merkezStore); const id = up.data.release.id;
   assert.equal(await beat(), null, 'uploaded is not published');
   const tenants = (pair.store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]).map(r => r.tenant);
   const other = (await adminCall(pair.merkezBase, up.cookie, '/businesses', { requestId: 'p'.repeat(16), name: 'Başka Kafe', kind: 'trial' })).data.tenantId;
   assert.equal((await adminCall(pair.merkezBase, up.cookie, '/releases/rollout', { id, mode: 'pilot', pilot: [other] })).status, 400, 'a pilot needs an activated business');
   assert.equal((await adminCall(pair.merkezBase, up.cookie, '/releases/rollout', { id, mode: 'pilot', pilot: [tenants[0]] })).status, 200);
-  assert.deepEqual(await beat(), { id, version: '0.1.1', size: bundle.size, notes: '' }, 'a pilot business of this install');
+  assert.deepEqual(await beat(), { id, version: NEXT, size: bundle.size, notes: '' }, 'a pilot business of this install');
   // Signed downloads, only for an install it is offered to; Range resumes.
   assert.equal((await fetch(`${pair.merkezBase}${MERKEZ_API}/releases/${id}/manifest`)).status, 401, 'unsigned');
   const manifest = await pair.link.signedGet(`/releases/${id}/manifest`);
@@ -96,7 +101,7 @@ test('rollout: nothing until published, pilot only to chosen businesses, Durdur 
   assert.deepEqual(Buffer.from(await part.arrayBuffer()), whole.subarray(1000));
   assert.equal((await pair.link.signedGet(`/releases/${id}/paket`, { Range: `bytes=${whole.length}-` })).status, 416);
   await adminCall(pair.merkezBase, up.cookie, '/releases/rollout', { id, mode: 'all' });
-  assert.equal((await beat() as { version: string }).version, '0.1.1');
+  assert.equal((await beat() as { version: string }).version, NEXT);
   // Older cafés need the full installer (minFrom), another platform hears nothing, and a newer café nothing either.
   report = { ...report, platform: 'linux-x64' as 'windows' };
   assert.equal(await beat(), null, 'another platform');
@@ -105,9 +110,9 @@ test('rollout: nothing until published, pilot only to chosen businesses, Durdur 
   assert.equal(await beat(), null, 'Durdur');
   assert.equal((await pair.link.signedGet(`/releases/${id}/manifest`)).status, 404, 'a stopped release cannot be downloaded');
   assert.equal((await adminCall(pair.merkezBase, up.cookie, '/releases/delete', { id })).status, 200);
-  const newer = await uploadBundle(pair.merkezBase, (await testBundle(temp('update-bundles'), '0.2.0', { minFrom: '0.1.5' })).file, pair.merkezStore);
+  const newer = await uploadBundle(pair.merkezBase, (await testBundle(temp('update-bundles'), LATER, { minFrom: NEEDS })).file, pair.merkezStore);
   await adminCall(pair.merkezBase, up.cookie, '/releases/rollout', { id: newer.data.release.id, mode: 'all' });
-  assert.equal(await beat(), null, '0.1.0 may not jump to a release that needs 0.1.5');
+  assert.equal(await beat(), null, `${APP_VERSION} may not jump to a release that needs ${NEEDS}`);
 });
 
 test('café update state reaches Mola Yönetim; a rollback alerts the vendor once', async t => {

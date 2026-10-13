@@ -47,3 +47,7 @@ Kararlar (13 Ekim): "İşletmem var" = kullanıcı adı + şifre + e-postaya tek
 Karar (13 Ekim): yedek özetinde Sunucu (bulut yedek) satırında 'Klasörü aç' yerine 'İndir' (kafe programında; işletmenin kendi en yeni şifreli yedeği). Mola Yönetim'deki yedek listesinde indirme yok (satıcı açamaz, KVKK), yalnız durum.
 
 **2. tur durumu (13 Ekim gece):** 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 yapıldı (4 gelecek fikri). Testler: birim testleri 860 (859 geçti, 1 atlandı, 0 hata); yeni tarayıcı testi `owner-login.spec.ts` (İşletmem var: e-posta kodu, Merkez'den geri yükleme) geçti; değişen ekranların tarayıcı testleri güncellendi. İşletmem var'ın çalışması için VDS'teki Mola Yönetim → Ayarlar → E-posta bildirimleri açık olmalı (Gmail uygulama şifresi).
+
+**0.1.2 için birikenler (13 Ekim, 0.1.1 yayından sonra):**
+- Yapıldı: güncelleme sonrası sunucu siyah konsol penceresinde açılıyordu (gizlendi); menü önizlemesi kasa PC'sinde İkiye böl açıkken iki personel ekranı gösteriyordu; müşteri menüsünde Tümü kategori sırasını izlemiyordu.
+- Yapılacak: VDS'teki Merkez'de kurtarma kodu Mola Yönetim'den gösterilemiyor/yenilenemiyor (HTTPS'li Merkez'de yerel işlem yok; SSH tüneli de reddediliyor). Sunucuda çalışan bir komut eklenecek (sifre-sifirla.sh gibi: kurtarma-kodu.sh) ve Yedek kartı VDS'te bu komutu söyleyecek.

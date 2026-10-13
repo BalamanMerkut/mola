@@ -273,8 +273,8 @@ systemctl stop mola-merkez 2>/dev/null || true
 rm -rf /opt/mola-merkez.yeni
 mkdir -p /opt/mola-merkez.yeni
 cp -R "$HERE/app" "$HERE/runtime" /opt/mola-merkez.yeni/
-cp "$HERE/sifre-sifirla.sh" "$HERE/BENIOKU.txt" "$HERE/mola-okuma.sudoers.ornek" /opt/mola-merkez.yeni/
-chmod 755 /opt/mola-merkez.yeni/runtime/node /opt/mola-merkez.yeni/sifre-sifirla.sh
+cp "$HERE/sifre-sifirla.sh" "$HERE/kurtarma-kodu.sh" "$HERE/BENIOKU.txt" "$HERE/mola-okuma.sudoers.ornek" /opt/mola-merkez.yeni/
+chmod 755 /opt/mola-merkez.yeni/runtime/node /opt/mola-merkez.yeni/sifre-sifirla.sh /opt/mola-merkez.yeni/kurtarma-kodu.sh
 # Read-only helper for "npm run vds" / "npm run vds:cek" (never writes). Its password-less sudo rule is the owner's own step:
 # mola-okuma.sudoers.ornek → /etc/sudoers.d/mola-okuma (docs/VDS_KURULUM.md bölüm 15).
 install -o root -g root -m 755 "$HERE/mola-oku" /usr/local/sbin/mola-oku
@@ -306,6 +306,21 @@ code=$?
 [ "$code" = 3 ] && echo "Önce Mola Merkez'i durdurun: sudo systemctl stop mola-merkez"
 exit $code
 `;
+// A new Merkez recovery code (Mola Yönetim never shows it on a server): scripts/merkez-kurtarma-kodu.ts.
+const RECOVERY = `#!/bin/sh
+# Mola Merkez: yeni kurtarma kodu. Sunucuda, Merkez durdurulmuşken (kod ekrana yazılır, iki parçası geri sorulur):
+#   sudo systemctl stop mola-merkez && sudo -u mola /opt/mola-merkez/kurtarma-kodu.sh; sudo systemctl start mola-merkez
+DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$DIR/app" || exit 1
+NODE="$DIR/runtime/node"; [ -x "$NODE" ] || NODE="$(command -v node)"
+[ -n "$NODE" ] || { echo "Node.js bulunamadı."; exit 1; }
+if [ -r /etc/mola-merkez/ayarlar.env ]; then set -a; . /etc/mola-merkez/ayarlar.env; set +a; fi
+: "\${MERKEZ_DATA_DIR:=/var/lib/mola-merkez/veri}"; export MERKEZ_DATA_DIR
+"$NODE" --disable-warning=ExperimentalWarning merkez-kurtarma-kodu.mjs "$@"
+code=$?
+[ "$code" = 3 ] && echo "Önce Mola Merkez'i durdurun: sudo systemctl stop mola-merkez"
+exit $code
+`;
 const README = `MOLA MERKEZ ${version} · LINUX SUNUCU (VDS) · x64
 Merkut Studios
 
@@ -320,6 +335,7 @@ Adım adım anlatım: docs/VDS_KURULUM.md (Ubuntu LTS, SSH anahtarı, güvenlik 
   ayarlar.env.ornek    ayarlar (/etc/mola-merkez/ayarlar.env olur; PUBLIC_ORIGIN ve MERKEZ_MENU_ORIGIN'i kendi adlarınızla değiştirin)
   Caddyfile.ornek      Caddy ile otomatik HTTPS (/etc/caddy/Caddyfile)
   sifre-sifirla.sh     Mola Yönetim yönetici şifresi için son çare
+  kurtarma-kodu.sh     yeni Merkez kurtarma kodu (Mola Yönetim sunucuda kodu göstermez); Merkez durdurulmuşken
   mola-oku             yalnız okuyan yardımcı (kur.sh /usr/local/sbin/mola-oku yapar): npm run vds ve npm run vds:cek kullanır
   mola-okuma.sudoers.ornek  o yardımcının parolasız izni (/etc/sudoers.d/mola-okuma; elle kurulur, docs/VDS_KURULUM.md 15)
 
@@ -338,13 +354,13 @@ function checkArchive(file) {
   const files = untar(gunzipSync(readFileSync(file)));
   const byName = new Map(files.filter(f => f.type === '0').map(f => [f.name, f]));
   const problems = [];
-  const need = ['app/merkez.mjs', 'app/merkez-sifre-sifirla.mjs', 'app/package.json', 'app/manifest.json', 'app/dist/merkez.html', 'app/node_modules/sharp/package.json', 'app/node_modules/@img/sharp-linux-x64/package.json', 'runtime/node', 'runtime/LICENSE', 'kur.sh', 'sifre-sifirla.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek', 'BENIOKU.txt', 'mola-oku', 'mola-okuma.sudoers.ornek'];
+  const need = ['app/merkez.mjs', 'app/merkez-sifre-sifirla.mjs', 'app/merkez-kurtarma-kodu.mjs', 'app/package.json', 'app/manifest.json', 'app/dist/merkez.html', 'app/node_modules/sharp/package.json', 'app/node_modules/@img/sharp-linux-x64/package.json', 'runtime/node', 'runtime/LICENSE', 'kur.sh', 'sifre-sifirla.sh', 'kurtarma-kodu.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek', 'BENIOKU.txt', 'mola-oku', 'mola-okuma.sudoers.ornek'];
   for (const name of need) if (!byName.has(`${BASE}/${name}`)) problems.push(`eksik: ${name}`);
-  for (const name of ['runtime/node', 'kur.sh', 'sifre-sifirla.sh', 'mola-oku']) { const f = byName.get(`${BASE}/${name}`); if (f && !(f.mode & 0o100)) problems.push(`çalıştırılabilir değil: ${name}`); }
+  for (const name of ['runtime/node', 'kur.sh', 'sifre-sifirla.sh', 'kurtarma-kodu.sh', 'mola-oku']) { const f = byName.get(`${BASE}/${name}`); if (f && !(f.mode & 0o100)) problems.push(`çalıştırılabilir değil: ${name}`); }
   const node = byName.get(`${BASE}/runtime/node`);
   if (node && node.data.subarray(0, 4).toString('latin1') !== '\x7fELF') problems.push('runtime/node bir Linux programı değil');
   for (const name of byName.keys()) if (/(^|\/)(veri|merkez-yedek)\/|development\.key|anahtar(\.yedek)?\.json|merkez\.sqlite|\.exe$|node\.exe$/.test(name)) problems.push(`pakete girmemeli: ${name}`);
-  for (const name of ['kur.sh', 'sifre-sifirla.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek', 'mola-oku', 'mola-okuma.sudoers.ornek']) { const f = byName.get(`${BASE}/${name}`); if (f?.data.includes('\r\n')) problems.push(`Windows satır sonu: ${name}`); }
+  for (const name of ['kur.sh', 'sifre-sifirla.sh', 'kurtarma-kodu.sh', 'mola-merkez.service', 'ayarlar.env.ornek', 'Caddyfile.ornek', 'mola-oku', 'mola-okuma.sudoers.ornek']) { const f = byName.get(`${BASE}/${name}`); if (f?.data.includes('\r\n')) problems.push(`Windows satır sonu: ${name}`); }
   const service = byName.get(`${BASE}/mola-merkez.service`)?.data.toString('utf8') ?? '';
   if (!/ExecStart=\/opt\/mola-merkez\/runtime\/node .*merkez\.mjs/.test(service) || !/MERKEZ_HOST=127\.0\.0\.1/.test(service)) problems.push('mola-merkez.service beklenen ExecStart/MERKEZ_HOST satırlarını içermiyor');
   const workFolder = /^(Environment=)?MERKEZ_CALISMA_KLASORU=\/var\/lib\/mola-merkez\/calisma$/m;
@@ -367,12 +383,14 @@ const bundle = (entry, file) => build({
 });
 await bundle('server/merkez/index.ts', 'merkez.mjs');
 await bundle('scripts/merkez-sifre-sifirla.ts', 'merkez-sifre-sifirla.mjs');
+await bundle('scripts/merkez-kurtarma-kodu.ts', 'merkez-kurtarma-kodu.mjs');
 
 const app = join(stage, 'app');
 // The whole built screens: merkez.html (Mola Yönetim), and index.html / raporlarim.html that the Köprü pages name.
 (function copy(source, target) { if (statSync(source).isDirectory()) { mkdirSync(target, { recursive: true }); for (const n of readdirSync(source)) copy(join(source, n), join(target, n)); } else { mkdirSync(dirname(target), { recursive: true }); copyFileSync(source, target); } })('dist', join(app, 'dist'));
 copyFileSync(join(stage, 'merkez.mjs'), join(app, 'merkez.mjs'));
 copyFileSync(join(stage, 'merkez-sifre-sifirla.mjs'), join(app, 'merkez-sifre-sifirla.mjs'));
+copyFileSync(join(stage, 'merkez-kurtarma-kodu.mjs'), join(app, 'merkez-kurtarma-kodu.mjs'));
 writeFileSync(join(app, 'package.json'), JSON.stringify({ name: 'mola-merkez', version, private: true, type: 'module', author: 'Merkut Studios' }, null, 2));
 // The image library (Destek ekleri: photos made upright, small, without EXIF/GPS): sharp + its Linux files.
 (function copyPackage(name, done = new Set()) {
@@ -395,6 +413,7 @@ const entries = [
   { path: `${BASE}/runtime/node`, data: node, mode: 0o755 }, { path: `${BASE}/runtime/LICENSE`, data: license },
   { path: `${BASE}/kur.sh`, data: Buffer.from(unix(INSTALL)), mode: 0o755 },
   { path: `${BASE}/sifre-sifirla.sh`, data: Buffer.from(unix(RESET)), mode: 0o755 },
+  { path: `${BASE}/kurtarma-kodu.sh`, data: Buffer.from(unix(RECOVERY)), mode: 0o755 },
   { path: `${BASE}/mola-merkez.service`, data: Buffer.from(unix(SERVICE)) },
   { path: `${BASE}/ayarlar.env.ornek`, data: Buffer.from(unix(SETTINGS)) },
   { path: `${BASE}/Caddyfile.ornek`, data: Buffer.from(unix(CADDYFILE)) },

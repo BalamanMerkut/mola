@@ -6,7 +6,7 @@ import type { MerkezData } from './store.js';
  * also go out by e-mail (server/merkez/mail.ts) when the vendor set it up: queued here, sent and retried by the mail loop.
  * `key` makes an event once-only (the same café offline since the same last contact, the same licence end date).
  */
-export type AlertKind = 'application.new' | 'application.resubmitted' | 'machine.conflict' | 'cafe.offline' | 'cafe.backup' | 'backup.failing' | 'ticket.new' | 'ticket.reply' | 'license.expiring' | 'owner.reset' | 'mail.test' | 'update.failed' | 'admin.password_reset' | 'demo.reset' | 'support.access' | 'support.session' | 'cafe.cloud_backup' | 'journal.broken' | 'cafe.integrity' | 'site.lead';
+export type AlertKind = 'application.new' | 'application.resubmitted' | 'machine.conflict' | 'cafe.offline' | 'cafe.backup' | 'backup.failing' | 'ticket.new' | 'ticket.reply' | 'license.expiring' | 'owner.reset' | 'mail.test' | 'update.failed' | 'admin.password_reset' | 'demo.reset' | 'support.access' | 'support.session' | 'cafe.cloud_backup' | 'journal.broken' | 'cafe.integrity' | 'site.lead' | 'merkez.recovery';
 /** `priority: 'low'`: shown grey, no sound, never e-mailed (e.g. "ikinci yedek yeri ayarlı değil"). */
 export type Alert = { id: string; kind: AlertKind; title: string; text: string; at: string; tenantId?: string; ticketId?: string; key?: string; readAt?: string; priority?: 'low' };
 /** E-mail: SMTP settings (the app password stays in this sealed record; never logged, never sent back to the screen). */
@@ -32,6 +32,8 @@ export const alertTitles: Record<AlertKind, string> = {
   'cafe.integrity': 'Dosyalar değiştirilmiş',
   // Web sitesi talebi (server/merkez/site-leads.ts): the contact form on molayazilim.com.tr (type and city only).
   'site.lead': 'Web sitesi talebi',
+  // The server's kurtarma-kodu.sh (server/merkez/offline-recovery.ts): a new Merkez recovery code; the old one no longer opens.
+  'merkez.recovery': 'Merkez kurtarma kodu yenilendi',
 };
 /** Adds an event (once per `key`) and queues its e-mail. Runs inside the registry transaction. */
 export function addAlert(d: MerkezData, at: string, kind: AlertKind, text: string, options: { tenantId?: string; ticketId?: string; key?: string; title?: string; priority?: 'low' } = {}) {
