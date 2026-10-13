@@ -56,7 +56,7 @@ import { tillNoticesFor } from '../packages/domain/till-notices.js';
 import { PrintService, printingRoutes, printingView } from './printing.js';
 import type { BackupScheduler } from './backup-scheduler.js';
 import { isRealChange } from './change-marker.js';
-import { desktopGuard, desktopRoutes, lanOrigins, paneGuard, type Desktop } from './desktop.js';
+import { desktopGuard, desktopRoutes, firewallCovers, lanOrigins, paneGuard, type Desktop } from './desktop.js';
 import { NetworkProfile } from './network-profile.js';
 import { fromThisComputer, recoveryView, restoreRoutes, securityRoutes, type Security } from './security-routes.js';
 import { CloudRestore, cloudRestoreRoutes } from './cloud-backup.js';
@@ -290,7 +290,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   // İnternetten menü: `public` once this business has its menu code at a Merkez that takes guest tunnels and this café serves the
   // built guest page: the table QR codes then hold `<base>/<masa kodu>` (guests on any network). Otherwise `publicProblem` says
   // why and the QR codes keep the LAN address (only the café's Wi-Fi), with a note to reprint once the public address is ready.
-  const networkProfile = new NetworkProfile({ lan: () => network.lan ? lanOrigins(network.port).map(a => a.name) : [] }); app.locals.networkProfile = networkProfile;
+  const networkProfile = new NetworkProfile({ lan: () => network.lan ? lanOrigins(network.port).map(a => a.name) : [], covered: firewallCovers }); app.locals.networkProfile = networkProfile;
   app.get('/api/staff/network', (req, res) => {
     const actor = staffActor(req), printed = store.read(actor.tenantId).qrPrint;
     const address = link.menuAddress(actor.tenantId);

@@ -72,12 +72,15 @@ function runHelper(file: string, args: string[], timeout: number, hide: boolean)
     });
   });
 }
-/** "--durum": tamam = only Mola's rule (inbound, allow, private networks), eksik = no rule, duzelt = other rules (e.g. Windows' own "Public"). */
+/** "--durum": tamam = only Mola's rule (inbound, allow, every profile, local network only), eksik = no rule, duzelt = other or older rules (e.g. Windows' own "Public", Mola's private-only rule of 0.1.12 and before). */
 async function firewallState(file: string) {
   const { out } = await runHelper(file, ['--guvenlik-duvari', '--durum'], 20000, true);
   try { return ({ tamam: 'ok', eksik: 'missing', duzelt: 'fix' } as Record<string, string>)[JSON.parse(out.trim().split('\n').pop() ?? '').durum] ?? 'unknown'; }
   catch { return 'unknown'; }
 }
+
+/** Mola's firewall rule is the current one (every profile, local network only): Windows' "Genel" profile does not keep tablets out. */
+export async function firewallCovers() { const file = firewallHelper(); return !!file && await firewallState(file) === 'ok'; }
 
 export const PANE_HEADER = 'X-Mola-Pane', PANE_KEY_HEADER = 'X-Mola-Pane-Key';
 /** İki ekran: the panes' key, derived from the desktop key (the panes never hold or send the desktop key itself). */
@@ -120,8 +123,8 @@ export type DesktopActivity = { openAccounts: number; pendingOrders: number };
 export function desktopRoutes(app: Express, desktop: Desktop | undefined, network: { lan: boolean; port: number }, backups?: BackupScheduler, security?: () => DesktopSecurity, activity?: () => DesktopActivity, profile?: NetworkProfile) {
   const allow = desktopGuard(desktop);
   let asking = false;
-  // Tabletler: is the connection phones use on Windows' "Genel" profile (Mola's firewall rule covers private networks only)?
-  // Read only; Mola never changes it (server/network-profile.ts).
+  // Tabletler: is the connection phones use on Windows' "Genel" profile while Mola's firewall rule is still the old private-only
+  // one? Read only; Mola never changes the profile (server/network-profile.ts).
   app.get('/api/desktop/network-profile', async (req, res) => {
     allow(req);
     res.json(profile ? await profile.view() : { checked: false, public: [] });
