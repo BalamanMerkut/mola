@@ -25,7 +25,7 @@ export function ContactSettings() {
   const changed = (Object.keys(blank) as (keyof Contact)[]).some(k => (form[k] ?? '').trim() !== (saved?.[k] ?? ''));
   return <section className="panel contact-settings" aria-label="Mola ekibi iletişim bilgileri">
     <h2><Headset size={18} /> Mola ekibi iletişim bilgileri</h2>
-    <p className="muted small">İşletmeler bu bilgileri başvuru beklerken, Mola Merkez’e ulaşılamadığında, lisans kapandığında, “Şifremi unuttum”da ve Destek ekranında görür. Boş bıraktığınız alan gösterilmez.</p>
+    <p className="muted small">İşletmeler bu bilgileri başvuru beklerken, Mola Merkez’e ulaşılamadığında, lisans kapandığında, “Şifremi unuttum”da ve Destek ekranında görür. Telefon, WhatsApp, e-posta ve çalışma saatleri molayazilim.com.tr’de de gösterilir (kaydettikten 1 dakika içinde). Boş bıraktığınız alan işletmelerde gösterilmez; sitede sitenin kendi bilgisi kalır.</p>
     {/* The browser stops a submit with an invalid field (e-mail, https address) itself: an older answer must not stay above it. */}
     <form onSubmit={e => { e.preventDefault(); void save(); }} onInvalidCapture={() => { setError(''); setNotice(''); }}>
       <div className="form-columns">

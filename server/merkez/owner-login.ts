@@ -47,7 +47,8 @@ export function recordOwners(d: MerkezData, mine: MerkezBusiness[], sent: SyncRe
   }
 }
 
-const WRONG = 'Bilgiler eşleşmedi. E-posta adresini, kullanıcı adını ve şifreyi kontrol edin.';
+// The same words whether the address, the name, the password or the lock is missing (no hint which one exists).
+const WRONG = 'Bilgiler eşleşmedi. E-posta adresini, kullanıcı adını ve şifreyi kontrol edin. Eski bilgisayarda Ayarlar → Güvenlik ve yedek → Yedek → “Yeni bilgisayar için e-posta” kartı “İşletmem var hazır” demediyse bu giriş henüz çalışmaz; Mola ekibini arayın.';
 const CODE_MS = 10 * 60_000, TRIES = 5;
 type Pending = { tenantId: string; email: string; codeHash: Buffer; until: number; tries: number };
 const hash = (code: string) => createHash('sha256').update(`mola:sahip-kodu:v1:${code}`).digest();
@@ -181,7 +182,11 @@ export function ownerLoginRoutes(app: Express, deps: () => Deps) {
   const code6 = z.string().trim().regex(/^\d{6}$/, 'E-postadaki 6 haneli kodu yazın.'), ticketSchema = z.string().regex(/^[A-Za-z0-9_-]{32}$/);
   app.post(`${MERKEZ_API}/owner-email/status`, (req, res) => {
     const { install, nonce, biz } = cafe(req, 'status', 60), c = current(biz);
-    deps().sendSigned(res, install.secret, nonce, { email: c ? maskEmail(c.email) : null, source: c?.source ?? null });
+    // Whether İşletmem var would work now (13 Ekim): the owner's lock as Merkez heard it (the café compares the stamp with
+    // its own) and the newest Sunucu yedeği copy (one taken after the lock carries it). The café's own facts, signed back.
+    const lock = biz.ownerLogin ? { username: biz.ownerLogin.username, stamp: biz.ownerLogin.stamp, at: biz.ownerLogin.updatedAt } : null;
+    const lastCopyAt = biz.installId ? deps().vault.copies(biz.installId).map(x => x.uploadedAt).sort().at(-1) ?? null : null;
+    deps().sendSigned(res, install.secret, nonce, { email: c ? maskEmail(c.email) : null, source: c?.source ?? null, lock, lastCopyAt });
   });
   app.post(`${MERKEZ_API}/owner-email/old-code`, async (req, res) => {
     const { install, nonce, biz } = cafe(req, 'code', 10), c = current(biz);

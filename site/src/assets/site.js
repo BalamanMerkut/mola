@@ -57,6 +57,41 @@
     videos.forEach(function (v) { vio.observe(v); });
   }
 
+  // ---- Mola ekibi iletişim bilgileri: what Mola Yönetim saved (GET /api/site/iletisim) over the build's own ----
+  // Written as text; links only from a number's digits or a checked address. No answer: the build's own stays.
+  var contactNodes = Array.prototype.slice.call(document.querySelectorAll('[data-iletisim]'));
+  if (contactNodes.length && window.fetch) {
+    var intl = function (v) { var d = String(v).replace(/\D/g, ''); return d.indexOf('90') === 0 ? d : d.indexOf('0') === 0 ? '9' + d : '90' + d; };
+    var okPhone = function (v) { var d = intl(v); return d.length >= 11 && d.length <= 15; };
+    var okMail = function (v) { return /^[^\s@<>"]{1,64}@[^\s@<>"]{1,180}\.[^\s@<>".]{2,}$/.test(v); };
+    fetch('/api/site/iletisim', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        var c = d && d.contact; if (!c) return;
+        var links = {
+          phone: c.phone && okPhone(c.phone) ? { href: 'tel:+' + intl(c.phone), text: c.phone } : null,
+          whatsapp: c.whatsapp && okPhone(c.whatsapp) ? { href: 'https://wa.me/' + intl(c.whatsapp) + '?text=' + encodeURIComponent('Merhaba, Mola hakkında bilgi almak istiyorum.'), text: c.whatsapp } : null,
+          email: c.email && okMail(c.email) ? { href: 'mailto:' + c.email, text: c.email } : null,
+        };
+        contactNodes.forEach(function (el) {
+          var kind = el.getAttribute('data-iletisim');
+          if (kind === 'hours') { if (typeof c.hours === 'string' && c.hours) el.textContent = c.hours; return; }
+          var l = links[kind]; if (!l) return;
+          if (el.classList.contains('contact-item')) {
+            var a = el;
+            // A "yakında" card becomes a link.
+            if (el.tagName !== 'A') { a = document.createElement('a'); a.className = el.className.replace(/\s*\bpending\b/, ''); a.setAttribute('data-iletisim', kind); a.innerHTML = el.innerHTML; if (kind === 'whatsapp') a.rel = 'noopener'; el.parentNode.replaceChild(a, el); }
+            a.href = l.href; var value = a.querySelector('span > span'); if (value) value.textContent = l.text;
+            return;
+          }
+          // The footer's lines and the e-mail links show the value; the WhatsApp button and line keep their words.
+          var link = el.tagName === 'A' ? el : el.querySelector('a');
+          if (link) { link.href = l.href; if (el.tagName === 'A' ? kind === 'email' : kind !== 'whatsapp') link.textContent = l.text; }
+          el.hidden = false;
+        });
+      })['catch'](function () { /* the build's own contact stays */ });
+  }
+
   // ---- Contact form → Mola Merkez (same address: /api/site/*) ----
   var form = document.getElementById('talep-formu');
   if (!form) return;
@@ -91,7 +126,7 @@
     e.preventDefault(); clearErrors();
     var data = new FormData(form);
     var body = {
-      business: data.get('business'), person: data.get('person'), phone: data.get('phone'), email: data.get('email') || undefined,
+      business: data.get('business'), person: data.get('person'), phone: data.get('phone'), email: data.get('email'),
       city: data.get('city'), tables: data.get('tables') || undefined, type: data.get('type') || '', message: data.get('message') || undefined,
       consent: data.get('consent') === 'evet', consentVersion: form.getAttribute('data-consent-version'), website: data.get('website') || '',
     };
@@ -99,6 +134,7 @@
     if (!String(body.business || '').trim()) return showError('business', 'İşletmenizin adını yazın.');
     if (!String(body.person || '').trim()) return showError('person', 'Adınızı ve soyadınızı yazın.');
     if (!String(body.phone || '').trim()) return showError('phone', 'Telefon numaranızı yazın.');
+    if (!String(body.email || '').trim()) return showError('email', 'E-posta adresinizi yazın.');
     if (!body.type) return showError('type', 'İşletme türünü seçin.');
     if (!body.consent) return showError('consent', 'Devam etmek için KVKK Aydınlatma Metni’ni okuduğunuzu onaylayın.');
     submit.disabled = true; var label = submit.innerHTML; submit.textContent = 'Gönderiliyor…';

@@ -330,3 +330,7 @@ input[type="checkbox"]{border-radius:4px}
 .owner-email-field input{min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;font:inherit;width:100%;min-width:0}
 .owner-email-field input.owner-email-code{font:600 20px Consolas,'Courier New',monospace;letter-spacing:6px;max-width:200px}
 .owner-email-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.owner-email-ready,.owner-email-wait{margin:0;padding:8px 12px;border-radius:9px;line-height:1.5}
+.owner-email-ready{background:#eef6ee;color:#24482f}
+.owner-email-wait{background:#fbf5e8;color:#6b4e16}
+.owner-email-wait .link-btn{border:0;background:none;padding:0;color:var(--green);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}

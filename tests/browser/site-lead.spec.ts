@@ -34,7 +34,10 @@ test('web sitesi formu: a café owner asks for a call; Mola Yönetim shows it as
   await form.getByLabel('İşletme adı *').fill('Harput Çay Bahçesi Deneme');
   await form.getByLabel('İlgili kişi *').fill('Mehmet Demir');
   await form.getByLabel('Telefon *').fill('0532 765 43 21');
-  await form.getByLabel(/E-posta/).fill('mehmet@example.com');
+  // The e-mail is required (13 Ekim): sign-ins and codes go there.
+  await form.getByRole('button', { name: /Gönder/ }).click();
+  await expect(form.locator('[data-field="email"] .error')).toHaveText('E-posta adresinizi yazın.');
+  await form.getByLabel('E-posta *').fill('mehmet@example.com');
   await expect(form.getByLabel('Şehir')).toHaveValue('Elazığ');
   await form.getByLabel(/Masa sayısı/).fill('24');
   await form.getByText('Çay bahçesi', { exact: true }).click();
@@ -91,4 +94,27 @@ test('web sitesi formu: a café owner asks for a call; Mola Yönetim shows it as
   expect(audit.map(a => a.action)).toEqual(expect.arrayContaining(['site.lead_received', 'site.lead_called', 'site.lead_note']));
   expect(audit.filter(a => a.action.startsWith('site.')).some(a => /Mehmet|765/.test(a.detail ?? ''))).toBe(false);
   await vendor.close();
+});
+
+test('Mola Yönetim’s contact on the site: the cards, the footer, the hours and the WhatsApp buttons take what GET /api/site/iletisim gives; markup in it stays text', async ({ page }, info) => {
+  // The answer is set here (this suite's Merkez keeps its own contact for the café specs; the endpoint has its own unit test).
+  await page.route('**/api/site/iletisim', r => r.fulfill({ json: { contact: { phone: '0538 049 20 02', whatsapp: '0538 049 20 02', email: 'merkut@example.com', hours: 'Her gün <b>10:00</b>–20:00' } } }));
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto(`${SITE}/iletisim/`);
+  const list = page.locator('.contact-list');
+  await expect(list.getByRole('link', { name: /WhatsApp’tan yazın/ })).toHaveAttribute('href', /^https:\/\/wa\.me\/905380492002\?text=/);
+  await expect(list.getByRole('link', { name: /Bizi arayın/ })).toHaveAttribute('href', 'tel:+905380492002');
+  await expect(list.getByRole('link', { name: /Bizi arayın/ })).toContainText('0538 049 20 02');
+  await expect(list.getByRole('link', { name: /E-posta gönderin/ })).toHaveAttribute('href', 'mailto:merkut@example.com');
+  await expect(list).not.toContainText('Numara yakında burada');
+  await expect(page.locator('.hours')).toContainText('Her gün <b>10:00</b>–20:00');
+  const footer = page.locator('footer');
+  await expect(footer.getByRole('link', { name: '0538 049 20 02' })).toHaveAttribute('href', 'tel:+905380492002');
+  await expect(footer.getByRole('link', { name: 'merkut@example.com' })).toBeVisible();
+  await expect(footer.getByRole('link', { name: 'WhatsApp', exact: true })).toBeVisible();
+  await page.screenshot({ path: info.outputPath('site-iletisim-merkezden.png'), fullPage: true });
+  // Another page: the WhatsApp button of the closing band shows up with the number.
+  await page.goto(`${SITE}/`);
+  await expect(page.getByRole('link', { name: 'WhatsApp’tan yazın' }).first()).toHaveAttribute('href', /wa\.me\/905380492002/);
+  expect(errors).toEqual([]);
 });

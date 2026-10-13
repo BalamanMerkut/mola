@@ -53,10 +53,11 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     // across the update): no lock yet, so Ayarlar asks for the password once. A wrong one makes none.
     expect(await (await owner.get('/api/staff/owner-email')).json()).toMatchObject({ lock: false, username: USER });
     expect((await local('/api/staff/owner-email/lock', { password: 'YanlisSifre!2026' })).status()).toBe(403);
-    expect(await (await local('/api/staff/owner-email/lock', { password: PASSWORD })).json()).toEqual({ lock: true, username: USER });
     await expect.poll(async () => !!(await old!.desktop<{ backup: { cloud?: unknown } }>('/api/desktop/status')).data.backup.cloud, { timeout: 30000 }).toBe(true);
-    expect((await old.desktop<{ lastError: string | null }>('/api/desktop/backup', {})).data.lastError).toBeNull();
-    await expect.poll(async () => (await old!.desktop<{ backup: { cloud?: { lastSuccessAt: string | null } } }>('/api/desktop/status')).data.backup.cloud?.lastSuccessAt ?? null, { timeout: 60000 }).not.toBeNull();
+    expect(await (await local('/api/staff/owner-email/lock', { password: PASSWORD })).json()).toMatchObject({ lock: true, username: USER });
+    // Nothing else to do here, no "Şimdi yedekle" (13 Ekim: Mola was reinstalled a minute after the e-mail): Merkez hears
+    // the lock at once and a fresh backup takes it to Sunucu yedeği; the card says so once both are there.
+    await expect.poll(async () => { const v = await (await owner!.get('/api/staff/owner-email')).json(); return v.atMerkez === true && !!v.copiedAt; }, { timeout: 60000 }).toBe(true);
 
     // Ayarlar → Güvenlik ve yedek → Yeni bilgisayar için e-posta (13 Ekim): the application's address shows; a change needs
     // the owner's password, the old address's code and the new address's code; the old address is told.

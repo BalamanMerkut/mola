@@ -365,21 +365,26 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
    * (server/owner-email.ts): an owner who stayed signed in across the update never typed the password, so no lock was made
    * and the new computer heard "Bilgiler eşleşmedi" (13 Ekim, DenemeKafe).
    */
-  async function sealOwner(tenantId: string, user: { username: string; salt: string }, password: string) {
+  async function sealOwner(tenantId: string, user: { username: string; salt: string }, password: string, carry: false | 'changed' | 'always' = false) {
     const vault = security?.vault;
     if (!vault || vault.protection === 'off') return false;
     const changed = await vault.ensureOwner({ tenantId, username: user.username, password, stamp: passwordStamp(user.salt) });
     if (changed) { const p = vault.backupProtection(); if (p) await backups?.rewrap(p).catch(() => 0); }
+    // Merkez hears the lock now, not with the heartbeat up to 10 minutes later (13 Ekim: Mola was reinstalled a minute
+    // after the e-mail was verified, so Merkez never had it). `carry` (Ayarlar → Yeni bilgisayar için e-posta, where the
+    // owner prepares İşletmem var on purpose): after that heartbeat a fresh backup takes the lock to Sunucu yedeği too.
+    if (carry === 'always' || (changed && carry)) void link.sync().catch(() => undefined).then(() => backups?.runNow('manual')).catch(() => undefined);
+    else if (changed) link.nudge();
     return changed;
   }
   /** The signed-in user with the stored salt (the lock's stamp follows it). */
   function ownerUser(actor: Actor) { const name = store.sessionUser(actor.tenantId, actor.id)?.username, found = name ? store.findUser(name) : undefined; return found && found.tenantId === actor.tenantId && found.user.id === actor.id ? found.user : undefined; }
-  /** Whether this owner's lock holds the current password (null: no protection here, so nothing to lock). */
+  /** This owner's lock: whether it holds the current password, and the stamp Merkez should have (null: no protection here). */
   function ownerSealed(actor: Actor) {
     const vault = security?.vault, me = ownerUser(actor);
     if (!vault || vault.protection === 'off' || !me) return null;
     const stamp = passwordStamp(me.salt);
-    return vault.ownerLogins().some(b => b.tenantId === actor.tenantId && b.username === me.username && b.stamp === stamp);
+    return { sealed: vault.ownerLogins().some(b => b.tenantId === actor.tenantId && b.username === me.username && b.stamp === stamp), username: me.username, stamp };
   }
   /** The login's failed-attempt limit: 12 wrong per user and device, or 60 per user once that device failed too (1 min). */
   function authBlocked(mineKey: string, anyKey: string) {
@@ -837,7 +842,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   // Ayarlar → Güvenlik ve yedek → Yeni bilgisayar için e-posta (verified by Mola Merkez; server/owner-email.ts).
   ownerEmailRoutes(app, { store, staffActor, link, confirmPassword, lock: {
     ready: ownerSealed,
-    seal: (actor, password) => { const me = ownerUser(actor); return me ? sealOwner(actor.tenantId, me, password) : Promise.resolve(false); },
+    seal: (actor, password, always) => { const me = ownerUser(actor); return me ? sealOwner(actor.tenantId, me, password, always ? 'always' : 'changed') : Promise.resolve(false); },
   } });
   // Ajanda ve rezervasyon: masa ayırma, kapora, etkinlikler (server/reservations.ts); before Bildirimler so its reminders are ready when they are read.
   let inbox: ReturnType<typeof notificationRoutes> | undefined;

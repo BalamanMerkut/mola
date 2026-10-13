@@ -47,8 +47,10 @@ test('site form rules: phones, required fields, consent and its text version', (
   const ok = checkSiteLead(form());
   assert.ok(ok.ok); if (ok.ok) { assert.equal(ok.value.tables, 16); assert.equal(ok.value.phone, '+905321234567'); }
   const city = checkSiteLead({ ...form(), city: '' }); assert.ok(city.ok && city.value.city === 'Elazığ', 'Şehir defaults to Elazığ');
-  const bare = checkSiteLead({ ...form(), email: '', tables: '', message: '' }); assert.ok(bare.ok && !('email' in bare.value) && !('tables' in bare.value) && !('message' in bare.value));
+  const bare = checkSiteLead({ ...form(), tables: '', message: '' }); assert.ok(bare.ok && bare.value.email === 'ayse@example.com' && !('tables' in bare.value) && !('message' in bare.value));
   const fieldOf = (b: object) => { const r = checkSiteLead(b); return r.ok ? 'ok' : r.problem.field; };
+  // The e-mail is required (13 Ekim): sign-ins and codes go there.
+  assert.equal(fieldOf({ ...form(), email: '' }), 'email'); assert.equal(fieldOf({ ...form(), email: undefined }), 'email');
   assert.equal(fieldOf({ ...form(), business: ' ' }), 'business');
   assert.equal(fieldOf({ ...form(), person: 'A' }), 'person');
   assert.equal(fieldOf({ ...form(), phone: 'x' }), 'phone');
@@ -176,6 +178,22 @@ test('Mola Yönetim: Arandı, not, Kapandı, yeniden aç, işletmeye bağla, sil
   assert.equal((await m.admin('/site-leads')).data.leads.length, 0);
   assert.ok(((await m.admin('/state')).data.audit as { action: string }[]).some(a => a.action === 'site.lead_deleted'));
   assert.equal((await m.admin('/site-leads/delete', { requestId: rid(), id: second.id })).status, 404);
+});
+
+test('the site shows Mola Yönetim’s contact: GET /api/site/iletisim, only the four public fields, empty ones left out; a lead without e-mail is refused', async t => {
+  const m = await merkez('site-contact'); t.after(() => m.close());
+  // Nothing saved yet: an empty answer (the site keeps its own).
+  const none = await m.site('/iletisim');
+  assert.equal(none.status, 200); assert.deepEqual(none.data, { contact: {} }); assert.equal(none.headers.get('cache-control'), 'public, max-age=60');
+  await m.login();
+  const saved = await m.admin('/contact', { phone: '0538 049 20 02', whatsapp: '0538 049 20 02', email: 'destek@example.com', hours: '', web: 'https://molayazilim.com.tr/' });
+  assert.equal(saved.status, 200, JSON.stringify(saved.data));
+  const c = (await m.site('/iletisim')).data.contact;
+  assert.deepEqual(Object.keys(c).sort(), ['email', 'phone', 'whatsapp'], 'no web, no empty hours');
+  assert.equal(c.email, 'destek@example.com'); assert.match(c.phone, /538/);
+  // The e-mail is required on the site form now.
+  const bare = await m.send({ email: '' });
+  assert.equal(bare.status, 400); assert.equal(bare.data.field, 'email');
 });
 
 test('social short links: MERKEZ_SITE_ORIGIN (the web site) when set, else PUBLIC_ORIGIN; a wrong value never breaks anything', () => {

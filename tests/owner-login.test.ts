@@ -158,6 +158,8 @@ test('İşletmem var with Sunucu yedeği: the e-mail code opens the copies on Mo
 });
 
 /** The café's signed call to Mola Merkez (what server/owner-email.ts relays) and the last code mailed to `to`. */
+/** The address part of /owner-email/status (the lock and the newest copy are checked on their own). */
+const addr = (s: unknown) => { const { email, source } = s as { email: unknown; source: unknown }; return { email, source }; };
 const codeTo = (mails: { to: string; text: string }[], to: string) => /\b(\d{6})\b/.exec([...mails].reverse().find(m => m.to === to)!.text)![1];
 
 test('Yeni bilgisayar için e-posta, no application: the first address is proved by its own code; then it takes the İşletmem var code and hears about every new computer', async () => {
@@ -166,7 +168,10 @@ test('Yeni bilgisayar için e-posta, no application: the first address is proved
   try {
     const call = <T,>(path: string, body: object) => w.link.relayPost<T>(path, { tenantId: 'sahip-a', ...body });
     assert.ok(w.link.read()?.accepts?.includes('owner.email'));
-    assert.deepEqual(await call('/owner-email/status', {}), { email: null, source: null });
+    const first = await call<{ lock: { username: string; stamp: string; at: string } | null; lastCopyAt: string | null }>('/owner-email/status', {});
+    assert.deepEqual(addr(first), { email: null, source: null });
+    // What the café's card compares with its own lock (13 Ekim): the lock Merkez heard, and the newest Sunucu yedeği copy.
+    assert.equal(first.lock?.username, USER.toLowerCase()); assert.equal(first.lock?.stamp, 'a1b2c3d4e5f6'); assert.ok('lastCopyAt' in first);
     // No address yet: İşletmem var finds nothing.
     await assert.rejects(w.post('/owner-login/start', { email: OWN, username: USER, password: PASSWORD }), (e: DomainError) => e.code === 'OWNER_LOGIN_FAILED');
     // Another install's business: not found (signed calls answer only for their own businesses).
@@ -191,7 +196,7 @@ test('changing the address: the old address\'s code first, then the new address\
   try {
     const call = <T,>(path: string, body: object) => w.link.relayPost<T>(path, { tenantId: 'sahip-a', ...body });
     // The application's address counts as the current one.
-    assert.deepEqual(await call('/owner-email/status', {}), { email: maskEmail(EMAIL), source: 'invoice' });
+    assert.deepEqual(addr(await call('/owner-email/status', {})), { email: maskEmail(EMAIL), source: 'invoice' });
     // A new address straight away: refused (the old address's code is needed).
     await assert.rejects(call('/owner-email/new-code', { email: NEW }), (e: DomainError) => e.code === 'OLD_CODE_REQUIRED');
     const old = await call<{ ticket: string; email: string }>('/owner-email/old-code', {});
@@ -203,7 +208,7 @@ test('changing the address: the old address\'s code first, then the new address\
     // The old code works once only.
     await assert.rejects(call('/owner-email/new-code', { email: NEW, old: { ticket: old.ticket, code: oldCode } }), (e: DomainError) => e.code === 'CODE_EXPIRED');
     await call('/owner-email/confirm', { ticket: sent.ticket, code: codeTo(w.mails, NEW) });
-    assert.deepEqual(await call('/owner-email/status', {}), { email: maskEmail(NEW), source: 'owner' });
+    assert.deepEqual(addr(await call('/owner-email/status', {})), { email: maskEmail(NEW), source: 'owner' });
     const changed = (w.merkezStore.read().mail?.queue ?? []).filter(m => /e-posta adresi değişti/.test(m.subject));
     assert.deepEqual(changed.map(m => m.to), [EMAIL], 'the earlier address is told');
     // Both addresses find the business at İşletmem var (the invoice one stays the vendor's record).
@@ -211,7 +216,7 @@ test('changing the address: the old address\'s code first, then the new address\
     // Mola Yönetim: the owner lost the new address → Kaldır; the invoice address is the current one again.
     const admin = client(`${w.base}/api/merkez/admin`); await admin('/login', { username: 'admin', password: MERKEZ_PASSWORD });
     assert.equal((await admin('/owner-email/clear', { tenantId: 'sahip-a' })).status, 200);
-    assert.deepEqual(await call('/owner-email/status', {}), { email: maskEmail(EMAIL), source: 'invoice' });
+    assert.deepEqual(addr(await call('/owner-email/status', {})), { email: maskEmail(EMAIL), source: 'invoice' });
     assert.ok(w.merkezStore.read().audit.some(a => a.action === 'owner_email.cleared' && a.by === 'admin'));
     const view = (await admin('/state')).data.businesses.find((b: { tenantId: string }) => b.tenantId === 'sahip-a');
     assert.equal(view.ownerEmail, undefined); assert.equal(view.ownerLoginReady, true);

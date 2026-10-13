@@ -300,6 +300,8 @@ a.contact-item:hover { border-color: var(--green-500); background: #fff; color: 
 .contact-item b { display: block; font-size: 16px; }
 .contact-item span { display: block; color: var(--muted); font-size: 14.5px; overflow-wrap: anywhere; }
 .contact-item.pending { opacity: .7; }
+/* A WhatsApp button or footer line without a number yet (site.js shows it once Mola Yönetim has one). */
+[data-iletisim][hidden] { display: none !important; }
 .hours { display: flex; gap: 10px; align-items: flex-start; color: var(--muted); font-size: 15px; margin-top: 14px; }
 .hours .icon { margin-top: 3px; }
 

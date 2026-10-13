@@ -17,6 +17,7 @@ import type { MerkezData, MerkezStore } from './store.js';
  *                                    need no outside service: a hidden "website" field people never fill (a filled one
  *                                    gets a calm 200 and nothing is kept), at least SITE_LEAD_MIN_SECONDS between the form
  *                                    key and sending, and limits per address (clientKey: IPv4, IPv6 /64) and overall.
+ *             GET  /api/site/iletisim  the vendor's contact from Mola Yönetim (phone, WhatsApp, e-mail, hours) for the site
  *             The site and Merkez share one origin on the VDS (Caddy passes /api/site/* here; docs/VDS_KURULUM.md).
  *   Stored    own table `site_talepleri` in merkez.sqlite (in Merkez's backup), one row per lead sealed with a key of its own
  *             purpose, bound to the lead's id (like Satışlarım). The KVKK tick is kept with its time and the text version.
@@ -114,6 +115,20 @@ export function siteLeadRoutes(app: Express, o: Deps) {
     if (over(keys, clientKey(req), LEAD_LIMITS.formKeysPerAddressMinute, 60_000)) return busy(res);
     const issued = o.now().getTime(), nonce = randomBytes(12).toString('base64url');
     res.json({ token: `${issued}.${nonce}.${mac(`${issued}.${nonce}`)}`, minSeconds: SITE_LEAD_MIN_SECONDS });
+  });
+
+  /*
+   * "Mola ekibi iletişim bilgileri" for the site (13 Ekim): Mola Yönetim → Ayarlar → İletişim bilgileri shows on
+   * molayazilim.com.tr too (site.js puts the filled fields over what the build wrote from site/config.json). Read-only, the
+   * vendor's own public contact (already shown to every café), only these four fields; an empty one is left out (the
+   * site keeps its own). The page writes them as text and builds the links from digits and a checked address.
+   */
+  const contactReads = pool();
+  app.get('/api/site/iletisim', (req, res) => {
+    if (over(contactReads, clientKey(req), 120, 60_000)) return busy(res);
+    const c = o.store.read().contact, out: Record<string, string> = {};
+    for (const k of ['phone', 'whatsapp', 'email', 'hours'] as const) if (c?.[k]?.trim()) out[k] = c[k].trim();
+    res.set({ 'Cache-Control': 'public, max-age=60', 'X-Robots-Tag': 'noindex' }).json({ contact: out });
   });
 
   app.post('/api/site/talep', (req, res) => {

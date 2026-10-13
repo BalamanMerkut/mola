@@ -21,6 +21,7 @@ export const SITE_LEAD_LIMITS = {
 export const SITE_LEAD_MIN_SECONDS = 4;
 
 export type SiteLeadInput = {
+  /** email: required by checkSiteLead since 13 Ekim; leads kept from before may have none. */
   business: string; person: string; phone: string; email?: string; city: string; tables?: number; type: SiteLeadType; message?: string;
   consent: true; consentVersion: string;
 };
@@ -57,7 +58,9 @@ export function checkSiteLead(body: unknown): { ok: true; value: SiteLeadInput }
   if (person.length < L.person.min || person.length > L.person.max) return fail('person', 'Adınızı ve soyadınızı yazın.');
   const phone = siteLeadPhone(b.phone);
   if (!phone) return fail('phone', 'Telefon numarası geçersiz. Örnek: 0532 123 45 67');
-  if (email && (email.length > L.email.max || !EMAIL.test(email))) return fail('email', 'E-posta adresi geçersiz. Boş da bırakabilirsiniz.');
+  // Required since 13 Ekim: the owner's sign-ins (İşletmem var) and codes go to an e-mail; older leads may have none.
+  if (!email) return fail('email', 'E-posta adresinizi yazın.');
+  if (email.length > L.email.max || !EMAIL.test(email)) return fail('email', 'E-posta adresi geçersiz. Örnek: ayse@ornekkafe.com');
   if (city.length < L.city.min || city.length > L.city.max || /[<>{}]/.test(city)) return fail('city', 'Şehri yazın.');
   let tables: number | undefined;
   if (b.tables !== undefined && b.tables !== null && b.tables !== '') {
@@ -69,5 +72,5 @@ export function checkSiteLead(body: unknown): { ok: true; value: SiteLeadInput }
   if (message.length > L.message.max) return fail('message', `Mesaj en çok ${L.message.max} harf olabilir.`);
   if (b.consent !== true) return fail('consent', 'Devam etmek için KVKK Aydınlatma Metni’ni okuduğunuzu onaylayın.');
   if (b.consentVersion !== SITE_CONSENT_VERSION) return fail('consentVersion', 'Sayfa eski kalmış. Lütfen sayfayı yenileyip yeniden gönderin.');
-  return { ok: true, value: { business, person, phone, ...(email ? { email } : {}), city, ...(tables ? { tables } : {}), type: b.type as SiteLeadType, ...(message ? { message } : {}), consent: true, consentVersion: SITE_CONSENT_VERSION } };
+  return { ok: true, value: { business, person, phone, email, city, ...(tables ? { tables } : {}), type: b.type as SiteLeadType, ...(message ? { message } : {}), consent: true, consentVersion: SITE_CONSENT_VERSION } };
 }
