@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { basename, join } from 'node:path';
 import { temp } from './merkez-fixture.js';
@@ -89,4 +89,34 @@ test('watchdog hands a downloaded update to the applier; a version that cannot s
   watch();
   assert.equal(await until('0.1.1 again', () => health(port)), '0.1.1');
   assert.match(readFileSync(join(root, 'logs', 'guncelleme.log'), 'utf8'), /Geri alındı/);
+});
+
+/*
+ * 13 Ekim (a real café): Mola.exe starts Mola-Sunucu.cmd, which appends the watchdog's output to logs\sunucu.log. The
+ * applier the watchdog starts inherits that open file on Windows, so while it waited for the new version, cmd could not open
+ * the log for its ">>" and never ran node: neither the new version nor the old one (rollback) came up. The launcher now
+ * falls back to another log file. Started here exactly that way: the real launcher text, through cmd, with the log.
+ */
+test('Windows: through the real Mola-Sunucu.cmd (output appended to sunucu.log) the update still starts the new version', { timeout: 240_000, skip: process.platform !== 'win32' }, async t => {
+  const { molaSunucuCmd } = await import('../scripts/desktop/mola-sunucu-cmd.mjs');
+  const root = temp('update-handover-cmd'), port = await freePort(), node = join(root, 'runtime', 'node.exe');
+  mkdirSync(join(root, 'runtime'), { recursive: true }); copyFileSync(process.execPath, node);
+  writeTree(root, { ...Object.fromEntries(Object.entries(appOf('0.1.0')).map(([f, d]) => [`app/${f}`, d])), 'masaustu.anahtar': 'test-anahtari', 'veri/merchant.sqlite': 'satışlar',
+    'Mola-Sunucu.cmd': molaSunucuCmd({ merkezUrl: 'http://127.0.0.1:9' }) });
+  const env: NodeJS.ProcessEnv = { ...process.env, PORT: String(port), MOLA_GUNCELLEME_SAGLIK_MS: '20000' };
+  delete env.MOLA_NOBETCI; delete env.DATA_DIR; delete env.MOLA_DESKTOP_KEY;
+  t.after(() => {
+    try { execFileSync('powershell.exe', ['-NoProfile', '-Command', `Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.ExecutablePath -eq '${node}' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`], { stdio: 'ignore' }); } catch { /* none */ }
+    for (let i = 0; i < 10; i++) { try { rmSync(root, { recursive: true, force: true }); break; } catch { execFileSync(process.execPath, ['-e', 'setTimeout(()=>{},500)']); } }
+  });
+  // As Mola.exe does: the launcher through cmd, no window.
+  spawn('cmd.exe', ['/d', '/c', `""${join(root, 'Mola-Sunucu.cmd')}""`], { cwd: root, env, detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true }).unref();
+  assert.equal(await until('0.1.0', () => health(port)), '0.1.0');
+  pending(root, '0.1.1', '0.1.0');
+  await fetch(`http://127.0.0.1:${port}/test/guncelle`);
+  const outcome = () => { try { return JSON.parse(readFileSync(join(root, 'guncelleme', 'sonuc.json'), 'utf8')); } catch { return undefined; } };
+  assert.equal(await until('0.1.1 running', async () => (await health(port)) === '0.1.1' ? '0.1.1' : outcome()?.result === 'rolled_back' ? 'geri alındı' : undefined, 120_000), '0.1.1');
+  assert.equal(readFileSync(join(root, 'veri', 'merchant.sqlite'), 'utf8'), 'satışlar');
+  // The watchdog's own lines are kept: in sunucu.log, or in the fallback file while the applier held it.
+  assert.match(readdirSync(join(root, 'logs')).join(' '), /sunucu(-\d+)?\.log/);
 });

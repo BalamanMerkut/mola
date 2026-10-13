@@ -864,6 +864,8 @@ Testler: `tests/external-orders.test.ts` (tekilleştirme, kabul/ret/hazır/tesli
 
 **Karar (sahibin, 4 Ekim):** satıcı yeni sürümü Mola Yönetim'de yayınlar; kafeler **çalışırken arka planda** indirir (kesilirse kaldığı yerden), doğrular; kurulum **kapanışta, ertesi açılışta ya da kafe boşken** yapılır (kafeler geceleri bilgisayarı kapattığı için en sık yol "sabah açılışta"). Her kurulumdan önce **doğrulanmış yedek**; yeni sürüm açılmazsa **kendiliğinden geri dönüş**. Veriye yalnız yeni sürümün kendi veri geçişi dokunur; geri dönüşte veri de güncelleme öncesine döner. **Geri sürüme inme (downgrade) yoktur.** Mola Yönetim'in kendisi bu yolla güncellenmez (aşağıda).
 
+> **13 Ekim olayı (0.1.2 → 0.1.4, gerçek kafe):** Windows'ta güncelleyici, onu başlatan nöbetçinin açık `logs\sunucu.log` tutamağını miras alır. Güncelleyici yeni sürümü beklerken `Mola-Sunucu.cmd` bu dosyayı `>>` için açamadı ve node'u hiç çalıştırmadı: yeni sürüm de, geri dönülen eski sürüm de açılmadı; kafe sahip Mola'yı yeniden açana kadar kapalı kaldı (veri yerindeydi). Düzeltme (0.1.5): başlatıcı önce kaydı açmayı dener, açamazsa `logs\sunucu-<rastgele>.log`'a yazar (`scripts/desktop/mola-sunucu-cmd.mjs`). Güncelleyici yeni sürümün başlatıcısını sunucuyu başlatmadan önce yerine koyduğu için 0.1.2'deki kafeler de 0.1.5'e geçebilir. Test: `tests/update-handover.test.ts` ("through the real Mola-Sunucu.cmd"; eski başlatıcıyla başarısız olur). Gerçek paketlerle prova: kurulu klasöre dokunmadan, geçici bir klasörde eski sürüm + kafe verisinin kopyası + yeni `.mola-guncelleme`, Merkez adresi ulaşılamaz bir adrese çevrilerek.
+
 | Ne | Nerede |
 |---|---|
 | Sürüm biçimi, imza (`mola-guncelleme-1`), sürüm sırası, tar okuyucu | `server/update-manifest.ts` |

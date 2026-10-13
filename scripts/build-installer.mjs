@@ -23,6 +23,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { finished } from 'node:stream/promises';
 import { folderItems, includeRuntime, updateBundlesWanted, writeUpdateBundle } from './update-bundle.mjs';
 import { writeIntegrityManifest } from './integrity-manifest.mjs';
+import { molaSunucuCmd } from './desktop/mola-sunucu-cmd.mjs';
 import { ICO_SIZES, MOLA_GREEN, YONETIM_BLACK, exeIconImages, icoFile } from './mola-icons.mjs';
 
 if (process.platform !== 'win32') throw new Error('Kurulum paketleri Windows bilgisayarda hazırlanmalı (Mola.exe Windows içindeki C# derleyicisiyle derlenir).');
@@ -305,24 +306,8 @@ if (chosen.includes('windows')) {
   // MOLA_LAN=0 (this computer only). The server runs under the watchdog (nobetci.mjs): it comes back after a crash; "Kapat"
   // and Mola-Durdur.cmd stop it for good. MOLA_MODE=installed: the packaged app, not a local test (no test badges).
   // MOLA_FIREWALL_HELPER: Tabletler > "İzni düzelt" runs Mola.exe --guvenlik-duvari (server/desktop.ts).
-  writeFileSync(join(prog, 'Mola-Sunucu.cmd'), crlf(`
-@echo off
-cd /d "%~dp0app"
-if exist "%~dp0ayarlar.cmd" call "%~dp0ayarlar.cmd"
-set SERVE_BUILD=1
-set MOLA_MODE=installed
-set MOLA_KEY_PROTECTION=1
-set MOLA_CLEAN_INSTALL=1
-set MOLA_DESKTOP_KEY=%~dp0masaustu.anahtar
-set MOLA_FIREWALL_HELPER=%~dp0Mola.exe
-if not defined DATA_DIR set DATA_DIR=%~dp0veri
-if not defined PORT set PORT=3000
-if not defined MOLA_MERKEZ_URL set MOLA_MERKEZ_URL=${MERKEZ_URL}${MERKEZ_LAN ? '\nif not defined MOLA_MERKEZ_LAN set MOLA_MERKEZ_LAN=1' : ''}
-set MOLA_AG=--lan
-if "%MOLA_LAN%"=="0" set MOLA_AG=
-if not exist "%~dp0logs" mkdir "%~dp0logs"
-"%~dp0runtime\\node.exe" --disable-warning=ExperimentalWarning nobetci.mjs server.mjs %MOLA_AG% >> "%~dp0logs\\sunucu.log" 2>&1
-`));
+  // The text lives in scripts/desktop/mola-sunucu-cmd.mjs (the update tests start the same launcher).
+  writeFileSync(join(prog, 'Mola-Sunucu.cmd'), molaSunucuCmd({ merkezUrl: MERKEZ_URL, merkezLan: MERKEZ_LAN }));
   writeFileSync(join(prog, 'Mola-Durdur.cmd'), stopCmd('Mola durduruldu.'));
   // The app folder after the launchers: its butunluk.json lists them as they are shipped.
   await appFolder(app, TARGETS.windows, 'windows', Object.fromEntries(['Mola.exe', 'Mola-Sunucu.cmd', 'Mola-Durdur.cmd', 'Mola-Kaldir.exe'].map(name => [name, readFileSync(join(prog, name))])));
