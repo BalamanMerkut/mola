@@ -73,7 +73,7 @@ test('kurtarma-kodu: nothing changes until commit; then the new code opens the k
   try {
     const d = store.read();
     assert.ok(d.audit.some(a => a.action === 'merkez.recovery_renewed' && a.by === 'system'));
-    assert.ok((d.alerts ?? []).some(a => a.kind === 'merkez.recovery'));
+    assert.equal((d.alerts ?? []).filter(a => a.kind === 'merkez.recovery').length, 1, 'one Bildirim merkezi entry');
     assert.ok(!JSON.stringify(d).includes(fresh));
   } finally { store.close(); }
 });
