@@ -8,6 +8,8 @@
 .activation-choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer}
 .activation-choice:hover{border-color:#91ab91;background:#f4f8f2}
 .activation-choice span{display:flex;flex-direction:column;gap:3px}
+.activation-group{margin:18px 0 0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7766}
+.activation-group + .activation-choice{margin-top:8px}
 .activation-choice small{color:var(--muted)}
 .activation-sector{display:flex;gap:8px;flex-wrap:wrap}
 .activation-sector button{flex:1;min-width:110px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}

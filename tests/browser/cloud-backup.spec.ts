@@ -54,8 +54,8 @@ test('sunucu yedeği: the rail shows it; a clean install restores from Mola Merk
     // A clean install on another computer.
     server = await protectedServer(scenario('cloud-new'), protectedPort(7), 'yeni-pc', true, env);
     await page.goto(`${server.base}/#masaustu=${server.token}`);
-    const welcome = page.getByRole('dialog', { name: 'Mola’ya hoş geldiniz' });
-    await welcome.getByRole('button', { name: /Mola Merkez’den geri yükle/ }).click();
+    // No welcome window: the activation screen offers the ways back (0.1.11).
+    await page.getByRole('button', { name: /Mola Merkez’den geri yükle/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Yedekten geri yükle' });
     await expect(dialog.getByRole('button', { name: /Mola Merkez’den/, pressed: true })).toBeVisible();
     await dialog.getByLabel('Taşıma kodu').fill('AAAA-BBBB-CCCC-DDDD');

@@ -14,9 +14,10 @@ test('first day: no recovery code before the owner account; the account signs in
   const admin = await browser.newPage();
   try {
     await page.goto(`${server.base}/#masaustu=${server.token}`);
-    const welcome = page.getByRole('dialog', { name: 'Mola’ya hoş geldiniz' });
-    await welcome.getByRole('button', { name: /Yeni kurulum/ }).click();
+    // No welcome window (0.1.11): straight to the activation screen, which offers every way in.
     await expect(page.getByRole('heading', { name: 'Mola’yı etkinleştir' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Mola’ya hoş geldiniz' })).toHaveCount(0);
+    for (const name of [/Kodum yok, başvuru yapacağım/, /Etkinleştirme kodum var/, /İşletmem var/, /Yedekten geri yükle/, /Mola Merkez’den geri yükle/]) await expect(page.getByRole('button', { name })).toBeVisible();
     // The code waits for the owner account: nothing on the activation screens.
     await page.waitForTimeout(3500);
     await expect(page.getByRole('dialog', { name: 'Kurtarma kodunuz' })).toHaveCount(0);

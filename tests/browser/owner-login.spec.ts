@@ -93,15 +93,13 @@ test('İşletmem var: e-mail + username + password, the code from the e-mail, th
     // The İşletmem var code mails below are counted from here (the old-address code above went to the same address).
     const earlier = codes().length;
 
-    // A clean install on another computer. The welcome window offers "İşletmem var"; here it is put off and taken from the
-    // activation screen instead (the other way in).
+    // A clean install on another computer: "İşletmem var" from the activation screen.
     fresh = await protectedServer(join(root, 'yeni'), protectedPort(5), 'yeni-pc', true, env);
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`${fresh.base}/#masaustu=${fresh.token}`);
-    const welcome = page.getByRole('dialog', { name: 'Mola’ya hoş geldiniz' });
-    await expect(welcome.getByRole('button', { name: /İşletmem var/ })).toBeVisible();
+    // The activation screen offers "İşletmem var" (no welcome window since 0.1.11).
+    await expect(page.getByRole('heading', { name: 'Mola’yı etkinleştir' })).toBeVisible();
     await page.screenshot({ path: info.outputPath('1-hos-geldiniz.png') });
-    await welcome.getByRole('button', { name: /Yeni kurulum/ }).click();
     await page.getByRole('button', { name: /İşletmem var/ }).click();
     const dialog = page.getByRole('dialog', { name: 'İşletmem var' });
     await expect(dialog.locator('.owner-steps li[aria-current="step"]')).toContainText('Giriş');

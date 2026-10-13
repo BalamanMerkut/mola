@@ -18,10 +18,10 @@ test('new computer: the first screen offers "Yedekten geri yükle"; a flash-driv
   const server = await protectedServer(root, protectedPort(5), 'yeni-pc', true);
   try {
     await page.goto(`${server.base}/#masaustu=${server.token}`);
-    const welcome = page.getByRole('dialog', { name: 'Mola’ya hoş geldiniz' });
-    await expect(welcome).toBeVisible();
+    // The activation screen's "Yedekten geri yükle" (no welcome window since 0.1.11).
+    await expect(page.getByRole('heading', { name: 'Mola’yı etkinleştir' })).toBeVisible();
     await page.screenshot({ path: info.outputPath('welcome.png') });
-    await welcome.getByRole('button', { name: /Yedekten geri yükle/ }).click();
+    await page.getByRole('button', { name: /Yedekten geri yükle/ }).click();
     const dialog = page.getByRole('dialog', { name: 'Yedekten geri yükle' });
     await expect(dialog).toBeVisible();
     await dialog.getByLabel('Yedek klasörü').fill(flash);

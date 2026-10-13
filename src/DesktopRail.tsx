@@ -63,11 +63,11 @@ export function DesktopRail({ children }: { children?: ReactNode }) {
       const s = await call<DesktopStatus>(token, '/api/desktop/status');
       if (s.locked) { window.dispatchEvent(new Event('mola:locked')); return; }
       setStatus(s);
-      // First look at a new install: offer the way back from a backup. The recovery code comes only once the owner account
-      // exists (never on the activation screens), and again on any refresh until saved or put off with "Sonra kaydedeceğim".
+      // The recovery code comes only once the owner account exists (never on the activation screens), and again on any
+      // refresh until saved or put off with "Sonra kaydedeceğim". A new install has no welcome window: the activation screen
+      // itself offers every way in (new business, İşletmem var, a backup folder, Mola Merkez; src/Activation.tsx).
       const idle = !shown.current.open && !shown.current.dialog;
-      if (first && s.security?.clean && s.security.protection !== 'off' && !later('mola-welcome')) setDialog('welcome');
-      else if (idle && s.security?.recoveryAvailable && s.security.owner !== false && !later('mola-recovery-later')) setDialog('recovery');
+      if (idle && s.security?.recoveryAvailable && s.security.owner !== false && !later('mola-recovery-later')) setDialog('recovery');
     } catch (e) {
       // A key from an earlier start is no longer valid; the next launch brings a new one.
       if ((e as { status?: number }).status === 404) forgetDesktopToken();
@@ -82,8 +82,9 @@ export function DesktopRail({ children }: { children?: ReactNode }) {
     // 13 Ekim: "Yedekleriniz nerede?" (Ayarlar → Güvenlik ve yedek) opens the backup folders on this computer.
     const reply = (error: string) => window.dispatchEvent(new CustomEvent('mola:open-result', { detail: error }));
     const ask = (e: Event) => { const what = (e as CustomEvent<string>).detail; if (what === 'backup') { setDialog(null); setOpen('backup'); } else if (what === 'recovery') { setOpen(null); setDialog(shown.current.status?.security?.recoveryAvailable ? 'recovery' : 'security'); }
-      // "İşletmem var" on the activation screen: only a clean install with key protection can take a business's backup.
-      else if (what === 'owner') { const s = shown.current.status?.security; if (s?.clean && s.protection !== 'off') { setOpen(null); setDialog('owner'); reply(''); } else reply('Bu bilgisayarda zaten işletme verisi var ya da anahtar koruması kapalı; “İşletmem var” yalnız yeni kurulumda kullanılır.'); }
+      // The activation screen's ways back (İşletmem var, Yedekten geri yükle, Mola Merkez'den geri yükle): only a clean
+      // install with key protection can take a business's backup.
+      else if (what === 'owner' || what === 'restore' || what === 'restore-merkez') { const s = shown.current.status?.security; if (s?.clean && s.protection !== 'off') { setOpen(null); setDialog(what); reply(''); } else reply('Bu bilgisayarda zaten işletme verisi var ya da anahtar koruması kapalı; işletmeyi taşıma ve yedekten geri yükleme yalnız yeni kurulumda yapılır.'); }
       else if (what === 'open-backups' || what === 'open-second') void call(token ?? '', what === 'open-backups' ? '/api/desktop/open-backups' : '/api/desktop/open-second', {}).then(() => reply(''), err => reply((err as Error).message)); };
     window.addEventListener('mola:security', on); window.addEventListener('mola:open', ask);
     return () => { window.removeEventListener('mola:security', on); window.removeEventListener('mola:open', ask); };
@@ -105,7 +106,6 @@ export function DesktopRail({ children }: { children?: ReactNode }) {
   // slot off, so the screen started over once, the owner's agreement window included).
   if (!active) return <>{null}{null}{split.on && token !== null && !failed ? null : children}</>;
   const closeDialog = () => {
-    if (dialog === 'welcome') { remember('mola-welcome'); if (status.security?.recoveryAvailable && status.security.owner !== false && !later('mola-recovery-later')) { setDialog('recovery'); return; } }
     if (dialog === 'recovery') remember('mola-recovery-later');
     setDialog(null); void refresh();
   };

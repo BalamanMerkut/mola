@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ClipboardList, KeyRound, Pencil, RefreshCw, Store, UserRound } from 'lucide-react';
+import { ArchiveRestore, ArrowLeft, ClipboardList, CloudDownload, KeyRound, Pencil, RefreshCw, Store, UserRound } from 'lucide-react';
 import type { Sector } from '../packages/domain/sector';
 import { api, ApiError } from './api';
 import { ApplicationForm, type ApplicationFields } from './ApplicationForm';
@@ -63,15 +63,16 @@ export function Activation({ onReady }: { onReady: (username: string) => void })
     try { const r = await api<{ username: string }>('/api/activation/owner', { username, password, ...(displayName.trim() ? { name: displayName.trim() } : {}) }); setPassword(''); setRepeat(''); onReady(r.username); }
     catch (e) { setError((e as Error).message); if (e instanceof ApiError && e.code === 'NOT_PENDING') await refresh(); } finally { setBusy(false); }
   }
-  // "İşletmem var" (13 Ekim): the dialog lives in the desktop window's rail (src/RestoreBackup.tsx OwnerRestoreDialog).
-  // No answer means no rail: a tablet or a browser on the network, where a business cannot be moved in.
-  function openOwner() {
+  // The ways back of a business that ran on another computer: "İşletmem var", a backup folder, Mola Merkez. Their dialogs
+  // live in the desktop window's rail (src/RestoreBackup.tsx); no answer means no rail (a tablet or a browser on the
+  // network), where a business cannot be moved in. This screen is the only place they are offered on a new install.
+  function openDesktop(kind: 'owner' | 'restore' | 'restore-merkez', name: string) {
     setError('');
     let answered = false;
     const on = (e: Event) => { answered = true; setError((e as CustomEvent<string>).detail ?? ''); };
     window.addEventListener('mola:open-result', on, { once: true });
-    window.dispatchEvent(new CustomEvent('mola:open', { detail: 'owner' }));
-    setTimeout(() => { window.removeEventListener('mola:open-result', on); if (!answered) setError('“İşletmem var” kasa bilgisayarındaki Mola penceresinden yapılır.'); }, 400);
+    window.dispatchEvent(new CustomEvent('mola:open', { detail: kind }));
+    setTimeout(() => { window.removeEventListener('mola:open-result', on); if (!answered) setError(`“${name}” kasa bilgisayarındaki Mola penceresinden yapılır.`); }, 400);
   }
   const back = () => { setMode('choose'); setEditing(false); setError(''); setRetry(false); };
   // The owner account's rules, shown live under each field (the same rules as server/kafe-routes.ts).
@@ -115,11 +116,14 @@ export function Activation({ onReady }: { onReady: (username: string) => void })
       <MolaContact title={a.status === 'rejected' ? 'Mola ekibine ulaşın' : 'Sorunuz mu var?'} note={a.status === 'rejected' ? 'Neden onaylanmadığını sormak ya da bilgileri birlikte düzeltmek için:' : 'Başvurunuzla ilgili Mola ekibine ulaşabilirsiniz.'} /></>
     : mode === 'choose' ? <>
       <h1>Mola’yı etkinleştir</h1>
-      {/* 10 Ekim: the two ways said as the owner thinks them (site /indir/ step 2): no code → apply; a code → type it. */}
-      <p>Mola ekibinden bir etkinleştirme kodu aldınız mı? Almadıysanız başvuru yapın; kod gerekmez. İnternet bağlantısı gerekir.</p>
+      <p>Nasıl başlamak istersiniz? İnternet bağlantısı gerekir.</p>
+      <h2 className="activation-group">Yeni başlıyorum</h2>
       <button type="button" className="activation-choice" onClick={() => setMode('apply')}><ClipboardList size={22} /><span><strong>Kodum yok, başvuru yapacağım</strong><small>Hesap açma başvurusu: işletme ve fatura bilgilerinizi gönderin. Mola ekibi onaylayınca 30 günlük ücretsiz deneme başlar.</small></span></button>
       <button type="button" className="activation-choice" onClick={() => setMode('code')}><KeyRound size={22} /><span><strong>Etkinleştirme kodum var</strong><small>Mola ekibinin size verdiği tek kullanımlık kodu girin.</small></span></button>
-      <button type="button" className="activation-choice" onClick={openOwner}><Store size={22} /><span><strong>İşletmem var</strong><small>Mola’yı başka bir bilgisayarda kullanıyorum: kullanıcı adım, şifrem ve e-postama gelen kodla verilerimi bu bilgisayara getir.</small></span></button>
+      <h2 className="activation-group">İşletmem başka bir bilgisayardaydı</h2>
+      <button type="button" className="activation-choice" onClick={() => openDesktop('owner', 'İşletmem var')}><Store size={22} /><span><strong>İşletmem var</strong><small>Kullanıcı adım, şifrem ve e-postama gelen kodla verilerimi bu bilgisayara getir.</small></span></button>
+      <button type="button" className="activation-choice" onClick={() => openDesktop('restore', 'Yedekten geri yükle')}><ArchiveRestore size={22} /><span><strong>Yedekten geri yükle</strong><small>Eski bilgisayarın yedeğini flash bellekten ya da yedek klasöründen getir.</small></span></button>
+      <button type="button" className="activation-choice" onClick={() => openDesktop('restore-merkez', 'Mola Merkez’den geri yükle')}><CloudDownload size={22} /><span><strong>Mola Merkez’den geri yükle</strong><small>Eski bilgisayar bozulduysa: Mola ekibinin verdiği taşıma kodu ve kurtarma kodunuzla.</small></span></button>
       {error && <Notice tone="error">{error}</Notice>}
       {status.existingData && <><p className="muted small">Bu bilgisayarda önceki sürümden kalan işletme verisi var. Veriler silinmez; mevcut işletmenizi bağlamak için Mola destek ekibine başvurun.</p><MolaContact /></>}
     </>
