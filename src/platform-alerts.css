@@ -18,7 +18,7 @@
 .yonetim .alert-center-v2 .alert-list li.alert-row { position:relative; display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:12px; align-items:center; min-height:64px; padding:10px 12px 10px 16px; border:0; border-top:1px solid var(--y-line-soft); background:transparent; }
 .yonetim .alert-center-v2 .alert-list li.alert-row:first-child { border-top:0; }
 .yonetim .alert-center-v2 .alert-list li.alert-row.unread { background:var(--y-soft,#f1f5ee); }
-.yonetim .alert-center-v2 .alert-list li.alert-row.unread.high { background:#fffaf7; }
+.yonetim .alert-center-v2 .alert-list li.alert-row.unread.high { background:#f5e3db; }
 .yonetim .alert-center-v2 .alert-list li.alert-row.unread::before { content:''; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:0 3px 3px 0; background:#5f9a5c; }
 .yonetim .alert-center-v2 .alert-list li.alert-row.unread.high::before { background:#c0623f; }
 .yonetim .alert-row .alert-icon { width:36px; height:36px; border-radius:11px; display:grid; place-items:center; }

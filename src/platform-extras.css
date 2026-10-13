@@ -34,13 +34,13 @@
 .detail-machines ul { list-style:none; margin:8px 0 0; padding:0; display:grid; gap:8px; }
 .detail-machines li { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; }
 .license-delivery { font-size:13px; margin:4px 0 10px; }
-.suspend-form { margin-top:12px; padding:12px; border:1px solid #eed8cf; border-radius:10px; background:#fff8f5; }
+.suspend-form { margin-top:12px; padding:12px; border:1px solid #eed8cf; border-radius:10px; background:#f5e3db; }
 .plan-choice { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0; }
 .plan-choice button { display:grid; gap:4px; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--y-card,#fff); color:var(--ink); }
 .plan-choice button.selected { border:2px solid var(--green); background:var(--y-soft,#f1f5ee); }
 .plan-choice button small { color:var(--muted); font-size:12px; line-height:1.4; }
 .plan-choice button:disabled { opacity:1; cursor:default; }
-.application-flags .flag-warn { background:#fff6e5; border:1px solid #f0dcae; border-radius:8px; padding:8px 10px; color:#6b4a0e; }
+.application-flags .flag-warn { background:#f6ebd4; border:1px solid #f0dcae; border-radius:8px; padding:8px 10px; color:#6b4a0e; }
 .audit-detail { color:var(--muted); }
 .failure-table { width:100%; border-collapse:collapse; font-size:12px; margin:10px 0; }
 .failure-table th, .failure-table td { text-align:left; padding:6px 8px; border-bottom:1px solid #f0f2ec; vertical-align:top; overflow-wrap:anywhere; }

@@ -7,4 +7,4 @@
 .demo-section .demo-template input{width:auto;margin:0}
 .demo-section .demo-status{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--y-soft,#f1f5ee);font-size:13px}
 .demo-section .demo-status.failed,.demo-section .demo-status.expired{background:#fbefed;color:#8a2c2c}
-.demo-section .demo-status.pending{background:#fff7e6;color:#6d4a06}
+.demo-section .demo-status.pending{background:#f6ebd4;color:#6d4a06}

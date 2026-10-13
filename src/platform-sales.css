@@ -70,7 +70,7 @@
 .yonetim .price-group legend { font-size:13px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:#6c7a70; margin-bottom:8px; padding:0; }
 .yonetim .price-row { display:grid; grid-template-columns:minmax(0,1fr) 150px 150px 150px; gap:6px 14px; align-items:center; padding:12px 14px; border:1px solid var(--y-line-soft); border-radius:14px; background:var(--y-card,#fff); transition:background .15s, border-color .15s; }
 .yonetim .price-row+.price-row { margin-top:8px; }
-.yonetim .price-row.changed { border-color:#e2c48a; background:#fffbf2; }
+.yonetim .price-row.changed { border-color:#e2c48a; background:#f6ebd4; }
 .yonetim .price-row.soon { background:var(--y-soft,#f1f5ee); border-style:dashed; }
 .yonetim .price-name { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .yonetim .price-name strong { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; }
@@ -160,7 +160,7 @@
 .yonetim .service-split>div { display:flex; flex-direction:column; gap:10px; padding:16px 18px; border-radius:16px; background:var(--y-soft,#f1f5ee); border:1px solid var(--y-line-soft); min-width:0; }
 .yonetim .service-split h3 { display:flex; align-items:center; gap:6px; font-size:15px; }
 .yonetim .service-split p { margin:0; }
-.yonetim .detail-sheet>.service-confirm { margin:0 -40px; padding:28px 40px 32px; background:#fffbf2; border-top:1px solid #f0dfb8; animation:mola-fade-in .2s ease-out; }
+.yonetim .detail-sheet>.service-confirm { margin:0 -40px; padding:28px 40px 32px; background:#f6ebd4; border-top:1px solid #f0dfb8; animation:mola-fade-in .2s ease-out; }
 .yonetim .service-confirm.asking { background:#fff4df; }
 .yonetim .change-list { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
 .yonetim .change-list li { display:grid; grid-template-columns:140px minmax(0,1fr); gap:12px; font-size:14.5px; }
@@ -200,7 +200,7 @@
 .yonetim .sales-head-actions .btn { margin:0; gap:6px; text-decoration:none; display:inline-flex; align-items:center; }
 .yonetim .sales-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
 .yonetim .kpi-card { display:flex; flex-direction:column; gap:2px; padding:20px 22px; border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); min-width:0; }
-.yonetim .kpi-card.warn { border-color:#ecd39e; background:#fffcf4; }
+.yonetim .kpi-card.warn { border-color:#ecd39e; background:#f6ebd4; }
 .yonetim .kpi-icon { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; margin-bottom:10px; }
 .yonetim .kpi-icon.ok { background:var(--ok-bg); color:var(--ok-fg); } .yonetim .kpi-icon.info { background:var(--info-bg); color:var(--info-fg); }
 .yonetim .kpi-icon.warn { background:var(--warn-bg); color:var(--warn-fg); } .yonetim .kpi-icon.idle { background:var(--idle-bg); color:var(--idle-fg); }

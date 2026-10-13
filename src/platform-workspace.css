@@ -4,7 +4,7 @@
    Under 900px the sidebar becomes a compact top bar whose five items always fit (no sideways scroll). */
 .platform-page.platform-v2.yonetim, .yonetim-auth {
   /* Matte cream, no bright white (14 Ekim, like the café's activation screen and the guides' paper). */
-  --y-bg:#ece5d7; --y-card:#f6f0e5; --y-line:#ddd5c4; --y-line-soft:#e8e1d3; --y-soft:#ece6d8; --y-field:#fbf8f1;
+  --y-bg:#ece5d7; --y-card:#f6f0e5; --y-line:#ddd5c4; --y-line-soft:#e8e1d3; --y-soft:#ece6d8; --y-field:#f1eadc;
   /* The study (14 Ekim): dark walnut sidebar and sign-in panel, brass for what is chosen, coffee for the main buttons.
      The café app keeps Mola's green; states keep their own green / amber / red. */
   --y-walnut:#3a281e; --y-walnut-line:#2a1c14; --y-walnut-hover:#4a3427; --y-walnut-text:#d8c7ad; --y-brass:#c9a368; --y-brass-soft:#5a412e;
@@ -255,7 +255,7 @@
 .yonetim .service-card:hover:not(:disabled) { border-color:#a9bfa3; box-shadow:var(--y-shadow); }
 .yonetim .service-card:disabled { opacity:1; cursor:default; }
 .yonetim .service-card.selected { border:2px solid var(--green); background:var(--y-soft,#f1f5ee); }
-.yonetim .service-card.asking { border-color:var(--warn-dot); background:#fffbf2; }
+.yonetim .service-card.asking { border-color:var(--warn-dot); background:#f6ebd4; }
 .yonetim .service-card.soon { background:var(--y-soft,#f1f5ee); color:#7a847c; border-style:dashed; }
 .yonetim .service-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
 .yonetim .service-card-head strong { font-size:18px; }
@@ -354,7 +354,7 @@
 .yonetim .alert-actions { gap:0 8px; }
 
 /* ---------- Başvurular, fatura bilgileri, olası tekrar ---------- */
-.yonetim .detail-application { background:#fffcf4; margin:0 -40px !important; padding:32px 40px !important; }
+.yonetim .detail-application { background:#f6ebd4; margin:0 -40px !important; padding:32px 40px !important; }
 .yonetim .application-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr)); gap:16px; align-items:start; }
 .yonetim .application-card { border:1px solid var(--y-line); border-radius:var(--y-radius); background:var(--y-card); padding:24px; display:grid; gap:16px; min-width:0; }
 .yonetim .application-card header { display:flex; align-items:center; gap:4px 10px; flex-wrap:wrap; }
@@ -364,7 +364,7 @@
 .yonetim .invoice-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 24px; margin:0; }
 .yonetim .invoice-facts dt { font-size:13px; color:var(--y-faint); }
 .yonetim .invoice-facts dd { margin:2px 0 0; overflow-wrap:anywhere; }
-.yonetim .application-flags { display:grid; gap:6px; font-size:14px; color:var(--warn-fg); background:#fff8e8; border-radius:var(--y-radius-sm); padding:12px 14px; }
+.yonetim .application-flags { display:grid; gap:6px; font-size:14px; color:var(--warn-fg); background:#f6ebd4; border-radius:var(--y-radius-sm); padding:12px 14px; }
 .yonetim .application-flags p { margin:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .yonetim .application-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .yonetim .application-actions .btn { margin:0; }
@@ -573,10 +573,11 @@
 /* The shared screens inside Mola Yönetim (panels, windows, fields, plain buttons) take its matte colours, not white. */
 .yonetim .panel, .yonetim .modal, .yonetim-auth .panel { background:var(--y-card); }
 .yonetim :is(input:not([type=checkbox]):not([type=radio]), select, textarea), .yonetim-auth :is(input:not([type=checkbox]):not([type=radio]), select, textarea) { background:var(--y-field); }
-.yonetim .btn.secondary, .yonetim-auth .btn.secondary { background:var(--y-field); }
+.yonetim .btn.secondary, .yonetim-auth .btn.secondary { background:var(--y-card); border-color:var(--y-line); }
 .yonetim .btn.secondary:hover, .yonetim-auth .btn.secondary:hover { background:var(--y-soft,#f1f5ee); }
 .yonetim .btn.primary:hover, .yonetim-auth .btn.primary:hover { background:#36241a; }
 /* Hover and the support chat inside Mola Yönetim: a shade darker than the card, never white (14 Ekim). */
 .yonetim .icon-btn:hover, .yonetim .tc-item:hover, .yonetim .tc-upload-btn:hover, .yonetim .ticket-inbox-row:hover, .yonetim .ticket-inbox-row.selected { background:var(--y-soft); }
 .yonetim .tc-main, .yonetim .tc-list, .yonetim .tc-filter button[aria-pressed="true"] { background:var(--y-card); }
 .yonetim .tc-search, .yonetim .tc-input, .yonetim .tc .tc-new-body input, .yonetim .tc .tc-new-body textarea { background:var(--y-field); }
+.yonetim .tc-row.theirs .tc-bubble { background:var(--y-field); border-color:var(--y-line); }

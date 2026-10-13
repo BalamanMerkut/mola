@@ -128,7 +128,7 @@
 .yonetim .ps-price-row { display:grid; grid-template-columns:38px minmax(0,1fr) 136px 136px 44px; gap:6px 14px; align-items:center; padding:10px 12px; border-radius:14px; border:1px solid transparent; transition:background .15s, border-color .15s; }
 .yonetim .ps-price-row + .ps-price-row { border-top-color:var(--y-line-soft); border-top-left-radius:0; border-top-right-radius:0; }
 .yonetim .ps-price-row:hover { background:var(--y-soft,#f1f5ee); }
-.yonetim .ps-price-row.changed { background:#fffbf2; border-color:#ecd7a8; border-radius:14px; }
+.yonetim .ps-price-row.changed { background:#f6ebd4; border-color:#ecd7a8; border-radius:14px; }
 .yonetim .ps-price-row.changed .ps-tile { background:#f8eedb; color:#7d520e; }
 .yonetim .ps-price-row.problem { border-color:#e9b9a8; background:#fdf4f0; border-radius:14px; }
 .yonetim .ps-price-row.soon { opacity:.85; }
@@ -166,7 +166,7 @@
 .yonetim .ps-checklist { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
 .yonetim .ps-checklist li { display:flex; align-items:center; gap:10px; min-height:40px; padding:6px 12px; border-radius:12px; background:var(--y-soft,#f1f5ee); font-size:14px; }
 .yonetim .ps-checklist li.ok svg { color:var(--ok-dot); }
-.yonetim .ps-checklist li.todo { background:#fdf6e8; } .yonetim .ps-checklist li.todo svg { color:var(--warn-dot); }
+.yonetim .ps-checklist li.todo { background:#f3e5c8; } .yonetim .ps-checklist li.todo svg { color:var(--warn-dot); }
 .yonetim .ps-checklist li.soft svg { color:var(--idle-dot); }
 .yonetim .ps-disk-note { display:flex; align-items:center; gap:6px; margin:0; }
 
@@ -180,7 +180,7 @@
 .yonetim .ps-right-icon { flex:none; display:grid; place-items:center; width:32px; height:32px; border-radius:10px; background:var(--y-card,#fff); color:#5c665f; }
 .yonetim .ps-right.open .ps-right-icon { color:var(--ok-fg); }
 .yonetim .ps-right.blocked .ps-right-icon { color:var(--bad-fg); }
-.yonetim .ps-right.pending { border-color:#e2c48a; background:#fffbf2; }
+.yonetim .ps-right.pending { border-color:#e2c48a; background:#f6ebd4; }
 .yonetim .ps-right .help-tip { vertical-align:middle; }
 .yonetim .ps-stepper { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; counter-reset:step; }
 .yonetim .ps-stepper li { position:relative; display:flex; flex-direction:column; gap:2px; padding:10px 12px 10px 44px; border-radius:12px; background:var(--y-soft,#f1f5ee); min-width:0; counter-increment:step; font-size:13.5px; }
@@ -287,7 +287,7 @@
 .yonetim .ps-devaccess { min-width:0; }
 .yonetim .ps-token-once { display:flex; flex-direction:column; gap:10px; }
 .yonetim .ps-cmd { display:flex; align-items:center; gap:8px; margin:0; padding:10px 12px; border-radius:10px; background:#22362b; color:#e9f1ea; font:13px/1.4 Consolas, monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
-.yonetim .ps-token-card .token-text { border:1px dashed #d8c08e; background:#fffbf2; }
+.yonetim .ps-token-card .token-text { border:1px dashed #d8c08e; background:#f6ebd4; }
 .yonetim .ps-token-list { gap:8px; }
 .yonetim .ps-token-list li { padding:10px 12px; border-color:var(--y-line-soft); border-radius:14px; }
 .yonetim .ps-token-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
