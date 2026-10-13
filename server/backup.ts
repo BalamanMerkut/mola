@@ -15,13 +15,14 @@ import { DomainError } from '../packages/domain/engine.js';
 import { businessDirectoryEntry, legacyDirectoryRow } from './business-directory.js';
 import { loginUsers } from './accounts.js';
 import { backupPaths, restorePaths } from './backup-paths.js';
-import { BACKUP_KEY_FILE, masterFromCode, openBackupKey, readBackupKeyFile, sealBackupKey } from './backup-key.js';
-import { KEY_FILE, RAW_KEY, RAW_WIPE, type BackupProtection, type RecoveryBlock } from './key-vault.js';
+import { BACKUP_KEY_FILE, masterFromCode, masterFromPassword, openBackupKey, readBackupKeyFile, sealBackupKey } from './backup-key.js';
+import { KEY_FILE, RAW_KEY, RAW_WIPE, type BackupProtection, type OwnerBlock, type RecoveryBlock } from './key-vault.js';
 import { existsSync } from 'node:fs';
 import { BLOB_NAME, decryptPackage, ensureBlob, fileSha256, PACKAGE_FILE, PACKAGE_TABLES, packageFile, type PackageInfo } from './year-packages.js';
 
 /** How a backup is opened: its old-style key file, the running server's master key, or the owner's recovery code. */
-export type BackupSecret = string | { master: Buffer } | { code: string };
+/** password: a business owner's own sign-in (İşletmem var, 13 Ekim) instead of the recovery code. */
+export type BackupSecret = string | { master: Buffer } | { code: string } | { username: string; password: string };
 
 type Entry = { path: string; blob: string; size: number; hash: string };
 /**
@@ -149,7 +150,7 @@ async function createBackupOffline(source: string, outputRoot: string, keyRoot: 
  * database; 'check' (the nightly proof) only checks that each one is there with its encrypted size: they never change, the
  * weekly check reads their SHA-256 and a monthly one opens every row.
  */
-export async function restoreBackup(backup: string, secret: BackupSecret, outputRoot: string, options: { packages?: 'full' | 'check' } = {}): Promise<{ directory: string; files: number; packages: number; master?: Buffer; recovery?: RecoveryBlock; installId?: string }> {
+export async function restoreBackup(backup: string, secret: BackupSecret, outputRoot: string, options: { packages?: 'full' | 'check' } = {}): Promise<{ directory: string; files: number; packages: number; master?: Buffer; recovery?: RecoveryBlock; installId?: string; owners?: OwnerBlock[] }> {
   if (!await exists(join(backup, 'complete.json')) || await exists(join(backup, 'BACKUP_IN_PROGRESS.txt')) || await exists(join(backup, 'BACKUP_FAILED.txt'))) throw new Error('Yedek tamamlanmamış.');
   const completion = JSON.parse(await fs.readFile(join(backup, 'complete.json'), 'utf8')) as Completion;
   if ((completion.format !== 1 && completion.format !== 2) || !Number.isSafeInteger(completion.files) || completion.files < 2 || !Number.isFinite(Date.parse(completion.createdAt))) throw new Error('Yedek tamamlanma kaydı geçersiz.');
@@ -158,7 +159,7 @@ export async function restoreBackup(backup: string, secret: BackupSecret, output
   else {
     wrapper = await readBackupKeyFile(backup);
     if (!wrapper) throw new DomainError('OLD_BACKUP', 'Bu yedek eski biçimde: kurtarma koduyla değil, ayrı anahtar dosyasıyla açılır.', 409);
-    master = 'master' in secret ? secret.master : await masterFromCode(wrapper, secret.code);
+    master = 'master' in secret ? secret.master : 'password' in secret ? await masterFromPassword(wrapper, secret.username, secret.password) : await masterFromCode(wrapper, secret.code);
     key = openBackupKey(wrapper, master);
   }
   if (key.length !== 32) throw new Error('Yedek anahtarı geçersiz.');
@@ -203,7 +204,7 @@ export async function restoreBackup(backup: string, secret: BackupSecret, output
     }
     if (options.packages !== 'check' && packages.length) await validatePackages(target, dataKey);
     await fs.unlink(progressPath);
-    return { directory: target, files: manifest.files.length, packages: packages.length, ...(master && wrapper ? { master, recovery: wrapper.recovery, installId: wrapper.installId } : {}) };
+    return { directory: target, files: manifest.files.length, packages: packages.length, ...(master && wrapper ? { master, recovery: wrapper.recovery, installId: wrapper.installId, ...(wrapper.owners?.length ? { owners: wrapper.owners } : {}) } : {}) };
   } catch (e) { await fs.writeFile(join(target, 'RESTORE_FAILED.txt'), 'Geri yükleme doğrulanamadı. Bu dizini uygulama verisi olarak kullanmayın.'); throw e; }
 }
 

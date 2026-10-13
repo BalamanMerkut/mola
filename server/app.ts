@@ -38,7 +38,11 @@ import type { Store } from './store.js';
 import { savePhoto, readPhotoSource } from './photos.js';
 import { photoInventory } from './photo-inventory.js';
 import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import fsp from 'node:fs/promises';
+import { passwordStamp } from './key-vault.js';
+import { zip } from './report-export-xlsx.js';
+import { businessDay } from '../packages/domain/business-day.js';
+import { basename, join, resolve } from 'node:path';
 import { AFTER_UPDATE_MS, YearPacker } from './year-packer.js';
 import { cashDayOf } from '../packages/domain/cash.js';
 
@@ -92,7 +96,7 @@ const idSchema = z.string().min(1).max(100);
 const requestId = z.string().regex(/^[a-zA-Z0-9_-]{8,100}$/);
 const selection = z.object({ groupId: idSchema, optionId: idSchema });
 // The note and grams are checked exactly in the domain (cleaned length, 50 g steps) so guests get its plain message.
-const line = z.object({ productId: idSchema, quantity: z.number().int().min(1).max(20), selections: z.array(selection).max(10), note: z.string().max(1000).optional(), grams: z.number().int().optional() });
+const line = z.object({ productId: idSchema, quantity: z.number().int().min(1).max(20), selections: z.array(selection).max(10), note: z.string().max(1000).optional(), grams: z.number().int().optional(), packed: z.boolean().optional() });
 // packed: "Paketlensin" for a table order; sent only when ticked, so older pending orders keep their request fingerprint.
 const orderInput = z.object({ requestId, tableId: idSchema, expectedTotal: z.number().int().positive().max(100_000_000), lines: z.array(line).min(1).max(30), packed: z.boolean().optional() });
 const guestOrderInput = orderInput.extend({ guestContext: z.string().regex(/^[a-f0-9]{64}$/).optional() });
@@ -349,6 +353,15 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     } catch (e) { throw e instanceof DomainError && e.code === 'INVALID_CODE' ? failed(e) : e; }
     openSession(req, res, fresh.tenantId, fresh.user);
     res.json({ role: fresh.user.role });
+    // "İşletmem var" (13 Ekim): while the owner's password is known, the master key is sealed with it once (again after a
+    // password change: the stamp follows the stored salt). After the answer, never slowing the sign-in; backups this
+    // computer reaches get the block too, so a new computer can open them with this sign-in.
+    const vault = security?.vault;
+    if (fresh.user.role === 'owner' && vault && vault.protection !== 'off') {
+      void vault.ensureOwner({ tenantId: fresh.tenantId, username: fresh.user.username, password: body.password, stamp: passwordStamp(fresh.user.salt) })
+        .then(async changed => { if (!changed) return; const p = vault.backupProtection(); if (p) await backups?.rewrap(p).catch(() => 0); })
+        .catch(error => console.warn(`Sahip şifre kilidi yazılamadı: ${error instanceof Error ? error.message : error}`));
+    }
   });
   /** The login's failed-attempt limit: 12 wrong per user and device, or 60 per user once that device failed too (1 min). */
   function authBlocked(mineKey: string, anyKey: string) {
@@ -844,11 +857,12 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     failures: since => failures.since(since),
     // Sosyal medya: the guest menu's public links (Google review included), for the permanent QR codes' short addresses at Merkez.
     social: () => (store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]).map(({ tenant }) => ({ tenantId: tenant, links: socialLinksOf(store.read(tenant)) ?? {} })),
+    owners: () => security?.vault?.ownerLogins() ?? [],
   };
   const clean = () => !store.db.prepare('SELECT tenant FROM snapshots LIMIT 1').get() && !link.read();
   restoreRoutes(app, localDesktop, { security, backups, clean });
   // "Mola Merkez'den geri yükle" (server/cloud-backup.ts): taşıma kodu + recovery code; the copy is downloaded beside the data folder.
-  cloudRestoreRoutes(app, localDesktop, { security, clean, restore: security?.restore ? new CloudRestore(link, `${store.directory.replace(/[\\/]+$/, '')}-merkez-indirme`, () => security.vault?.installId, now) : undefined });
+  cloudRestoreRoutes(app, localDesktop, { security, clean, link, restore: security?.restore ? new CloudRestore(link, `${store.directory.replace(/[\\/]+$/, '')}-merkez-indirme`, () => security.vault?.installId, now) : undefined });
   // The recovery code is shown once an owner account exists (after "İşletme sahibi hesabı"), never on the activation screens.
   const hasOwner = () => (store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]).some(({ tenant }) => store.read(tenant).staffUsers?.some(u => u.role === 'owner' && u.active));
   // Owners only see whether their data is safe, not paths or details.
@@ -858,7 +872,24 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     // A night with nothing new needs no backup: healthy while the backups hold everything ("Gece yedeği gerekmedi: …" as `note`).
     const note = s?.skipped && (!s.lastSuccessAt || s.skipped.at > s.lastSuccessAt) ? s.skipped.text : undefined;
     // Sunucu yedeği: only its time and whether it worked ("Sunucu yedeği: dün 23:40 · başarılı").
-    res.json({ enabled: !!backups, lastSuccessAt: s?.lastSuccessAt ?? null, healthy: !!s?.lastSuccessAt && !!current && now().getTime() - Date.parse(current) < 36 * 3600_000 && !s.lastError, ...(note ? { note } : {}), ...(cloud?.enabled ? { cloud: { lastSuccessAt: cloud.lastSuccessAt ?? null, failing: !!cloud.lastError, running: cloud.running } } : {}) });
+    // 13 Ekim tanıtım ("klasörler nerde yedekler nerde"): where each copy is, for the "Yedekleriniz nerede?" summary.
+    const second = backups?.second?.status();
+    res.json({ enabled: !!backups, lastSuccessAt: s?.lastSuccessAt ?? null, healthy: !!s?.lastSuccessAt && !!current && now().getTime() - Date.parse(current) < 36 * 3600_000 && !s.lastError, ...(note ? { note } : {}), ...(cloud?.enabled ? { cloud: { lastSuccessAt: cloud.lastSuccessAt ?? null, failing: !!cloud.lastError, running: cloud.running } } : {}),
+      ...(backups ? { folder: backups.folder, kept: (s?.set?.length ?? 0) + (s?.packages?.length ?? 0), canDownload: !!s?.lastDirectory } : {}),
+      second: second?.folder ? { folder: second.folder, kind: second.kind ?? 'folder', label: second.label ?? null, lastCopyAt: second.lastCopyAt ?? null, lastError: second.lastError ?? null } : null });
+  });
+  // "En yeni yedeği indir" (13 Ekim): the newest verified backup as one ZIP. Its files are the same encrypted ones the
+  // Sunucu yedeği sends to Mola Merkez; they open only with the recovery code (or the owner's "İşletmem var" sign-in).
+  app.get('/api/staff/backup-download', async (req, res) => {
+    const a = staffActor(req); requireRole(store.read(a.tenantId), a, ['owner']);
+    const dir = backups?.status().lastDirectory;
+    if (!backups || !dir || !resolve(dir).startsWith(resolve(backups.folder))) throw new DomainError('NO_BACKUP', 'Henüz indirilecek bir yedek yok. Önce “Şimdi yedekle” deyin.', 404);
+    const files: { name: string; data: Buffer }[] = [];
+    const walk = async (folder: string, prefix: string) => { for (const entry of await fsp.readdir(folder, { withFileTypes: true })) { const full = join(folder, entry.name), name = `${prefix}${entry.name}`; if (entry.isDirectory()) await walk(full, `${name}/`); else files.push({ name, data: await fsp.readFile(full) }); } };
+    await walk(dir, `${basename(dir)}/`);
+    const day = businessDay(now().getTime());
+    res.setHeader('Content-Type', 'application/zip'); res.setHeader('Content-Disposition', `attachment; filename="Mola-yedek-${day}.zip"`); res.setHeader('Cache-Control', 'no-store');
+    res.end(zip(files, now()));
   });
   reportSecurity(app, store, staffActor, now);
   // İade: item and amount refunds, the cashier's small refunds and requests (server/refunds.ts); after reportSecurity, before managementRoutes.

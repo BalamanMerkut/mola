@@ -1,26 +1,28 @@
 import { useEffect, useState } from 'react';
-import { ArchiveRestore, Check, CloudDownload, KeyRound, Sparkles, UserRound } from 'lucide-react';
+import { ArchiveRestore, Check, CloudDownload, KeyRound, Sparkles, Store, UserRound } from 'lucide-react';
 import { Notice } from './components';
 import { Modal } from './components';
 import { HelpTip } from './HelpTip';
 import { desktopCall, type SecurityCaller } from './desktop-call';
 import { RecoveryCard, protectionText, type RecoveryView } from './RecoveryCode';
 import { SecondBackupCard } from './SecondBackup';
-import { RestoreDialog } from './RestoreBackup';
+import { OwnerRestoreDialog, RestoreDialog } from './RestoreBackup';
 import './security.css';
 
 /** Loaded only when the desktop window opens one of these, so tablets and phones never download them. */
 export type DesktopSecurity = { protection: RecoveryView['protection']; recoveryConfirmed: boolean; recoveryAvailable: boolean; warning: string | null; secondFolder: string | null; secondError: string | null; clean: boolean; owner?: boolean; /** Hizmet paketi: "İki ekran" in the package (src/DesktopRail.tsx). */ split?: boolean };
-export type SecurityDialogKind = 'security' | 'recovery' | 'welcome' | 'restore' | 'restore-merkez';
+export type SecurityDialogKind = 'security' | 'recovery' | 'welcome' | 'restore' | 'restore-merkez' | 'owner';
 const callerFor = (token: string): SecurityCaller => (path, body) => desktopCall(token, `/api/desktop${path}`, body);
 
 export default function DesktopSecurityDialog({ kind, token, security, onOpen, onClose }: { kind: SecurityDialogKind; token: string; security?: DesktopSecurity; onOpen: (kind: SecurityDialogKind) => void; onClose: () => void }) {
   const caller = callerFor(token);
   if (kind === 'restore' || kind === 'restore-merkez') return <RestoreDialog token={token} onClose={onClose} initial={kind === 'restore-merkez' ? 'merkez' : 'folder'} />;
+  if (kind === 'owner') return <OwnerRestoreDialog token={token} onClose={onClose} />;
   if (kind === 'recovery') return <RecoveryDialog caller={caller} onClose={onClose} />;
   if (kind === 'welcome') return <Modal title="Mola’ya hoş geldiniz" onClose={onClose}><div className="modal-body desktop-dialog welcome-dialog">
     <p>Bu bilgisayarda henüz işletme yok. Nasıl başlamak istersiniz?</p>
     <button type="button" className="welcome-choice" onClick={onClose}><Sparkles size={22} /><span><strong>Yeni kurulum</strong><small>İlk kez Mola kullanıyorum.</small></span></button>
+    <button type="button" className="welcome-choice" onClick={() => onOpen('owner')}><Store size={22} /><span><strong>İşletmem var</strong><small>Mola’yı başka bilgisayarda kullanıyorum: kullanıcı adım, şifrem ve e-postama gelen kodla bu bilgisayara taşı.</small></span></button>
     <button type="button" className="welcome-choice" onClick={() => onOpen('restore')}><ArchiveRestore size={22} /><span><strong>Yedekten geri yükle</strong><small>Eski bilgisayardaki verileri flash bellekten ya da OneDrive’dan getir.</small></span></button>
     <button type="button" className="welcome-choice" onClick={() => onOpen('restore-merkez')}><CloudDownload size={22} /><span><strong>Mola Merkez’den geri yükle</strong><small>Eski bilgisayar bozulduysa ya da kayıpsa: Mola ekibinin verdiği taşıma kodu ve kurtarma kodunuzla.</small></span></button>
   </div></Modal>;

@@ -5,7 +5,7 @@ import './activation.css';
 import { orderBusinesses, type BusinessOrder } from './businessOrder';
 import { PlatformDiagnostics } from './PlatformDiagnostics';
 import { AlertBell, AlertCenter, useAlertSound } from './PlatformAlerts';
-import { Building2, CalendarDays, Store, KeyRound, Download, FileText, ChevronRight, Sun, Inbox, LifeBuoy, Settings, LogOut, ReceiptText, Megaphone } from 'lucide-react';
+import { Building2, CalendarDays, Store, KeyRound, Download, FileText, ChevronRight, Sun, Inbox, LifeBuoy, Settings, LogOut, ReceiptText, Megaphone, Package } from 'lucide-react';
 import { TicketChat } from './TicketChat';
 import { BusinessFilters, matchesBusiness, type BusinessFilter } from './PlatformFilters';
 import { PlatformPassword } from './PlatformPassword';
@@ -25,6 +25,7 @@ import { PlatformToday, type SettingsSection } from './PlatformToday';
 import { PlatformSettings } from './PlatformSettings';
 import { PlatformSales } from './PlatformSales';
 import { PlatformAnnouncements } from './PlatformAnnouncements';
+import { PlatformCatalogPage, type PackagesTab } from './PlatformCatalogPage';
 import { StepUpDialog, withStepUp } from './platformStepUp';
 import { FeatureChips, offeredPackages, type CatalogView } from './platformCatalog';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
@@ -38,7 +39,7 @@ import { YonetimBrand } from './MolaLogo';
 import { AppVersion } from './AppVersion';
 // Local-only hints (prefilled admin name, first-login file) must not appear on the public domain.
 const localDev = /^(localhost|127\.|\[::1\]|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
-type Page = 'today' | 'businesses' | 'applications' | 'support' | 'announcements' | 'sales' | 'settings' | 'alerts';
+type Page = 'today' | 'businesses' | 'applications' | 'support' | 'announcements' | 'sales' | 'packages' | 'settings' | 'alerts';
 /** Tiles per page; with the "İşletme ekle" tile 24 fill whole rows of 2, 3 or 4. */
 const PAGE = 23;
 type Snapshot = { businesses: Business[]; tickets: Ticket[]; audit: AuditEntry[]; alerts: AlertView[]; unread: number; version?: string; catalog?: CatalogView };
@@ -46,8 +47,8 @@ type IssuedCode = { name: string; code: string; codeExpiresAt: string; phone?: s
 const blankInvoice: Invoice = { legalName: '', taxOffice: '', taxType: 'company', taxNumber: '', city: '', district: '', address: '', phone: '', email: '' };
 
 /**
- * Mola Yönetim: the vendor's panel on Mola Merkez. A left sidebar (Bugün, İşletmeler, Başvurular, Destek, Duyurular, Satışlarım, Ayarlar), the
- * bell and "Çıkış yap" at the top right. Licences, activation codes, support, the notification centre and the cafés' health
+ * Mola Yönetim: the vendor's panel on Mola Merkez. A left sidebar (Bugün, İşletmeler, Başvurular, Duyurular, Satışlarım, Paketler;
+ * Destek and Ayarlar kept at the bottom, 13 Ekim), the bell and "Çıkış yap" at the top right. Licences, activation codes, support, the notification centre and the cafés' health
  * reports. It never shows (and Merkez never has) a café's sales, payments, menu or staff.
  */
 export function Platform() {
@@ -62,7 +63,7 @@ export function Platform() {
   const [businessOrder, setBusinessOrder] = useState<BusinessOrder>('created');
   const [supportBusinessId, setSupportBusinessId] = useState('');
   const [creating, setCreating] = useState(false), [selectedBusiness, setSelectedBusiness] = useState(''), [detailTab, setDetailTab] = useState<DetailTab>('summary');
-  const [settingsSection, setSettingsSection] = useState<SettingsSection>('security');
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>('security'), [packagesTab, setPackagesTab] = useState<PackagesTab>('packages');
   const [query, setQuery] = useState(''), [filter, setFilter] = useState<BusinessFilter>('all'), [listPage, setListPage] = useState(1);
   const [name, setName] = useState(''), [contactName, setContactName] = useState(''), [plan, setPlan] = useState('trial'), [sector, setSector] = useState<Sector | ''>(''), [packageId, setPackageId] = useState('');
   const [withInvoice, setWithInvoice] = useState(false), [invoice, setInvoice] = useState<Invoice>(blankInvoice), [invoiceTried, setInvoiceTried] = useState(false);
@@ -217,23 +218,25 @@ export function Platform() {
   const showList = (f: BusinessFilter) => { go('businesses'); setQuery(''); setFilter(f); setListPage(1); };
   const open = (id: string, tab: DetailTab = 'summary') => { setError(''); setNotice(''); setSelectedBusiness(id); setDetailTab(tab); window.scrollTo?.(0, 0); };
   const openTicket = (id: string, tenantId?: string) => { setSupportBusinessId(tenantId ?? ''); setTicketId(id); go('support'); };
-  const openSettings = (section: SettingsSection) => { setSettingsSection(section); go('settings'); };
-  const invoiceProblems = !withInvoice ? [] : [!validTaxNumber(invoice.taxType, invoice.taxNumber.replace(/\D/g, '')) && 'Vergi / T.C. kimlik numarası geçersiz.', !normalPhone(invoice.phone) && 'Cep telefonu geçersiz.', !validEmail(invoice.email) && 'E-posta geçersiz.'].filter(Boolean) as string[];
+  const openSettings = (section: SettingsSection) => { setSettingsSection(section); go('settings'); };  const invoiceProblems = !withInvoice ? [] : [!validTaxNumber(invoice.taxType, invoice.taxNumber.replace(/\D/g, '')) && 'Vergi / T.C. kimlik numarası geçersiz.', !normalPhone(invoice.phone) && 'Cep telefonu geçersiz.', !validEmail(invoice.email) && 'E-posta geçersiz.'].filter(Boolean) as string[];
   const invoiceInput = (label: string, field: keyof Invoice, props: { maxLength: number; minLength?: number }) => <label>{label}<input required disabled={disabled} value={invoice[field]} onChange={e => setInvoice({ ...invoice, [field]: e.target.value })} {...props} /></label>;
   const current: Page = selected ? 'businesses' : page;
-  const nav: [Page, string, ReactNode, number][] = [['today', 'Bugün', <Sun size={18} key="i" />, 0], ['businesses', 'İşletmeler', <Building2 size={18} key="i" />, 0], ['applications', 'Başvurular', <Inbox size={18} key="i" />, waiting.length + (siteLeads.counts?.new ?? 0)], ['support', 'Destek', <LifeBuoy size={18} key="i" />, openTickets], ['announcements', 'Duyurular', <Megaphone size={18} key="i" />, 0], ['sales', 'Satışlarım', <ReceiptText size={18} key="i" />, 0]];
+  // 13 Ekim: Paketler is a place of its own (Hizmet fiyatları its sub-tab); Destek sits at the bottom, right above Ayarlar.
+  const nav: [Page, string, ReactNode, number][] = [['today', 'Bugün', <Sun size={18} key="i" />, 0], ['businesses', 'İşletmeler', <Building2 size={18} key="i" />, 0], ['applications', 'Başvurular', <Inbox size={18} key="i" />, waiting.length + (siteLeads.counts?.new ?? 0)], ['announcements', 'Duyurular', <Megaphone size={18} key="i" />, 0], ['sales', 'Satışlarım', <ReceiptText size={18} key="i" />, 0], ['packages', 'Paketler', <Package size={18} key="i" />, 0]];
+  const pinned: [Page, string, ReactNode, number][] = [['support', 'Destek', <LifeBuoy size={18} key="i" />, openTickets], ['settings', 'Ayarlar', <Settings size={18} key="i" />, 0]];
   // İşletme ekle: the package to start with (Kafe Standart unless chosen; a trial has everything open anyway).
   const packageChoices = data.catalog ? offeredPackages(data.catalog) : [], startPackage = packageChoices.some(p => p.id === packageId) ? packageId : (packageChoices.find(p => p.id === 'kafe-standart') ?? packageChoices[0])?.id ?? '';
-  // Phones (under 600 px): six places fit the top strip; Duyurular moves next to the bell (`yonetim-topbar-announce`).
-  const navButton = ([id, title, icon, badge]: [Page, string, ReactNode, number]) => <button type="button" key={id} aria-label={title} title={badge > 0 ? `${title}: ${badge} bekliyor` : undefined} aria-current={current === id ? 'page' : undefined} className={`${current === id ? 'active' : ''}${id === 'announcements' ? ' nav-announcements' : ''}`} disabled={busy} onClick={() => go(id)}>{icon}<span>{title}</span>{badge > 0 && <span className="nav-badge" aria-hidden="true">{badge > 99 ? '99+' : badge}</span>}</button>;
+  // Phones (under 600 px): six places fit the top strip; Duyurular and Paketler move next to the bell (`yonetim-topbar-icon`).
+  const navButton = ([id, title, icon, badge]: [Page, string, ReactNode, number]) => <button type="button" key={id} aria-label={title} title={badge > 0 ? `${title}: ${badge} bekliyor` : undefined} aria-current={current === id ? 'page' : undefined} className={`${current === id ? 'active' : ''}${id === 'announcements' ? ' nav-announcements' : id === 'packages' ? ' nav-packages' : ''}`} disabled={busy} onClick={() => go(id)}>{icon}<span>{title}</span>{badge > 0 && <span className="nav-badge" aria-hidden="true">{badge > 99 ? '99+' : badge}</span>}</button>;
+  const topIcon = (id: Page, title: string, icon: ReactNode, extra: string) => <button type="button" className={`icon-btn yonetim-topbar-icon ${extra}${current === id ? ' active' : ''}`} aria-label={title} title={title} aria-current={current === id ? 'page' : undefined} disabled={busy} onClick={() => go(id)}>{icon}</button>;
   return <main className="platform-page platform-v2 yonetim">
     <aside className="yonetim-sidebar">
       <div className="yonetim-brand"><YonetimBrand /></div>
-      <nav className="yonetim-nav" aria-label="Mola Yönetim bölümleri">{nav.map(navButton)}<span className="yonetim-nav-gap" aria-hidden="true" />{navButton(['settings', 'Ayarlar', <Settings size={18} key="i" />, 0])}</nav>
+      <nav className="yonetim-nav" aria-label="Mola Yönetim bölümleri">{nav.map(navButton)}<span className="yonetim-nav-gap" aria-hidden="true" />{pinned.map(navButton)}</nav>
       {devBadge && <span className="platform-local-note" title="Mola Merkez proje klasöründen (npm run merkez) çalışıyor. Kurulu Mola Yönetim’de bu etiket görünmez.">Yerel test ortamı</span>}
     </aside>
     <div className="yonetim-main" ref={top}><div className="yonetim-column">
-      <header className="yonetim-topbar"><span className="yonetim-topbar-brand" aria-hidden="true"><YonetimBrand /></span><div className="yonetim-topbar-actions"><button type="button" className={`icon-btn yonetim-topbar-announce${current === 'announcements' ? ' active' : ''}`} aria-label="Duyurular" title="Duyurular" aria-current={current === 'announcements' ? 'page' : undefined} disabled={busy} onClick={() => go('announcements')}><Megaphone size={20} aria-hidden="true" /></button><AlertBell unread={data.unread} onOpen={() => go('alerts')} /><button type="button" className="btn secondary small-btn" disabled={busy || uncertain} onClick={() => void logout()}><LogOut size={15} aria-hidden="true" />Çıkış yap</button></div></header>
+      <header className="yonetim-topbar"><span className="yonetim-topbar-brand" aria-hidden="true"><YonetimBrand /></span><div className="yonetim-topbar-actions">{topIcon('packages', 'Paketler', <Package size={20} aria-hidden="true" />, 'yonetim-topbar-packages')}{topIcon('announcements', 'Duyurular', <Megaphone size={20} aria-hidden="true" />, 'yonetim-topbar-announce')}<AlertBell unread={data.unread} onOpen={() => go('alerts')} /><button type="button" className="btn secondary small-btn" disabled={busy || uncertain} onClick={() => void logout()}><LogOut size={15} aria-hidden="true" /><span className="yonetim-logout-text">Çıkış yap</span></button></div></header>
       <section className="platform-content" aria-label="Seçili bölüm">
         {((error && !creating) || notice || (uncertain && !creating)) && <div className="yonetim-flash">
           {error && !creating && <Notice tone="error">{error}</Notice>}{uncertain && !creating && <button className="btn primary retry-btn" disabled={busy} onClick={() => void mutate()}>İşlemi yeniden kontrol et</button>}
@@ -270,9 +273,10 @@ export function Platform() {
         </>
         : page === 'announcements' ? <PlatformAnnouncements businesses={data.businesses} catalog={data.catalog} disabled={disabled} />
         : page === 'sales' ? <PlatformSales disabled={disabled} />
-        : page === 'settings' ? <PlatformSettings section={settingsSection} onSection={setSettingsSection} disabled={disabled} onSessionEnd={endSession} onCatalogChanged={() => void load()}
+        : page === 'packages' ? <PlatformCatalogPage tab={packagesTab} onTab={setPackagesTab} onChanged={() => void load()} />
+        : page === 'settings' ? <PlatformSettings section={settingsSection} onSection={setSettingsSection} disabled={disabled} onSessionEnd={endSession} onOpenBusiness={id => { setPageName('businesses'); open(id); }}
             security={{ pending: settingsSection === 'security' ? securityPending || undefined : undefined, onBack: securityPending ? backToPending : undefined, onEnabled: () => { if (returnTo.current) returnTo.current.armed = true; }, onAsk: openSecurity }} />
-        : <AlertCenter alerts={data.alerts} names={names} ticketIds={new Set(data.tickets.map(t => t.id))} onChanged={() => void load()} onOpenBusiness={id => { setPageName('businesses'); open(id); }} onOpenTicket={(id, tenantId) => openTicket(id, tenantId)} onEmail={() => openSettings('email')} onOpenSiteLeads={() => { setApplicationKind('web'); go('applications'); }} />}
+        : <AlertCenter alerts={data.alerts} names={names} ticketIds={new Set(data.tickets.map(t => t.id))} onChanged={() => void load()} onOpenBusiness={(id, tab) => { setPageName('businesses'); open(id, tab); }} onOpenTicket={(id, tenantId) => openTicket(id, tenantId)} onEmail={() => openSettings('email')} onOpenSiteLeads={() => { setApplicationKind('web'); go('applications'); }} />}
       </section>
       <footer className="yonetim-footer" aria-label="Sürüm"><AppVersion product="Mola Yönetim" merkez={data.version} /></footer>
     </div></div>

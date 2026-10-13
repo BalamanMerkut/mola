@@ -80,19 +80,25 @@ export async function openYonetim(page: Page, password = merkezPassword()) {
 export const yonetimState = async (request: APIRequestContext) => (await request.get(`${ADMIN_API}/state`)).json();
 /** Mola Yönetim's sidebar (a compact top bar on a phone). */
 export const yonetimNav = (page: Page) => page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' });
-export async function yonetimGo(page: Page, name: 'Bugün' | 'İşletmeler' | 'Başvurular' | 'Destek' | 'Duyurular' | 'Satışlarım' | 'Ayarlar') {
+export async function yonetimGo(page: Page, name: 'Bugün' | 'İşletmeler' | 'Başvurular' | 'Destek' | 'Duyurular' | 'Satışlarım' | 'Paketler' | 'Ayarlar') {
   const item = yonetimNav(page).getByRole('button', { name, exact: true });
-  // Phones (under 600 px): Duyurular is the megaphone beside the bell, not in the top strip.
-  if (name === 'Duyurular' && !await item.isVisible()) return page.locator('.yonetim-topbar').getByRole('button', { name: 'Duyurular', exact: true }).click();
+  // Phones (under 600 px): Duyurular (megaphone) and Paketler are icons beside the bell, not in the top strip.
+  if ((name === 'Duyurular' || name === 'Paketler') && !await item.isVisible()) return page.locator('.yonetim-topbar').getByRole('button', { name, exact: true }).click();
   await item.click();
 }
 /**
  * Ayarlar → one section (Hesap güvenliği, Yedek, Güncellemeler, E-posta bildirimleri, İletişim bilgileri, İşlem kayıtları,
  * Çalışma klasörü, Geliştirici erişimi). The old name "İşlem geçmişi" opens İşlem kayıtları (same lines, now tamper-evident).
+ * Paketler and Hizmet fiyatları have their own page since 13 Ekim: `yonetimPackages`.
  */
-export async function yonetimSettings(page: Page, section: 'Hesap güvenliği' | 'Paketler' | 'Hizmet fiyatları' | 'Yedek' | 'Güncellemeler' | 'E-posta bildirimleri' | 'İletişim bilgileri' | 'İşlem geçmişi' | 'İşlem kayıtları' | 'Çalışma klasörü' | 'Geliştirici erişimi') {
+export async function yonetimSettings(page: Page, section: 'Hesap güvenliği' | 'Yedek' | 'Güncellemeler' | 'E-posta bildirimleri' | 'İletişim bilgileri' | 'İşlem geçmişi' | 'İşlem kayıtları' | 'Çalışma klasörü' | 'Geliştirici erişimi') {
   await yonetimGo(page, 'Ayarlar');
   await page.getByRole('navigation', { name: 'Ayarlar bölümleri' }).getByRole('button', { name: section === 'İşlem geçmişi' ? 'İşlem kayıtları' : section, exact: true }).click();
+}
+/** Paketler (left menu) → its tab: the packages or Hizmet fiyatları. */
+export async function yonetimPackages(page: Page, tab: 'Paketler' | 'Hizmet fiyatları') {
+  await yonetimGo(page, 'Paketler');
+  await page.getByRole('navigation', { name: 'Paketler bölümleri' }).getByRole('button', { name: tab, exact: true }).click();
 }
 /** The bell: opens "Bildirim merkezi". */
 export const yonetimBell = (page: Page) => page.getByRole('button', { name: /^Bildirim merkezi/ });
@@ -225,6 +231,11 @@ export async function openFirstSteps(page: Page) {
 export const bottomNav = (page: Page) => page.getByRole('navigation', { name: 'Alt menü' });
 export const moreSheet = (page: Page) => page.getByRole('dialog', { name: 'Daha fazla' });
 const startsWith = (name: string) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}${name === 'Kasa' ? '(?: ve giderler)?' : ''}(?:$|\\s*,|\\s*\\d)`);
+/** Satış ve Raporlar → "Yazdır ve paylaş" (13 Ekim: one menu instead of four buttons) → one of its lines, by its label. */
+export async function reportAction(page: Page, label: 'Yazdır / PDF' | 'Muhasebeci için indir' | 'Raporları gönder' | 'Raporları telefonda gör') {
+  await page.getByRole('button', { name: 'Yazdır ve paylaş' }).click();
+  await page.getByRole('menuitem', { name: new RegExp(`^${label.replace(/[/]/g, '\\/')}`) }).click();
+}
 export async function openView(page: Page, name: string) {
   if (name === 'Kampanyalar') return openMenu(page, 'Kampanyalar');
   if (name === 'Çalışanlar') return openStaff(page, 'Çalışanlar');

@@ -361,3 +361,9 @@ button.stock-item-main:focus-visible{outline:2px solid var(--green);outline-offs
   .stock-history-meta .stock-history-who{justify-content:flex-start}
   .stock-history-btn{flex:1 1 100%;justify-content:center}
 }
+
+/* 13 Ekim tanıtım: the options that change a recipe, each with how many can be made ("Orta şekerli ≈ 600"). */
+.stock-variants{list-style:none;margin:0;padding:6px 16px 12px;display:flex;flex-wrap:wrap;gap:6px 8px}
+.stock-variants li{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;background:#f3f6f1;border:1px solid #e1e8dc;font-size:13px}
+.stock-variants li small{color:#66746b}
+.stock-variants li b{font-weight:700;color:#234c3e}

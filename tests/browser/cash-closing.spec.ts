@@ -135,7 +135,9 @@ test('a full cash day: opening float, a sale with a tip, a cashier expense over 
     await expect(strip).toContainText('Kasa kapandı');
     // Closed: "Gün sonu" is no longer the green main button.
     await strip.click();
-    await expect(cashier.getByRole('group', { name: 'Kasa işlemleri' }).getByRole('button', { name: 'Gün sonu' })).not.toHaveClass(/primary/);
+    await expect(cashier.getByRole('group', { name: 'Kasa işlemleri' }).getByRole('button', { name: 'Gün sonu', exact: true })).not.toHaveClass(/primary/);
+    // 13 Ekim: the one who closed it can take it back (owner and Müdür too); not done here.
+    await expect(cashier.getByRole('group', { name: 'Kasa işlemleri' }).getByRole('button', { name: 'Gün sonunu geri al' })).toBeVisible();
     await cashier.keyboard.press('Escape');
 
     // The owner hears the difference; the report shows the closing, each closer's pattern, and takes a correction.

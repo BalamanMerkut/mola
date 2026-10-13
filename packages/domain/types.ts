@@ -13,7 +13,8 @@ export type ProductArtKind = 'coffee' | 'tea' | 'cold' | 'cake' | 'food' | 'soup
 export type Product = { readyMade?: boolean; vatRate?: number; unit?: 'piece' | 'kg'; firstPublishedAt?: string | null; discounts?: import('./campaigns.js').DiscountOffer[]; published?: boolean; id: string; code: string; name: string; nameEn: string; category: string; description: string; price: number; soldOut: boolean; art: ProductArtKind; groups: OptionGroup[]; subtype?: string; ingredients?: string; descriptionEn?: string; ingredientsEn?: string; photo?: string | null };
 /** `note`: the guest's free text for this line (packages/domain/lines.ts cleans it). `grams`: only on lines of products sold
  * by weight; such a line always has quantity 1, so payments, quotas and counts treat one weighed sale as one item. */
-export type CartLine = { productId: string; quantity: number; selections: Selection[]; note?: string; grams?: number };
+/** `packed`: this item is packed to go ("Paket yapılsın", 13 Ekim); kept only when true, never on takeaway tickets. */
+export type CartLine = { productId: string; quantity: number; selections: Selection[]; note?: string; grams?: number; packed?: boolean };
 /** Weighed lines: unitPrice and total are the price of the whole line; `weightPricing` keeps what was quoted so an edit of the weight reprices like the menu did. */
 export type OrderLine = CartLine & { /** KDV rate the line was sold with (vat.ts), stamped when it was made; lines from before stamping have none. */ vatRate?: number;/** Platform order item that matches no Mola product ("Menüde eşleşmeyen ürün"); productId is then `ext:…`. */ unmatched?: boolean; weightPricing?: { perKg: number; extra: number; offers?: import('./campaigns.js').DiscountOffer[] }; quantityPricing?: { original: number; offers: import('./campaigns.js').DiscountOffer[] }; originalUnitPrice?: number; campaigns?: { id: string; name: string; reportId?: string }[]; id: string; name: string; code: string; optionNames: string[]; unitPrice: number; total: number };
 /** `takeaway`: a hidden counter ticket ("Masasız #12"), never on the floor plan and without a QR link (packages/domain/takeaway.ts).
@@ -39,8 +40,9 @@ export type ChangeSide = { name: string; quantity: number; grams?: number; optio
 /** A line a waiter changed before the kitchen started it (Kola → Ayran, adet, seçenek, not), and printTo: the printers that
  * already printed the order and still owe a DEĞİŞİKLİK slip. */
 export type LineChange = { id: string; at: string; by: string; from: ChangeSide; to: ChangeSide; printTo?: string[]; /** A ready-made product swapped without the kitchen (order-change.ts). */ ready?: boolean; /** What the order's total moved by (kuruş; + more to pay). */ delta?: number };
-/** `packed`: a seated guest (or staff for them) asked for this table order to be packed to go ("Paketlensin"). Kept only
- * when true; never on takeaway tickets, which are always to go. Changes nothing about prices, bills or receipts. */
+/** `packed`: every item of this table order is packed to go ("Paketlensin" / "Hepsini paketle"). Kept only when true; never
+ * on takeaway tickets, which are always to go. Since 13 Ekim each line carries its own `packed` too (a guest packs only the
+ * cake); the order flag is then "all lines". Changes nothing about prices, bills or receipts. */
 /** `cancelReason`/`cancelledBy`: a whole order cancelled by staff with its reason. `cancellations`: items cancelled while the rest goes on. */
 /** `external`: the order came from a delivery platform (packages/domain/external-orders.ts); `source` stays 'staff'. */
 /** `reservation`: sold on a reserved table (`id`) or an event table (`eventId`); reports' "Rezervasyon" channel. */

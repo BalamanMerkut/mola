@@ -36,6 +36,22 @@
 .restore-modes{display:flex;gap:6px;padding:4px;border:1px solid var(--line);border-radius:12px;background:#f6f8f4;margin-bottom:12px}
 .restore-modes button{flex:1;min-height:44px;border:0;border-radius:9px;background:transparent;display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer}
 .restore-modes button.active{background:#fff;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+/* "İşletmem var": three steps (giriş → e-posta kodu → verileri getir). */
+.owner-steps{list-style:none;display:flex;gap:6px;padding:0;margin:0 0 16px}
+.owner-steps li{flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#f6f8f4;color:var(--muted);font-size:13px;font-weight:600}
+.owner-steps li>span{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;background:#fff;border:1.5px solid #c9d2c4;font-size:12px}
+.owner-steps li.active{background:#eef3ec;color:var(--ink)}
+.owner-steps li.active>span{border-color:var(--green);color:var(--green)}
+.owner-steps li.done>span{background:#7f9f86;border-color:#7f9f86;color:#fff}
+.owner-form{display:flex;flex-direction:column;gap:12px}
+.owner-form label{display:flex;flex-direction:column;gap:6px;font-weight:600}
+.owner-form input{min-height:44px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;width:100%;font:inherit}
+.owner-form input.owner-code{font:600 24px Consolas,"Courier New",monospace;letter-spacing:8px;text-align:center;max-width:240px}
+.owner-form .recovery-actions .btn{display:inline-flex;align-items:center;gap:6px}
+.owner-progress{margin:12px 0}
+.owner-progress>span{display:block;height:6px;border-radius:999px;background:var(--green);transition:width .4s}
+.owner-progress p{margin:6px 0 0}
+@media(max-width:600px){.owner-steps li{font-size:0;justify-content:center}.owner-steps li.active{font-size:12px}}
 .cloud-line{margin:6px 0 0;font-size:14px}
 .cloud-line.bad{color:#a33a2b}
 .backup-second{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}

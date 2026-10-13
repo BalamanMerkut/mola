@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeftRight, Banknote, ChevronDown, Clock3, MoonStar, PlusCircle, QrCode, ReceiptText, Sunrise, TriangleAlert, Undo2 } from 'lucide-react';
-import { movementNames, OWNER_MOVEMENTS, type CashMovementKind, type CashStatus } from '../packages/domain/cash';
+import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Banknote, ChevronDown, CircleEllipsis, Clock3, HandCoins, Landmark, MoonStar, PlusCircle, QrCode, ReceiptText, RotateCcw, Sunrise, TriangleAlert, Undo2, Wallet } from 'lucide-react';
+import { movementNames, type CashMovementKind, type CashStatus } from '../packages/domain/cash';
 import type { StaffSnapshot } from '../packages/domain/types';
 import { api, ApiError, money, moneyError, moneyInput, parseMoney, requestId } from './api';
 import { Modal, Notice } from './components';
@@ -73,7 +73,7 @@ export function kitchenNote(data: Pick<StaffSnapshot, 'orders'>) {
 export function CashDayPanel({ data, visible, onToast, compact = false, onExpense, slot }: { data: StaffSnapshot; visible: boolean; onToast: (message: string) => void; compact?: boolean; onExpense?: () => void; slot?: HTMLElement | null }) {
   const owner = data.role === 'owner';
   const { status, reload } = useCashStatus(true);
-  const [closing, setClosing] = useState(false), [moving, setMoving] = useState(false), [code, setCode] = useState(false), [refund, setRefund] = useState(false);
+  const [closing, setClosing] = useState(false), [moving, setMoving] = useState(false), [code, setCode] = useState(false), [refund, setRefund] = useState(false), [revoking, setRevoking] = useState(false);
   const [menu, setMenu] = useState(false), menuId = useId();
   useEffect(() => { if (!menu) return; const close = (e: Event) => { if (e instanceof KeyboardEvent ? e.key === 'Escape' : !(e.target instanceof Element && e.target.closest('.cash-chip-wrap'))) setMenu(false); }; document.addEventListener('pointerdown', close); document.addEventListener('keydown', close); return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', close); }; }, [menu]);
   // "İade": owner and Müdür any refund, the cashier small ones (or a request to the owner); packages/domain/refund-rules.ts.
@@ -101,6 +101,8 @@ export function CashDayPanel({ data, visible, onToast, compact = false, onExpens
           {canRefund && <button type="button" className="btn secondary small-btn" onClick={act(() => setRefund(true))}><Undo2 size={16} aria-hidden="true" />İade</button>}
           {status.settings.shiftTracking && <button type="button" className="btn secondary small-btn" onClick={act(() => setCode(true))}><QrCode size={16} aria-hidden="true" />Vardiya kodu</button>}
           <button type="button" className={`btn ${closePrimary && !status.showOpening ? 'primary' : 'secondary'} small-btn cash-close-button`} onClick={act(() => setClosing(true))}><MoonStar size={16} aria-hidden="true" />Gün sonu</button>
+          {/* 13 Ekim: a gün sonu done by mistake is taken back the same night, before any new payment (the person who did it, the owner, the Müdür). */}
+          {status.closedToday?.id && status.closedToday.revoke === null && <button type="button" className="btn secondary small-btn cash-revoke-button" onClick={act(() => setRevoking(true))}><RotateCcw size={16} aria-hidden="true" />Gün sonunu geri al</button>}
   </>;
   // Compact: the chip and banners go into the counter's head (`slot`); the dialogs stay here, so they live on across sizes.
   // Kasa ve giderler → Bugün passes its own slot (not compact): the full strip is drawn there.
@@ -124,6 +126,7 @@ export function CashDayPanel({ data, visible, onToast, compact = false, onExpens
     </section>)}
     {closing && <ClosingDialog openBills={openBillsNote(data)} kitchen={kitchenNote(data)} status={status} printing={!!data.printing?.bill} business={data.name} owner={owner} onClose={() => { setClosing(false); void reload(); }} onDone={message => { onToast(message); void reload(); }} />}
     {moving && <MovementDialog status={status} owner={owner} onClose={() => setMoving(false)} onSaved={message => { setMoving(false); onToast(message); void reload(); }} />}
+    {revoking && status.closedToday && <RevokeDialog status={status} onClose={() => setRevoking(false)} onDone={message => { setRevoking(false); onToast(message); void reload(); }} />}
     {code && <CounterCodeDialog onClose={() => setCode(false)} />}
     {refund && <RefundWindow onClose={() => setRefund(false)} onDone={message => { setRefund(false); onToast(message); void reload(); }} />}
   </>;
@@ -162,10 +165,40 @@ function OpeningCard({ status, owner, onSaved }: { status: CashStatus; owner: bo
   </form>;
 }
 
-const ownerKinds: CashMovementKind[] = ['exchange', ...OWNER_MOVEMENTS];
+/**
+ * 13 Ekim tanıtım ("çok karışık"): the owner first says what happened in plain words, then (for money out) why. Three
+ * big choices instead of five tabs; the cashier keeps only Para bozdurma, as before.
+ */
+type MovementGroup = 'exchange' | 'out' | 'in';
+const outKinds: { kind: CashMovementKind; label: string; icon: ReactNode }[] = [
+  { kind: 'owner_took', label: 'Ben aldım', icon: <Wallet size={18} aria-hidden="true" /> },
+  { kind: 'bank', label: 'Bankaya yatırdım', icon: <Landmark size={18} aria-hidden="true" /> },
+  { kind: 'tip_out', label: 'Garsona kart bahşişi', icon: <HandCoins size={18} aria-hidden="true" /> },
+  { kind: 'other_out', label: 'Başka bir şey', icon: <CircleEllipsis size={18} aria-hidden="true" /> },
+];
+const groupOf = (k: CashMovementKind): MovementGroup => k === 'exchange' ? 'exchange' : k === 'owner_in' ? 'in' : 'out';
+/** "Gün sonunu geri al": why, then the closing is taken back and the kasa is open again (server/cash-closing.ts revoke). */
+function RevokeDialog({ status, onClose, onDone }: { status: CashStatus; onClose: () => void; onDone: (message: string) => void }) {
+  const id = useId(), [reason, setReason] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [request] = useState(requestId);
+  const closed = status.closedToday!;
+  async function save() {
+    if (busy || reason.trim().length < 3) return; setBusy(true); setError('');
+    try { await api('/api/staff/cash/revoke', { requestId: request, id: closed.id, reason: reason.trim() }); onDone('Gün sonu geri alındı. Kasa yeniden açık.'); }
+    catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+  return <Modal title="Gün sonunu geri al" onClose={() => { if (!busy) onClose(); }}><form className="modal-body cash-revoke" onSubmit={e => { e.preventDefault(); void save(); }}>
+    <p>{saatEki(clock(closed.at), 'de')} {closed.byName} gün sonu yaptı. Geri alınca:</p>
+    <ul className="cash-revoke-list"><li>Kasa, gün sonundan önceki gibi <strong>yeniden açık</strong> olur; satışa devam edersiniz.</li><li>Bu gün sonu raporlardan çıkar. Akşam yapacağınız gün sonu, günün tek kapanışı olur.</li><li>Kim, ne zaman, neden geri aldı işletme sahibine bildirilir ve kayıtta kalır.</li></ul>
+    <label htmlFor={`${id}-reason`}>Neden geri alıyorsunuz? *<input id={`${id}-reason`} aria-label="Geri alma nedeni" value={reason} maxLength={300} autoFocus onChange={e => setReason(e.target.value)} placeholder="Örn. Yanlışlıkla bastım, müşteriler hâlâ içeride" /></label>
+    {error && <Notice tone="error">{error}</Notice>}
+    <div className="modal-actions"><button type="button" className="btn secondary" disabled={busy} onClick={onClose}>Vazgeç</button><button className="btn primary" disabled={busy || reason.trim().length < 3}>{busy ? 'Geri alınıyor…' : 'Gün sonunu geri al'}</button></div>
+  </form></Modal>;
+}
 /** Para bozdurma for everyone at the counter; the owner also records real money taken out or put in. */
 function MovementDialog({ status, owner, onClose, onSaved }: { status: CashStatus; owner: boolean; onClose: () => void; onSaved: (message: string) => void }) {
   const id = useId();
+  // The owner starts on the three choices; the cashier has only Para bozdurma.
+  const [group, setGroup] = useState<MovementGroup | null>(owner ? null : 'exchange');
   const [type, setType] = useState<CashMovementKind>('exchange'), [amount, setAmount] = useState(''), [note, setNote] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [request] = useState(requestId);
   // "Sahip aldı" more than the drawer holds: the server asks once ("Yine de kaydet"), the amount may have an extra zero.
@@ -187,17 +220,32 @@ function MovementDialog({ status, owner, onClose, onSaved }: { status: CashStatu
     other_out: 'Gider olmayan başka bir nakit çıkışı. Kısa bir açıklama yazın.',
     owner_in: 'Kasaya sizin koyduğunuz nakit (ör. bozuk para). Beklenen tutara eklenir.',
   };
-  return <Modal title={owner ? 'Kasa hareketi' : 'Para bozdurma'} onClose={() => { if (!busy) onClose(); }}><form className="modal-body cash-movement" onSubmit={e => { e.preventDefault(); void save(); }}>
-    {owner && <div className="cash-segment wrap" role="group" aria-label="Hareket türü">{ownerKinds.map(k => <button type="button" key={k} aria-pressed={type === k} className={type === k ? 'selected' : ''} onClick={() => setType(k)}>{movementNames[k]}</button>)}</div>}
+  const choose = (g: MovementGroup) => { setGroup(g); setType(g === 'exchange' ? 'exchange' : g === 'in' ? 'owner_in' : 'owner_took'); setError(''); setBelowZero(''); };
+  const sign = (k: CashMovementKind) => k === 'exchange' ? '' : groupOf(k) === 'in' ? '+' : '−';
+  const list = status.movements.length > 0 && <div className="cash-movement-list"><h3>Bugünkü hareketler</h3><ul>{status.movements.map(m => <li key={m.id}><span>{clock(m.at)}</span><strong>{movementNames[m.type]}</strong><span className={`move-amount ${groupOf(m.type)}`}>{sign(m.type)}{money(m.amount)}</span><small>{m.byName}{m.note ? ` · ${m.note}` : ''}</small></li>)}</ul></div>;
+  // Step 1 (owner): what happened, in three plain choices.
+  if (!group) return <Modal title="Kasa hareketi" onClose={onClose}><div className="modal-body cash-movement">
+    <p className="muted">Kasada ne oldu?</p>
+    <div className="move-choices">
+      <button type="button" className="move-choice" onClick={() => choose('exchange')}><span className="move-icon neutral"><ArrowLeftRight size={22} aria-hidden="true" /></span><span><strong>Para bozdurdum</strong><small>Kasadaki toplam değişmez (ör. 200 TL → 10 × 20 TL)</small></span></button>
+      <button type="button" className="move-choice" onClick={() => choose('out')}><span className="move-icon out"><ArrowUpFromLine size={22} aria-hidden="true" /></span><span><strong>Kasadan para çıktı</strong><small>Ben aldım, bankaya yatırdım, garsona bahşiş…</small></span></button>
+      <button type="button" className="move-choice" onClick={() => choose('in')}><span className="move-icon in"><ArrowDownToLine size={22} aria-hidden="true" /></span><span><strong>Kasaya para koydum</strong><small>Ör. bozuk para, eksik kalan nakit</small></span></button>
+    </div>
+    <p className="muted small"><PlusCircle size={13} aria-hidden="true" /> Kira, maaş, alışveriş gibi ödemeler için “Gider kaydet”i kullanın.</p>
+    {list}
+  </div></Modal>;
+  const title = group === 'exchange' ? 'Para bozdurma' : group === 'in' ? 'Kasaya para koydum' : 'Kasadan para çıktı';
+  return <Modal title={title} onClose={() => { if (!busy) onClose(); }}><form className="modal-body cash-movement" onSubmit={e => { e.preventDefault(); void save(); }}>
+    {owner && <button type="button" className="text-btn move-back" disabled={busy} onClick={() => setGroup(null)}>← Başka bir hareket</button>}
+    {group === 'out' && <fieldset className="move-reasons"><legend>Para nereye gitti?</legend>{outKinds.map(k => <button type="button" key={k.kind} aria-pressed={type === k.kind} className={type === k.kind ? 'selected' : ''} onClick={() => { setType(k.kind); setBelowZero(''); }}>{k.icon}{k.label}</button>)}</fieldset>}
     <p className="muted">{lead[type]}</p>
     {!owner && <p className="muted small">Kasadan yapılan ödemeyi “Gider kaydet” ile yazın. Kasadan para alma yalnız işletme sahibinin hesabından kaydedilir.</p>}
-    <label htmlFor={`${id}-amount`}>{type === 'exchange' ? 'Bozdurulan tutar (TL) *' : 'Tutar (TL) *'}<input id={`${id}-amount`} aria-label="Hareket tutarı" inputMode="decimal" value={amount} aria-invalid={!!amountProblem} onChange={e => { setAmount(e.target.value); setBelowZero(''); }} required />{amountProblem && <small className="field-error" role="alert">{amountProblem}</small>}</label>
-    <label htmlFor={`${id}-note`}>{needsNote ? 'Açıklama *' : 'Açıklama (isteğe bağlı)'}<input id={`${id}-note`} aria-label="Hareket açıklaması" value={note} maxLength={300} onChange={e => setNote(e.target.value)} placeholder={type === 'exchange' ? 'Örn. 200 TL → 10 × 20 TL' : type === 'bank' ? 'Örn. Ziraat hesabına' : ''} required={needsNote} />{needsNote && amount.trim() && !note.trim() && <small className="field-error">“Diğer çıkış” için kısa bir açıklama yazın.</small>}</label>
+    <label htmlFor={`${id}-amount`}>{type === 'exchange' ? 'Bozdurulan tutar (TL) *' : 'Tutar (TL) *'}<input id={`${id}-amount`} aria-label="Hareket tutarı" inputMode="decimal" value={amount} aria-invalid={!!amountProblem} autoFocus onChange={e => { setAmount(e.target.value); setBelowZero(''); }} required />{amountProblem && <small className="field-error" role="alert">{amountProblem}</small>}</label>
+    <label htmlFor={`${id}-note`}>{needsNote ? 'Ne için? *' : 'Not (isteğe bağlı)'}<input id={`${id}-note`} aria-label="Hareket açıklaması" value={note} maxLength={300} onChange={e => setNote(e.target.value)} placeholder={type === 'exchange' ? 'Örn. 200 TL → 10 × 20 TL' : type === 'bank' ? 'Örn. Ziraat hesabına' : type === 'other_out' ? 'Örn. Komşu esnafa borç' : ''} required={needsNote} />{needsNote && amount.trim() && !note.trim() && <small className="field-error">Kısa bir açıklama yazın.</small>}</label>
     {error && <Notice tone="error">{error}</Notice>}
     {belowZero ? <div className="cash-confirm" role="alert"><Notice tone="error">{belowZero}</Notice><div className="modal-actions"><button type="button" className="btn secondary" disabled={busy} onClick={() => setBelowZero('')}>Tutarı düzelt</button><button type="button" className="btn primary" disabled={busy} onClick={() => void save(true)}>Yine de kaydet</button></div></div>
       : <button className="btn primary full" disabled={busy || !Number.isFinite(value) || value <= 0 || (needsNote && !note.trim())}>{busy ? 'Kaydediliyor…' : 'Kaydet'}</button>}
-    {status.movements.length > 0 && <div className="cash-movement-list"><h3>Bugünkü hareketler</h3><ul>{status.movements.map(m => <li key={m.id}><span>{clock(m.at)}</span><strong>{movementNames[m.type]}</strong><span>{money(m.amount)}</span><small>{m.byName}{m.note ? ` · ${m.note}` : ''}</small></li>)}</ul></div>}
-    {owner && <p className="muted small"><PlusCircle size={13} aria-hidden="true" /> Kira, maaş gibi giderler için “Gider kaydet”i ya da Kasa ve giderler → Giderler'i kullanın.</p>}
+    {list}
   </form></Modal>;
 }
 

@@ -9,7 +9,7 @@ type Steps = { dismissed: boolean; steps: { menu: boolean; staff: boolean; print
 type Key = keyof Steps['steps'];
 /** The café computer's own window: its rail can open the recovery code and the backup dialogs (src/DesktopRail.tsx). */
 const inDesktopWindow = () => document.body.classList.contains('desktop-shell');
-export const openRail = (what: 'recovery' | 'backup') => window.dispatchEvent(new CustomEvent('mola:open', { detail: what }));
+export const openRail = (what: 'recovery' | 'backup' | 'open-backups' | 'open-second' | 'owner') => window.dispatchEvent(new CustomEvent('mola:open', { detail: what }));
 
 /**
  * "İlk adımlar": a short list on the owner's Masalar after the first setup. Each step ticks itself from the real data

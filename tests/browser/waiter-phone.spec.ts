@@ -150,13 +150,14 @@ test('Sipariş al on the waiter phone: "2 latte + 1 cheesecake" to Masa 05 in a 
     await bottomNav(waiter).getByRole('button', { name: /^Sipariş al/ }).click();
     await expect(waiter.getByLabel('Sipariş masası')).toHaveValue('');
     await waiter.getByLabel('Sipariş masası').selectOption({ label: 'Masa 05' });
-    // The basket can still be looked over and changed: + / −, notes and "Paketlensin" are in it.
+    // The basket can still be looked over and changed: + / −, notes, "Paket yapılsın" per item and "Hepsini paketle".
     await row(cake).getByRole('button', { name: new RegExp(`${cake.name} · `) }).click();
     if (cake.groups.length) await waiter.getByRole('dialog').getByRole('button', { name: /Sepete ekle/ }).click();
     await bar.getByRole('button', { name: /Sepeti görüntüle/ }).click();
     const basket = waiter.getByRole('dialog', { name: /Masa 05 · Sepet/ });
     await expect(basket.getByRole('button', { name: new RegExp(`${cake.name} adedini artır`) })).toBeVisible();
-    await expect(basket.getByRole('checkbox', { name: /Paketlensin/ })).toBeVisible();
+    await expect(basket.getByRole('checkbox', { name: `Paket yapılsın · ${cake.name}` })).toBeVisible();
+    await expect(basket.getByRole('checkbox', { name: /^Hepsini paketle/ })).toBeVisible();
     expect(await fits(waiter)).toBe(true);
   } finally { await waiter.context().close(); }
 });

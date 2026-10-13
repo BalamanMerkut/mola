@@ -106,3 +106,14 @@
 /* Satış card: the KDV inside the sales (prices include it; 11 Ekim). */
 .simple-vat{display:block;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-size:12.5px;color:#5f6b62}
 .simple-vat b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* 13 Ekim tanıtım: one "Yazdır ve paylaş" menu instead of four buttons in two rows. */
+.report-share{position:relative}
+.report-share-btn{display:inline-flex;align-items:center;gap:8px}
+.report-share-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:min(340px,calc(100vw - 32px));background:#fff;border:1px solid #e1e8dc;border-radius:16px;box-shadow:0 14px 34px rgba(20,40,30,.14);padding:6px;display:grid;gap:2px}
+.report-share-item{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:12px;background:none;font:inherit;color:inherit;cursor:pointer}
+.report-share-item:hover,.report-share-item:focus-visible{background:#f3f6f1}
+.report-share-item strong{display:flex;align-items:center;gap:6px;font-size:14px}
+.report-share-item small{display:block;color:#66746b;font-size:12px;margin-top:2px}
+.report-share-item.locked{opacity:.7}
+.report-share-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#eef3ec;color:#234c3e}

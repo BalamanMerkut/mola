@@ -167,7 +167,7 @@ test('Kasa şeridi after gün sonu: not the main button any more; sales after it
   const owner = await signedIn(browser, 'isletme');
   // The counter's compact Masalar (1280 px): the strip is one chip; its menu ("Kasa işlemleri") holds "Gün sonu".
   const strip = cashier.locator('.cash-chip'), menu = cashier.getByRole('group', { name: 'Kasa işlemleri' });
-  const dayEnd = async () => { if (!await menu.isVisible()) await strip.click(); return menu.getByRole('button', { name: 'Gün sonu' }); };
+  const dayEnd = async () => { if (!await menu.isVisible()) await strip.click(); return menu.getByRole('button', { name: 'Gün sonu', exact: true }); };
   try {
     // Closed today by the test before: the strip says so, and "Gün sonu" is no longer the green main button.
     await expect(strip).toContainText('Kasa kapandı');
@@ -200,8 +200,10 @@ test('Kasa şeridi after gün sonu: not the main button any more; sales after it
     // The owner's "Sahip aldı" larger than the drawer: asked once, with "Yine de kaydet".
     await owner.reload();
     await cashAction(owner, 'Kasa hareketi');
-    const move = owner.getByRole('dialog', { name: 'Kasa hareketi' });
-    await move.getByRole('button', { name: 'Sahip aldı' }).click();
+    // 13 Ekim: three plain choices first; "Kasadan para çıktı" starts on "Ben aldım".
+    await owner.getByRole('dialog', { name: 'Kasa hareketi' }).getByRole('button', { name: /Kasadan para çıktı/ }).click();
+    const move = owner.getByRole('dialog', { name: 'Kasadan para çıktı' });
+    await expect(move.getByRole('button', { name: 'Ben aldım', pressed: true })).toBeVisible();
     await move.getByLabel('Hareket tutarı').fill('25.000');
     await move.getByRole('button', { name: 'Kaydet', exact: true }).click();
     await expect(move.getByText(/beklenen nakit eksiye düşer/)).toBeVisible();

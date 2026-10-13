@@ -15,19 +15,24 @@ test('English guest menu translates dictionary categories, owner-named categorie
   // Owner names what the dictionary does not know: one category and one subcategory.
   await page.goto('/');
   await page.getByRole('button', { name: 'Menü yönetimi', exact: true }).click();
-  await page.getByRole('button', { name: 'Kategorileri yönet', exact: true }).click();
-  const row = (name: string) => page.locator('.category-manage-row').filter({ has: page.locator('strong', { hasText: new RegExp(`^${name}$`) }) });
+  await page.getByRole('button', { name: 'Kategoriler ve sıra', exact: true }).click();
+  const row = (name: string) => page.locator('.category-order-row').filter({ has: page.locator('strong', { hasText: new RegExp(`^${name}$`) }) });
+  // 13 Ekim: names and sub-categories sit behind each row's "Düzenle" (one row open at a time).
+  const edit = (name: string) => row(name).locator('.category-order-main').getByRole('button', { name: 'Düzenle', exact: true }).click();
+  await edit('Kahvaltı');
   await expect(row('Kahvaltı')).toContainText('İngilizce: Breakfast (otomatik)');
+  await edit('Ev lezzetleri');
   await expect(row('Ev lezzetleri')).toContainText('İngilizce adı yok; Türkçe adı gösterilir');
   await row('Ev lezzetleri').getByRole('button', { name: 'İngilizce adı', exact: true }).click();
   await expect(page.getByLabel('Kategori İngilizce adı', { exact: true })).toHaveAttribute('placeholder', 'Örn. Breakfast');
   await page.getByLabel('Kategori İngilizce adı', { exact: true }).fill('Homemade dishes');
   await page.getByRole('button', { name: 'İngilizce adı kaydet', exact: true }).click();
   await expect(row('Ev lezzetleri')).toContainText('İngilizce: Homemade dishes');
+  await edit('Kahvaltı');
   await row('Kahvaltı').getByRole('button', { name: 'İngilizce adı', exact: true }).click();
   await expect(page.getByLabel('Kategori İngilizce adı', { exact: true })).toHaveAttribute('placeholder', 'Breakfast');
   await page.getByRole('button', { name: 'Vazgeç', exact: true }).click();
-  const teaRow = row('Çaylar'); await teaRow.getByText('Alt kategorileri yönet', { exact: true }).click();
+  const teaRow = row('Çaylar'); await edit('Çaylar'); await teaRow.locator('summary', { hasText: /^Alt kategoriler/ }).click();
   const blend = teaRow.locator('.subcategory-manage-row').filter({ has: page.locator('span', { hasText: /^Özel karışım$/ }) });
   await expect(teaRow.locator('.subcategory-manage-row').filter({ has: page.locator('span', { hasText: /^Demleme$/ }) })).toContainText('İngilizce: Brewed tea (otomatik)');
   await blend.getByRole('button', { name: 'İngilizce adı', exact: true }).click();

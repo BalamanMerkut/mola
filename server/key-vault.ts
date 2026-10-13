@@ -19,9 +19,18 @@ export const KEY_FILE = 'anahtar.json', KEY_COPY = 'anahtar.yedek.json', RAW_KEY
 const ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // 32 symbols: no 0/O or 1/I to mix up on paper
 export type KdfParams = { N: number; r: number; p: number };
 export type RecoveryBlock = { id: string; kdf: 'scrypt'; N: number; r: number; p: number; salt: string; iv: string; wrapped: string; tag: string; createdAt: string; shownAt?: string; confirmedAt?: string };
-export type KeyFile = { v: 1; kind: 'mola-anahtar'; installId: string; check: string; osLock: { kind: OsLockKind; data: string }; recovery: RecoveryBlock; createdAt: string; updatedAt: string };
-/** What a protected backup needs: the live key and the recovery block (copied into the backup, never the code). */
-export type BackupProtection = { master: Buffer; recovery: RecoveryBlock; installId: string };
+/**
+ * "İşletmem var" (13 Ekim, sahibin kararı): the master key sealed a second time with a key derived from a business owner's
+ * own password, so a new computer opens a backup with the owner's sign-in instead of the recovery code. One block per
+ * business (owner username); `stamp` changes with the password (a hash of its salt), so a changed password is sealed again.
+ * `verifier`: what Mola Merkez keeps to check that password at the "İşletmem var" sign-in (scrypt with its own salt; it
+ * cannot open the block, the block's key comes from another salt).
+ */
+export type OwnerVerifier = { salt: string; N: number; r: number; p: number; hash: string };
+export type OwnerBlock = { id: string; tenantId: string; username: string; stamp: string; kdf: 'scrypt'; N: number; r: number; p: number; salt: string; iv: string; wrapped: string; tag: string; verifier: OwnerVerifier; createdAt: string };
+export type KeyFile = { v: 1; kind: 'mola-anahtar'; installId: string; check: string; osLock: { kind: OsLockKind; data: string }; recovery: RecoveryBlock; owners?: OwnerBlock[]; createdAt: string; updatedAt: string };
+/** What a protected backup needs: the live key, the recovery block and the owners' blocks (copied into the backup, never a code or password). */
+export type BackupProtection = { master: Buffer; recovery: RecoveryBlock; installId: string; owners?: OwnerBlock[] };
 
 export function newRecoveryCode() {
   // b & 31 of a uniform byte is uniform over the 32 symbols: 24 symbols = 120 bits.
@@ -77,6 +86,58 @@ export async function openRecovery(block: RecoveryBlock, code: string, installId
 /** The recovery block as it travels with a backup: without the "shown"/"saved" marks of this computer. */
 export const portableRecovery = ({ shownAt: _s, confirmedAt: _c, ...block }: RecoveryBlock): RecoveryBlock => block;
 
+// ---------- The owner's password ("İşletmem var") ----------
+/** The verifier Merkez checks costs little (32 MB, tens of milliseconds): it is asked at most a few times per sign-in. */
+export const VERIFIER_KDF: KdfParams = { N: 2 ** 15, r: 8, p: 1 };
+const passwordText = (password: string) => {
+  const text = String(password).normalize('NFC');
+  if (!text || text.length > 200) throw new DomainError('WRONG_PASSWORD', 'Kullanıcı adı ya da şifre yanlış.', 403);
+  return text;
+};
+function derivePassword(password: string, salt: Buffer, params: KdfParams) {
+  return new Promise<Buffer>((resolve, reject) => scryptCallback(passwordText(password), salt, 32, { ...params, maxmem: 256 * params.N * params.r + 32 * 1024 * 1024 }, (error, key) => error ? reject(error) : resolve(key)));
+}
+const ownerAad = (installId: string, tenantId: string, id: string) => Buffer.from(`mola:sahip:v1:${installId}:${tenantId}:${id}`);
+/** A password's fingerprint for "is the block still this password's": the stored hash's salt changes with every new password. */
+export const passwordStamp = (salt: string) => createHmac('sha256', 'mola:sahip-damgasi:v1').update(salt).digest('hex').slice(0, 32);
+/** The verifier Merkez keeps: scrypt of the password under its own salt (never the block's key). */
+export async function makeVerifier(password: string, params: KdfParams = VERIFIER_KDF): Promise<OwnerVerifier> {
+  const salt = randomBytes(16), hash = await derivePassword(password, salt, params);
+  return { salt: b64(salt), ...params, hash: hash.toString('hex') };
+}
+/** Merkez's check of a password against the verifier (constant time). */
+export async function verifierMatches(v: OwnerVerifier, password: string) {
+  try {
+    const expected = Buffer.from(v.hash, 'hex');
+    if (expected.length !== 32) return false;
+    const got = await derivePassword(password, Buffer.from(v.salt, 'base64'), kdfParams(v));
+    return timingSafeEqual(got, expected);
+  } catch { return false; }
+}
+export async function wrapOwner(master: Buffer, o: { password: string; username: string; tenantId: string; stamp: string; installId: string }, params: KdfParams): Promise<OwnerBlock> {
+  const salt = randomBytes(16), iv = randomBytes(12), id = randomUUID();
+  const kek = await derivePassword(o.password, salt, params);
+  try {
+    const cipher = createCipheriv('aes-256-gcm', kek, iv); cipher.setAAD(ownerAad(o.installId, o.tenantId, id));
+    const wrapped = Buffer.concat([cipher.update(master), cipher.final()]);
+    return { id, tenantId: o.tenantId, username: o.username, stamp: o.stamp, kdf: 'scrypt', ...params, salt: b64(salt), iv: b64(iv), wrapped: b64(wrapped), tag: b64(cipher.getAuthTag()), verifier: await makeVerifier(o.password), createdAt: new Date().toISOString() };
+  } finally { kek.fill(0); }
+}
+/** The master key from an owner's password; a wrong one fails the GCM check (after the full scrypt time). */
+export async function openOwner(block: OwnerBlock, password: string, installId: string) {
+  const kek = await derivePassword(password, Buffer.from(block.salt, 'base64'), kdfParams(block));
+  try {
+    const decipher = createDecipheriv('aes-256-gcm', kek, Buffer.from(block.iv, 'base64')); decipher.setAAD(ownerAad(installId, block.tenantId, block.id)); decipher.setAuthTag(Buffer.from(block.tag, 'base64'));
+    const master = Buffer.concat([decipher.update(Buffer.from(block.wrapped, 'base64')), decipher.final()]);
+    if (master.length !== 32) throw new Error('length');
+    return master;
+  } catch { throw new DomainError('WRONG_PASSWORD', 'Kullanıcı adı ya da şifre yanlış.', 403); }
+  finally { kek.fill(0); }
+}
+const validOwner = (o: unknown): o is OwnerBlock => { const b = o as OwnerBlock; return !!b && typeof b === 'object' && typeof b.id === 'string' && typeof b.tenantId === 'string' && typeof b.username === 'string' && typeof b.stamp === 'string' && [b.salt, b.iv, b.wrapped, b.tag].every(v => typeof v === 'string') && !!b.verifier && typeof b.verifier.hash === 'string'; };
+/** The owners' blocks of a key file or a backup, the malformed ones left out. */
+export const ownerBlocks = (list: unknown) => Array.isArray(list) ? list.filter(validOwner).slice(0, 50) : [];
+
 // ---------- Files ----------
 const sleep = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 /** tmp + fsync + rename: the old file stays whole until the new one is complete. Antivirus/OneDrive may hold it a moment. */
@@ -114,7 +175,7 @@ export function readKeyFile(directory: string): KeyFile | undefined {
     const path = join(directory, name);
     if (!existsSync(path)) continue;
     found = true;
-    try { const value = JSON.parse(readFileSync(path, 'utf8')); if (validKeyFile(value)) return value; } catch { /* try the copy */ }
+    try { const value = JSON.parse(readFileSync(path, 'utf8')); if (validKeyFile(value)) { const owners = ownerBlocks(value.owners); const { owners: _o, ...rest } = value; return owners.length ? { ...rest, owners } : rest; } } catch { /* try the copy */ }
   }
   if (found) throw new Error('Anahtar dosyası (anahtar.json) ve kopyası bozuk. Verileri yedekten ve kurtarma koduyla geri yükleyin.');
   return undefined;
@@ -168,7 +229,7 @@ export class AttemptLimiter {
     this.busy = true;
     try { return await fn(); }
     // A typo in the format is answered at once and costs no scrypt; only real tries count.
-    catch (error) { if (error instanceof DomainError && error.code === 'WRONG_CODE') this.failures.push(this.now()); throw error; }
+    catch (error) { if (error instanceof DomainError && (error.code === 'WRONG_CODE' || error.code === 'WRONG_PASSWORD')) this.failures.push(this.now()); throw error; }
     finally { this.busy = false; }
   }
 }
@@ -390,17 +451,40 @@ export class KeyVault {
     this.pending = undefined;
   }
   backupProtection(): BackupProtection | undefined {
-    return this.state === 'open' && this.file && this.key ? { master: this.key, recovery: portableRecovery(this.file.recovery), installId: this.file.installId } : undefined;
+    return this.state === 'open' && this.file && this.key ? { master: this.key, recovery: portableRecovery(this.file.recovery), installId: this.file.installId, ...(this.file.owners?.length ? { owners: this.file.owners } : {}) } : undefined;
   }
+  /**
+   * "İşletmem var": seals the master key with this owner's password (right after a sign-in, while the password is known).
+   * Nothing to do when the block of this business already holds this password (`stamp`). Returns whether it changed.
+   */
+  async ensureOwner(o: { tenantId: string; username: string; password: string; stamp: string }) {
+    if (this.state !== 'open' || !this.file || !this.key) return false;
+    const old = this.file.owners?.find(b => b.tenantId === o.tenantId);
+    if (old && old.username === o.username && old.stamp === o.stamp) return false;
+    const block = await wrapOwner(this.key, { ...o, installId: this.file.installId }, this.options.kdf ?? kdfParams(this.file.recovery));
+    // Read again: another sign-in may have written meanwhile (the scrypt above takes a moment).
+    const file = readKeyFile(this.directory) ?? this.file;
+    const next: KeyFile = { ...file, owners: [...(file.owners ?? []).filter(b => b.tenantId !== o.tenantId), block], updatedAt: new Date().toISOString() };
+    writeKeyFile(this.directory, next);
+    this.file = next;
+    return true;
+  }
+  /** What Merkez needs to check each owner's password at "İşletmem var" (no wrapping key): sent with the heartbeat. */
+  ownerLogins() { return (this.file?.owners ?? []).map(b => ({ tenantId: b.tenantId, username: b.username, stamp: b.stamp, verifier: b.verifier })); }
 }
 
 /**
  * A restored data folder on this computer: its key file is rewritten for this computer's OS lock, with the recovery block the
  * owner's code just opened (the backup's own copy of anahtar.json may still carry an older code). Verified before return.
  */
-export async function adoptKey(directory: string, master: Buffer, recovery: RecoveryBlock, installId: string, osLock: OsLock = platformOsLock()) {
-  const now = new Date().toISOString();
-  const file: KeyFile = { v: 1, kind: 'mola-anahtar', installId, check: keyCheck(master), osLock: { kind: osLock.kind, data: await osLock.seal(master, installId) }, recovery: { ...portableRecovery(recovery), shownAt: now, confirmedAt: now }, createdAt: now, updatedAt: now };
+/**
+ * `owners`: the owners' password blocks the backup carried (kept, so "İşletmem var" works again from this computer's backups).
+ * `codeKnown` false (opened with the owner's password, 13 Ekim): the recovery code may be lost, so the block is left unmarked
+ * and the next start makes a new code and shows it to the owner (KeyVault.load).
+ */
+export async function adoptKey(directory: string, master: Buffer, recovery: RecoveryBlock, installId: string, osLock: OsLock = platformOsLock(), extra: { owners?: OwnerBlock[]; codeKnown?: boolean } = {}) {
+  const now = new Date().toISOString(), known = extra.codeKnown !== false;
+  const file: KeyFile = { v: 1, kind: 'mola-anahtar', installId, check: keyCheck(master), osLock: { kind: osLock.kind, data: await osLock.seal(master, installId) }, recovery: known ? { ...portableRecovery(recovery), shownAt: now, confirmedAt: now } : portableRecovery(recovery), ...(extra.owners?.length ? { owners: extra.owners } : {}), createdAt: now, updatedAt: now };
   if (!(await osLock.open(file.osLock.data, installId)).equals(master)) throw new OsLockError('Anahtar bu bilgisayar için kilitlenemedi.', false);
   if (!keyOpensData(directory, master)) throw new Error('Geri yüklenen veri bu anahtarla açılmıyor.');
   writeKeyFile(directory, file);

@@ -214,3 +214,49 @@ test('next morning: "Dünün kasası kapanmadı" until it is closed; a handover 
   const report = (await owner('/staff/reports/cash-closings?from=2026-10-04&to=2026-10-05')).data;
   assert.deepEqual(report.closings.map((x: any) => [x.mode, x.day]), [['final', '2026-10-04'], ['handover', '2026-10-04']]);
 });
+
+test('13 Ekim: a gün sonu done by mistake is taken back the same night before any payment; it leaves the reports, the kasa is open again', async t => {
+  const c = await cafe(t, '2026-10-13T06:00:00Z');
+  const owner = c.client(), cashier = c.client(), cashier2 = c.client(), waiter = c.client();
+  assert.equal((await owner.login('isletme')).status, 200); assert.equal((await cashier.login('kasiyer')).status, 200); assert.equal((await waiter.login('garson')).status, 200);
+  // A second cashier for "not the one who did it".
+  assert.equal((await owner('/staff/users', { username: 'kasiyer2', name: 'Ali Kasa', role: 'cashier', password: DEMO_PASSWORD })).status, 200);
+  assert.equal((await cashier2.login('kasiyer2')).status, 200);
+  assert.equal((await cashier('/staff/cash/open', { requestId: randomUUID(), amount: 50000 })).status, 200);
+  const tables = (await owner('/staff/state')).data.tables;
+  const sell = async (i: number) => { const r = await waiter('/staff/orders', { requestId: randomUUID(), tableId: tables[i].id, lines: [{ productId: 'tea', quantity: 2, selections: [] }], expectedTotal: 7000 }); const account = (await cashier('/staff/state')).data.tables.find((x: any) => x.account?.id === r.data.accountId).account; return cashier('/staff/payments', { requestId: randomUUID(), accountId: r.data.accountId, version: account.version, method: 'cash', amount: 7000, tendered: 7000 }); };
+  assert.equal((await sell(0)).status, 200);
+  // The mistaken gün sonu at 18:00.
+  c.set('2026-10-13T15:00:00Z');
+  const counted = await cashier('/staff/cash/count', { requestId: randomUUID(), mode: 'final', counted: 57000 });
+  assert.equal(counted.status, 200, JSON.stringify(counted.data));
+  assert.equal((await cashier('/staff/cash/finish', { id: counted.data.id, left: 57000 })).status, 200);
+  let status = (await cashier('/staff/cash/status')).data;
+  assert.equal(status.closedToday.id, counted.data.id); assert.equal(status.closedToday.revoke, null, 'the person who did it may take it back');
+  assert.match((await cashier2('/staff/cash/status')).data.closedToday.revoke, /siz yapmadınız/, 'another cashier may not');
+  assert.equal((await cashier2('/staff/cash/revoke', { requestId: randomUUID(), id: counted.data.id, reason: 'deneme' })).data.code, 'CANNOT_REVOKE');
+  assert.equal((await cashier('/staff/cash/revoke', { requestId: randomUUID(), id: counted.data.id, reason: '' })).data.code, 'NOTE_REQUIRED');
+  // Taken back with a reason: the kasa is open again, the closing is gone from the list and the day report, the owner is told.
+  c.set('2026-10-13T15:05:00Z');
+  assert.equal((await cashier('/staff/cash/revoke', { requestId: randomUUID(), id: counted.data.id, reason: 'Yanlışlıkla bastım' })).status, 200);
+  status = (await cashier('/staff/cash/status')).data;
+  assert.equal(status.closedToday, null); assert.equal(status.showOpening, false); assert.equal(status.opening.amount, 50000, 'the morning opening holds again');
+  const list = (await owner('/staff/reports/cash-closings?from=2026-10-13&to=2026-10-13')).data;
+  assert.equal((list.closings ?? []).length, 0, 'the revoked closing is not in Kasa kapanışları');
+  const notes = (await owner('/staff/notifications')).data;
+  assert.ok(JSON.stringify(notes).includes('Gün sonu geri alındı'), 'the owner hears about it');
+  // Sales go on; the real gün sonu at night counts the whole day from the morning: the one closing of the day.
+  assert.equal((await sell(1)).status, 200);
+  c.set('2026-10-13T20:00:00Z');
+  const real = await cashier('/staff/cash/count', { requestId: randomUUID(), mode: 'final', counted: 64000 });
+  assert.equal(real.status, 200); assert.equal(real.data.extra, undefined, 'not an "Ek kapanış": the first was taken back');
+  assert.equal((await cashier('/staff/cash/finish', { id: real.data.id, left: 64000 })).status, 200);
+  const closing = (await owner(`/staff/cash/closing/${real.data.id}`)).data.closing;
+  assert.equal(closing.difference, 0, 'opening ₺500 + two cash bills ₺140 = ₺640, counted ₺640');
+  // After a payment that came after the gün sonu, or the next cash day, it can no longer be taken back.
+  c.set('2026-10-13T20:10:00Z');
+  assert.equal((await sell(2)).status, 200);
+  assert.match((await cashier('/staff/cash/status')).data.closedToday.revoke, /ödeme alındı/);
+  c.set('2026-10-14T03:00:00Z'); await owner.login('isletme');
+  assert.equal((await owner('/staff/cash/revoke', { requestId: randomUUID(), id: real.data.id, reason: 'deneme' })).data.code, 'CANNOT_REVOKE');
+});

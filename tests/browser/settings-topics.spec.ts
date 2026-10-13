@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { ensureSetup, openCash, openFirstSteps, openReport, openSettings, openStaff, openView, settingsPageNames, settingsParts, settingsPlaces, settingsTopicNames, settingsTopics, type SettingsPage } from './helpers';
+import { ensureSetup, openCash, openFirstSteps, openReport, openSettings, openStaff, openView, reportAction, settingsPageNames, settingsParts, settingsPlaces, settingsTopicNames, settingsTopics, type SettingsPage } from './helpers';
 
 /** Screens for the owner: also saved to KAFE_EKRAN (docs/ekran/kafe) when that is set. */
 async function shot(page: Page, file: string, path: string, fullPage = true) {
@@ -88,7 +88,7 @@ test('Ayarlar: five topics of one-time settings; every setting of the earlier pa
   await page.getByRole('button', { name: 'Uyarı sınırları' }).click();
   await visible(page.getByRole('dialog', { name: 'Düşük kâr uyarı sınırları' }).getByRole('heading', { name: /Düşük kâr uyarısı/ }));
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Raporları gönder' }).click();
+  await reportAction(page, 'Raporları gönder');
   await visible(page.getByRole('dialog', { name: 'Raporları gönder' }).getByRole('heading', { name: /E-posta hesabı/ }));
   await page.keyboard.press('Escape');
   // No jargon left in Güvenlik: the words the owner asked to replace are gone from the page (help texts may name the app).

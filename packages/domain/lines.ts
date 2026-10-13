@@ -161,7 +161,9 @@ export function restoreBasket(saved: unknown, products: Product[]): { lines: Bas
     const l = raw as Record<string, unknown> | null;
     if (!l || typeof l !== 'object' || !text(l.productId) || typeof l.quantity !== 'number' || !Array.isArray(l.selections) || !l.selections.every(s => s && typeof s === 'object' && text((s as Selection).groupId) && text((s as Selection).optionId))) { dropped++; continue; }
     const note = typeof l.note === 'string' ? readNote(l.note) : undefined;
-    const line: BasketLine = { productId: l.productId as string, quantity: l.quantity, selections: (l.selections as Selection[]).map(s => ({ groupId: s.groupId, optionId: s.optionId })), ...(note ? { note } : {}), ...(typeof l.grams === 'number' ? { grams: l.grams } : {}), ...(typeof l.seen === 'number' && Number.isSafeInteger(l.seen) ? { seen: l.seen } : {}) };
+    // An older basket kept "Paketlensin" for the whole order: every line is packed then.
+    const packed = l.packed === true || value.packed === true;
+    const line: BasketLine = { productId: l.productId as string, quantity: l.quantity, selections: (l.selections as Selection[]).map(s => ({ groupId: s.groupId, optionId: s.optionId })), ...(note ? { note } : {}), ...(typeof l.grams === 'number' ? { grams: l.grams } : {}), ...(packed ? { packed: true } : {}), ...(typeof l.seen === 'number' && Number.isSafeInteger(l.seen) ? { seen: l.seen } : {}) };
     if (basketLineFits(products.find(p => p.id === line.productId), line)) lines.push(line); else dropped++;
   }
   return { lines, packed: value.packed === true, dropped };

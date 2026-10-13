@@ -12,7 +12,7 @@ async function login(page: Page, role = 'isletme') {
 }
 async function staffPage(browser: Browser, role: string) { const context = await browser.newContext(); const page = await context.newPage(); await login(page, role); return { context, page }; }
 
-test('guest ticks "Paketlensin": the kitchen card says PAKETLENECEK, the guest and the owner read "Paketlenecek"; note examples fit the product', async ({ page, browser }, info) => {
+test('guest ticks "Paket yapılsın" on one item: that line says PAKET for the guest, kitchen and owner; "Hepsini paketle" makes the kitchen card PAKETLENECEK; note examples fit the product', async ({ page, browser }, info) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await login(page);
   await page.request.post('/api/staff/settings', { data: { changeSeconds: 0, commissionBps: null } });
@@ -36,35 +36,43 @@ test('guest ticks "Paketlensin": the kitchen card says PAKETLENECEK, the guest a
   await expect(dialog.getByLabel('Not ekle (isteğe bağlı)')).toHaveAttribute('placeholder', 'Örn. soğansız, az pişmiş');
   await dialog.getByRole('button', { name: /Sepete ekle/ }).click();
   await guest.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
-  const packed = guest.getByRole('checkbox', { name: 'Paketlensin (yanımda götüreceğim)' });
-  await expect(packed).not.toBeChecked();
-  await packed.check();
+  // 13 Ekim: "Paket yapılsın" per item (here only the toast; the tea is drunk here), "Hepsini paketle" for all.
+  const all = guest.getByRole('checkbox', { name: 'Hepsini paketle (yanımda götüreceğim)' });
+  await expect(all).not.toBeChecked();
+  await guest.getByRole('checkbox', { name: 'Paket yapılsın · Kaşarlı Tost' }).check();
+  await expect(guest.getByRole('checkbox', { name: 'Paket yapılsın · Demleme Çay' })).not.toBeChecked();
+  await expect(all).not.toBeChecked();
   await guest.screenshot({ path: info.outputPath('guest-basket-packed.png'), fullPage: true });
   await guest.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
   await expect(guest.getByText(/Sipariş #\d+ alındı/)).toBeVisible();
   await guest.getByRole('button', { name: 'Tamam', exact: true }).click();
   await guest.getByRole('button', { name: /Siparişlerim/ }).click();
-  await expect(guest.locator('.customer-order .packed-badge')).toHaveText('Paketlenecek');
+  // Only the toast's line says PAKET; the order is not "all packed".
+  await expect(guest.locator('.customer-order .packed-line')).toHaveCount(1);
+  await expect(guest.locator('.customer-order .order-line').filter({ hasText: 'Kaşarlı Tost' }).locator('.packed-line')).toHaveText('PAKET');
+  await expect(guest.locator('.customer-order .packed-badge:not(.packed-line)')).toHaveCount(0);
   await guest.getByRole('button', { name: 'EN', exact: true }).click();
-  await expect(guest.locator('.customer-order .packed-badge')).toHaveText('Pack to go');
+  await expect(guest.locator('.customer-order .packed-line')).toHaveText('PACK');
 
   const kitchen = await staffPage(browser, 'mutfak'); kitchen.page.on('pageerror', e => errors.push(e.message));
   const card = kitchen.page.locator('.kitchen-card').filter({ hasText: 'Kaşarlı Tost' });
-  await expect(card.locator('.packed-loud')).toHaveText('PAKETLENECEK');
+  await expect(card.locator('.order-line').filter({ hasText: 'Kaşarlı Tost' }).locator('.packed-line.packed-loud')).toHaveText('PAKET');
+  await expect(card.locator('.order-line').filter({ hasText: 'Demleme Çay' }).locator('.packed-line')).toHaveCount(0);
   await expect(card).toContainText('Masa 01');
   await kitchen.page.screenshot({ path: info.outputPath('kitchen-packed.png'), fullPage: true });
 
-  // The owner's table window reads it too; staff ordering for a table gets the same choice.
+  // The owner's table window reads it too; staff ordering for a table gets "Hepsini paketle".
   await page.reload();
   await page.getByRole('button', { name: /Masa 01/ }).click();
-  await expect(page.getByRole('dialog').locator('.packed-badge')).toHaveText('Paketlenecek');
+  await expect(page.getByRole('dialog').locator('.packed-line')).toHaveText('PAKET');
   const waiter = await staffPage(browser, 'garson'); waiter.page.on('pageerror', e => errors.push(e.message));
   await waiter.page.getByRole('navigation').getByRole('button', { name: 'Sipariş al', exact: true }).click();
   await waiter.page.getByLabel('Sipariş masası').selectOption('table-2');
   // Waiters have no product-number box: the product's round "+" adds one.
   await waiter.page.getByRole('button', { name: 'Demleme Çay · bir adet ekle', exact: true }).click();
   await waiter.page.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
-  await waiter.page.getByRole('checkbox', { name: 'Paketlensin (müşteri götürecek)' }).check();
+  await waiter.page.getByRole('checkbox', { name: 'Hepsini paketle (müşteri götürecek)' }).check();
+  await expect(waiter.page.getByRole('checkbox', { name: 'Paket yapılsın · Demleme Çay' })).toBeChecked();
   await waiter.page.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
   await expect(waiter.page.getByText(/Sipariş #\d+ mutfağa gönderildi/)).toBeVisible();
   await expect(kitchen.page.locator('.kitchen-card').filter({ hasText: 'Masa 02' }).locator('.packed-loud')).toHaveText('PAKETLENECEK', { timeout: 15000 });

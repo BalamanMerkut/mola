@@ -120,13 +120,14 @@ test('etkinlik: 25 temporary tables, reservation, walk-in, orders, closing only 
   await shot(page, 'etkinlik-telefon.png', info.outputPath('etkinlik-telefon.png'));
   await page.setViewportSize({ width: 1280, height: 860 });
 
-  // Before the start nothing is on Masalar; "Etkinliği başlat" brings the tables now.
+  // Before the start nothing is on Masalar; "Şimdi başlat" (step 1, Hazırlık) brings the tables now.
   await page.getByRole('button', { name: 'Masalar', exact: true }).click();
   const section = page.getByRole('region', { name: 'Etkinlik: Elazığspor derbisi' });
   await expect(section).toHaveCount(0);
   await page.getByRole('button', { name: 'Ajanda ve rezervasyon', exact: true }).click();
-  await event.getByRole('button', { name: 'Etkinliği başlat' }).click();
-  await expect(event).toContainText('Sürüyor');
+  await expect(event.getByRole('list', { name: 'Etkinlik adımları' }).locator('[aria-current="step"]')).toContainText('Hazırlık');
+  await event.getByRole('button', { name: 'Şimdi başlat' }).click();
+  await expect(event.getByRole('list', { name: 'Etkinlik adımları' }).locator('[aria-current="step"]')).toContainText('Sürüyor');
   await page.getByRole('button', { name: 'Masalar', exact: true }).click();
   await expect(section.locator('.table-card')).toHaveCount(25);
   await expect(page.getByText('Etkinlik sürerken normal masalar gizli.')).toBeVisible();

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Activity, AlertTriangle, ArrowLeft, CalendarClock, CalendarPlus, Check, ChevronRight, Cloud, Copy, DatabaseBackup, ExternalLink, FilePenLine, Globe, HardDrive, Hash, KeyRound, Layers, ListTodo, Mail, MapPin, MessageSquarePlus, MessagesSquare, Monitor, Package, Phone, QrCode, Repeat, Share2, ShieldCheck, Snowflake, StickyNote, Trash2, UserRound, Wifi } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Activity, AlertTriangle, ArrowLeft, CalendarClock, CalendarPlus, Check, CheckCircle2, ChevronRight, Copy, DatabaseBackup, ExternalLink, Hash, IdCard, KeyRound, LayoutDashboard, Layers, LifeBuoy, ListTodo, Mail, MapPin, MessageSquarePlus, MessagesSquare, Monitor, Package, Phone, Repeat, Share2, ShieldCheck, Snowflake, StickyNote, Trash2, UserRound, Wifi, type LucideIcon } from 'lucide-react';
 import { NewMessage } from './PlatformNewMessage';
 import { ApplicationActions, ApplicationFlags, InvoiceSection } from './PlatformApplications';
 import type { Ticket } from '../server/license';
@@ -14,13 +14,13 @@ import { BusinessProgress, PlatformAudit, type AuditEntry } from './PlatformBusi
 import { BusinessDiagnostics } from './PlatformDiagnostics';
 import { ServiceTab } from './PlatformService';
 import { ActivationSteps } from './PlatformActivationHelp';
-import { PlatformRemoteSupport } from './PlatformRemoteSupport';
+import { PlatformRemoteSupport, RemoteConnectButton } from './PlatformRemoteSupport';
 // Sunucu yedeği: Özet → "Sunucu yedeği", Lisans → "Yeni bilgisayara taşıma" (src/PlatformCloudBackup.tsx).
 import { bytesText, CloudBackupSection, TransferCode, useCloudBackups, type CloudRow, type CloudState } from './PlatformCloudBackup';
 import './remote-support.css';
 import { TicketChat } from './TicketChat';
 import { AgreementSection, IntegritySection } from './PlatformIntegrity';
-import { ADMIN, backupWarning, businessStatus, dateTime, expiresSoon, filesChanged, machineSwapOpen, offline, pendingFreeze, planText, qrOrderingFact, rowStatus, seenAgo, shortDate, strongDuplicates, type Business } from './platformStatus';
+import { ADMIN, backupWarning, businessStatus, dateTime, expiresSoon, filesChanged, machineSwapOpen, offline, pendingFreeze, planText, qrOrderingFact, rowStatus, seenAgo, shortDate, strongDuplicates, type Business, type Tone } from './platformStatus';
 import { sectorNames } from '../packages/domain/sector';
 import { socialEntries, socialHandle, socialInfo, type SocialLinks } from '../packages/domain/social-links';
 import { SocialIcon } from './socialIcons';
@@ -29,6 +29,7 @@ import { CopyButton, DCard, DefList, FactTiles, type Fact, type Row } from './Pl
 
 export const detailTabs = [['summary', 'Özet'], ['license', 'Lisans'], ['service', 'Hizmet'], ['info', 'Bilgiler'], ['support', 'Destek']] as const;
 export type DetailTab = typeof detailTabs[number][0];
+const tabIcons: Record<DetailTab, LucideIcon> = { summary: LayoutDashboard, license: KeyRound, service: Package, info: IdCard, support: LifeBuoy };
 type Mutate = (path: string, body: object) => Promise<boolean>;
 const planNames: Record<number, string> = { 1: '1 aylık', 6: '6 aylık', 12: '1 yıllık' };
 const tabName = (tab: DetailTab) => detailTabs.find(([id]) => id === tab)![1];
@@ -81,9 +82,12 @@ export function ContactLinks({ phone, email, name }: { phone?: string; email?: s
 }
 
 /**
- * Business detail as its own page: a back link, the name with one status chip, five tabs centred under it (Özet, Lisans,
- * Hizmet, Bilgiler, Destek). Özet, Lisans, Bilgiler and Destek are cards on the page (src/PlatformDetailKit.tsx); Hizmet keeps
- * its own sheet. The business's own data (menu, tables, owner account, appearance) is not here: it stays on the café computer.
+ * Business detail as its own page (13 Ekim: "ilkel ve karmaşık" → one identity card on top). A back link; the identity card:
+ * the initial, the name with one status chip and the Mola version, the line (tür · il · plan · paket), three short facts (son
+ * bağlantı, paket, lisans) and the one action the vendor looks for, "Uzaktan bağlan" (with "Ara" beside it); then five tabs
+ * with icons centred under it (Özet, Lisans, Hizmet, Bilgiler, Destek). Every tab is square cards with the explanation behind
+ * the grey ⓘ (src/PlatformDetailKit.tsx); Hizmet keeps its own sheet. The business's own data (menu, tables, owner account,
+ * appearance) is not here: it stays on the café computer.
  */
 export function BusinessDetail({ business: l, catalog, tickets, audit, tab, onTab, disabled, busy, mutate, onReload, onNewCode, onOpen, onOpenTicket, onAllTickets, onBack }: {
   business: Business; catalog?: CatalogView; tickets: Ticket[]; audit: AuditEntry[]; tab: DetailTab; onTab: (tab: DetailTab) => void; disabled: boolean; busy: boolean;
@@ -91,49 +95,86 @@ export function BusinessDetail({ business: l, catalog, tickets, audit, tab, onTa
 }) {
   const status = rowStatus(l), freeze = pendingFreeze(l), applying = !!l.application && l.application.status !== 'approved';
   const line = [l.sector && sectorNames[l.sector], l.invoice?.city, applying ? 'Hesap açma başvurusu' : planText(l), l.services ? l.services.chosen && l.services.packageName : l.service === 'menu' && 'Sadece QR menü'].filter(Boolean).join(' · ');
+  // "Uzaktan bağlan" when the owner has not allowed it (or the computer is off): the Destek tab's card, brought into view.
+  const [remoteFocus, setRemoteFocus] = useState(0);
+  const showRemote = () => { if (tab !== 'support') onTab('support'); setRemoteFocus(n => n + 1); };
+  const packageName = l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem';
+  const facts: [string, string, string?, Tone?][] = applying ? [] : [
+    ['Son bağlantı', l.activation === 'pending' ? 'Etkinleştirilmedi' : seenAgo(l.lastSeenAt), l.lastSeenAt ? dateTime(l.lastSeenAt) : undefined, offline(l) && !l.suspended ? 'bad' : undefined],
+    ['Paket', packageName, l.services ? `${l.services.features.length} hizmet` : undefined],
+    ['Lisans', l.endsAt ? (l.active ? `${l.daysRemaining} gün kaldı` : 'Süresi doldu') : 'Başlamadı', l.endsAt ? `Bitiş ${shortDate(l.endsAt)}` : planText(l), l.endsAt && !l.active ? 'bad' : expiresSoon(l) ? 'warn' : undefined],
+  ];
+  const phone = l.invoice?.phone;
   return <section className="platform-detail-page" aria-label={l.name}>
     <button type="button" className="text-btn back-link" aria-label="İşletmeler listesine dön" disabled={busy} onClick={onBack}><ArrowLeft size={16} aria-hidden="true" />İşletmeler</button>
-    <header className="detail-header">
-      <div className="detail-title"><h1>{l.name}</h1><span className={`status-chip ${status.tone}`}>{status.label}</span>{l.activation === 'active' && <span className="version-chip" title="İşletmenin bilgisayarındaki Mola sürümü (son bağlantıda bildirdiği)">{l.appVersion ? `Mola ${l.appVersion}` : 'Sürüm bilinmiyor'}</span>}</div>
-      <p className="detail-line">{line}</p>
+    <header className="detail-header did-card">
+      <span className={`did-avatar ${status.tone}`} aria-hidden="true">{l.name.trim().charAt(0).toLocaleUpperCase('tr-TR') || '?'}</span>
+      <div className="did-main">
+        <div className="detail-title"><h1>{l.name}</h1><span className={`status-chip ${status.tone}`}>{status.label}</span>{l.activation === 'active' && <span className="version-chip" title="İşletmenin bilgisayarındaki Mola sürümü (son bağlantıda bildirdiği)">{l.appVersion ? `Mola ${l.appVersion}` : 'Sürüm bilinmiyor'}</span>}</div>
+        <p className="detail-line">{line}</p>
+        {facts.length > 0 && <dl className="did-facts" aria-label="Kısa durum">{facts.map(([label, value, sub, tone]) => <div key={label} className={tone ? `tone-${tone}` : undefined}><dt>{label}</dt><dd>{tone && <span className="fact-dot" aria-hidden="true" />}{value}</dd>{sub && <dd className="did-sub">{sub}</dd>}</div>)}</dl>}
+      </div>
+      {l.activation === 'active' && <div className="did-actions">
+        <RemoteConnectButton tenantId={l.tenantId} disabled={disabled} onShow={showRemote} />
+        {phone && <a className="btn secondary small-btn did-call" href={`tel:${phone}`} title={showPhone(phone)} aria-label={`Ara: ${showPhone(phone)}`}><Phone size={16} aria-hidden="true" />Ara</a>}
+      </div>}
     </header>
-    <nav className="detail-tabs" aria-label="İşletme yönetimi">{detailTabs.map(([id, title]) => { const badge = id === 'support' ? l.openTickets : id === 'license' && (freeze || filesChanged(l)) ? 1 : 0; return <button type="button" key={id} aria-label={title} aria-pressed={tab === id} className={tab === id ? 'active' : ''} disabled={disabled} onClick={() => { if (id !== tab) onTab(id); }}>{title}{badge > 0 && <span className="tab-badge" aria-hidden="true">{id === 'license' ? '!' : badge}</span>}</button>; })}</nav>
+    <nav className="detail-tabs" aria-label="İşletme yönetimi">{detailTabs.map(([id, title]) => { const badge = id === 'support' ? l.openTickets : id === 'license' && (freeze || filesChanged(l)) ? 1 : 0, Icon = tabIcons[id]; return <button type="button" key={id} aria-label={title} aria-pressed={tab === id} className={tab === id ? 'active' : ''} disabled={disabled} onClick={() => { if (id !== tab) onTab(id); }}><Icon size={17} aria-hidden="true" /><span className="detail-tab-label">{title}</span>{badge > 0 && <span className="tab-badge" aria-hidden="true">{id === 'license' ? '!' : badge}</span>}</button>; })}</nav>
     {tab === 'summary' ? <Summary l={l} onTab={onTab} disabled={disabled} mutate={mutate} onOpen={onOpen} />
       : tab === 'license' ? <License l={l} vatRate={catalog?.vatRate ?? 20} disabled={disabled} mutate={mutate} onReload={onReload} onNewCode={onNewCode} onTab={onTab} />
       : tab === 'service' ? <ServiceTab l={l} catalog={catalog} disabled={disabled} mutate={mutate} />
       : tab === 'info' ? <Info l={l} disabled={disabled} mutate={mutate} onOpen={onOpen} audit={audit} tickets={tickets} />
-      : <SupportTab l={l} tickets={tickets} audit={audit} disabled={disabled} onReload={onReload} onAllTickets={onAllTickets} />}
+      : <SupportTab l={l} tickets={tickets} audit={audit} disabled={disabled} onReload={onReload} onAllTickets={onAllTickets} remoteFocus={remoteFocus} />}
   </section>;
 }
 
+/** One square card of Özet: a few short lines (name, value with a state dot, a quiet note), one clear action at the bottom. */
+type Line = { label: string; value: string; sub?: string; tone?: Tone };
+function SummaryCard({ title, icon, tone = 'ok', tip, lines, action, className = '' }: { title: string; icon: ReactNode; tone?: Tone; tip: string; lines: Line[]; action?: { label: string; onClick: () => void; disabled?: boolean }; className?: string }) {
+  const worst = lines.some(x => x.tone === 'bad') ? 'bad' : lines.some(x => x.tone === 'warn') ? 'warn' : null;
+  // The icon tile turns amber or red when a line needs a look; the lines carry their own dots.
+  return <DCard title={title} icon={icon} tone={worst ?? tone} tip={tip} className={`dsum-card${worst ? ` dsum-${worst}` : ''} ${className}`.trim()}>
+    <dl className="detail-facts dsum-lines">{lines.map(x => <div key={x.label} className={x.tone ? `tone-${x.tone}` : undefined}>
+      <dt>{x.label}</dt>
+      <dd className={x.tone ? `fact-${x.tone}` : undefined}>{x.tone && <span className="fact-dot" aria-hidden="true" />}<span>{x.value}</span>{x.sub && <small className="fact-sub">{x.sub}</small>}</dd>
+    </div>)}</dl>
+    {action && <div className="dsum-action"><button type="button" className="btn secondary small-btn" disabled={action.disabled} onClick={action.onClick}>{action.label}<ChevronRight size={15} aria-hidden="true" /></button></div>}
+  </DCard>;
+}
+
 /**
- * Özet: one look at the business. KPI tiles (state, licence, package, contact, QR orders, internet menu, computers, version,
- * backups, agreement), what needs doing, the vendor's note and the computers side by side, the server backup, and the rest
- * folded under "Diğer bilgiler". An application shows its decision first.
+ * Özet: the state in one look. First what needs doing ("Sıradaki işler") or "Her şey yolunda"; then three square cards with a
+ * few short lines and one action each: Lisans ve paket, Bağlantı ve cihaz, Yedekler (13 Ekim: once twelve tiles). Then the
+ * vendor's note and the computers side by side, the server backup, and the rest folded under "Diğer bilgiler". An application
+ * shows its decision first, with its own facts.
  */
 function Summary({ l, onTab, disabled, mutate, onOpen }: { l: Business; onTab: (tab: DetailTab) => void; disabled: boolean; mutate: Mutate; onOpen: (tenantId: string) => void }) {
   const status = businessStatus(l), applying = !!l.application && l.application.status !== 'approved', machines = l.machines ?? [];
   const cloud = useCloudBackups(), row = cloud?.businesses.find(b => b.tenantId === l.tenantId);
   const go = (target: DetailTab) => ({ label: `${tabName(target)} bölümüne git`, onClick: () => onTab(target), disabled });
   const changed = filesChanged(l);
-  const facts: Fact[] = applying ? [
-    { label: 'Durum', value: status.label, tone: status.tone, icon: <Activity size={18} /> }, { label: 'İşletme türü', value: l.sector ? sectorNames[l.sector] : 'Seçilmedi', icon: <Layers size={18} /> }, { label: 'Yetkili', value: l.contactName || '—', icon: <UserRound size={18} /> },
+  // A business still applying: its six facts as tiles (the decision card above them).
+  const facts: Fact[] = !applying ? [] : [
+    { label: 'Durum', value: status.label, tone: status.tone, icon: <Activity size={18} /> }, { label: 'İşletme türü', value: l.sector ? sectorNames[l.sector] : 'Seçilmedi', icon: <Layers size={18} /> }, { label: 'Yetkili', value: l.contactName || '-', icon: <UserRound size={18} /> },
     { label: 'İlk gönderim', value: dateTime(l.application!.firstSubmittedAt ?? l.application!.submittedAt), icon: <CalendarClock size={18} /> }, { label: 'Son gönderim', value: dateTime(l.application!.submittedAt), icon: <CalendarClock size={18} /> }, { label: 'Gönderim sayısı', value: String(l.application!.submissions ?? 1), icon: <Repeat size={18} /> },
-  ] : [
-    { label: 'Durum', value: status.label, tone: status.tone, icon: <Activity size={18} /> },
-    { label: 'Lisans bitişi', value: l.endsAt ? shortDate(l.endsAt) : 'Başlamadı', sub: l.endsAt ? (l.active ? `${l.daysRemaining} gün kaldı` : 'Süresi doldu') : planText(l), tone: l.endsAt && !l.active ? 'bad' : expiresSoon(l) ? 'warn' : undefined, icon: <CalendarClock size={18} />, accent: 'info', go: go('license') },
-    { label: 'Paket', value: l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem', sub: l.services ? `${l.services.features.length} hizmet${l.services.chosen ? ` · ${money(l.services.price.monthly)}/ay` : ''}` : undefined, icon: <Package size={18} />, accent: 'ok', go: go('service') },
-    { label: 'Son bağlantı', value: l.activation === 'pending' ? 'Etkinleştirilmedi' : seenAgo(l.lastSeenAt), sub: l.lastSeenAt ? dateTime(l.lastSeenAt) : undefined, tone: offline(l) && !l.suspended ? 'bad' : undefined, icon: <Wifi size={18} />, accent: 'info' },
-    // QR siparişleri açık mı (8 Ekim): the café's word over its tunnel (server/qr-ordering.ts), closed while the café is away.
-    { label: 'QR siparişleri', ...qrOrderingFact(l), icon: <QrCode size={18} />, accent: 'ok' },
-    { label: 'İnternetten menü', ...menuFact(l), icon: <Globe size={18} />, accent: 'info' },
-    { label: 'Bilgisayarlar', value: machines.length ? `${machines.length} bilgisayar` : '—', sub: machines.length > 1 ? 'İki farklı bilgisayar · aşağıda' : machines.length ? 'Etkin' : undefined, tone: machines.length > 1 ? 'warn' : undefined, icon: <Monitor size={18} /> },
-    { label: 'Sürüm', value: l.appVersion || '—', sub: changed ? 'Dosyalar değiştirilmiş' : l.integrity?.state === 'ok' ? 'Dosyalar imzalı listeyle aynı' : undefined, tone: changed ? 'bad' : undefined, icon: <ShieldCheck size={18} />, ...(changed ? { go: go('license') } : {}) },
-    { ...backupFact(l.backup), icon: <DatabaseBackup size={18} />, accent: 'ok' },
-    { ...secondFact(l.backup), icon: <HardDrive size={18} />, accent: 'ok' },
-    { label: 'Sunucu yedeği', ...cloudFact(l, cloud, row), icon: <Cloud size={18} />, accent: 'info' },
-    { label: 'Sözleşme', ...agreementFact(l), icon: <FilePenLine size={18} />, go: go('license') },
   ];
+  // A running business: three square cards (lisans ve paket, bağlantı ve cihaz, yedekler), a few short lines each.
+  const licence: Line[] = [
+    { label: 'Durum', value: status.label, tone: status.tone },
+    { label: 'Lisans bitişi', value: l.endsAt ? shortDate(l.endsAt) : 'Başlamadı', sub: l.endsAt ? (l.active ? `${l.daysRemaining} gün kaldı` : 'Süresi doldu') : planText(l), tone: l.endsAt && !l.active ? 'bad' : expiresSoon(l) ? 'warn' : undefined },
+    { label: 'Paket', value: l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem', sub: l.services ? `${l.services.features.length} hizmet${l.services.chosen ? ` · ${money(l.services.price.monthly)}/ay` : ''}` : undefined },
+    { label: 'Sözleşme', ...agreementFact(l) },
+  ];
+  const link: Line[] = [
+    { label: 'Son bağlantı', value: l.activation === 'pending' ? 'Etkinleştirilmedi' : seenAgo(l.lastSeenAt), sub: l.lastSeenAt ? dateTime(l.lastSeenAt) : undefined, tone: offline(l) && !l.suspended ? 'bad' : undefined },
+    // QR siparişleri açık mı (8 Ekim): the café's word over its tunnel (server/qr-ordering.ts), closed while the café is away.
+    { label: 'QR siparişleri', ...qrOrderingFact(l) },
+    { label: 'İnternetten menü', ...menuFact(l) },
+    { label: 'Bilgisayarlar', value: machines.length ? `${machines.length} bilgisayar` : '-', sub: machines.length > 1 ? 'İki farklı bilgisayar · aşağıda' : machines.length ? 'Etkin' : undefined, tone: machines.length > 1 ? 'warn' : undefined },
+    { label: 'Sürüm', value: l.appVersion || '-', sub: changed ? 'Dosyalar değiştirilmiş' : l.integrity?.state === 'ok' ? 'Dosyalar imzalı listeyle aynı' : undefined, tone: changed ? 'bad' : undefined },
+  ];
+  const backups: Line[] = [{ ...backupFact(l.backup) }, { ...secondFact(l.backup) }, { label: 'Sunucu yedeği', ...cloudFact(l, cloud, row) }];
+  const toCloud = () => document.getElementById(`cloud-${l.tenantId}`)?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
   const more: [string, string][] = applying ? [] : [
     ['Kurulum', l.setupCompleted ? `Tamamlandı${l.setupCompletedAt ? ' · ' + shortDate(l.setupCompletedAt) : ''}` : 'Bekleniyor'], ['Masa · çalışan · ürün', l.counts ? `${l.counts.tables} · ${l.counts.staff} · ${l.counts.products}` : '—'],
     ['Hizmet paketi', l.services ? `${l.services.packageName}${l.services.chosen ? ` · ${money(l.services.price.monthly)}/ay` : ''}` : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem'], ['Yetkili', l.contactName || '—'], ['İlk giriş', l.firstLoginAt ? dateTime(l.firstLoginAt) : 'Henüz yok'], ['Hesap açıldı', l.createdAt ? shortDate(l.createdAt) : '—'],
@@ -152,7 +193,7 @@ function Summary({ l, onTab, disabled, mutate, onOpen }: { l: Business; onTab: (
   if (expiresSoon(l)) next.push([`Lisans ${l.daysRemaining} gün içinde bitiyor.`, 'license']);
   if (offline(l)) next.push([`İşletmenin bilgisayarı bir gündür bağlanmadı (${seenAgo(l.lastSeenAt)}).`, null]);
   if (backupWarning(l)) next.push(['İşletmenin otomatik yedeği eski veya başarısız.', null]);
-  if (l.backup?.enabled && l.backup.second && !l.backup.second.set) next.push([`İkinci yedek yeri ayarlı değil${l.secondMissingSince ? ` (${shortDate(l.secondMissingSince)} tarihinden beri)` : ''}: işletme şerit → Yedekle → İkinci yedek yeri’nden flash bellek ya da OneDrive seçebilir.`, null]);
+  if (l.backup?.enabled && l.backup.second && !l.backup.second.set) next.push([`İkinci yedek yeri ayarlı değil${l.secondMissingSince ? ` (${shortDate(l.secondMissingSince)} tarihinden beri)` : ''}. Sahip kafedeki Mola’da Yedekle → İkinci yedek yeri’nden seçebilir.`, null]);
   if (machineSwapOpen(l)) next.push(['Bu lisans birden fazla bilgisayardan kullanıldı (İki farklı bilgisayar).', null]);
   if (changed) next.push(['Dosyalar değiştirilmiş: işletmenin bilgisayarındaki Mola program dosyaları imzalı listeyle uyuşmuyor.', 'license']);
   if (l.neverConnected && strongDuplicates(l).length) next.push(['Bu kayıt hiç bağlanmadı ve başka bir kaydın tekrarı olabilir; gerekmiyorsa Lisans bölümünün altından silebilirsiniz.', 'license']);
@@ -162,15 +203,22 @@ function Summary({ l, onTab, disabled, mutate, onOpen }: { l: Business; onTab: (
       <p className="section-lead">{l.application!.status === 'pending' ? 'İşletme onay bekliyor. Onaylarsanız 30 günlük deneme başlar; işletmenin bilgisayarı birkaç saniye içinde sahip hesabı ve kuruluma geçer.' : `Reddedildi: ${l.application!.reason ?? ''}`}</p>
       <ApplicationFlags l={l} onOpen={onOpen} disabled={disabled} repeats={false} />
       <ApplicationActions l={l} disabled={disabled} mutate={mutate} /></DCard>}
-    <section className="detail-section dsheet-bare" aria-label="Genel durum">
-      <FactTiles facts={facts} label="Genel durum" />
-      {l.kind === 'trial' && l.endsAt && !l.suspended && <p className="detail-trial-note">{l.source === 'application' ? 'Deneme, başvuru onaylanınca başladı; başka onay gerekmez.' : 'Deneme kendiliğinden başladı; onay gerekmez.'} Ücretli aboneliğe Lisans bölümünden geçirilir (kalan deneme süresi korunur).</p>}
-      {l.suspended && l.suspendReason && <p className="detail-trial-note muted-note">Askıya alma nedeni: {l.suspendReason}</p>}
-    </section>
-    {next.length > 0 && <DCard title="Sıradaki işler" icon={<ListTodo size={20} />} tone="warn" className="detail-next" actions={<span className="status-chip warn">{next.length}</span>}>
+    {/* What needs the vendor first ("Sıradaki işler"), or one calm line: the state in one look. */}
+    {next.length > 0 ? <DCard title="Sıradaki işler" icon={<ListTodo size={20} />} tone="warn" className="detail-next" actions={<span className="status-chip warn">{next.length}</span>}>
       <ul>{next.map(([text, target]) => <li key={text}>{target
         ? <button type="button" disabled={disabled} onClick={() => onTab(target)}><span className="next-dot" aria-hidden="true" /><span className="next-text">{text}</span><span className="next-go">{tabName(target)}<ChevronRight size={15} aria-hidden="true" /></span></button>
-        : <p><span className="next-dot" aria-hidden="true" /><span className="next-text">{text}</span></p>}</li>)}</ul></DCard>}
+        : <p><span className="next-dot" aria-hidden="true" /><span className="next-text">{text}</span></p>}</li>)}</ul></DCard>
+      : !applying && <section className="detail-section dcalm" aria-label="Genel durum özeti"><CheckCircle2 size={22} aria-hidden="true" /><p><strong>Her şey yolunda.</strong> Lisans, bağlantı ve yedekler normal; bekleyen iş yok.</p></section>}
+    {applying ? <section className="detail-section dsheet-bare" aria-label="Genel durum"><FactTiles facts={facts} label="Genel durum" /></section>
+      : <section className="detail-section dsheet-bare dsum" aria-label="Genel durum">
+        <div className="dsum-grid">
+          <SummaryCard title="Lisans ve paket" icon={<KeyRound size={20} />} tone="info" tip="Lisansın bitişi, paket ve sözleşme. Uzatma, plan, dondurma ve askı Lisans bölümündedir; paket Hizmet bölümünden değişir." lines={licence} action={{ label: 'Lisansa git', onClick: () => onTab('license'), disabled }} />
+          <SummaryCard title="Bağlantı ve cihaz" icon={<Wifi size={20} />} tip="İşletmenin bilgisayarının son bağlantıda bildirdikleri: QR siparişleri, internetten menü, bilgisayar sayısı, Mola sürümü ve program dosyaları denetimi." lines={link} action={changed ? { label: 'Dosya denetimine git', onClick: () => onTab('license'), disabled } : { label: 'Cihaz bilgileri', onClick: () => onTab('info'), disabled }} />
+          <SummaryCard title="Yedekler" icon={<DatabaseBackup size={20} />} tip="Kafenin kendi bilgisayarındaki otomatik yedek, ikinci yer (flash bellek, OneDrive) ve Mola Merkez’e gelen şifreli sunucu yedeği. Mola Merkez kopyaları açamaz." lines={backups} action={l.activation === 'active' ? { label: 'Sunucu yedeğine bak', onClick: toCloud } : undefined} />
+        </div>
+        {l.kind === 'trial' && l.endsAt && !l.suspended && <p className="detail-trial-note">{l.source === 'application' ? 'Deneme, başvuru onaylanınca başladı; başka onay gerekmez.' : 'Deneme kendiliğinden başladı; onay gerekmez.'} Ücretli aboneliğe Lisans bölümünden geçirilir (kalan deneme süresi korunur).</p>}
+        {l.suspended && l.suspendReason && <p className="detail-trial-note muted-note">Askıya alma nedeni: {l.suspendReason}</p>}
+      </section>}
     <div className="dpair">
       <Notes l={l} disabled={disabled} mutate={mutate} />
       <Machines l={l} disabled={disabled} mutate={mutate} />
@@ -364,7 +412,7 @@ function Info({ l, disabled, mutate, onOpen, audit, tickets }: { l: Business; di
 }
 
 /** Destek: this business's tickets as a chat (src/TicketChat.tsx, answered in place), remote support and its error reports. */
-function SupportTab({ l, tickets, audit, disabled, onReload, onAllTickets }: { l: Business; tickets: Ticket[]; audit: AuditEntry[]; disabled: boolean; onReload: () => void; onAllTickets: () => void }) {
+function SupportTab({ l, tickets, audit, disabled, onReload, onAllTickets, remoteFocus = 0 }: { l: Business; tickets: Ticket[]; audit: AuditEntry[]; disabled: boolean; onReload: () => void; onAllTickets: () => void; remoteFocus?: number }) {
   const own = tickets.filter(t => t.tenantId === l.tenantId);
   const [selected, setSelected] = useState(''), [writing, setWriting] = useState(false), [sent, setSent] = useState('');
   const events = audit.filter(a => a.action === 'ticket.closed').map(a => ({ ticketId: a.target, kind: 'closed' as const, at: a.at }));
@@ -388,7 +436,7 @@ function SupportTab({ l, tickets, audit, disabled, onReload, onAllTickets }: { l
         {email && <span className="dchip"><a href={`mailto:${email}`}><Mail size={14} aria-hidden="true" />{email}</a><CopyButton text={email} label="E-postayı kopyala" /></span>}
       </div>}
     </DCard>
-    <PlatformRemoteSupport tenantId={l.tenantId} name={l.name} disabled={disabled} />
+    <PlatformRemoteSupport tenantId={l.tenantId} name={l.name} disabled={disabled} focus={remoteFocus} />
     <details className="detail-section dcard detail-errors"><summary><span className="dcard-icon idle" aria-hidden="true"><ShieldCheck size={20} /></span><span className="dmore-title">Hata kayıtları</span><ChevronRight className="dmore-chevron" size={18} aria-hidden="true" /></summary><BusinessDiagnostics tenantId={l.tenantId} /></details>
   </div>;
 }

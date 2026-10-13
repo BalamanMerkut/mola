@@ -47,6 +47,8 @@ export type MerkezBusiness = License & {
   invoice?: Invoice; application?: Application;
   /** The café's stable activation id (kept across its retries): a repeat finds this business instead of making another. */
   activationId?: string;
+  /** "İşletmem var" (13 Ekim): the owner's username and password verifier from the café (server/merkez/owner-login.ts). */
+  ownerLogin?: import('./owner-login.js').OwnerLogin;
   /** The vendor's own notes about this business (never sent to the café). */
   notes?: string;
   /** Why the vendor suspended it (shown in Mola Yönetim and the history). */

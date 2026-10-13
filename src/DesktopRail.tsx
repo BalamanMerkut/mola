@@ -79,7 +79,12 @@ export function DesktopRail({ children }: { children?: ReactNode }) {
     // Security cards announce changes: the reminder dots follow without polling.
     const on = () => void refresh();
     // "İlk adımlar" (src/FirstSteps.tsx) opens the recovery code or the backup dialog from the owner's Masalar.
-    const ask = (e: Event) => { const what = (e as CustomEvent<string>).detail; if (what === 'backup') { setDialog(null); setOpen('backup'); } else if (what === 'recovery') { setOpen(null); setDialog(shown.current.status?.security?.recoveryAvailable ? 'recovery' : 'security'); } };
+    // 13 Ekim: "Yedekleriniz nerede?" (Ayarlar → Güvenlik ve yedek) opens the backup folders on this computer.
+    const reply = (error: string) => window.dispatchEvent(new CustomEvent('mola:open-result', { detail: error }));
+    const ask = (e: Event) => { const what = (e as CustomEvent<string>).detail; if (what === 'backup') { setDialog(null); setOpen('backup'); } else if (what === 'recovery') { setOpen(null); setDialog(shown.current.status?.security?.recoveryAvailable ? 'recovery' : 'security'); }
+      // "İşletmem var" on the activation screen: only a clean install with key protection can take a business's backup.
+      else if (what === 'owner') { const s = shown.current.status?.security; if (s?.clean && s.protection !== 'off') { setOpen(null); setDialog('owner'); reply(''); } else reply('Bu bilgisayarda zaten işletme verisi var ya da anahtar koruması kapalı; “İşletmem var” yalnız yeni kurulumda kullanılır.'); }
+      else if (what === 'open-backups' || what === 'open-second') void call(token ?? '', what === 'open-backups' ? '/api/desktop/open-backups' : '/api/desktop/open-second', {}).then(() => reply(''), err => reply((err as Error).message)); };
     window.addEventListener('mola:security', on); window.addEventListener('mola:open', ask);
     return () => { window.removeEventListener('mola:security', on); window.removeEventListener('mola:open', ask); };
   }, [token]);

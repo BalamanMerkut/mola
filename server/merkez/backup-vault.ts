@@ -9,7 +9,9 @@ import { MERKEZ_API } from '../sync-protocol.js';
 import { addAlert } from './alerts.js';
 import { businessDay } from '../../packages/domain/business-day.js';
 import { isoWeek } from '../backup-retention.js';
-import type { Install, MerkezData, MerkezStore } from './store.js';
+import { licenseFeatures, type Install, type MerkezData, type MerkezStore } from './store.js';
+import { servicesView } from './catalog.js';
+import { sellableFeatures } from '../../packages/domain/service-pricing.js';
 
 /*
  * Sunucu yedeği ("B planı"): an encrypted off-site copy of each café's verified backup, kept on Mola Merkez.
@@ -398,6 +400,39 @@ export function cloudWarning(lastError: string | undefined, newest: number, byte
   if (bytes >= LARGE_BYTES) return { tone: 'warn', text: `sunucu yedekleri ${sizeText(bytes)} yer tutuyor.` };
   return null;
 }
+/**
+ * Ayarlar → Yedek → "Kafelerin bulut yedekleri" (13 Ekim): one short line per business that has copies here or the
+ * "Bulutta şifreli yedek" service. Read only: the name, the package (`scope`: every service, as in a trial or a full plan;
+ * the cloud backup among some services; or not in the licence any more), the last upload, how many copies and how large,
+ * and a state ("Sağlıklı", "3 gündür yedek gelmedi"). No copy ids and nothing to download: Mola Merkez cannot open a café's
+ * backup and the vendor never gets one (KVKK).
+ */
+export type CloudOverviewRow = {
+  tenantId: string; name: string; packageName: string; scope: 'full' | 'cloud' | 'none'; suspended: boolean;
+  lastUploadAt: string | null; count: number; bytes: number; days: number | null;
+  status: 'ok' | 'stale' | 'none' | 'error' | 'suspended'; statusText: string;
+};
+export function cloudOverview(vault: BackupVault, d: MerkezData, now: Date) {
+  const sellable = sellableFeatures(), rows: CloudOverviewRow[] = [];
+  for (const b of d.businesses) {
+    if (!b.installId) continue;
+    const v = businessView(vault, d, b.tenantId, now), open = licenseFeatures(b);
+    const inLicense = open.includes('cloud-backup');
+    if (!inLicense && !v.count && !v.lastUploadAt) continue;
+    const scope: CloudOverviewRow['scope'] = !inLicense ? 'none' : sellable.every(f => open.includes(f)) ? 'full' : 'cloud';
+    const since = v.lastUploadAt ?? v.lastAttemptAt, days = since ? Math.floor((now.getTime() - Date.parse(since)) / DAY) : null;
+    const status: CloudOverviewRow['status'] = b.suspended ? 'suspended' : v.lastError === CAP_ERROR ? 'error' : !v.lastUploadAt ? (v.stale ? 'stale' : 'none') : v.stale ? 'stale' : 'ok';
+    const statusText = status === 'suspended' ? 'Hizmet askıda' : status === 'error' ? 'Son yedek sınırı aştı, alınamadı'
+      : status === 'stale' ? `${Math.max(STALE_DAYS, days ?? STALE_DAYS)} gündür yedek gelmedi` : status === 'none' ? 'Henüz yedek gelmedi' : 'Sağlıklı';
+    rows.push({ tenantId: b.tenantId, name: b.name, packageName: b.kind === 'trial' ? 'Deneme' : servicesView(d, b).packageName, scope, suspended: !!b.suspended,
+      lastUploadAt: v.lastUploadAt, count: v.count, bytes: v.bytes, days: v.lastUploadAt ? Math.floor((now.getTime() - Date.parse(v.lastUploadAt)) / DAY) : null, status, statusText });
+  }
+  // What needs a look first, then the newest upload.
+  const rank = { error: 0, stale: 1, none: 2, ok: 3, suspended: 4 } as const;
+  rows.sort((a, b) => rank[a.status] - rank[b.status] || (b.lastUploadAt ?? '').localeCompare(a.lastUploadAt ?? '') || a.name.localeCompare(b.name, 'tr'));
+  const last = rows.map(r => r.lastUploadAt).filter((x): x is string => !!x).sort().at(-1) ?? null;
+  return { staleDays: STALE_DAYS, total: { businesses: rows.filter(r => r.count > 0).length, copies: rows.reduce((n, r) => n + r.count, 0), bytes: rows.reduce((n, r) => n + r.bytes, 0), lastUploadAt: last, attention: rows.filter(r => r.status === 'stale' || r.status === 'error').length }, businesses: rows };
+}
 /** "Sunucu yedeği alınmadı" (each once per last upload) and a full disk (once a day): Bildirim merkezi. */
 export function sweepVault(vault: BackupVault, store: MerkezStore, now: Date) {
   vault.sweep(now);
@@ -538,6 +573,12 @@ export function backupVaultRoutes(app: Express, deps: () => Deps) {
     try { sweepVault(vault, store, now()); } catch { /* the view still answers */ }
     const d = store.read();
     res.json({ disk: vault.disk(), defaults: DEFAULT_SETTINGS, staleDays: STALE_DAYS, businesses: d.businesses.filter(b => b.installId).map(b => businessView(vault, d, b.tenantId, now())) });
+  });
+  // Ayarlar → Yedek → "Kafelerin bulut yedekleri": the short list (read only; no copy ids, nothing to download).
+  app.get('/api/merkez/admin/cloud-backups/overview', (req, res) => {
+    const { admin, vault, store, now } = deps();
+    admin(req);
+    res.json(cloudOverview(vault, store.read(), now()));
   });
   app.post('/api/merkez/admin/cloud-backups/settings', (req, res) => {
     const { admin, vault, store, now } = deps();

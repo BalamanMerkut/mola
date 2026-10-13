@@ -138,11 +138,10 @@ export function SalesReports({ open, onRecipe }: { open?: ReportsOpening; onReci
     {usesPeriod && <PeriodBar range={range} onChange={setRange} />}
     <div className="report-toolbar">
       {detail && <button type="button" className="btn secondary report-mode-btn" onClick={() => setDetail(false)}>Sade özete dön</button>}
-      <ReportTools view={detail && tab !== 'money' ? tab : 'summary'} viewName={detail && tab !== 'money' ? TAB_NAMES[tab] : 'Satış özeti'} range={range} />
-      {owner && <div className="report-tools report-owner-tools" role="group" aria-label="Raporların ayarları">
-        <button type="button" className={`btn secondary report-tool${pk.has('email-reports') ? '' : ' locked'}`} onClick={() => pk.has('email-reports') ? setSending(true) : openFeatureLock('email-reports')}><Mail size={16} aria-hidden="true" />Raporları gönder</button>
-        <button type="button" className="btn secondary report-tool" onClick={() => goTo({ view: 'settings', topic: 'security', part: 'phone' })}><Smartphone size={16} aria-hidden="true" />Raporları telefonda gör</button>
-      </div>}
+      <ReportTools view={detail && tab !== 'money' ? tab : 'summary'} viewName={detail && tab !== 'money' ? TAB_NAMES[tab] : 'Satış özeti'} range={range} extra={owner ? [
+        { id: 'email', icon: <Mail size={18} aria-hidden="true" />, label: 'Raporları gönder', sub: 'Günlük, haftalık, aylık özet e-postayla', locked: !pk.has('email-reports'), onClick: () => pk.has('email-reports') ? setSending(true) : openFeatureLock('email-reports') },
+        { id: 'phone', icon: <Smartphone size={18} aria-hidden="true" />, label: 'Raporları telefonda gör', sub: 'Telefonunuzu bir kez eşleştirin, her yerden bakın', onClick: () => goTo({ view: 'settings', topic: 'security', part: 'phone' }) },
+      ] : []} />
     </div>
     {sending && <Modal title="Raporları gönder" wide className="email-reports-dialog" onClose={() => setSending(false)}><div className="modal-body settings-shell"><div className="settings-page wide email-reports-page"><div className="settings-page-body"><EmailReports /></div></div></div></Modal>}
     {!detail ? <SimpleSummary range={range} onDetail={() => setDetail(true)} onRange={setRange} /> : <>

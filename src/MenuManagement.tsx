@@ -18,7 +18,7 @@ export function MenuManagement({ data, onAdd, onEdit, onCategories, onPreview, o
   return <section className="menu-workspace" aria-label="Menü yönetimi">
     <div className="menu-toolbar" role="group" aria-label="Menü işlemleri">
       <button className="btn primary" onClick={onAdd}><Plus size={17} />Ürün ekle</button>
-      <button className="btn secondary" onClick={onCategories}><ListFilter size={16} />Kategorileri yönet</button>
+      <button className="btn secondary" onClick={onCategories}><ListFilter size={16} />Kategoriler ve sıra</button>
       <button className="btn secondary" onClick={onPreview}><Eye size={16} />Menüyü önizle</button>
       <label className="menu-search"><Search size={17} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Ürün adı veya kodu" aria-label="Menüde ürün ara" />{search && <button className="icon-btn" aria-label="Aramayı temizle" onClick={() => setSearch('')}><X size={15} /></button>}</label>
     </div>

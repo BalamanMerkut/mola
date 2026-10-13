@@ -11,9 +11,11 @@ import { APP_VERSION } from './license.js';
 export type Security = {
   vault?: KeyVault;
   attempts: AttemptLimiter;
-  /** Clean install only: restore a protected backup with its recovery code, then switch to it (runtime.ts). */
-  restore?: (backup: string, code: string) => Promise<void>;
+  /** Clean install only: restore a protected backup with its recovery code (or the owner's sign-in, "İşletmem var"), then switch to it (runtime.ts). */
+  restore?: (backup: string, code: string | OwnerSecret) => Promise<void>;
 };
+/** "İşletmem var": a business owner's username and password, which open the backup's owner block. */
+export type OwnerSecret = { username: string; password: string };
 const OFF: RecoveryView = { protection: 'off', protectedAtRest: false, available: false, confirmed: false, shown: false, createdAt: null, warning: null };
 export const recoveryView = (security?: Security) => security?.vault?.view() ?? OFF;
 
@@ -94,8 +96,11 @@ export function restoreRoutes(app: Express, guard: (req: Request) => void, ctx: 
   });
   app.post('/api/desktop/restore', async (req, res) => {
     guard(req); ready();
-    const b = z.object({ backup: z.string().min(1).max(500), code: z.string().min(1).max(64) }).parse(req.body);
-    await ctx.security!.attempts.run(() => ctx.security!.restore!(b.backup, b.code));
+    // The recovery code, or (İşletmem var, 13 Ekim) the owner's username and password.
+    const b = z.object({ backup: z.string().min(1).max(500), code: z.string().min(1).max(64).optional(), username: z.string().trim().min(1).max(50).optional(), password: z.string().min(1).max(200).optional() }).parse(req.body);
+    const secret = b.code ? b.code : b.username && b.password ? { username: b.username, password: b.password } : undefined;
+    if (!secret) throw new DomainError('CODE_REQUIRED', 'Kurtarma kodunu ya da işletme sahibinin şifresini yazın.', 400);
+    await ctx.security!.attempts.run(() => ctx.security!.restore!(b.backup, secret));
     res.json({ ok: true });
   });
 }

@@ -6,7 +6,7 @@ import { Notice } from './components';
 import { Card, Row, Toggle } from './SettingsKit';
 
 /*
- * Kasa ve giderler → Kasa ayarları → Kart ve yazar kasa: "Yazar kasa yardımcısı" (owner). On by default: after every payment the
+ * Kasa ve giderler → Kasa ayarları → Kart ve yazar kasa: "Yazar kasa yardımcısı" (owner). Off by default since 11 Ekim (the owner turns it on); when on, after every payment the
  * payment window says what to enter on the yazar kasa per KDV department, and the gün sonu compares it with the Z raporu.
  * "Ödemeden sonra 'Girildi' onayı iste" (off by default) keeps the card until the cashier presses "Girildi". Its own small
  * card (POST /api/staff/cash/settings), so it can sit in any Ayarlar layout.

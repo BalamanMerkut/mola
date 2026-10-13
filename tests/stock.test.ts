@@ -511,3 +511,26 @@ test('Stok performance: 200 products, 100 items, a year of sales with options, m
   // A report (read now and then by the owner), not the stock screen: a looser guard, also for a busy test machine.
   assert.equal(report.rows.length, 200); assert.ok(profitMs < 500, `profit took ${profitMs.toFixed(1)} ms`);
 });
+
+test('13 Ekim: how many of each option can be made (Türk kahvesi orta şekerli, büyük latte, yulaf sütü)', () => {
+  const items = [item('kahve', 'g'), item('sut', 'ml'), item('yulaf', 'ml'), item('seker', 'g')];
+  const recipes: Recipe[] = [
+    { id: 'l1', productId: 'latte', validFrom: iso(T0), items: [{ itemId: 'kahve', amount: 18 }, { itemId: 'sut', amount: 200 }], options: latteOptions },
+    { id: 't1', productId: 'turk', validFrom: iso(T0), items: [{ itemId: 'kahve', amount: 7 }], options: [{ groupId: 'sugar', optionId: 'medium', add: [{ itemId: 'seker', amount: 6 }] }, { groupId: 'sugar', optionId: 'sweet', add: [{ itemId: 'seker', amount: 10 }] }] },
+  ];
+  const data: StockData = { items, recipes, entries: [count('kahve', 700, T0), count('sut', 2000, T0), count('yulaf', 500, T0), count('seker', 120, T0)] };
+  const levels = stockLevels(data, feedOf([]), T0 + H);
+  const products = [
+    { id: 'latte', groups: [{ id: 'size', name: 'Boy', required: false, options: [{ id: 'large', name: 'Büyük', extra: 0 }] }, { id: 'milk', name: 'Süt', required: false, options: [{ id: 'oat', name: 'Yulaf sütü', extra: 0 }] }, { id: 'extra', name: 'Ekstra', required: false, options: [{ id: 'shot', name: 'Ekstra shot', extra: 0 }] }] },
+    { id: 'turk', groups: [{ id: 'sugar', name: 'Şeker', required: true, options: [{ id: 'none', name: 'Sade', extra: 0 }, { id: 'medium', name: 'Orta şekerli', extra: 0 }, { id: 'sweet', name: 'Şekerli', extra: 0 }] }] },
+  ] as unknown as Product[];
+  const view = productStock(products, data, levels, T0 + H);
+  const turk = view.get('turk')!;
+  assert.equal(turk.makeable, 100, 'sade: 700 g ÷ 7 g');
+  assert.deepEqual(turk.variants?.map(v => [v.option, v.makeable, v.limitingId]), [['Orta şekerli', 20, 'seker'], ['Şekerli', 12, 'seker']], 'şeker (120 g ÷ 6 g, ÷ 10 g) limits the sweet ones');
+  const latte = view.get('latte')!;
+  assert.equal(latte.makeable, 10, 'süt 2000 ÷ 200');
+  assert.deepEqual(latte.variants?.map(v => [v.option, v.makeable]), [['Büyük', 6], ['Yulaf sütü', 2], ['Ekstra shot', 10]], 'büyük: 2000 ÷ 300; yulaf: 500 ÷ 200; shot: kahve 700 ÷ 27 = 25 but süt still 10');
+  // Options the menu no longer has are left out; a recipe without option rules has no variants at all.
+  assert.equal(productStock([{ id: 'turk' }], data, levels, T0 + H).get('turk')!.variants, undefined);
+});

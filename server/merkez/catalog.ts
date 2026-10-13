@@ -284,7 +284,7 @@ export function catalogRoutes(app: Express, o: CatalogDeps) {
         const pkg = packageOf(d, b.packageId);
         if (!pkg) throw new DomainError('PACKAGE_NOT_FOUND', 'Paket bulunamadı. Listeyi yenileyin.', 404);
         const current = biz.services?.packageId === pkg.id;
-        if ((pkg.archived || pkg.legacy) && !current) throw new DomainError('PACKAGE_UNAVAILABLE', pkg.legacy ? 'Eski planlar yeni işletmelere verilmez; bir paket ya da Özel seçin.' : 'Bu paket arşivde; önce Ayarlar → Paketler’den geri alın.', 409);
+        if ((pkg.archived || pkg.legacy) && !current) throw new DomainError('PACKAGE_UNAVAILABLE', pkg.legacy ? 'Eski planlar yeni işletmelere verilmez; bir paket ya da Özel seçin.' : 'Bu paket arşivde; önce Paketler sayfasından geri alın.', 409);
       } else if (!b.features?.length) throw new DomainError('SERVICES_EMPTY', 'Özel için en az bir hizmet seçin.', 400);
       if (b.features?.some(f => featureById.get(f)?.soon)) throw new DomainError('FEATURE_SOON', 'Yakında gelecek hizmetler seçilemez.', 400);
       if (b.discount?.kind === 'amount' && b.discount.value) {

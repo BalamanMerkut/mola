@@ -57,7 +57,9 @@ test('the café computer can back up now; owners only see whether the data is sa
   assert.equal(readdirSync(options.backups).filter(n => n.startsWith('backup-')).length, 2, 'manual + the newest of this business day');
   const owner = (await post('/api/login', { username: 'isletme', password: DEMO_PASSWORD })).headers.getSetCookie()[0].split(';')[0];
   const status = await (await fetch(base + '/api/staff/backup-status', { headers: { Cookie: owner } })).json();
-  assert.deepEqual(Object.keys(status).sort(), ['enabled', 'healthy', 'lastSuccessAt']); assert.equal(status.healthy, true);
+  // 13 Ekim ("Yedekleriniz nerede?"): the owner also sees where the copies are; never a key, code or file list.
+  assert.deepEqual(Object.keys(status).sort(), ['canDownload', 'enabled', 'folder', 'healthy', 'kept', 'lastSuccessAt', 'second']); assert.equal(status.healthy, true);
+  assert.equal(status.canDownload, true); assert.equal(status.second, null);
 });
 test('a backup target inside the data folder is refused and reported, not silently written', async () => {
   mkdirSync('.local/tests', { recursive: true });

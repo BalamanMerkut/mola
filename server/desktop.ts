@@ -179,6 +179,14 @@ export function desktopRoutes(app: Express, desktop: Desktop | undefined, networ
     openFolder(backups.folder);
     res.json({ ok: true });
   });
+  // "Yedekleriniz nerede?" → İkinci yer → Klasörü aç (13 Ekim): the copies on the flash drive or the synced folder.
+  app.post('/api/desktop/open-second', (req, res) => {
+    allow(req);
+    const root = backups?.second?.root;
+    if (!root || !existsSync(root)) throw new DomainError('SECOND_MISSING', 'İkinci yedek yeri şu anda bulunamadı (flash bellek takılı mı?).', 409);
+    openFolder(root);
+    res.json({ ok: true });
+  });
   app.post('/api/desktop/shutdown', (req, res) => {
     allow(req);
     res.json({ ok: true });

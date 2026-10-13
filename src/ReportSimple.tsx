@@ -1,7 +1,7 @@
 import { PlaceLink } from './Moved';
 import { LockedHint, openFeatureLock, usePackage } from './FeatureLock';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { BadgeCheck, ChevronRight, FileSpreadsheet, Landmark, Printer, Receipt, ShoppingBag, TriangleAlert, Wallet } from 'lucide-react';
+import { BadgeCheck, ChevronDown, ChevronRight, FileSpreadsheet, Landmark, Printer, Receipt, Share2, ShoppingBag, TriangleAlert, Wallet } from 'lucide-react';
 import { api, ApiError, money } from './api';
 import { commissionShare, MAX_COMMISSION_BPS, shareText } from '../packages/domain/commission';
 import type { ExpenseBreakdown } from '../packages/domain/reports';
@@ -169,13 +169,25 @@ async function download(path: string, fallback: string) {
 }
 const rangeText = (r: Range) => r.from === 'all' ? 'Tüm zamanlar' : yearOf(r) ? `${yearOf(r)} yılı${r.to.endsWith('-12-31') ? '' : ' (bugüne kadar)'}` : r.from === r.to ? formatReportDate(r.from) : `${formatReportDate(r.from)} – ${formatReportDate(r.to)}`;
 
-export function ReportTools({ view, viewName, range }: { view: string; viewName: string; range: Range }) {
-  const [open, setOpen] = useState<'print' | 'excel' | null>(null);
-  // Hizmet paketi: without "Gelişmiş raporlar" both buttons stay, faded with "Pakette yok", and open the package card.
-  const locked = !usePackage().has('reports-advanced'), choose = (what: 'print' | 'excel') => locked ? openFeatureLock('reports-advanced') : setOpen(what);
-  return <div className="report-tools" role="group" aria-label="Rapor dosyaları">
-    <button type="button" className={`btn secondary report-tool${locked ? ' locked' : ''}`} onClick={() => choose('print')}><Printer size={16} aria-hidden="true" />Yazdır / PDF{locked && <LockedHint />}</button>
-    <button type="button" className={`btn secondary report-tool${locked ? ' locked' : ''}`} onClick={() => choose('excel')}><FileSpreadsheet size={16} aria-hidden="true" />Muhasebeci için indir{locked && <LockedHint />}</button>
+/** One more line in the "Yazdır ve paylaş" menu (the owner's e-mail reports and phone). */
+export type ReportAction = { id: string; icon: ReactNode; label: string; sub: string; locked?: boolean; onClick: () => void };
+/**
+ * 13 Ekim tanıtım ("tıkış tıkış"): Yazdır / PDF, Muhasebeci için indir and the owner's Raporları gönder / telefonda gör were
+ * four buttons in two rows. Now one "Yazdır ve paylaş" button opens them as a short menu, each with what it does.
+ */
+export function ReportTools({ view, viewName, range, extra = [] }: { view: string; viewName: string; range: Range; extra?: ReportAction[] }) {
+  const [open, setOpen] = useState<'print' | 'excel' | null>(null), [menu, setMenu] = useState(false), menuId = useId();
+  // Hizmet paketi: without "Gelişmiş raporlar" both stay, faded with "Pakette yok", and open the package card.
+  const locked = !usePackage().has('reports-advanced'), choose = (what: 'print' | 'excel') => { setMenu(false); if (locked) openFeatureLock('reports-advanced'); else setOpen(what); };
+  useEffect(() => { if (!menu) return; const close = (e: Event) => { if (e instanceof KeyboardEvent ? e.key === 'Escape' : !(e.target instanceof Element && e.target.closest('.report-share'))) setMenu(false); }; document.addEventListener('pointerdown', close); document.addEventListener('keydown', close); return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', close); }; }, [menu]);
+  const items: ReportAction[] = [
+    { id: 'print', icon: <Printer size={18} aria-hidden="true" />, label: 'Yazdır / PDF', sub: 'Bu ekranın A4 çıktısı ya da PDF dosyası', locked, onClick: () => choose('print') },
+    { id: 'excel', icon: <FileSpreadsheet size={18} aria-hidden="true" />, label: 'Muhasebeci için indir', sub: 'Ay ya da dönemin Excel dosyası', locked, onClick: () => choose('excel') },
+    ...extra.map(x => ({ ...x, onClick: () => { setMenu(false); x.onClick(); } })),
+  ];
+  return <div className="report-tools report-share" role="group" aria-label="Rapor dosyaları">
+    <button type="button" className="btn secondary report-share-btn" aria-expanded={menu} aria-controls={menuId} onClick={() => setMenu(m => !m)}><Share2 size={16} aria-hidden="true" />Yazdır ve paylaş<ChevronDown size={15} aria-hidden="true" /></button>
+    {menu && <div className="report-share-menu" id={menuId} role="menu">{items.map(x => <button key={x.id} type="button" role="menuitem" className={`report-share-item${x.locked ? ' locked' : ''}`} onClick={x.onClick}><span className="report-share-icon">{x.icon}</span><span><strong>{x.label}{x.locked && <LockedHint />}</strong><small>{x.sub}</small></span></button>)}</div>}
     {open === 'print' && <PrintPreview view={view} viewName={viewName} range={range} onClose={() => setOpen(null)} />}
     {open === 'excel' && <AccountantExport range={range} onClose={() => setOpen(null)} />}
   </div>;

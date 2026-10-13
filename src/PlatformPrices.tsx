@@ -13,7 +13,7 @@ import { IconBtn } from './platformSettingsKit';
 type Row = { monthly: string; yearly: string };
 const TIP = 'Aylık fiyatlar KDV hariçtir. Yıllık fiyat boş bırakılırsa aylığın 10 katıdır (2 ay bedava). “Yakında” olan hizmetler satılmaz; fiyatı hazırlık içindir. Kaydedince paketler ve işletme fiyatları yeni fiyatlarla hesaplanır; önceki satış kayıtları değişmez. Her değişiklik İşlem kayıtları’na eski → yeni olarak yazılır.';
 /**
- * Ayarlar → "Hizmet fiyatları": each service's monthly price (KDV hariç); the yearly price is the monthly × 10 unless typed.
+ * Paketler → "Hizmet fiyatları" (once Ayarlar → Hizmet fiyatları): each service's monthly price (KDV hariç); the yearly price is the monthly × 10 unless typed.
  * "Yakında" services are shown with their planned price but are not sold yet. Saving writes only what changed to İşlem
  * kayıtları (old → new). Packages and businesses use the new prices at once; earlier sales keep their amounts.
  * One tidy row per service: its icon, name, the two price boxes side by side, what changed, and a reset to the start price.

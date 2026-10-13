@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:cr
 import fs from 'node:fs/promises';
 import { join } from 'node:path';
 import { DomainError } from '../packages/domain/engine.js';
-import { keyCheck, openRecovery, portableRecovery, wipeFile, writeAtomic, type BackupProtection, type RecoveryBlock } from './key-vault.js';
+import { keyCheck, openOwner, openRecovery, ownerBlocks, portableRecovery, wipeFile, writeAtomic, type BackupProtection, type OwnerBlock, type RecoveryBlock } from './key-vault.js';
 
 /**
  * anahtar-kurtarma.json inside every protected backup: the backup's own key, sealed with a key derived from the master key,
@@ -11,14 +11,15 @@ import { keyCheck, openRecovery, portableRecovery, wipeFile, writeAtomic, type B
  * No raw backup key file is written in protected mode: one on the same disk would make a stolen disk readable.
  */
 export const BACKUP_KEY_FILE = 'anahtar-kurtarma.json';
-export type BackupKeyFile = { v: 1; kind: 'mola-yedek-anahtari'; backup: string; installId: string; check: string; recovery: RecoveryBlock; key: { iv: string; data: string; tag: string } };
+/** owners (13 Ekim): the master key sealed with each owner's password too (İşletmem var); missing on older backups. */
+export type BackupKeyFile = { v: 1; kind: 'mola-yedek-anahtari'; backup: string; installId: string; check: string; recovery: RecoveryBlock; owners?: OwnerBlock[]; key: { iv: string; data: string; tag: string } };
 const wrappingKey = (master: Buffer) => Buffer.from(hkdfSync('sha256', master, Buffer.alloc(0), 'mola:yedek-anahtari:v1', 32));
 const aad = (backup: string) => Buffer.from(`mola:yedek:${backup}`);
 
 export function sealBackupKey(backup: string, key: Buffer, protection: BackupProtection): BackupKeyFile {
   const iv = randomBytes(12), cipher = createCipheriv('aes-256-gcm', wrappingKey(protection.master), iv); cipher.setAAD(aad(backup));
   const data = Buffer.concat([cipher.update(key), cipher.final()]);
-  return { v: 1, kind: 'mola-yedek-anahtari', backup, installId: protection.installId, check: keyCheck(protection.master), recovery: portableRecovery(protection.recovery), key: { iv: iv.toString('base64'), data: data.toString('base64'), tag: cipher.getAuthTag().toString('base64') } };
+  return { v: 1, kind: 'mola-yedek-anahtari', backup, installId: protection.installId, check: keyCheck(protection.master), recovery: portableRecovery(protection.recovery), ...(protection.owners?.length ? { owners: protection.owners } : {}), key: { iv: iv.toString('base64'), data: data.toString('base64'), tag: cipher.getAuthTag().toString('base64') } };
 }
 export function openBackupKey(file: BackupKeyFile, master: Buffer) {
   try {
@@ -34,12 +35,24 @@ export async function readBackupKeyFile(backup: string): Promise<BackupKeyFile |
   try { text = await fs.readFile(join(backup, BACKUP_KEY_FILE), 'utf8'); } catch (e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') return undefined; throw e; }
   const file = JSON.parse(text) as BackupKeyFile;
   if (file?.v !== 1 || file.kind !== 'mola-yedek-anahtari' || typeof file.backup !== 'string' || !/^[a-f0-9-]{36}$/.test(file.installId) || !file.recovery || !file.key) throw new Error('Yedeğin kurtarma kaydı bozuk.');
+  const owners = ownerBlocks(file.owners); delete file.owners; if (owners.length) file.owners = owners;
   return file;
 }
 /** The master key of the café that made the backup, from the owner's recovery code. */
 export async function masterFromCode(file: BackupKeyFile, code: string) {
   const master = await openRecovery(file.recovery, code, file.installId);
   if (keyCheck(master) !== file.check) throw new DomainError('WRONG_CODE', 'Kurtarma kodu bu yedeğe ait değil.', 403);
+  return master;
+}
+/**
+ * "İşletmem var": the master key from a business owner's own sign-in. Only the block of that username is tried (one scrypt);
+ * a backup from before 13 Ekim, or one made before the owner first signed in on the new version, has none.
+ */
+export async function masterFromPassword(file: BackupKeyFile, username: string, password: string) {
+  const name = username.trim().toLowerCase(), block = file.owners?.find(b => b.username === name);
+  if (!block) throw new DomainError('NO_OWNER_LOCK', 'Bu yedek şifreyle açılmıyor (şifre kilidinden önce alınmış). Kurtarma koduyla geri yükleyin ya da daha yeni bir yedek seçin.', 409);
+  const master = await openOwner(block, password, file.installId);
+  if (keyCheck(master) !== file.check) throw new DomainError('WRONG_PASSWORD', 'Kullanıcı adı ya da şifre yanlış.', 403);
   return master;
 }
 /**
@@ -93,7 +106,7 @@ export async function rewrapBackups(roots: string[], protection: BackupProtectio
         const file = await readBackupKeyFile(join(root, name));
         if (!file || file.installId !== protection.installId) continue;
         openBackupKey(file, protection.master);
-        writeAtomic(join(root, name, BACKUP_KEY_FILE), JSON.stringify({ ...file, recovery: portableRecovery(protection.recovery) }));
+        writeAtomic(join(root, name, BACKUP_KEY_FILE), JSON.stringify({ ...file, recovery: portableRecovery(protection.recovery), ...(protection.owners?.length ? { owners: protection.owners } : {}) }));
         changed++;
       } catch { /* a damaged or foreign backup is left as it is */ }
       await new Promise(r => setImmediate(r));

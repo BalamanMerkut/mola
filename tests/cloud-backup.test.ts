@@ -306,6 +306,46 @@ test('Mola Yönetim: per-business view and settings, "2 gündür sunucu yedeği 
   } finally { await w.close(); }
 });
 
+test('Ayarlar → Yedek → "Kafelerin bulut yedekleri": a read-only line per business (package, last upload, copies, size, state), nothing to download', async () => {
+  const w = await world('cloud-overview');
+  try {
+    // Signed out: refused like every Mola Yönetim read.
+    const outside = await fetch(`${w.base}/api/merkez/admin/cloud-backups/overview`);
+    assert.equal(outside.status, 401);
+    const a = await w.cafe('eski', 'bulut-a', NAME, 'eski-pc');
+    let view = await w.admin('/cloud-backups/overview');
+    assert.equal(view.status, 200);
+    // Registered, the service in its (old, full) plan, nothing sent yet.
+    let row = view.data.businesses.find((x: { tenantId: string }) => x.tenantId === 'bulut-a');
+    assert.deepEqual({ name: row.name, scope: row.scope, count: row.count, status: row.status, statusText: row.statusText, lastUploadAt: row.lastUploadAt }, { name: NAME, scope: 'full', count: 0, status: 'none', statusText: 'Henüz yedek gelmedi', lastUploadAt: null });
+    await a.scheduler.runNow(); await a.scheduler.uploading;
+    view = await w.admin('/cloud-backups/overview');
+    row = view.data.businesses.find((x: { tenantId: string }) => x.tenantId === 'bulut-a');
+    assert.equal(row.count, 1); assert.ok(row.bytes > 0); assert.ok(row.lastUploadAt); assert.equal(row.days, 0);
+    assert.equal(row.status, 'ok'); assert.equal(row.statusText, 'Sağlıklı'); assert.equal(typeof row.packageName, 'string');
+    assert.deepEqual(view.data.total, { businesses: 1, copies: 1, bytes: row.bytes, lastUploadAt: row.lastUploadAt, attention: 0 });
+    // Read only and nothing to fetch a copy with: no copy ids, no files, no transfer state, no settings.
+    assert.deepEqual(Object.keys(row).sort(), ['bytes', 'count', 'days', 'lastUploadAt', 'name', 'packageName', 'scope', 'status', 'statusText', 'suspended', 'tenantId']);
+    assert.ok(!JSON.stringify(view.data).includes(w.merkezVault.copies(a.installId)[0].id), 'no copy id in the list');
+    assert.equal((await w.admin('/cloud-backups/overview', {})).status, 404);
+    // Three days without an upload: "3 gündür yedek gelmedi", first in the list, counted for the summary.
+    w.clock.t += 3 * 86400000 + 60_000;
+    await w.admin('/login', { username: 'admin', password: MERKEZ_PASSWORD }); // the session ended with the clock
+    view = await w.admin('/cloud-backups/overview');
+    row = view.data.businesses.find((x: { tenantId: string }) => x.tenantId === 'bulut-a');
+    assert.equal(row.status, 'stale'); assert.equal(row.statusText, '3 gündür yedek gelmedi'); assert.equal(row.days, 3);
+    assert.equal(view.data.total.attention, 1); assert.equal(view.data.staleDays, 2);
+    // A package with the service among others: "cloud"; without it the copies already here keep the line ("none").
+    const give = (features: string[]) => w.merkezStore.mutate(d => { const b = d.businesses.find(x => x.tenantId === 'bulut-a')!; b.services = { packageId: null, features: features as never, updatedAt: new Date(w.clock.t).toISOString() }; });
+    give(['core', 'qr-menu', 'cloud-backup']);
+    row = (await w.admin('/cloud-backups/overview')).data.businesses.find((x: { tenantId: string }) => x.tenantId === 'bulut-a');
+    assert.equal(row.scope, 'cloud'); assert.equal(row.packageName, 'Özel');
+    give(['core', 'qr-menu']);
+    row = (await w.admin('/cloud-backups/overview')).data.businesses.find((x: { tenantId: string }) => x.tenantId === 'bulut-a');
+    assert.equal(row.scope, 'none'); assert.equal(row.count, 1);
+  } finally { await w.close(); }
+});
+
 test('pieces go as raw bytes to a Merkez that takes them (a quarter less traffic); an older Merkez still gets base64 JSON', async () => {
   const calls: { path: string; bytes: number }[] = [];
   const w = await world('cloud-binary', { binary: true, spy: (path, body) => calls.push({ path, bytes: Buffer.isBuffer(body?.data) ? body.data.length : typeof body?.data === 'string' ? body.data.length : 0 }) });

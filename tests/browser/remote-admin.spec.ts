@@ -1,5 +1,5 @@
 import { test, expect, type Request as PwRequest } from '@playwright/test';
-import { ensureSetup, openSettings, openView } from './helpers';
+import { ensureSetup, openSettings, openView, reportAction } from './helpers';
 import { totp } from '../../server/totp';
 
 /*
@@ -76,9 +76,9 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
 
     // Satış ve Raporlar opens without a second code; the Excel file downloads whole.
     await openView(device, 'Satış ve Raporlar');
-    await expect(device.getByRole('button', { name: 'Muhasebeci için indir' })).toBeVisible({ timeout: 30_000 });
+    await expect(device.getByRole('button', { name: 'Yazdır ve paylaş' })).toBeVisible({ timeout: 30_000 });
     await device.screenshot({ path: info.outputPath('cihaz-raporlar.png'), fullPage: true });
-    await device.getByRole('button', { name: 'Muhasebeci için indir' }).click();
+    await reportAction(device, 'Muhasebeci için indir');
     const excel = device.getByRole('dialog', { name: 'Muhasebeci için indir' });
     const file = device.waitForEvent('download');
     await excel.getByRole('button', { name: 'Excel dosyasını indir' }).click();

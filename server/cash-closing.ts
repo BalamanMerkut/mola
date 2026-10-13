@@ -212,7 +212,7 @@ export class CashBook {
   status(tenant: string, s: State, actor: Actor, now: number): CashStatus {
     const p = this.position(tenant, now), settings = s.cashShift ?? {};
     const finalDay = p.lastFinal?.day;
-    const closedToday = p.lastFinal && p.lastFinal.status === 'closed' && p.lastFinal.day === p.today ? { at: p.lastFinal.closedAt ?? p.lastFinal.to, byName: p.lastFinal.byName } : null;
+    const closedToday = p.lastFinal && p.lastFinal.status === 'closed' && p.lastFinal.day === p.today ? { at: p.lastFinal.closedAt ?? p.lastFinal.to, byName: p.lastFinal.byName, id: p.lastFinal.id, revoke: this.revokeBlock(s, actor, p.lastFinal, now) } : null;
     // Sales on the floor after today's gün sonu (the night went on): the strip asks for one more closing ("Ek kapanış").
     // Measured from the count (the window's end), not from "Kapanışı tamamla": a bill paid in between belongs to the next window.
     const countedAt = closedToday ? p.lastFinal!.to : '';
@@ -376,6 +376,40 @@ export class CashBook {
     s.audit.push({ action: r.mode === 'final' ? 'cash.closed' : 'cash.handover', actor: actor.id, target: r.id, at });
     return { closing: closed, fresh: true };
   }
+  /**
+   * Whether this gün sonu can still be taken back (13 Ekim, sahibin kararı): the latest closing of the cash day, still that cash
+   * day (until 05:00), no payment since its count, and the person is the owner, the Müdür or the one who counted it.
+   * Returns the reason it cannot, or null.
+   */
+  revokeBlock(s: State, actor: Actor, r: CashClosing | undefined, now: number): string | null {
+    if (!r || r.kind !== 'closing' || r.mode !== 'final' || r.status !== 'closed') return 'Geri alınacak gün sonu bulunamadı.';
+    const p = this.position(s.tenantId, now);
+    if (p.lastAny?.id !== r.id) return 'Bu gün sonundan sonra yeni bir kasa kaydı var; geri alınamaz.';
+    if (r.day !== cashDayOf(now)) return 'Gün sonu yalnız aynı iş günü içinde (gece 05:00’e kadar) geri alınabilir.';
+    if (actor.role !== 'owner' && actor.role !== 'manager' && actor.id !== r.by) return 'Bu gün sonunu siz yapmadınız. İşletme sahibi ya da Müdür geri alabilir.';
+    const after = (iso: string) => iso > r.to;
+    if (s.payments.some(x => after(x.createdAt)) || s.archives.some(a => a.payments.some(x => after(x.createdAt)))) return 'Gün sonundan sonra ödeme alındı; geri alınamaz. Gece kapanmadan “Ek kapanış” yapın.';
+    return null;
+  }
+  /** "Gün sonunu geri al": the closing leaves the closing lists and reports (kind 'revoked'); the kasa is open as before it. */
+  revoke(s: State, actor: Actor, b: { requestId: string; id: string; reason: string }, ctx: Context) {
+    requireRole(s, actor, ['owner', 'manager', 'cashier']);
+    return once(s, actor, 'cash-revoke', b.requestId, b, () => {
+      const tenant = s.tenantId, r = this.get<CashClosing>(tenant, b.id), reason = b.reason.trim();
+      const blocked = this.revokeBlock(s, actor, r, ctx.now.getTime());
+      if (blocked) throw new DomainError('CANNOT_REVOKE', blocked, 409);
+      if (reason.length < 3 || reason.length > 300) throw new DomainError('NOTE_REQUIRED', 'Neden geri aldığınızı kısaca yazın.');
+      assertOpenDay(this.store.packages.closedEnd(), r!.day);
+      const user = s.staffUsers?.find(u => u.id === actor.id), at = ctx.now.toISOString();
+      const revoked: CashClosing = { ...r!, status: 'revoked', revokedAt: at, revokedBy: actor.id, revokedByName: user?.name ?? 'Kasiyer', revokeReason: reason };
+      this.store.db.prepare(`UPDATE cash_records SET kind='revoked', payload=? WHERE tenant=? AND id=?`).run(seal(revoked, this.key(tenant), `cash:${tenant}:${r!.id}`), tenant, r!.id);
+      this.changed(tenant, r!.day);
+      s.audit.push({ action: 'cash.closing_revoked', actor: actor.id, target: r!.id, at });
+      return revoked;
+    });
+  }
+  /** Gün sonları taken back in [from, to) (işlem geçmişi). */
+  revoked(tenant: string, from = -8.64e15, to = 8.64e15) { return this.list<CashClosing>(tenant, ['revoked'], from, to); }
   correct(s: State, actor: Actor, b: { requestId: string; closingId: string; amount: number; note: string }, ctx: Context) {
     requireRole(s, actor, ['owner']);
     return once(s, actor, 'cash-correction', b.requestId, b, () => {
@@ -606,6 +640,15 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
         `${c.byName} · Beklenen ${money(c.figures.expected)} · Sayılan ${money(c.counted)}${c.cardDifference ? ` · Kart farkı ${signed(c.cardDifference)}` : ''}${c.note ? ` · Not: ${c.note}` : ''}. Kasa ve giderler → Kapanışlar.`);
     }
     res.json({ closing: closingFor(c, a.role), corrections: [], ...(ownShift ? { ownShift } : {}) });
+  });
+  // "Gün sonunu geri al" (13 Ekim): the same cash day, before any new payment; the owner hears about it with the reason, and
+  // the QR ordering pause of the gün sonu ends like after a kasa opening.
+  app.post('/api/staff/cash/revoke', (req, res) => {
+    const a = counter(req), b = z.object({ requestId, id: z.string().min(1).max(100), reason: z.string().max(300) }).parse(req.body);
+    const r = store.mutate(a.tenantId, s => book.revoke(s, a, b, ctx()));
+    options.cashOpened?.(a.tenantId);
+    notify(a.tenantId, `cash-revoked:${r.id}`, 'Gün sonu geri alındı', `${r.revokedByName} · ${new Date(r.closedAt ?? r.to).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' })} gün sonu (${r.byName}) geri alındı, kasa yeniden açık. Neden: ${r.revokeReason}.`);
+    res.json({ ok: true, id: r.id });
   });
   // "Tamam" on the gün sonu result: the closing person's own shift of the closed cash day ends now (kind "closing").
   app.post('/api/staff/cash/closing-shift', (req, res) => {

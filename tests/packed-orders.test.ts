@@ -175,3 +175,37 @@ test('tickets opened before the rename keep their stored "Paket #n" name; new on
   assert.equal(s.archives[0].tableName, 'Paket #1', 'history shows the name it had');
   assert.match(renderText(kitchenTicket(s, s.orders.find(x => x.id === next.orderId)!, printer, s.orders[1].lines), printer).join('\n'), /MASASIZ #2/);
 });
+
+test('13 Ekim: each item can be packed on its own; "Hepsini paketle" packs all; edits follow the lines; the ticket marks the item', () => {
+  const s = business(); const t = at('2026-10-13T09:00:00Z');
+  const two = { lines: [{ productId: 'tea', quantity: 1, selections: [], packed: true }, { productId: 'tea', quantity: 2, selections: [], note: 'Açık' }], expectedTotal: 3500 * 3 };
+  const mixed = submitOrder(s, guest, { requestId: randomUUID(), tableId: 'table-1', ...two }, t);
+  const o = s.orders.find(x => x.id === mixed.orderId)!;
+  assert.equal(o.lines[0].packed, true); assert.equal('packed' in o.lines[1], false); assert.equal('packed' in o, false, 'only some items: the order is not "all packed"');
+  // The kitchen ticket says PAKET under the packed item only, and no PAKETLENECEK heading.
+  const ticket = renderText(kitchenTicket(s, o, printer, o.lines), printer).join('\n');
+  assert.match(ticket, /1 x [^\n]*\n(?:[^\n]*\n)?\s+\[PAKET\]/); assert.equal((ticket.match(/\[PAKET\]/g) ?? []).length, 1); assert.doesNotMatch(ticket, /PAKETLENECEK/);
+  // Every item packed: the order flag follows (older screens and reports read it), the lines do not repeat it on the ticket.
+  const all = submitOrder(s, guest, { requestId: randomUUID(), tableId: 'table-1', lines: two.lines.map(l => ({ ...l, packed: true })), expectedTotal: two.expectedTotal }, t);
+  const allOrder = s.orders.find(x => x.id === all.orderId)!;
+  assert.equal(allOrder.packed, true); assert.ok(allOrder.lines.every(l => l.packed));
+  const allTicket = renderText(kitchenTicket(s, allOrder, printer, allOrder.lines), printer).join('\n');
+  assert.match(allTicket, /PAKETLENECEK/); assert.doesNotMatch(allTicket, /\[PAKET\]/);
+  // Older screens: the order-level choice packs every line.
+  const old = submitOrder(s, waiter, { requestId: randomUUID(), tableId: 'table-2', ...tea(2), packed: true }, t);
+  assert.ok(s.orders.find(x => x.id === old.orderId)!.lines.every(l => l.packed));
+  // A takeaway ticket never keeps a packed item.
+  const ticketOrder = submitTakeaway(s, waiter, { requestId: randomUUID(), lines: [{ productId: 'tea', quantity: 1, selections: [], packed: true }], expectedTotal: 3500 }, t);
+  assert.ok(s.orders.filter(x => x.accountId === ticketOrder.accountId).every(x => !('packed' in x) && x.lines.every(l => !('packed' in l))));
+  // Not a yes/no: refused, nothing changes.
+  const before = structuredClone(s);
+  assert.equal(code(() => submitOrder(s, guest, { requestId: randomUUID(), tableId: 'table-1', lines: [{ productId: 'tea', quantity: 1, selections: [], packed: 'yes' as unknown as boolean }], expectedTotal: 3500 }, t)), 'INVALID_VALUE');
+  assert.deepEqual(s, before);
+  // The guest's edit: the lines bring their own choice (one item unpacked, the other packed) and the order flag follows.
+  editOrder(s, guest, { requestId: randomUUID(), orderId: o.id, version: o.version, expectedTotal: 3500 * 3, packed: false, lines: [{ ...two.lines[0], existingId: o.lines[0].id, packed: undefined }, { ...two.lines[1], existingId: o.lines[1].id, packed: true }] }, at('2026-10-13T09:00:20Z'));
+  assert.equal('packed' in o.lines[0], false); assert.equal(o.lines[1].packed, true); assert.equal('packed' in o, false);
+  // An older pending edit (no line choices, no order choice) keeps the packing the order had.
+  const all2 = s.orders.find(x => x.id === all.orderId)!;
+  editOrder(s, guest, { requestId: randomUUID(), orderId: all2.id, version: all2.version, expectedTotal: 3500 * 3, lines: all2.lines.map(l => ({ productId: l.productId, quantity: l.quantity, selections: l.selections, ...(l.note ? { note: l.note } : {}), existingId: l.id })) }, at('2026-10-13T09:00:30Z'));
+  assert.equal(all2.packed, true); assert.ok(all2.lines.every(l => l.packed));
+});

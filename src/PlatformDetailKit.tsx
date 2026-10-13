@@ -11,11 +11,13 @@ import './platform-detail.css';
  */
 
 /** One card: icon tile, title, actions and ⓘ on the right. Still a region named after its title (the browser specs use them). */
-export function DCard({ title, icon, tone = 'ok', tip, actions, label, className = '', children }: {
+export function DCard({ title, icon, tone = 'ok', tip, actions, label, className = '', children, id }: {
   title: ReactNode; icon?: ReactNode; tone?: Tone; tip?: string; actions?: ReactNode; label?: string; className?: string; children?: ReactNode;
+  /** An anchor the page scrolls to (Özet → "Sunucu yedeğine bak", "Uzaktan bağlan"). */
+  id?: string;
 }) {
   const name = label ?? (typeof title === 'string' ? title : undefined);
-  return <section className={`detail-section dcard ${className}`.trim()} aria-label={name}>
+  return <section id={id} className={`detail-section dcard ${className}`.trim()} aria-label={name}>
     <header className="dcard-head">
       {icon && <span className={`dcard-icon ${tone}`} aria-hidden="true">{icon}</span>}
       <h2>{title}</h2>

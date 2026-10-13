@@ -10,7 +10,7 @@ import { withStepUp } from './platformStepUp';
 
 type Draft = { id?: string; name: string; features: FeatureId[]; discount?: Discount; discountOk: boolean; updatedAt?: string; legacy?: boolean; businesses: number };
 /**
- * Ayarlar → "Paketler": every package as a card (services, monthly and yearly total, how many businesses use it), "Yeni paket"
+ * Paketler (left menu, 13 Ekim; once Ayarlar → Paketler): every package as a card (services, monthly and yearly total, how many businesses use it), "Yeni paket"
  * opens the builder: a name, the services as checkbox cards (core always on, requirements added with a note), an optional
  * package discount and the live total. Edit, duplicate, archive. The two "eski plan" packages are the plans from before
  * packaging: shown apart, they can only be copied.
@@ -62,7 +62,7 @@ export function PlatformPackages({ onChanged }: { onChanged?: () => void }) {
     </footer>
   </article>;
   return <section className="packages-page" aria-label="Paketler">
-    <div className="packages-head"><div><h2><Package size={20} /> Paketler</h2><p className="muted">İşletmelere atanan hizmet paketleri. Fiyatlar Hizmet fiyatlarından hesaplanır (KDV hariç).</p></div>
+    <div className="packages-head"><div><h2><Package size={20} /> Hizmet paketleri</h2><p className="muted">İşletmelere atanan paketler. Fiyatlar “Hizmet fiyatları” sekmesinden hesaplanır (KDV hariç).</p></div>
       <button type="button" className="btn primary" disabled={busy} onClick={() => open({ name: '', features: normalFeatures([]), discountOk: true, businesses: 0 })}><PackagePlus size={16} />Yeni paket</button></div>
     {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
     <div className="package-grid">{live.map(card)}

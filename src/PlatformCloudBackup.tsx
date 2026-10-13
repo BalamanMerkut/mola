@@ -3,6 +3,7 @@ import { Check, Cloud, Copy, HardDrive, KeyRound } from 'lucide-react';
 import { api } from './api';
 import { Notice } from './components';
 import { ADMIN, dateTime, type Business } from './platformStatus';
+import { DCard } from './PlatformDetailKit';
 import './platform-cloud.css';
 
 /*
@@ -46,8 +47,8 @@ export function CloudBackupSection({ l, disabled }: { l: Business; disabled: boo
     try { await api(`${ADMIN}/cloud-backups/settings`, { tenantId: l.tenantId, daily: Number(form.daily), weekly: Number(form.weekly), capMb: Number(form.capMb) }); setForm(null); setSaved(true); setRefresh(n => n + 1); }
     catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
-  return <section className="detail-section" aria-label="Sunucu yedeği"><h2><Cloud size={18} aria-hidden="true" /> Sunucu yedeği</h2>
-    <p className="section-note">İşletmenin bilgisayarı her yedekten sonra şifreli bir kopyayı buraya gönderir. Mola Merkez kopyaları açamaz; açmak için işletme sahibinin kurtarma kodu gerekir.</p>
+  return <DCard id={`cloud-${l.tenantId}`} title="Sunucu yedeği" icon={<Cloud size={20} />} tone="info" className="detail-cloud" tip="İşletmenin bilgisayarı her yedekten sonra şifreli bir kopyayı Mola Merkez’e gönderir. Mola Merkez kopyaları açamaz; açmak için işletme sahibinin kurtarma kodu gerekir. Saklama: günlük ve haftalık kopyalar; kopya başına üst sınır buradan değişir."
+    actions={row ? <span className={`status-chip ${row.stale || row.warning?.tone === 'bad' ? 'bad' : row.warning ? 'warn' : row.count ? 'ok' : 'idle'}`}>{row.stale ? 'Yedek gelmiyor' : row.warning ? 'Bakılmalı' : row.count ? 'Sağlıklı' : 'Henüz kopya yok'}</span> : undefined}>
     {!row ? <p className="muted small">{state ? 'Bilgi yok.' : 'Yükleniyor…'}</p> : <>
       {row.warning && <Notice tone={row.warning.tone === 'bad' ? 'error' : undefined}>Sunucu yedeği: {row.warning.text}</Notice>}
       <dl className="detail-facts compact" aria-label="Sunucu yedeği durumu">
@@ -67,7 +68,7 @@ export function CloudBackupSection({ l, disabled }: { l: Business; disabled: boo
       {saved && <Notice tone="success">Kaydedildi. Bir sonraki yüklemede uygulanır.</Notice>}
     </>}
     {error && <Notice tone="error">{error}</Notice>}
-  </section>;
+  </DCard>;
 }
 
 /**
@@ -84,8 +85,8 @@ export function TransferCode({ l, disabled }: { l: Business; disabled: boolean }
     catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   const t = row?.transfer;
-  return <section className="detail-section" aria-label="Yeni bilgisayara taşıma"><h2><KeyRound size={18} aria-hidden="true" /> Yeni bilgisayara taşıma</h2>
-    <p className="section-note">İşletmenin bilgisayarı bozulduysa ya da kaybolduysa: arayanın işletme sahibi olduğundan emin olun, taşıma kodunu telefonda okuyun. Sahip yeni bilgisayarda Mola’yı kurar, ilk ekranda “Mola Merkez’den geri yükle”yi seçer, bu kodu ve kendi kurtarma kodunu girer. Eski bilgisayar sonra bağlanınca orada sipariş kapanır.</p>
+  return <DCard title="Yeni bilgisayara taşıma" icon={<KeyRound size={20} />} tone="info" className="detail-transfer" tip="İşletmenin bilgisayarı bozulduysa ya da kaybolduysa: arayanın işletme sahibi olduğundan emin olun, taşıma kodunu telefonda okuyun. Sahip yeni bilgisayarda Mola’yı kurar, ilk ekranda “Mola Merkez’den geri yükle”yi seçer, bu kodu ve kendi kurtarma kodunu girer. Eski bilgisayar sonra bağlanınca orada sipariş kapanır. Kod tek kullanımlık, 24 saat geçerli.">
+    {!issued && <p className="dcard-quiet">Bilgisayarı bozulan işletme, sunucu yedeğini yeni bilgisayara bu kodla getirir.</p>}
     {issued ? <div className="owner-reset-issued"><p className="activation-code" data-testid="transfer-code">{issued.code}</p>
       <p className="muted small">Tek kullanımlık; {dateTime(issued.expiresAt)} saatine kadar geçerli. Bu kod bir daha gösterilmez; yenisi eskisini geçersiz kılar.</p>
       <div className="application-actions"><button type="button" className="btn secondary small-btn" onClick={() => { void navigator.clipboard?.writeText(issued.code).then(() => setCopied(true)).catch(() => {}); }}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? 'Kopyalandı' : 'Kodu kopyala'}</button><button type="button" className="btn secondary small-btn" onClick={() => setIssued(null)}>Kapat</button></div></div>
@@ -95,7 +96,7 @@ export function TransferCode({ l, disabled }: { l: Business; disabled: boolean }
         <div className="application-actions"><button type="button" className="btn secondary small-btn" disabled={disabled || busy} onClick={() => void make()}><KeyRound size={15} />Taşıma kodu ver</button></div>
       </>}
     {error && <Notice tone="error">{error}</Notice>}
-  </section>;
+  </DCard>;
 }
 
 /** Ayarlar → Yedek: how much of Merkez's disk the cafés' copies use, and what is left. */

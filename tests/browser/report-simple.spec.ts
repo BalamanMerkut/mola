@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ensureSetup, openCash, openMenu, openSettings, openView, reportGroups } from './helpers';
+import { ensureSetup, openCash, openMenu, openSettings, openView, reportAction, reportGroups } from './helpers';
 
 // A new device: Satış ve Raporlar opens on the plain summary (the other specs remember "Detaylı göster").
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -80,7 +80,7 @@ test('Satış ve Raporlar: sade özet first, "Detaylı göster" remembered, KDV 
   await expect(page.getByTestId('simple-sentence')).toBeVisible(); await expect(reportGroups(page)).toHaveCount(0);
 
   // "Yazdır / PDF": a clean A4 page of the open report and period, printed by the browser; "PDF indir" from the café computer.
-  await page.getByRole('button', { name: 'Yazdır / PDF' }).click();
+  await reportAction(page, 'Yazdır / PDF');
   const dialog = page.getByRole('dialog', { name: 'Yazdır / PDF' });
   const paper = page.frameLocator('iframe[title="Yazdırılacak sayfa"]');
   await expect(paper.locator('h1')).toHaveText(/ · \d+ Ekim 2026 \S+ · Satış özeti$/);
@@ -104,13 +104,13 @@ test('Satış ve Raporlar: sade özet first, "Detaylı göster" remembered, KDV 
   await reportGroups(page).getByRole('button', { name: 'Para', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Para taşındı' })).toBeVisible();
   await openCash(page, 'Giderler', 'Kayıtlar');
-  await page.getByRole('button', { name: 'Yazdır / PDF' }).click();
+  await reportAction(page, 'Yazdır / PDF');
   await expect(paper.locator('h1')).toHaveText(/ · Giderler$/);
   await expect(paper.getByRole('heading', { name: 'Gider kayıtları' })).toBeVisible();
   await page.getByRole('dialog', { name: 'Yazdır / PDF' }).getByRole('button', { name: 'Kapat' }).first().click();
 
   // "Muhasebeci için indir": one .xlsx of the chosen period.
-  await page.getByRole('button', { name: 'Muhasebeci için indir' }).click();
+  await reportAction(page, 'Muhasebeci için indir');
   const excel = page.getByRole('dialog', { name: 'Muhasebeci için indir' });
   await expect(excel.getByRole('radio', { name: /Bu ay/ })).toBeVisible();
   // K-M: early in a month "Geçen ay" is chosen only when the month before sold something; else "Bu ay".
@@ -151,7 +151,7 @@ test('Satış ve Raporlar: sade özet first, "Detaylı göster" remembered, KDV 
   }
   await page.setViewportSize({ width: 390, height: 844 }); await page.getByRole('button', { name: 'Sade özete dön' }).click();
   await shot(page, 'rapor-sade-telefon.png', info.outputPath('rapor-sade-telefon.png'));
-  await page.getByRole('button', { name: 'Yazdır / PDF' }).click();
+  await reportAction(page, 'Yazdır / PDF');
   await expect(paper.locator('h1')).toBeVisible();
   expect(await fits(page), 'print preview 390').toBe(true);
 });

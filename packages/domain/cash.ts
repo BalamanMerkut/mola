@@ -102,8 +102,11 @@ export type CashRefundLine = { id: string; at: string; amount: number; method: '
  * blind count is entered (`counted`, the figures are fixed then); `closed` once the note and the amount left are given.
  * Never changed after that: the owner adds CashCorrection entries.
  */
+/** `revoked` (13 Ekim, "Gün sonunu geri al"): a gün sonu taken back the same cash day before any new payment; it leaves the
+ * closing lists and reports (its row moves to kind 'revoked') and stays in the işlem geçmişi with who, when and why. */
 export type CashClosing = Who & {
-  id: string; kind: 'closing'; mode: 'final' | 'handover'; status: 'counted' | 'closed'; day: string;
+  id: string; kind: 'closing'; mode: 'final' | 'handover'; status: 'counted' | 'closed' | 'revoked'; day: string;
+  revokedAt?: string; revokedBy?: string; revokedByName?: string; revokeReason?: string;
   from: string; to: string; closedAt?: string;
   counted: number; denominations?: Record<string, number>; pos: number | null;
   figures: CashFigures; difference: number; cardDifference: number | null;
@@ -224,7 +227,8 @@ export type CashStatus = {
   showOpening: boolean;
   /** The window was opened on an earlier cash day and never closed: "Dünün kasası kapanmadı". */
   unclosedPrevious: { day: string } | null;
-  closedToday: { at: string; byName: string } | null;
+  /** `id` and `revoke` (13 Ekim): the gün sonu and whether this person may take it back now (null) or why not (a sentence). */
+  closedToday: { at: string; byName: string; id?: string; revoke?: string | null } | null;
   /** A blind count already saved and waiting for its note / amount left; it must be finished first. */
   draft: { id: string; byName: string; countedAt: string; mode: 'final' | 'handover'; mine: boolean } | null;
   movements: CashMovement[];

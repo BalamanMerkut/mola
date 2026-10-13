@@ -20,7 +20,7 @@ import { platformOsLock, type OsLock } from './os-lock.js';
 import { SecondBackup, secondPlaceRoot } from './second-backup.js';
 import { CloudBackup } from './cloud-backup.js';
 import { plainError } from './backup-errors.js';
-import { fromThisComputer, lockedRoutes, type Security } from './security-routes.js';
+import { fromThisComputer, lockedRoutes, type OwnerSecret, type Security } from './security-routes.js';
 import { requestDiagnostics } from './request-diagnostics.js';
 import { restoreBackup } from './backup.js';
 import { DomainError } from '../packages/domain/engine.js';
@@ -199,16 +199,19 @@ export async function startLocalServer(options: RuntimeOptions) {
      * Clean install, desktop window: restore a protected backup with the owner's recovery code. It is restored and verified in
      * its own folder, its key is locked for this computer, then it takes the data folder's place; the empty install is kept aside.
      */
-    async function restoreHere(backup: string, code: string) {
+    async function restoreHere(backup: string, code: string | OwnerSecret) {
       let restored: Awaited<ReturnType<typeof restoreBackup>>;
-      try { restored = await restoreBackup(resolve(backup), { code }, staging); }
+      // "İşletmem var" (13 Ekim): the owner's own sign-in instead of the recovery code; the code may be lost, so a new one is
+      // made and shown after the restore (adoptKey codeKnown false).
+      const byPassword = typeof code !== 'string';
+      try { restored = await restoreBackup(resolve(backup), byPassword ? code : { code }, staging); }
       catch (error) {
         // A half-restored folder is of no use here and may hold an old backup's raw key: it goes.
         for (const e of existsSync(staging) ? readdirSync(staging, { withFileTypes: true }) : []) if (e.isDirectory() && existsSync(join(staging, e.name, 'RESTORE_FAILED.txt'))) rmSync(join(staging, e.name), { recursive: true, force: true });
         throw error;
       }
       if (!restored.master || !restored.recovery || !restored.installId) throw new DomainError('OLD_BACKUP', 'Bu yedek kurtarma koduyla açılmıyor.', 409);
-      try { await adoptKey(restored.directory, restored.master, restored.recovery, restored.installId, protection.osLock); }
+      try { await adoptKey(restored.directory, restored.master, restored.recovery, restored.installId, protection.osLock, { owners: restored.owners, codeKnown: !byPassword }); }
       catch (error) { rmSync(restored.directory, { recursive: true, force: true }); throw error; }
       writeFileSync(join(restored.directory, READY), 'Doğrulandı; veri klasörünün yerine geçecek.\n');
       handler = busyApp();

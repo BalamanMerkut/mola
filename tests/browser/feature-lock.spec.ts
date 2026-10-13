@@ -1,7 +1,7 @@
 import { test, expect, request as playwrightRequest, type APIRequestContext, type Browser, type Locator, type Page } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ADMIN_API, adminLogin, e2eRun, enableAdminFactor, ensureSetup, openAdminRight, openSettings, openView } from './helpers';
+import { ADMIN_API, adminLogin, e2eRun, enableAdminFactor, ensureSetup, openAdminRight, openSettings, openView, reportAction } from './helpers';
 
 /*
  * Hizmet paketi on the café's screens (src/FeatureLock.tsx, src/PackageCard.tsx): Mola Yönetim gives the demo business a
@@ -77,7 +77,7 @@ test('owner: Stok faded → blurred page with the card → "Mola ekibine yaz" pr
 
   // The report buttons of Gelişmiş raporlar are faded and open the same card over the screen.
   await openView(page, 'Satış ve Raporlar');
-  await page.getByRole('button', { name: /Yazdır \/ PDF/ }).click();
+  await reportAction(page, 'Yazdır / PDF');
   const modal = page.getByRole('dialog', { name: 'Bu hizmet paketinizde yok' });
   await expect(modal).toContainText('Gelişmiş raporlar');
   await modal.getByRole('button', { name: 'Kapat', exact: true }).last().click();

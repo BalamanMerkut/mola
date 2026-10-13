@@ -13,7 +13,7 @@ import './reservations.css';
 
 /*
  * Ajanda ve rezervasyon → Etkinlikler: maç günü gibi etkinlikler. "Etkinlik oluştur" makes the event and its temporary tables
- * (D1…D25 or the owner's own names, no QR). Reservations go onto those tables; from the start (or "Etkinliği başlat") the
+ * (D1…D25 or the owner's own names, no QR). Reservations go onto those tables; from the start (or "Şimdi başlat") the
  * tables are on Masalar in their own section. Only "Etkinliği kapat" ends it, once every bill there is closed.
  */
 type TableState = { id: string; name: string; guest?: string; open?: boolean };
@@ -84,7 +84,7 @@ function EventForm({ event, today, onClose, onSaved }: { event?: EventRow; today
           : <ul className="step-chips" aria-label="Açılacak masalar">{names.slice(0, SHOWN_NAMES).map(m => <li key={m}>{m}</li>)}{names.length > SHOWN_NAMES && <li className="more">+ {names.length - SHOWN_NAMES} masa daha (son: {names.at(-1)})</li>}</ul>}
       </Step>
     </>}
-    <Step n={++n} title="Masalar ekranı" help="Etkinlik başlayınca (ya da “Etkinliği başlat” deyince) geçici masalar Masalar ekranında kendi bölümünde görünür. Normal masaları gizlerseniz ekranda yalnız etkinlik masaları kalır; “Normal masaları göster” ile her an geri açılır.">
+    <Step n={++n} title="Masalar ekranı" help="Etkinlik başlayınca (ya da “Şimdi başlat” deyince) geçici masalar Masalar ekranında kendi bölümünde görünür. Normal masaları gizlerseniz ekranda yalnız etkinlik masaları kalır; “Normal masaları göster” ile her an geri açılır.">
       <label className="step-check"><input type="checkbox" checked={f.hideNormal} onChange={e => set({ hideNormal: e.target.checked })} />Etkinlik sürerken yalnız etkinlik masalarını göster</label>
       <p className="step-hint">{f.hideNormal ? 'Normal masalar etkinlik boyunca gizlenir; gerekirse tek dokunuşla açılır.' : 'Normal masalar etkinlik masalarıyla birlikte görünür.'}</p>
     </Step>
@@ -115,22 +115,32 @@ function EventCard({ e, view, now, onDone, onError }: { e: EventRow; view: Event
   // Rezervasyonlar (with its phone, for those who may read it); otherwise a saved phone would be lost.
   const pick = (t: PlanTable, tile: { all: Reservation[] }) => { onError(''); if (tile.all.length) setSheet(t); else if (view.canReserve) setReserving({ tableId: t.id, fromTable: true }); };
   const start = () => { onError(''); void api('/api/staff/events/start', { requestId: requestId(), id: e.id }).then(() => onDone(`${e.name} başladı. Masalar ekranında.`)).catch(err => onError((err as Error).message)); };
+  // "Geldi" / "Gelmedi" right in the list (13 Ekim tanıtım: the guests' state was the confusing part).
+  const mark = (r: Reservation, what: 'seat' | 'no-show') => { onError(''); void api(`/api/staff/reservations/${what}`, { requestId: requestId(), id: r.id }).then(() => onDone(what === 'seat' ? `${r.name} geldi · ${r.tableName}. Siparişi Masalar ekranından alın.` : `${r.name} gelmedi olarak işaretlendi; ${r.tableName} boşaldı.`)).catch(err => onError((err as Error).message)); };
+  const step = closed ? 3 : overdue ? 3 : started ? 2 : 1;
+  const waiting = mine.filter(r => r.status === 'booked').length, seated = mine.filter(r => r.status === 'seated').length;
   return <article className={`panel event-card${closed ? ' closed' : ''}`} aria-label={e.name} data-event={e.id}>
     <header className="event-card-head">
       <div><h3>{e.name}</h3><span className="muted small">{longDay(e.day)} · {e.start}{e.end ? `–${e.end}` : ''} · {e.tables.length} masa{e.capacity ? ` · masa başı ${e.capacity} kişi` : ''}{e.hideNormal ? ' · normal masalar gizlenir' : ''}</span></div>
       <span className={`event-state${overdue ? ' overdue' : started && !closed ? ' running' : ''}`}>{state}</span>
     </header>
-    {!closed && <div className="event-actions">
-      {view.canReserve && <button type="button" className="btn secondary" onClick={() => setReserving({})}><Plus size={16} />Masaya rezervasyon</button>}
-      {view.canRun && !started && <button type="button" className="btn secondary" onClick={start}><Play size={16} />Etkinliği başlat</button>}
-      {view.canRun && <button type="button" className="btn secondary" onClick={() => setEditing(true)}><Pencil size={15} />Düzenle</button>}
-      {view.canRun && <button type="button" className="btn secondary" onClick={() => setClosing(true)}>Etkinliği kapat</button>}
+    {/* 13 Ekim tanıtım: where the event stands and the one thing to do now, step by step. */}
+    {!closed && <div className="event-steps">
+      <ol className="event-step-bar" aria-label="Etkinlik adımları">{['Hazırlık', 'Sürüyor', 'Kapanış'].map((label, i) => <li key={label} className={i + 1 < step ? 'done' : i + 1 === step ? 'current' : ''} aria-current={i + 1 === step ? 'step' : undefined}><span>{i + 1}</span>{label}</li>)}</ol>
+      <div className="event-step-now">
+        {step === 1 && <><p><strong>Hazırlık.</strong> Masalara rezervasyon ekleyin (boş masaya dokunun). Etkinlik {longDay(e.day)} {e.start}’de kendiliğinden başlar; masalar o zaman Masalar ekranına gelir.</p>
+          <div className="event-actions">{view.canRun && <button type="button" className="btn primary" onClick={start}><Play size={16} />Şimdi başlat</button>}{view.canReserve && <button type="button" className="btn secondary" onClick={() => setReserving({})}><Plus size={16} />Masaya rezervasyon</button>}{view.canRun && <button type="button" className="btn secondary" onClick={() => setEditing(true)}><Pencil size={15} />Düzenle</button>}</div></>}
+        {step === 2 && <><p><strong>Etkinlik sürüyor.</strong> Siparişleri <strong>Masalar</strong> ekranındaki “{e.name}” bölümünden alın. Gelen misafir için aşağıdan <strong>Geldi</strong>, gelmeyen için <strong>Gelmedi</strong> deyin.{waiting ? ` ${waiting} rezervasyon bekleniyor.` : ''}{seated ? ` ${seated} masa dolu.` : ''}</p>
+          <div className="event-actions">{view.canReserve && <button type="button" className="btn secondary" onClick={() => setReserving({})}><Plus size={16} />Masaya rezervasyon</button>}{view.canRun && <button type="button" className="btn secondary" onClick={() => setEditing(true)}><Pencil size={15} />Düzenle</button>}{view.canRun && <button type="button" className="btn secondary" onClick={() => setClosing(true)}>Etkinliği bitir</button>}</div></>}
+        {step === 3 && <><p><strong>Bitiş saati geçti.</strong> Bütün hesaplar kapandıysa etkinliği kapatın; geçici masalar kalkar, satışlar raporlarda kalır.</p>
+          <div className="event-actions">{view.canRun && <button type="button" className="btn primary" onClick={() => setClosing(true)}>Etkinliği kapat</button>}{view.canRun && <button type="button" className="btn secondary" onClick={() => setEditing(true)}><Pencil size={15} />Bitiş saatini uzat</button>}</div></>}
+      </div>
     </div>}
     {!closed && <>{view.canReserve && <div className="resv-plan-hint"><Hand size={15} aria-hidden="true" /><span>Boş masaya dokunun, rezervasyon açılır.</span><PlanLegend /></div>}
       <TablePlan className="event-tables" tables={formTables} reservations={mine} at={null} busyNow canWrite={view.canReserve} label={`${e.name} masaları`} onPick={pick}
         extra={t => view.canRun ? <button type="button" className="plan-rename icon-btn" title="Adı değiştir" aria-label={`${t.name} masasının adını değiştir`} onClick={() => setRenaming(e.tableState.find(x => x.id === t.id)!)}><Pencil size={14} aria-hidden="true" /></button> : null} /></>}
     {mine.length > 0 && <details className="event-resv" open={!closed}><summary><Users size={15} aria-hidden="true" />Rezervasyonlar ({mine.length})</summary>
-      <ul>{mine.map(r => <li key={r.id}><span className="resv-time small">{r.time}</span><span><strong>{r.name}</strong> · {r.people} kişi · {r.tableName}{r.deposit ? ` · ${depositLine(r)}` : ''}</span><span className={`resv-status ${r.status}`}>{statusNames[r.status]}</span></li>)}</ul></details>}
+      <ul>{mine.map(r => <li key={r.id}><span className="resv-time small">{r.time}</span><span><strong>{r.name}</strong> · {r.people} kişi · {r.tableName}{r.deposit ? ` · ${depositLine(r)}` : ''}</span>{r.status === 'booked' && started && view.canReserve && !closed ? <span className="event-guest-actions"><button type="button" className="btn primary small-btn" onClick={() => mark(r, 'seat')}>Geldi</button><button type="button" className="btn secondary small-btn" onClick={() => mark(r, 'no-show')}>Gelmedi</button></span> : <span className={`resv-status ${r.status}`}>{statusNames[r.status]}</span>}</li>)}</ul></details>}
     {editing && <EventForm event={e} today={view.today} onClose={() => setEditing(false)} onSaved={m => { setEditing(false); onDone(m); }} />}
     {closing && <CloseEventDialog event={e} waiting={mine.filter(r => r.status === 'booked').length} onClose={() => setClosing(false)} onClosed={m => { setClosing(false); onDone(m); }} />}
     {renaming && <RenameTable table={renaming} onClose={() => setRenaming(null)} onSaved={m => { setRenaming(null); onDone(m); }} />}

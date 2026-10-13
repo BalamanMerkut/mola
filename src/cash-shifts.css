@@ -244,3 +244,19 @@
   .cash-print-foot{margin-top:18pt;font-size:9pt}
   @page{size:A4;margin:16mm}
 }
+
+/* 13 Ekim tanıtım: Kasa hareketi in plain steps (what happened → why → amount) and "Gün sonunu geri al". */
+.move-choices{display:grid;gap:10px;margin:6px 0 14px}
+.move-choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;border:1px solid #dfe6da;border-radius:14px;background:#fff;cursor:pointer;font:inherit;color:inherit;transition:border-color .15s,box-shadow .15s}
+.move-choice:hover,.move-choice:focus-visible{border-color:#9db8a6;box-shadow:0 2px 10px rgba(35,76,62,.08)}
+.move-choice strong{display:block;font-size:15px}
+.move-choice small{display:block;color:#66746b;font-size:13px;margin-top:2px}
+.move-icon{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px}
+.move-icon.neutral{background:#eef2ff;color:#3f4fa0}.move-icon.out{background:#fdecea;color:#a3352b}.move-icon.in{background:#e7f4ec;color:#2f6b55}
+.move-back{margin:-4px 0 6px;font-size:13px}
+.move-reasons{border:0;padding:0;margin:0 0 6px;display:flex;flex-wrap:wrap;gap:8px}
+.move-reasons legend{font-size:13px;font-weight:600;margin-bottom:8px;padding:0}
+.move-reasons button{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:8px 14px;border:1px solid #dfe6da;border-radius:999px;background:#fff;font:inherit;font-size:14px;cursor:pointer}
+.move-reasons button.selected{background:#234c3e;border-color:#234c3e;color:#fff}
+.cash-movement-list .move-amount.out{color:#a3352b}.cash-movement-list .move-amount.in{color:#2f6b55}
+.cash-revoke-list{margin:8px 0 14px;padding-left:20px;display:grid;gap:6px;color:#3a4a40}

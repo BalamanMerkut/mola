@@ -110,6 +110,13 @@ export const syncRequest = z.object({
    * version; Merkez answers with each business's menu code (`tunnel`). Sent only to a Merkez that listed 'guest.tunnel'.
    */
   tunnel: z.object({ v: z.literal(1) }).strict().optional(),
+  /**
+   * "İşletmem var" (13 Ekim): each business owner's username and a scrypt verifier of the password (its own salt; it cannot
+   * open anything, the backup's owner block uses another salt). Merkez checks a sign-in on a new computer with it and sends
+   * a one-time code to the business's e-mail. Sent only to a Merkez that listed 'owner.login'.
+   */
+  owners: z.array(z.object({ tenantId: id, username: z.string().min(1).max(50), stamp: z.string().regex(/^[a-f0-9]{8,64}$/),
+    verifier: z.object({ salt: z.string().regex(/^[A-Za-z0-9+/=]{16,64}$/), N: z.number().int(), r: z.number().int(), p: z.number().int(), hash: z.string().regex(/^[a-f0-9]{64}$/) }).strict() }).strict()).max(50).optional(),
 }).strict();
 export type SyncRequest = z.infer<typeof syncRequest>;
 export type BusinessReport = z.infer<typeof businessReport>;
@@ -170,7 +177,8 @@ export type UpdateOffer = { id: string; version: string; size: number; notes: st
  * Merkez's own address.
  */
 export const MENU_ORIGIN_FLAG = 'guest.menu-origin';
-export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror'];
+// 'owner.login' (13 Ekim): this Merkez keeps the owners' password verifiers (`owners`) for "İşletmem var" on a new computer.
+export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login'];
 /** Activation answer: the install credentials (kept only on the café computer, sealed) and the first signed licence. */
 export type ActivationResult = { installId: string; secret: string; tenantId: string; name: string; sector?: typeof sectors[number]; license: SignedLicense; serverTime: string };
 // ---------- Hesap açma başvurusu ----------

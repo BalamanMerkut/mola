@@ -58,7 +58,8 @@ test('Mola Yönetim: sidebar, Bugün list, status chips, filters, sorting, pagin
   await page.getByRole('button', { name: 'Giriş yap', exact: true }).click();
 
   // The sidebar replaces the tabs and the KPI cards; Bugün is the landing page.
-  await expect(yonetimNav(page).getByRole('button')).toHaveText([/^Bugün/, /^İşletmeler/, /^Başvurular/, /^Destek/, /^Duyurular/, /^Satışlarım/, /^Ayarlar/]);
+  // 13 Ekim: Paketler joined the menu; Destek sits at the bottom right above Ayarlar.
+  await expect(yonetimNav(page).getByRole('button')).toHaveText([/^Bugün/, /^İşletmeler/, /^Başvurular/, /^Duyurular/, /^Satışlarım/, /^Paketler/, /^Destek/, /^Ayarlar/]);
   await expect(yonetimNav(page).getByRole('button', { name: 'Bugün', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.locator('.platform-kpis')).toHaveCount(0);
   await expect(page.locator('.platform-local-note')).toContainText('Yerel test ortamı');
@@ -117,15 +118,22 @@ test('Mola Yönetim: sidebar, Bugün list, status chips, filters, sorting, pagin
   await page.getByLabel('İşletme ara', { exact: true }).fill('IŞIK');
   await expect(rows).toHaveCount(1); await expect(rows).toContainText('Işık Kafe');
   await rows.click();
-  // The business is a page with a back link, the name and five tabs centred under it, one flat sheet per tab.
+  // The business is a page with a back link, an identity card (name, state, line, short facts) and five tabs with icons
+  // centred under it, cards per tab (13 Ekim).
   await expect(detail.locator('.detail-header')).toContainText('Işık Kafe');
   await expect(detail.locator('.detail-header .status-chip')).toHaveText('3 gün kaldı');
   await expect(detail.locator('.detail-line')).toContainText('Kafe · İstanbul · Yıllık abonelik');
+  await expect(detail.locator('.did-facts dt')).toHaveText(['Son bağlantı', 'Paket', 'Lisans']);
+  await expect(detail.locator('.did-facts')).toContainText('3 gün kaldı');
   const tabs = detail.getByRole('navigation', { name: 'İşletme yönetimi' }).getByRole('button');
   await expect(tabs).toHaveText(['Özet', 'Lisans', 'Hizmet', 'Bilgiler', 'Destek']);
+  await expect(tabs.locator('svg')).toHaveCount(5);
   await expect(detailTab(detail, 'Özet')).toHaveAttribute('aria-pressed', 'true');
   const centre = async (selector: string) => { const box = (await detail.locator(selector).boundingBox())!; return box.x + box.width / 2; };
-  expect(Math.abs(await centre('.detail-tabs') - await centre('.detail-title'))).toBeLessThan(4);
+  expect(Math.abs(await centre('.detail-tabs') - await centre('.detail-header'))).toBeLessThan(4);
+  // Özet: three square cards with short lines and one action each.
+  await expect(detail.locator('.dsum-card')).toHaveCount(3);
+  for (const card of ['Lisans ve paket', 'Bağlantı ve cihaz', 'Yedekler']) await expect(detail.getByRole('region', { name: card, exact: true }).locator('.dsum-action button')).toHaveCount(1);
   for (const fact of ['Durum', 'Lisans bitişi', 'Son bağlantı', 'Sürüm', 'Son yedek', 'İkinci yedek', 'Bilgisayarlar']) await expect(detail.locator('.detail-facts dt').filter({ hasText: new RegExp(`^${fact}$`) })).toHaveCount(1);
   await expect(detail.locator('.detail-next')).toContainText('Lisans 3 gün içinde bitiyor.');
   await expect(detail.getByRole('region', { name: 'Satıcı notu' })).toBeVisible();
@@ -185,7 +193,14 @@ test('Mola Yönetim: sidebar, Bugün list, status chips, filters, sorting, pagin
 
   // Ayarlar: one section at a time.
   await yonetimSettings(page, 'Hesap güvenliği');
-  await expect(page.getByRole('navigation', { name: 'Ayarlar bölümleri' }).getByRole('button')).toHaveText(['Hesap güvenliği', 'Paketler', 'Hizmet fiyatları', 'Yedek', 'Güncellemeler', 'E-posta bildirimleri', 'İletişim bilgileri', 'İşlem kayıtları', 'Çalışma klasörü', 'Geliştirici erişimi']);
+  // Paketler and Hizmet fiyatları left Ayarlar for their own place in the menu (13 Ekim); Destek sits right above Ayarlar.
+  await expect(page.getByRole('navigation', { name: 'Ayarlar bölümleri' }).getByRole('button')).toHaveText(['Hesap güvenliği', 'Yedek', 'Güncellemeler', 'E-posta bildirimleri', 'İletişim bilgileri', 'İşlem kayıtları', 'Çalışma klasörü', 'Geliştirici erişimi']);
+  expect(await page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' }).getByRole('button').evaluateAll(items => items.map(b => b.getAttribute('aria-label')))).toEqual(['Bugün', 'İşletmeler', 'Başvurular', 'Duyurular', 'Satışlarım', 'Paketler', 'Destek', 'Ayarlar']);
+  // Destek and Ayarlar are kept at the bottom of the sidebar, Destek right above Ayarlar.
+  const navBox = async (name: string) => (await page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' }).getByRole('button', { name, exact: true }).boundingBox())!;
+  const [packagesBox, supportBox, settingsBox] = [await navBox('Paketler'), await navBox('Destek'), await navBox('Ayarlar')];
+  expect(supportBox.y - (packagesBox.y + packagesBox.height)).toBeGreaterThan(40);
+  expect(Math.abs(settingsBox.y - (supportBox.y + supportBox.height))).toBeLessThan(12);
   await expect(page.getByRole('heading', { name: 'Yönetici şifresi' })).toBeVisible();
   await shot(page, 'ayarlar.png', info.outputPath('yonetim-settings.png'));
 

@@ -96,9 +96,11 @@ test('owner adds custom category, creates a product, renames and reorders the cu
   }
   await page.reload();
   await page.getByRole('button', { name: 'Menü yönetimi', exact: true }).click();
-  await page.getByRole('button', { name: 'Kategorileri yönet', exact: true }).click();
-  const teaCategory = page.locator('.category-manage-row').filter({ has: page.locator('strong', { hasText: /^Çaylar$/ }) });
-  await teaCategory.getByText('Alt kategorileri yönet', { exact: true }).click();
+  await page.getByRole('button', { name: 'Kategoriler ve sıra', exact: true }).click();
+  // 13 Ekim: the order first; name, English name, sub-categories and delete behind each row's "Düzenle".
+  const teaCategory = page.locator('.category-order-row').filter({ has: page.locator('strong', { hasText: /^Çaylar$/ }) });
+  await teaCategory.locator('.category-order-main').getByRole('button', { name: 'Düzenle', exact: true }).click();
+  await teaCategory.locator('summary', { hasText: /^Alt kategoriler/ }).click();
   await page.getByLabel('Çaylar yeni alt kategori adı', { exact: true }).fill('Özel harman');
   await teaCategory.getByRole('button', { name: 'Alt kategori ekle', exact: true }).click();
   await expect(teaCategory.locator('.subcategory-manage-row').filter({ hasText: 'Özel harman' })).toBeVisible();
@@ -117,9 +119,14 @@ test('owner adds custom category, creates a product, renames and reorders the cu
   const afterSubcategory = await (await page.request.get('/api/staff/state')).json();
   expect(afterSubcategory.products.find((p: { id: string }) => p.id === 'tea').subtype).toBe('');
   await page.getByLabel('Yeni kategori adı').fill('Kahvaltılar'); await page.getByRole('button', { name: 'Kategori ekle', exact: true }).click();
-  const row = page.locator('.category-manage-row').filter({ hasText: 'Kahvaltılar' }); await expect(row).toBeVisible();
+  const row = page.locator('.category-order-row').filter({ hasText: 'Kahvaltılar' }); await expect(row).toBeVisible();
+  await row.locator('.category-order-main').getByRole('button', { name: 'Düzenle', exact: true }).click();
   await row.getByRole('button', { name: 'Adını değiştir' }).click(); await row.getByLabel('Kategori yeni adı').fill('Kahvaltı'); await row.getByRole('button', { name: 'Adı kaydet' }).click();
   for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Kahvaltı yukarı', exact: true }).click();
+  // The guest tabs preview follows before saving; one "Sırayı kaydet" sends it.
+  await expect(page.locator('.category-preview-tabs span').first()).toHaveText('Kahvaltı');
+  await page.getByRole('button', { name: 'Sırayı kaydet', exact: true }).click();
+  await expect(page.getByText('Sıra kaydedildi. Müşteri menüsü bu sırayla açılır.')).toBeVisible();
   await page.getByRole('button', { name: 'Kapat', exact: true }).click();
   await page.getByRole('button', { name: 'Ürün ekle', exact: true }).click();
   await page.getByLabel('Kategori', { exact: true }).selectOption('Çaylar');
@@ -128,8 +135,10 @@ test('owner adds custom category, creates a product, renames and reorders the cu
   await page.getByLabel('Ürün adı', { exact: true }).fill('Simit tabağı'); await page.getByLabel('Fiyat (TL)', { exact: true }).fill('75');
   await page.getByRole('button', { name: 'Kaydet ve yayınla', exact: true }).click();
   await expect(page.locator('.menu-row').filter({ hasText: 'Simit tabağı' })).toBeVisible();
-  await page.getByRole('button', { name: 'Kategorileri yönet', exact: true }).click();
-  await expect(page.locator('.category-manage-row').filter({ hasText: 'Kahvaltı' }).getByRole('button', { name: 'Sil', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Kategoriler ve sıra', exact: true }).click();
+  const breakfast = page.locator('.category-order-row').filter({ has: page.locator('strong', { hasText: /^Kahvaltı$/ }) });
+  await breakfast.locator('.category-order-main').getByRole('button', { name: 'Düzenle', exact: true }).click();
+  await expect(breakfast.getByRole('button', { name: /^Sil/ })).toBeDisabled();
   await page.getByRole('button', { name: 'Kapat', exact: true }).click();
   let submitted = 0; page.on('request', r => { if (r.method() === 'POST' && /\/api\/(guest|staff)\/orders(?:\/|$)/.test(r.url())) submitted++; });
   await page.getByRole('button', { name: 'Menüyü önizle', exact: true }).click();

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AtSign, Bell, BellOff, Building2, CheckCheck, ChevronRight, ClipboardList, CloudDownload, DatabaseBackup, Globe, Headset, Inbox, KeyRound, LifeBuoy, Mail, MailOpen, Monitor, RotateCcw, Save, Send, Server, Settings2, ShieldAlert, UserRound, WifiOff, type LucideIcon } from 'lucide-react';
+import { AtSign, Bell, BellOff, Building2, CheckCheck, ChevronRight, ClipboardList, CloudDownload, DatabaseBackup, Globe, Headset, Inbox, KeyRound, LifeBuoy, Mail, MailOpen, Monitor, MonitorSmartphone, RotateCcw, Save, Send, Server, Settings2, ShieldAlert, UserRound, WifiOff, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { Notice } from './components';
 import { HelpTip } from './HelpTip';
@@ -37,11 +37,19 @@ export function useAlertSound(alerts: AlertView[] | undefined) {
     }
   }, [alerts]);
 }
+/** "Bugün", "Dün", "Daha eski" (Türkiye's calendar day). */
+function dayGroup(iso: string, now = Date.now()) {
+  const day = (t: number) => new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
+  const d = day(Date.parse(iso));
+  return d === day(now) ? 'Bugün' : d === day(now - 86400000) ? 'Dün' : 'Daha eski';
+}
 /**
- * "Bildirim merkezi": newest first, unread marked; each opens the business, application or ticket it is about. One about a
- * deleted record (or a ticket gone with it) stays as plain text.
+ * "Bildirim merkezi" (13 Ekim: a plain list, not big cards): newest first, grouped under Bugün / Dün / Daha eski. Each line: the
+ * kind's coloured icon, the title and one line of text, small tags (kind, Önemli, the business, when), and on the right one
+ * quiet action (open the business, application or ticket; "Uzaktan bağlan" for a remote-support event) with the read mark
+ * beside it. Unread lines are tinted with a dot. One about a deleted record (or a ticket gone with it) has no action.
  */
-export function AlertCenter({ alerts, names, ticketIds, onOpenBusiness, onOpenTicket, onChanged, onEmail, onOpenSiteLeads }: { alerts: AlertView[]; names: Map<string, string>; ticketIds?: Set<string>; onOpenBusiness: (tenantId: string) => void; onOpenTicket: (ticketId: string, tenantId?: string) => void; onChanged: () => void; onEmail?: () => void; onOpenSiteLeads?: () => void }) {
+export function AlertCenter({ alerts, names, ticketIds, onOpenBusiness, onOpenTicket, onChanged, onEmail, onOpenSiteLeads }: { alerts: AlertView[]; names: Map<string, string>; ticketIds?: Set<string>; onOpenBusiness: (tenantId: string, tab?: 'support') => void; onOpenTicket: (ticketId: string, tenantId?: string) => void; onChanged: () => void; onEmail?: () => void; onOpenSiteLeads?: () => void }) {
   const [only, setOnly] = useState<'all' | 'unread' | 'important'>('all'), [page, setPage] = useState(1), [error, setError] = useState('');
   const unread = alerts.filter(a => !a.readAt).length, important = alerts.filter(a => alertLevel(a) === 'high').length;
   const rows = alerts.filter(a => only === 'all' || (only === 'unread' ? !a.readAt : alertLevel(a) === 'high')).slice().reverse();
@@ -51,7 +59,11 @@ export function AlertCenter({ alerts, names, ticketIds, onOpenBusiness, onOpenTi
   /** The one thing to do with an entry, as a button; none for a record that is gone. */
   const primary = (a: AlertView) => a.ticketId && (!ticketIds || ticketIds.has(a.ticketId)) ? { label: 'Talebi aç', run: opened(a, () => onOpenTicket(a.ticketId!, a.tenantId)) }
     : a.kind === 'site.lead' && onOpenSiteLeads ? { label: 'Talepleri aç', run: opened(a, onOpenSiteLeads) }
+    // Uzaktan destek (izin açıldı, oturum): straight to the business's Destek tab, where "Kafeye bağlan" is.
+    : a.kind.startsWith('support.') && a.tenantId && names.has(a.tenantId) ? { label: 'Uzaktan bağlan', remote: true, run: opened(a, () => onOpenBusiness(a.tenantId!, 'support')) }
     : a.tenantId && names.has(a.tenantId) ? { label: a.kind.startsWith('application') ? 'Başvuruyu aç' : 'İşletmeyi aç', run: opened(a, () => onOpenBusiness(a.tenantId!)) } : null;
+  const shown = rows.slice((current - 1) * 20, current * 20);
+  const groups = shown.reduce<[string, AlertView[]][]>((out, a) => { const g = dayGroup(a.at); if (out.at(-1)?.[0] === g) out.at(-1)![1].push(a); else out.push([g, [a]]); return out; }, []);
   const empty = only === 'unread' ? ['Okunmamış bildirim yok.', 'Hepsini okudunuz; yeni bir olay gelince burada görünür ve kısa bir ses çalar.'] : only === 'important' ? ['Önemli bildirim yok.', 'Yedek, bağlantı, güvenlik ve lisans sorunları burada toplanır.'] : ['Henüz bildirim yok.', 'Başvurular, destek talepleri, lisans, bağlantı ve yedek olayları burada görünür.'];
   return <section className="alert-center alert-center-v2" aria-label="Bildirim merkezi">
     <header className="page-head alert-head"><div><div className="alert-title"><h1>Bildirim merkezi</h1><HelpTip title="Bildirim merkezi">{ALERT_TIP}</HelpTip></div>
@@ -62,27 +74,31 @@ export function AlertCenter({ alerts, names, ticketIds, onOpenBusiness, onOpenTi
       </div></header>
     <div className="platform-pills" role="group" aria-label="Bildirim süzgeci">{([['all', 'Tümü', alerts.length], ['unread', 'Okunmamış', unread], ['important', 'Önemli', important]] as const).map(([id, title, n]) => <button type="button" key={id} className={only === id ? 'active' : ''} aria-pressed={only === id} onClick={() => { setOnly(id); setPage(1); }}>{title}<span className="pill-count">{n}</span></button>)}</div>
     {error && <Notice tone="error">{error}</Notice>}
-    <ul className="alert-list alert-cards">{rows.slice((current - 1) * 20, current * 20).map(a => {
-      const kind = alertKind(a.kind), level = alertLevel(a), action = primary(a), business = a.tenantId ? names.get(a.tenantId) : undefined, Icon = kind.icon;
-      return <li key={a.id} className={`alert-card ${a.readAt ? 'read' : 'unread'}${a.priority === 'low' ? ' low' : ''}${level === 'high' ? ' high' : ''}`}>
-        <span className={`alert-icon ps-tile ${kind.tone}`} aria-hidden="true"><Icon size={19} /></span>
-        <div className="alert-body">
-          <div className="alert-title-line"><strong>{a.title}</strong>{!a.readAt && <span className="alert-new">Yeni</span>}<span className="visually-hidden">{a.readAt ? '' : ' (okunmamış)'}</span></div>
-          <p>{a.text}</p>
-          <div className="alert-meta">
-            <span className="alert-kind">{kind.label}</span>
-            {level === 'high' && <span className="alert-level high">Önemli</span>}
-            {a.priority === 'low' && <span className="alert-level low alert-priority">Düşük öncelik</span>}
-            {business && <span className="alert-business"><Building2 size={13} aria-hidden="true" />{business}</span>}
-            <time dateTime={a.at} title={dateTime(a.at)}>{whenText(a.at)}</time>
+    {groups.map(([group, items]) => <section key={group} className="alert-day" aria-label={group}>
+      <h2 className="alert-day-title">{group}<span>{items.length}</span></h2>
+      <ul className="alert-list alert-rows">{items.map(a => {
+        const kind = alertKind(a.kind), level = alertLevel(a), action = primary(a), business = a.tenantId ? names.get(a.tenantId) : undefined, Icon = kind.icon;
+        const remote = action?.label === 'Uzaktan bağlan';
+        return <li key={a.id} className={`alert-row ${a.readAt ? 'read' : 'unread'}${a.priority === 'low' ? ' low' : ''}${level === 'high' ? ' high' : ''}`}>
+          <span className={`alert-icon ps-tile ${kind.tone}`} aria-hidden="true"><Icon size={18} /></span>
+          <div className="alert-body">
+            <div className="alert-title-line">{!a.readAt && <i className="alert-dot" aria-hidden="true" />}<strong>{a.title}</strong><span className="visually-hidden">{a.readAt ? '' : ' (okunmamış)'}</span></div>
+            <p title={a.text}>{a.text}</p>
+            <div className="alert-meta">
+              <span className="alert-kind">{kind.label}</span>
+              {level === 'high' && <span className="alert-level high">Önemli</span>}
+              {a.priority === 'low' && <span className="alert-level low alert-priority">Düşük öncelik</span>}
+              {business && <span className="alert-business"><Building2 size={12} aria-hidden="true" />{business}</span>}
+              <time dateTime={a.at} title={dateTime(a.at)}>{whenText(a.at)}</time>
+            </div>
           </div>
-        </div>
-        <div className="alert-actions">
-          {action && <button type="button" className="btn secondary small-btn alert-open" onClick={action.run}>{action.label}<ChevronRight size={15} aria-hidden="true" /></button>}
-          <IconBtn icon={a.readAt ? Mail : MailOpen} label={a.readAt ? 'Okunmadı olarak işaretle' : 'Okundu olarak işaretle'} onClick={() => mark(a.readAt ? { ids: [a.id], unread: true } : { ids: [a.id] })} />
-        </div>
-      </li>;
-    })}</ul>
+          <div className="alert-actions">
+            {action && <button type="button" className={`alert-open${remote ? ' remote' : ''}`} onClick={action.run}>{remote && <MonitorSmartphone size={15} aria-hidden="true" />}{action.label}<ChevronRight size={15} aria-hidden="true" /></button>}
+            <IconBtn icon={a.readAt ? Mail : MailOpen} className="alert-read" label={a.readAt ? 'Okunmadı olarak işaretle' : 'Okundu olarak işaretle'} onClick={() => mark(a.readAt ? { ids: [a.id], unread: true } : { ids: [a.id] })} />
+          </div>
+        </li>;
+      })}</ul>
+    </section>)}
     {!rows.length && <div className="alert-empty" role="status"><span className="ps-tile green" aria-hidden="true"><BellOff size={22} /></span><strong>{empty[0]}</strong><span>{empty[1]}</span></div>}
     {pages > 1 && <nav className="platform-pager" aria-label="Bildirim sayfaları"><button className="btn secondary small-btn" disabled={current === 1} onClick={() => setPage(current - 1)}>Önceki bildirimler</button><span>Sayfa {current} / {pages}</span><button className="btn secondary small-btn" disabled={current === pages} onClick={() => setPage(current + 1)}>Sonraki bildirimler</button></nav>}
   </section>;

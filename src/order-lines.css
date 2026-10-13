@@ -24,3 +24,12 @@
 .packed-choice input{width:20px;height:20px;flex:none;accent-color:var(--green,#234c3e)}
 .packed-badge{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;margin:0 0 6px;padding:3px 9px;border-radius:999px;background:#fff1d6;color:#7a4a0c;font-size:12px;font-weight:700}
 .packed-badge.packed-loud{display:flex;justify-content:center;margin:8px 0;padding:7px 10px;border-radius:8px;background:#8a5a12;color:#fff;font-size:15px;letter-spacing:.6px}
+/* 13 Ekim: one item packed ("PAKET" under that item; loud on the kitchen card) and the basket line's own choices. */
+.order-line .packed-badge.packed-line{display:inline-flex;margin:6px 0 0;padding:2px 8px;font-size:11px;letter-spacing:.4px}
+.order-line .packed-badge.packed-line.packed-loud{display:inline-flex;justify-content:flex-start;margin:6px 0 0;padding:4px 10px;font-size:13px}
+.cart-line-extras{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:8px}
+.cart-line-extras .note-field{flex-basis:100%;margin:4px 0 0}
+.line-packed-choice{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 10px;border:1px solid #e3c98e;border-radius:999px;background:#fffaf0;color:#7a4a0c;font-size:13px;font-weight:600;cursor:pointer}
+.line-packed-choice input{width:18px;height:18px;margin:0;accent-color:var(--green,#234c3e)}
+.line-packed-choice:has(input:checked){background:#fff1d6;border-color:#ad741e}
+.line-note-btn{display:inline-flex;align-items:center;gap:5px;min-height:36px;font-size:13px}

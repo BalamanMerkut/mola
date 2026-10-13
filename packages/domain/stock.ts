@@ -198,13 +198,20 @@ export function stockLevels(data: StockData, feed: SalesFeed, now: number): Map<
   return out;
 }
 
+/**
+ * `variants` (13 Ekim tanıtım): the options that change the recipe ("Orta şekerli" adds sugar, "Büyük boy" scales it, "Yulaf
+ * sütü" swaps the milk), each with how many pieces of that choice the stock is enough for. One option at a time; missing when
+ * no option changes the recipe.
+ */
+export type ProductVariantStock = { key: string; group: string; option: string; makeable: number; limitingId?: string };
 export type ProductStock = {
   productId: string; status: 'recipe' | 'ready' | 'none';
   /** Pieces (or kg for weighed products) the current stock is enough for, with the plain recipe (no option). */
   makeable?: number; limitingId?: string; stock?: number; low: boolean; empty: boolean;
+  variants?: ProductVariantStock[];
 };
 /** "≈ 133 adet yapılabilir" (and which item limits it), "48 adet kaldı" for ready-bought products, or not tracked. */
-export function productStock(products: readonly Pick<Product, 'id' | 'unit'>[], data: StockData, levels: Map<string, StockLevel>, now: number): Map<string, ProductStock> {
+export function productStock(products: readonly (Pick<Product, 'id' | 'unit'> & Partial<Pick<Product, 'groups'>>)[], data: StockData, levels: Map<string, StockLevel>, now: number): Map<string, ProductStock> {
   const current = currentRecipes(data.recipes, now), items = new Map(data.items.map(i => [i.id, i]));
   const out = new Map<string, ProductStock>();
   for (const p of products) {
@@ -216,17 +223,31 @@ export function productStock(products: readonly Pick<Product, 'id' | 'unit'>[], 
       out.set(p.id, { productId: p.id, status: 'ready', stock, makeable: stock, limitingId: r.items[0]?.itemId, low: !!level?.low || stock <= 0, empty: stock <= 0 });
       continue;
     }
-    let makeable = Infinity, limitingId: string | undefined, low = false;
-    for (const [itemId, amount] of recipeUsage(r)) {
-      if (!(amount > 0)) continue;
-      const level = levels.get(itemId), have = items.get(itemId)?.removedAt ? 0 : Math.max(0, level?.stock ?? 0);
-      const n = have / amount;
-      if (n < makeable) { makeable = n; limitingId = itemId; }
-      if (level?.low) low = true;
+    /** How many pieces (kg) this usage allows, the item that limits it, and whether any of its items is low. */
+    const enough = (usage: Map<string, number>) => {
+      let makeable = Infinity, limitingId: string | undefined, low = false;
+      for (const [itemId, amount] of usage) {
+        if (!(amount > 0)) continue;
+        const level = levels.get(itemId), have = items.get(itemId)?.removedAt ? 0 : Math.max(0, level?.stock ?? 0);
+        const n = have / amount;
+        if (n < makeable) { makeable = n; limitingId = itemId; }
+        if (level?.low) low = true;
+      }
+      const value = !Number.isFinite(makeable) ? null : p.unit === 'kg' ? Math.floor(makeable * 10 + 1e-9) / 10 : Math.floor(makeable + 1e-9);
+      return { value, limitingId, low };
+    };
+    const plain = enough(recipeUsage(r));
+    if (plain.value === null) { out.set(p.id, { productId: p.id, status: 'none', low: false, empty: false }); continue; }
+    const value = plain.value;
+    // Each option with a rule of its own (an option the menu no longer has is left out).
+    const variants: ProductVariantStock[] = [];
+    for (const rule of r.options ?? []) {
+      const group = p.groups?.find(g => g.id === rule.groupId), option = group?.options.find(o => o.id === rule.optionId);
+      if (!group || !option) continue;
+      const v = enough(recipeUsage(r, `${rule.groupId}:${rule.optionId}`));
+      if (v.value !== null) variants.push({ key: `${rule.groupId}:${rule.optionId}`, group: group.name, option: option.name, makeable: v.value, ...(v.limitingId ? { limitingId: v.limitingId } : {}) });
     }
-    if (!Number.isFinite(makeable)) { out.set(p.id, { productId: p.id, status: 'none', low: false, empty: false }); continue; }
-    const value = p.unit === 'kg' ? Math.floor(makeable * 10 + 1e-9) / 10 : Math.floor(makeable + 1e-9);
-    out.set(p.id, { productId: p.id, status: 'recipe', makeable: value, limitingId, low: low || value <= 0, empty: value <= 0 });
+    out.set(p.id, { productId: p.id, status: 'recipe', makeable: value, limitingId: plain.limitingId, low: plain.low || value <= 0, empty: value <= 0, ...(variants.length ? { variants } : {}) });
   }
   return out;
 }

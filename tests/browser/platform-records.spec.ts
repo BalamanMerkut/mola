@@ -25,6 +25,12 @@ test('the notification centre counts, pages, marks read and links stay clear', a
   const pills = page.getByRole('group', { name: 'Bildirim süzgeci' });
   await expect(pills.getByRole('button')).toHaveText(['Tümü25', 'Okunmamış21', 'Önemli8']);
   await expect(page.locator('.alert-list li')).toHaveCount(20);
+  // 13 Ekim: a plain list grouped by day (Bugün / Dün / Daha eski, in that order), unread lines with a dot.
+  const days = await page.locator('.alert-day-title').evaluateAll(h => h.map(x => x.firstChild?.textContent ?? ''));
+  expect(days.length).toBeGreaterThanOrEqual(2);
+  expect(days).toEqual(['Bugün', 'Dün', 'Daha eski'].filter(d => days.includes(d)));
+  await expect(page.locator('.alert-list li.unread .alert-dot')).toHaveCount(await page.locator('.alert-list li.unread').count());
+  await expect(page.locator('.alert-list li.read .alert-dot')).toHaveCount(0);
   // Cards: an icon and a word for the kind, "Önemli" / "Düşük öncelik", the business, a relative time; one action button and
   // read / unread as a small icon button.
   const first = page.locator('.alert-list li').first();

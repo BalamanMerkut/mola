@@ -200,3 +200,14 @@
   .event-close-btn{margin-left:0;width:100%}
   .resv-name-form{grid-template-columns:minmax(0,1fr) 80px}
 }
+
+/* 13 Ekim tanıtım: an event step by step (Hazırlık → Sürüyor → Kapanış) and "Geldi / Gelmedi" in its list. */
+.event-steps{margin:10px 0 12px;border:1px solid #e1e8dc;border-radius:14px;background:#fbfcfa;padding:12px 14px}
+.event-step-bar{list-style:none;margin:0 0 10px;padding:0;display:flex;gap:6px}
+.event-step-bar li{flex:1;display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:#eef2ec;color:#66746b;font-size:13px;font-weight:600}
+.event-step-bar li span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#fff;font-size:12px}
+.event-step-bar li.done{background:#e3f0e8;color:#2f6b55}
+.event-step-bar li.current{background:#234c3e;color:#fff}.event-step-bar li.current span{color:#234c3e}
+.event-step-now p{margin:0 0 10px;line-height:1.5}
+.event-guest-actions{display:inline-flex;gap:6px;margin-left:auto}
+@media (max-width:520px){.event-step-bar li{font-size:12px;padding:6px}.event-step-bar li span{display:none}}

@@ -52,7 +52,7 @@ test('owner: grouped menu, the bell, Kasa ve giderler (two tab levels), Personel
   await expect(page.locator('.cash-today .cash-strip').getByRole('button', { name: 'Gider kaydet', exact: true })).toBeVisible();
   await openCash(page, 'Giderler', 'Kayıtlar');
   await expect(page.getByRole('heading', { name: /Gider kayıtları/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Yazdır / PDF' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Yazdır ve paylaş' })).toBeVisible();
   await shot(page, 'yeni-duzen-sahip-masaustu.png', info.outputPath('sahip-masaustu.png'));
   await page.getByRole('button', { name: 'Otomatik giderleri yönet' }).click();
   await expect(page.getByRole('navigation', { name: 'Giderler bölümleri', exact: true }).getByRole('button', { name: /^Otomatik giderler/ })).toHaveAttribute('aria-current', 'page');

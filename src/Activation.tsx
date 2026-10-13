@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ClipboardList, KeyRound, Pencil, RefreshCw, UserRound } from 'lucide-react';
+import { ArrowLeft, ClipboardList, KeyRound, Pencil, RefreshCw, Store, UserRound } from 'lucide-react';
 import type { Sector } from '../packages/domain/sector';
 import { api, ApiError } from './api';
 import { ApplicationForm, type ApplicationFields } from './ApplicationForm';
@@ -63,6 +63,16 @@ export function Activation({ onReady }: { onReady: (username: string) => void })
     try { const r = await api<{ username: string }>('/api/activation/owner', { username, password, ...(displayName.trim() ? { name: displayName.trim() } : {}) }); setPassword(''); setRepeat(''); onReady(r.username); }
     catch (e) { setError((e as Error).message); if (e instanceof ApiError && e.code === 'NOT_PENDING') await refresh(); } finally { setBusy(false); }
   }
+  // "İşletmem var" (13 Ekim): the dialog lives in the desktop window's rail (src/RestoreBackup.tsx OwnerRestoreDialog).
+  // No answer means no rail: a tablet or a browser on the network, where a business cannot be moved in.
+  function openOwner() {
+    setError('');
+    let answered = false;
+    const on = (e: Event) => { answered = true; setError((e as CustomEvent<string>).detail ?? ''); };
+    window.addEventListener('mola:open-result', on, { once: true });
+    window.dispatchEvent(new CustomEvent('mola:open', { detail: 'owner' }));
+    setTimeout(() => { window.removeEventListener('mola:open-result', on); if (!answered) setError('“İşletmem var” kasa bilgisayarındaki Mola penceresinden yapılır.'); }, 400);
+  }
   const back = () => { setMode('choose'); setEditing(false); setError(''); setRetry(false); };
   // The owner account's rules, shown live under each field (the same rules as server/kafe-routes.ts).
   const userProblem = usernameProblem(username), ownerReady = !!username && !userProblem && password.length >= 10 && password === repeat;
@@ -87,7 +97,7 @@ export function Activation({ onReady }: { onReady: (username: string) => void })
           <small id="owner-password-rule" className={password && password.length < 10 ? 'field-error' : 'field-rule'}>{password && password.length < 10 ? `En az 10 karakter: ${10 - password.length} karakter daha yazın.` : 'En az 10 karakter.'}</small>
         <label>Şifre tekrar *<input type="password" required maxLength={128} autoComplete="new-password" disabled={busy} value={repeat} aria-invalid={!!repeat && repeat !== password} onChange={e => setRepeat(e.target.value)} /></label>
           {repeat && repeat !== password && <small className="field-error" role="alert">Şifreler eşleşmiyor.</small>}
-        <p className="muted small">Bu bilgiler yalnız bu bilgisayarda saklanır, Mola Merkez’e gönderilmez.</p>
+        <p className="muted small">Şifreniz Mola Merkez’e gönderilmez. Yeni bilgisayarda “İşletmem var” ile girebilmeniz için yalnız şifreden geri çevrilemeyen bir doğrulama özeti saklanır.</p>
         {error && <Notice tone="error">{error}</Notice>}
         <button className="btn primary" disabled={busy || !ownerReady}><UserRound size={16} />{busy ? 'Hesap oluşturuluyor…' : 'Hesabı oluştur'}</button>
       </form></>
@@ -109,6 +119,8 @@ export function Activation({ onReady }: { onReady: (username: string) => void })
       <p>Mola ekibinden bir etkinleştirme kodu aldınız mı? Almadıysanız başvuru yapın; kod gerekmez. İnternet bağlantısı gerekir.</p>
       <button type="button" className="activation-choice" onClick={() => setMode('apply')}><ClipboardList size={22} /><span><strong>Kodum yok, başvuru yapacağım</strong><small>Hesap açma başvurusu: işletme ve fatura bilgilerinizi gönderin. Mola ekibi onaylayınca 30 günlük ücretsiz deneme başlar.</small></span></button>
       <button type="button" className="activation-choice" onClick={() => setMode('code')}><KeyRound size={22} /><span><strong>Etkinleştirme kodum var</strong><small>Mola ekibinin size verdiği tek kullanımlık kodu girin.</small></span></button>
+      <button type="button" className="activation-choice" onClick={openOwner}><Store size={22} /><span><strong>İşletmem var</strong><small>Mola’yı başka bir bilgisayarda kullanıyorum: kullanıcı adım, şifrem ve e-postama gelen kodla verilerimi bu bilgisayara getir.</small></span></button>
+      {error && <Notice tone="error">{error}</Notice>}
       {status.existingData && <><p className="muted small">Bu bilgisayarda önceki sürümden kalan işletme verisi var. Veriler silinmez; mevcut işletmenizi bağlamak için Mola destek ekibine başvurun.</p><MolaContact /></>}
     </>
     : mode === 'apply' ? form(undefined, 'Hesap açma başvurusu', 'Başvuruyu gönder')

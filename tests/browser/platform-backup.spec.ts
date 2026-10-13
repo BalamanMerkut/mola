@@ -9,6 +9,9 @@ test('Ayarlar → Yedek: the recovery code is shown once on this computer, saved
   await yonetimSettings(page, 'Yedek');
   const card = page.getByRole('region', { name: 'Yedek' });
   await expect(card).toContainText('Otomatik yedek kapalı', { timeout: 10000 });
+  // The recovery code is not saved yet: the summary says so and "Ayrıntılar" (with the code card) is open by itself.
+  await expect(card.locator('.bk-attention')).toContainText('Kurtarma kodu henüz kaydedilmedi');
+  await expect(card.locator('details.bk-details')).toHaveAttribute('open', '');
   await card.getByRole('button', { name: 'Kurtarma kodunu göster' }).click();
   const code = card.getByTestId('merkez-recovery-code');
   await expect(code).toBeVisible(); expect((await code.innerText()).replace(/\s/g, '')).toMatch(/^[A-Z2-9]{24}$/);
@@ -30,6 +33,12 @@ test('Ayarlar → Yedek: the recovery code is shown once on this computer, saved
     started = route.request().postDataJSON(); await closed; await route.fulfill({ json: { path: usb } });
   });
   await yonetimSettings(page, 'Çalışma klasörü'); await yonetimSettings(page, 'Yedek');
+  // 13 Ekim: "Yedekler nerede?" first; with the code saved "Ayrıntılar" stays closed, and "İkinci yeri ayarla" opens it.
+  const details = card.locator('details.bk-details');
+  await expect(details).not.toHaveAttribute('open', '');
+  await expect(card.getByRole('list', { name: 'Yedek yerleri' }).getByRole('listitem')).toHaveCount(3);
+  await card.getByRole('button', { name: 'İkinci yeri ayarla' }).click();
+  await expect(details).toHaveAttribute('open', '');
   const second = card.getByRole('group', { name: 'Önerilen yerler' });
   await expect(second.getByRole('button', { name: /Google Drive \(G:\)/ })).toBeVisible();
   await second.getByRole('button', { name: /Google Drive \(G:\)/ }).click();

@@ -96,9 +96,10 @@ function heading(s: State, o: Order): Op[] {
 }
 /** "2 x Latte", or "500 g Fıstıklı Baklava" for a weighed line. */
 const itemName = (l: Pick<OrderLine, 'grams' | 'name'>, quantity: number) => l.grams ? `${formatWeight(l.grams)} ${l.name}` : `${quantity} x ${l.name}`;
-function itemLines(lines: OrderLine[]): Ticket {
-  // The guest's note is bold under the options, so it is not missed on a busy ticket.
-  return lines.flatMap(l => [{ text: itemName(l, l.quantity), bold: true, tall: true } as Op, ...(l.optionNames.length ? [{ text: `    ${l.optionNames.join(', ')}` } as Op] : []), ...(l.note ? [{ text: `    Not: ${l.note}`, bold: true } as Op] : [])]);
+/** `allPacked`: the heading already says PAKETLENECEK for every item, so the lines do not repeat it. */
+function itemLines(lines: OrderLine[], allPacked = false): Ticket {
+  // The guest's note is bold under the options, so it is not missed on a busy ticket; a packed item says so on its own line.
+  return lines.flatMap(l => [{ text: itemName(l, l.quantity), bold: true, tall: true } as Op, ...(l.optionNames.length ? [{ text: `    ${l.optionNames.join(', ')}` } as Op] : []), ...(l.packed && !allPacked ? [{ text: '    [PAKET]', bold: true } as Op] : []), ...(l.note ? [{ text: `    Not: ${l.note}`, bold: true } as Op] : [])]);
 }
 export function kitchenTicket(s: State, o: Order, printer: PrinterConfig, lines: OrderLine[], reprint = false): Ticket {
   return [
@@ -110,7 +111,7 @@ export function kitchenTicket(s: State, o: Order, printer: PrinterConfig, lines:
     ...(o.updatedAt ? [{ text: 'Müşteri siparişi değiştirdi', align: 'center' } as Op] : []),
     // A table guest taking the order away: bold above the items, so it is packed rather than plated.
     ...(o.packed ? [{ text: '*** PAKETLENECEK ***', align: 'center', bold: true } as Op] : []),
-    { rule: true }, ...itemLines(lines), { rule: true },
+    { rule: true }, ...itemLines(lines, !!o.packed), { rule: true },
   ];
 }
 /** `part`: only these items were cancelled (the rest of the order goes on); otherwise the whole order stops. */

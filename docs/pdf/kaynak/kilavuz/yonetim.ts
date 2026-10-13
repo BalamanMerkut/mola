@@ -34,7 +34,7 @@ function giris() {
 function bugun() {
   return [
     bolum('Bugün ve Bildirim merkezi', 'Mola Yönetim her açılışta "Bugün" sayfasıyla başlar: yapılacaklar en acilden başlayarak, her satır bir cümle ve bir düğme.'),
-    sekil('y-bugun', { aciklamalar: ['Sol menü: Bugün, İşletmeler, Başvurular, Destek, Duyurular, Satışlarım; altta Ayarlar.', '"Bugün yapılacaklar" listesi.', 'Zil: Bildirim merkezi (okunmamış olay sayısı).'] }),
+    sekil('y-bugun', { aciklamalar: ['Sol menü: Bugün, İşletmeler, Başvurular, Duyurular, Satışlarım, Paketler; altta Destek ve Ayarlar.', '"Bugün yapılacaklar" listesi.', 'Zil: Bildirim merkezi (okunmamış olay sayısı).'] }),
     p('Listede sırasıyla şunlar çıkar: Merkez yedeği alınamadı, süresi biten ya da 7 gün içinde bitecek lisans, yanıt bekleyen destek talebi, onay bekleyen başvuru ve web sitesi talebi, dondurma isteği, iki farklı bilgisayar uyarısı, 3 günden uzun bağlanmayan işletme, yedeği başarısız işletme, dosyaları değişmiş kurulum, gönderilemeyen e-posta. Liste boşsa "Her şey yolunda" yazar.'),
     sekil('y-bildirim-merkezi', { baslik: 'Bildirim merkezi' }),
     p('Bildirim merkezi olayların kaydıdır: yeni başvuru, yeni destek mesajı, biten lisans, yedek sorunu, güncelleme kurulamadı, dosyalar değiştirilmiş, web sitesi talebi. Her olay bir karttır: solda türünün simgesi (başvuru, destek, lisans, yedek, bağlantı, güvenlik, web talebi…), başlık ve "Yeni" etiketi, altında tür, <b>Önemli</b> ya da <b>Düşük öncelik</b> çipi, işletmenin adı ve "3 saat önce" gibi zaman. Sağdaki düğme ilgili yeri açar ("İşletmeyi aç", "Talebi aç", "Talepleri aç", "Başvuruyu aç"); yanındaki küçük zarf simgesi okundu / okunmadı yapar. Süzgeçler: <b>Tümü, Okunmamış, Önemli</b> (yedek, bağlantı, güvenlik, lisans sorunları). "Tümünü okundu işaretle" üsttedir; yanındaki dişli E-posta bildirimleri ayarını açar. Ayarlar → E-posta bildirimleri açıksa önemli olaylar e-postanıza da gelir.'),
@@ -122,7 +122,8 @@ function paketler() {
   return [
     bolum('Paketler, fiyatlar ve Satışlarım'),
     h2('Paketler'),
-    sekil('y-paketler', { baslik: 'Ayarlar → Paketler' }),
+    sekil('y-paketler', { baslik: 'Paketler (sol menü)' }),
+    p('Paketler sol menüde kendi yerindedir; üstteki iki sekme <b>Paketler</b> ve <b>Hizmet fiyatları</b>dır.'),
     p('Her paket kartında ad, aylık ve yıllık toplam, hizmetler, indirim ve kaç işletmede kullanıldığı yazar. Düzenle, Kopyala, Arşivle. Kullanılan bir paket değişirse ikinci bir onay istenir ve o paketteki bütün işletmelerin lisansları güncellenir. "Eski planlar" eski "Tam sistem" ve "Sadece QR menü" kayıtlarıdır.'),
     sekil('y-paket-olustur', { aciklamalar: ['Paket adı.', 'Canlı aylık ve yıllık toplam.'] }),
     p('Yeni paket oluştururken hizmetler gruplara ayrılır. "Adisyon çekirdeği" her pakette vardır, çıkarılamaz. Bir hizmet başka bir hizmeti gerektiriyorsa kendiliğinden eklenir (QR sipariş için QR menü). "Yakında" olanlar seçilemez. Paket indirimi tutar ya da yüzde olabilir.'),
@@ -158,7 +159,7 @@ function guncellemeler() {
 function ayarlar() {
   return [
     bolum('Ayarlar, yedek ve kayıtlar'),
-    p('Ayarlar\'ın bölümleri sayfanın üstünde simgeli sekmelerdir: Hesap güvenliği, Paketler, Hizmet fiyatları, Yedek, Güncellemeler, E-posta bildirimleri, İletişim bilgileri, İşlem kayıtları, Çalışma klasörü, Geliştirici erişimi. Sekmeler sığmazsa iki satıra iner, telefonda kendi içinde yana kayar. Her bölüm aynı kart düzenindedir; açıklamalar kartın sağ üstündeki gri <b>ⓘ</b>\'dedir.'),
+    p('Ayarlar\'ın bölümleri sayfanın üstünde simgeli sekmelerdir: Hesap güvenliği, Yedek, Güncellemeler, E-posta bildirimleri, İletişim bilgileri, İşlem kayıtları, Çalışma klasörü, Geliştirici erişimi. Sekmeler sığmazsa iki satıra iner, telefonda kendi içinde yana kayar. Her bölüm aynı kart düzenindedir; açıklamalar kartın sağ üstündeki gri <b>ⓘ</b>\'dedir.'),
     h2('Yedek ve Sunucu yedeği'),
     sekil('y-yedek', { baslik: 'Ayarlar → Yedek' }),
     p('En üstte durum kartı: son yedek, sonraki yedek, saklanan yedek sayısı, ikinci yer ve sağlık çipi, "Şimdi yedekle". Altında <b>Saklanan yedekler</b>, <b>İkinci yedek yeri</b>, <b>Kurtarma kodu</b> (veri anahtarı satırıyla), <b>Geri yüklemeye hazırlık</b> (yedek var mı, kod kaydedildi mi, ikinci yer var mı) ve <b>Kafelerin sunucu yedekleri</b> kartları.'),
@@ -263,7 +264,7 @@ function operasyon() {
     ]),
     h2('Sık sorulanlar'),
     sss('Bir kafe "Mola Merkez\'e ulaşılamıyor" diyor.', 'Kafe nedeni ayrı söyler: internet yok, Merkez yanıt vermiyor, adres yanlış ya da bilgisayarın saati yanlış. Merkez\'in sağlık adresini kontrol edin; sorun kafedeyse internetini ve saatini kontrol ettirin. Kafe 14 güne kadar Merkez\'siz çalışır.'),
-    sss('Kafe yeni bilgisayara geçiyor.', 'Bulut yedeği varsa işletme sayfası → Lisans → <b>Yeni bilgisayara taşıma</b>\'dan taşıma kodu verin; yoksa kafe USB\'deki yedeği ve kurtarma kodunu kullanır. "İki farklı bilgisayar" uyarısı çıkarsa işletme Özet\'inden "Eski bilgisayarı yeniden etkinleştir" ile çözersiniz.'),
+    sss('Kafe yeni bilgisayara geçiyor.', 'Çoğu zaman size iş düşmez: sahip yeni bilgisayarda ilk ekranda <b>İşletmem var</b>ı seçer, kullanıcı adı ve şifresiyle girer, işletmenin e-postasına gelen 6 haneli kodu yazar; bulut yedeği varsa veriler sunucudan, yoksa flash bellekten gelir. Bunun için Ayarlar → E-posta bildirimleri açık olmalı. Sahip şifresini de bilmiyorsa: bulut yedeği varsa işletme sayfası → Lisans → <b>Yeni bilgisayara taşıma</b>\'dan taşıma kodu verin; yoksa kafe USB\'deki yedeği ve kurtarma kodunu kullanır. "İki farklı bilgisayar" uyarısı çıkarsa işletme Özet\'inden "Eski bilgisayarı yeniden etkinleştir" ile çözersiniz.'),
     sss('Menü adresi (menu.) her istekte hata (500) veriyor.', 'Merkez sürümü eski: sunucunun kum havuzunda ağ adresleri okunamıyordu, 12 Ekim\'de düzeltildi. Merkez\'i güncelleyin.'),
     sss('Yeni kafe etkinleştirmede "kod geçersiz" diyor.', 'Kafe eski paketle kurulmuş, kodu eski Merkez\'e soruyor. VDS adresiyle hazırlanmış paketle yeniden kurun (Web sitesi → Uygulamayı indir).'),
     sss('Merkez\'in bilgisayarı değişti.', 'Kafeler yeni adresi imzalı bir duyuruyla öğrenir ve doğrular. Adım adım: docs/VDS_KURULUM.md "Kafeleri yeni adrese geçirin".'),

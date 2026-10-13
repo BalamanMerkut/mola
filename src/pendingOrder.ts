@@ -3,7 +3,7 @@ import { readNote, validGrams } from '../packages/domain/lines';
 
 /** A stored line's note must already be in its cleaned form and a weight a valid one: the retry resends the body byte for byte,
  * so the request fingerprint (and the line identity) stays the one the first attempt used. */
-export const validLineExtras = (l: Pick<CartLine, 'note' | 'grams' | 'quantity'>) => (l.note === undefined || (typeof l.note === 'string' && readNote(l.note) === l.note)) && (l.grams === undefined || (validGrams(l.grams) && l.quantity === 1));
+export const validLineExtras = (l: Pick<CartLine, 'note' | 'grams' | 'quantity' | 'packed'>) => (l.packed === undefined || l.packed === true) && (l.note === undefined || (typeof l.note === 'string' && readNote(l.note) === l.note)) && (l.grams === undefined || (validGrams(l.grams) && l.quantity === 1));
 
 export type PendingOrder = {
   version: 1;

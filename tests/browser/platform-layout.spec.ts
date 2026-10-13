@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { ADMIN_API, MERKEZ, detailTab, merkezPassword, openBusiness, yonetimBell, yonetimGo, yonetimNav, yonetimSettings, yonetimState } from './helpers';
+import { ADMIN_API, MERKEZ, detailTab, merkezPassword, openBusiness, yonetimBell, yonetimGo, yonetimNav, yonetimPackages, yonetimSettings, yonetimState } from './helpers';
 
 // Phones, tablets (portrait and landscape) and a desktop: the owner plans phone and tablet apps for Mola Yönetim.
 const sizes = [[360, 800], [390, 844], [768, 1024], [820, 1180], [800, 360], [844, 390], [1024, 768], [1180, 820], [1280, 860]] as const;
@@ -66,7 +66,11 @@ test('Mola Yönetim fits phones, tablets (both ways) and desktop: no sideways sc
     await yonetimGo(page, 'Destek'); await expect(page.getByRole('heading', { name: 'Destek', exact: true })).toBeVisible(); await check('Destek');
     await yonetimGo(page, 'Duyurular'); await expect(page.getByRole('heading', { name: 'Duyurular', exact: true })).toBeVisible(); await check('Duyurular');
     await yonetimGo(page, 'Satışlarım'); await expect(page.getByRole('heading', { name: 'Satışlarım', exact: true })).toBeVisible(); await check('Satışlarım');
-    for (const section of ['Hesap güvenliği', 'Paketler', 'Hizmet fiyatları', 'Yedek', 'E-posta bildirimleri', 'İletişim bilgileri', 'İşlem geçmişi'] as const) { await yonetimSettings(page, section); await check(`Ayarlar · ${section}`); }
+    for (const tab of ['Paketler', 'Hizmet fiyatları'] as const) { await yonetimPackages(page, tab); await check(`Paketler · ${tab}`); }
+    for (const section of ['Hesap güvenliği', 'Yedek', 'E-posta bildirimleri', 'İletişim bilgileri', 'İşlem geçmişi'] as const) { await yonetimSettings(page, section); await check(`Ayarlar · ${section}`); }
+    // Yedek → the cafés' cloud backups list (opened from "Yedekler nerede?").
+    await yonetimSettings(page, 'Yedek'); await page.getByRole('button', { name: /Kafelerin bulut yedekleri/ }).click();
+    await expect(page.getByRole('group', { name: 'Kafelerin bulut yedekleri listesi' })).toBeVisible(); await check('Ayarlar · Yedek · bulut listesi');
     await yonetimBell(page).click(); await expect(page.getByRole('heading', { name: 'Bildirim merkezi' })).toBeVisible(); await check('Bildirim merkezi');
   }
 });

@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { createServer, type Server } from 'node:net';
 import { join } from 'node:path';
-import { ensureSetup, openView } from './helpers';
+import { ensureSetup, openView, reportAction } from './helpers';
 
 /** Screens for the owner: also saved to KAFE_EKRAN (docs/ekran/kafe) when that is set. */
 async function shot(page: Page, file: string, path: string, fullPage = true) {
@@ -41,7 +41,7 @@ test('Satış ve Raporlar → Raporları gönder (once Ayarlar → İşletme →
     await login(page); await ensureSetup(page.request);
     await page.setViewportSize({ width: 1280, height: 900 }); await page.goto('/');
     await openView(page, 'Satış ve Raporlar');
-    await page.getByRole('button', { name: 'Raporları gönder' }).click();
+    await reportAction(page, 'Raporları gönder');
     const account = page.getByRole('form', { name: 'E-posta hesabı' });
     await expect(account).toBeVisible();
     // Before an account is saved, the test button says why it waits.

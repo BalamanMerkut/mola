@@ -71,6 +71,14 @@ function packedChoice(value: unknown) {
   if (value !== undefined && typeof value !== 'boolean') throw new DomainError('INVALID_VALUE', 'Paketleme tercihi geçersiz.');
   return value as boolean | undefined;
 }
+/**
+ * Per item "Paket yapılsın" (13 Ekim): `all` (the order-level choice of older screens and "Hepsini paketle") packs every line;
+ * a takeaway ticket keeps none (always to go). The order flag is "every line packed", so older readers still see it.
+ */
+function applyPacking(o: Pick<Order, 'packed'>, lines: OrderLine[], takeaway: boolean, all: boolean | undefined) {
+  for (const l of lines) { if (takeaway || all === false) delete l.packed; else if (all === true) l.packed = true; }
+  if (!takeaway && lines.length > 0 && lines.every(l => l.packed)) o.packed = true; else delete o.packed;
+}
 /** Weighed products need grams and one line per weight; piece products must not carry grams. */
 function checkWeight(p: Product, line: CartLine) {
   if (soldByWeight(p) ? !validGrams(line.grams) || line.quantity !== 1 : line.grams !== undefined) throw new DomainError('INVALID_WEIGHT', soldByWeight(p) ? 'Ağırlığı 50 g ile 20 kg arasında, 50 g adımlarla seçin.' : 'Bu ürün artık adetle satılıyor. Sepetinizi güncelleyin.');
@@ -97,7 +105,8 @@ export function quote(products: Product[], cart: CartLine[], ctx: Context, quant
     }
     checkWeight(p, line);
     // Only the known fields are kept: the note is stored cleaned, grams only on weighed lines.
-    const note = lineNote(line.note), base = { productId: line.productId, quantity: line.quantity, selections: structuredClone(line.selections), ...(note ? { note } : {}) };
+    if (line.packed !== undefined && typeof line.packed !== 'boolean') throw new DomainError('INVALID_VALUE', 'Paketleme tercihi geçersiz.');
+    const note = lineNote(line.note), base = { productId: line.productId, quantity: line.quantity, selections: structuredClone(line.selections), ...(note ? { note } : {}), ...(line.packed === true ? { packed: true } : {}) };
     if (soldByWeight(p)) {
       const extra = unitPrice - p.price, original = weightBase(p.price, line.grams!, extra);
       assertInt(original, 1, 100_000_000);
@@ -136,9 +145,10 @@ export function submitOrder(s: State, actor: Actor, input: { requestId: string; 
     if (table.needsCleaning) throw new DomainError('TABLE_CLEANING', 'Masa temizlik bekliyor. Garson masayı hazır hale getirdikten sonra sipariş verebilirsiniz.', 409);
     // A leaked table QR must not be able to bury the kitchen: QR orders not yet started are capped per table.
     if (actor.role === 'guest' && table.accountId && s.orders.filter(o => o.accountId === table.accountId && o.source === 'qr' && ['awaiting_approval', 'new'].includes(o.status)).length >= 20) throw new DomainError('TOO_MANY_PENDING', 'Bu masada hazırlanmayı bekleyen çok sipariş var. Lütfen personelle görüşün.', 429);
-    // A takeaway ticket is always to go, so the flag is only kept on table orders.
-    const packed = packedChoice(input.packed) && !isTakeaway(table);
+    // A takeaway ticket is always to go, so packing is only kept on table orders (per item, or all with the order choice).
+    const packedAll = packedChoice(input.packed);
     const lines = quote(saleProducts(s, ctx.now), input.lines, ctx, input.lines, vatSettings(s));
+    const packing: Pick<Order, 'packed'> = {}; applyPacking(packing, lines, isTakeaway(table), packedAll || undefined);
     checkCampaignLimits(s, lines);
     const total = lines.reduce((sum, l) => sum + l.total, 0);
     if (total !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Menüyü yenileyip toplamı yeniden kontrol edin.', 409);
@@ -152,7 +162,7 @@ export function submitOrder(s: State, actor: Actor, input: { requestId: string; 
     if (n < 0) n = participants.length;
     // Sales on a reserved table or an event table are tagged for the reports ("Rezervasyon"), also after a table move.
     const eventId = a.guest?.eventId ?? table.event?.id, tag = a.guest?.reservationId || eventId ? { reservation: { ...(a.guest?.reservationId ? { id: a.guest.reservationId } : {}), ...(eventId ? { eventId } : {}) } } : {};
-    const order: Order = { ...tag, ...(packed ? { packed: true } : {}), paymentBeforePreparation: s.paymentMode === 'before_preparation', id: ctx.id(), number: (s.orderNumberBase ?? 0) + s.orders.length + 1, accountId: a.id, guestId: actor.id, guestLabel: actor.role === 'guest' ? `Misafir ${n + 1}` : 'Personel', source: actor.role === 'guest' ? 'qr' : 'staff', createdAt: ctx.now.toISOString(), status: actor.role === 'guest' && s.waiterApproval && !s.autoApproveQr ? 'awaiting_approval' : 'new', approvalRequired: actor.role === 'guest' && !!s.waiterApproval, version: 1, menuRevision: s.menuRevision, lines, total, cancelRequested: false };
+    const order: Order = { ...tag, ...packing, paymentBeforePreparation: s.paymentMode === 'before_preparation', id: ctx.id(), number: (s.orderNumberBase ?? 0) + s.orders.length + 1, accountId: a.id, guestId: actor.id, guestLabel: actor.role === 'guest' ? `Misafir ${n + 1}` : 'Personel', source: actor.role === 'guest' ? 'qr' : 'staff', createdAt: ctx.now.toISOString(), status: actor.role === 'guest' && s.waiterApproval && !s.autoApproveQr ? 'awaiting_approval' : 'new', approvalRequired: actor.role === 'guest' && !!s.waiterApproval, version: 1, menuRevision: s.menuRevision, lines, total, cancelRequested: false };
     // The change window is the guest's: staff orders go to the kitchen at once.
     if (order.source === 'qr') order.editableUntil = new Date(ctx.now.getTime() + s.changeSeconds * 1000).toISOString();
     s.orders.push(order); a.version++;
@@ -237,7 +247,10 @@ function relined(s: State, o: Order, input: (CartLine & { existingId?: string })
   const seen = new Set<string>();
   for (const line of input) assertInt(line.quantity, 1, 20);
   const selectionKey = (l: CartLine) => JSON.stringify(l.selections.map(x => [x.groupId, x.optionId]).sort());
-  return input.map(l => {
+  // "Paket yapılsın" follows the edited line (editOrder puts an older edit's order-level choice back).
+  const packing = (l: CartLine, line: OrderLine) => { if (l.packed !== undefined && typeof l.packed !== 'boolean') throw new DomainError('INVALID_VALUE', 'Paketleme tercihi geçersiz.'); if (l.packed === true) line.packed = true; else delete line.packed; return line; };
+  return input.map(l => packing(l, edited(l)));
+  function edited(l: CartLine & { existingId?: string }): OrderLine {
     assertInt(l.quantity, 1, 20);
     const previous = l.existingId ? o.lines.find(p => p.id === l.existingId) : undefined;
     if (l.existingId && (!previous || seen.has(l.existingId))) throw new DomainError('INVALID_LINE', 'Sipariş kalemi geçersiz.');
@@ -253,7 +266,7 @@ function relined(s: State, o: Order, input: (CartLine & { existingId?: string })
       return withNote(repriceSavedLine(structuredClone(previous), l.quantity, productQuantity(input, l.productId)), note);
     }
     return quote(saleProducts(s, ctx.now), [{ productId: l.productId, quantity: l.quantity, selections: l.selections, note: l.note, grams: l.grams }], ctx, input, vatSettings(s))[0];
-  });
+  }
 }
 export function editOrder(s: State, actor: Actor, input: { requestId: string; orderId: string; version: number; expectedTotal: number; packed?: boolean; lines: (CartLine & { existingId?: string })[] }, ctx: Context) {
   requireRole(s, actor, ['guest']);
@@ -275,7 +288,10 @@ export function editOrder(s: State, actor: Actor, input: { requestId: string; or
     const total = lines.reduce((n, l) => n + l.total, 0);
     if (total !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Güncel toplamı kontrol edip tekrar deneyin.', 409);
     if (o.approvalRequired && !s.autoApproveQr) { o.status = 'awaiting_approval'; o.reviewedBy = undefined; }
-    if (packed !== undefined) { if (packed && !isTakeaway(table)) o.packed = true; else delete o.packed; }
+    // Per item since 13 Ekim: the lines bring their own choice; an older edit (no line choices) keeps the order's as it was.
+    const keepOld = packed === undefined && !input.lines.some(l => l.packed !== undefined);
+    if (keepOld) { if (o.packed) for (const l of lines) l.packed = true; }
+    applyPacking(o, lines, isTakeaway(table), packed === true ? true : undefined);
     o.lines = lines; o.total = total; o.version++; o.updatedAt = ctx.now.toISOString(); a.version++;
     s.audit.push({ action: 'order.edited', actor: actor.id, target: o.id, at: o.updatedAt });
     return { orderId: o.id, number: o.number, version: o.version, total };

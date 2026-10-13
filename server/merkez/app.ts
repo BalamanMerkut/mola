@@ -46,6 +46,7 @@ import { LEGACY_FULL, LEGACY_MENU } from '../../packages/domain/service-pricing.
 import { announcementRoutes, deliverAnnouncements, forgetAnnouncementsOf } from './announcements.js';
 // Sosyal medya kısa adresleri (server/merkez/social.ts): the cafés' public links and the QR codes' /s/<code>/<platform>.
 import { recordSocial, socialRoutes, socialView } from './social.js';
+import { ownerLoginRoutes, recordOwners } from './owner-login.js';
 import { shortLinkOrigin, siteLeadRoutes } from './site-leads.js';
 // İnternetten menü (server/merkez/guest-tunnel.ts): the cafés' guest tunnels and the public /q/<kod>/… addresses.
 import { GuestTunnelHub, guestTunnelRoutes, menuOpen, recordTunnel } from './guest-tunnel.js';
@@ -107,6 +108,8 @@ export type MerkezOptions = { now?: () => Date; httpSecurity?: HttpSecurity; bac
   workFolderDefault?: string | null;
   /** Menünün kopyası: where the photos of the cafés' menu copies are kept (default: <data folder>-menu beside it). */
   menuMirrorDirectory?: string;
+  /** Tests: the "İşletmem var" code e-mail goes here instead of SMTP. */
+  ownerLoginMail?: typeof sendMail;
   /** Merkez's own built screens (runtime.ts, serveBuild): the guest menu's files are served from here when they are the café's exact bytes. */
   buildDirectory?: string;
   /** The guest menu's own origin (default: MERKEZ_MENU_ORIGIN; null: none; server/merkez/menu-host.ts). */
@@ -226,6 +229,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   const vault = new BackupVault(options.cloudBackupDirectory ?? `${store.directory.replace(/[\\/]+$/, '')}-sunucu-yedekleri`, { minFreeBytes: options.cloudBackupMinFreeBytes });
   app.locals.backupVault = vault;
   backupVaultRoutes(app, () => ({ ...releaseDeps(), vault, sendSigned }));
+  // "İşletmem var" (server/merkez/owner-login.ts): the owner's own sign-in on a new computer, a code to the business's e-mail.
+  ownerLoginRoutes(app, () => ({ ...releaseDeps(), vault, ...(options.ownerLoginMail ? { send: options.ownerLoginMail } : {}) }));
   { const t = setInterval(() => { try { sweepVault(vault, store, now()); } catch { /* closed or busy: next time */ } }, 10 * 60_000); t.unref(); }
   // Köprü (server/merkez/relay.ts): uzaktan destek and uzaktan raporlar. Before the JSON-only rule and the 64 kB parser (held
   // polls, relayed photos); its postbox is beside the data folder (<data>-kutu/), never in a backup.
@@ -1159,6 +1164,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
       const announcements = replaced ? undefined : deliverAnnouncements(d, owned, b.announcements);
       // Sosyal medya: the businesses' public links in, their short-address codes out (a replaced computer's are not kept).
       const social = replaced ? undefined : recordSocial(d, mine, b.social, time, shortLinkOrigin(options.httpSecurity?.publicOrigin));
+      // İşletmem var: the owners' password verifiers (a replaced computer's are not kept).
+      if (!replaced) recordOwners(d, mine, b.owners, time);
       // İnternetten menü: each business's menu code for the table QR codes (only when the café asks; a replaced computer gets none).
       const tunnel = replaced ? undefined : recordTunnel(d, mine, b.tunnel, time, guestOrigin ?? siteOrigin);
       const notes = signedNotes(store, d, caller.id, replaced ? [] : mine, when);

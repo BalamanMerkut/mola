@@ -1,5 +1,5 @@
-import { lazy, useEffect, useId, useState } from 'react';
-import { Building2, Check, ClipboardCheck, CreditCard, DatabaseBackup, Footprints, KeyRound, LayoutGrid, Info, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone } from 'lucide-react';
+import { lazy, useEffect, useId, useState, type ReactNode } from 'react';
+import { Building2, Check, ClipboardCheck, Cloud, CreditCard, DatabaseBackup, Download, FolderOpen, Footprints, HardDrive, KeyRound, LayoutGrid, Info, MapPin, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone, Usb } from 'lucide-react';
 import { Moved, PlaceLink } from './Moved';
 import { PhonePairing } from './PhonePairing';
 import QRCode from 'qrcode';
@@ -30,7 +30,7 @@ import { KitchenModeCard } from './KitchenModeCard';
 // The "Tanıtım işletmesi" card (Güvenlik ve yedek → Yedek): its own file.
 import { DemoResetCard } from './DemoResetCard';
 // Hizmet paketi: a closed service's card is a faded row that opens the package card (src/FeatureLock.tsx).
-import { LockedRow, usePackage } from './FeatureLock';
+import { LockedRow, openFeatureLock, usePackage } from './FeatureLock';
 
 // The integrations agent owns this screen; Ayarlar only gives it a place.
 const Integrations = lazy(() => import('./Integrations').then(module => ({ default: module.Integrations })));
@@ -243,12 +243,55 @@ export function DevicesPage() {
   return <><DeviceChecks page /><ConnectTablet /><div className="settings-card-fold"><PhotoStorage /></div></>;
 }
 
-type Backup = { enabled: boolean; lastSuccessAt: string | null; healthy: boolean; note?: string; cloud?: CloudView };
+type SecondPlace = { folder: string; kind: 'usb' | 'onedrive' | 'gdrive' | 'folder'; label: string | null; lastCopyAt: string | null; lastError: string | null };
+type Backup = { enabled: boolean; lastSuccessAt: string | null; healthy: boolean; note?: string; cloud?: CloudView; folder?: string; kept?: number; canDownload?: boolean; second?: SecondPlace | null };
 const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+const placeName: Record<SecondPlace['kind'], string> = { usb: 'Flash bellek', onedrive: 'OneDrive', gdrive: 'Google Drive', folder: 'Klasör' };
+/**
+ * 13 Ekim tanıtım ("klasörler nerde yedekler nerde, benim bile kafam karışıyor"): every place a copy is kept, one row each,
+ * with its last copy and one action: Klasörü aç (this computer, the second place) or İndir (the newest backup, the same files
+ * the Sunucu yedeği holds). The details stay in the rail's "Yedekle" window.
+ */
+function BackupPlaces({ backup }: { backup: Backup }) {
+  const desktop = typeof document !== 'undefined' && document.body.classList.contains('desktop-shell'), pk = usePackage();
+  const [error, setError] = useState(''), [busy, setBusy] = useState(false);
+  useEffect(() => { const on = (e: Event) => setError((e as CustomEvent<string>).detail ?? ''); window.addEventListener('mola:open-result', on); return () => window.removeEventListener('mola:open-result', on); }, []);
+  async function download() {
+    setBusy(true); setError('');
+    try {
+      const r = await fetch('/api/staff/backup-download', { credentials: 'same-origin', signal: AbortSignal.timeout(180_000) });
+      if (!r.ok) { let m = 'Yedek indirilemedi.'; try { m = ((await r.json()) as { message?: string }).message ?? m; } catch { /* not JSON */ } throw new Error(m); }
+      const blob = await r.blob(), name = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') ?? '')?.[1] ?? 'Mola-yedek.zip';
+      const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+  const second = backup.second, cloudOn = pk.has('cloud-backup') && !!backup.cloud;
+  const row = (icon: ReactNode, title: string, where: string, state: { ok: boolean | null; text: string }, action: ReactNode) => <li className="backup-place">
+    <span className="backup-place-icon" aria-hidden="true">{icon}</span>
+    <div className="backup-place-text"><strong>{title}</strong><small title={where}>{where}</small></div>
+    <span className={`backup-place-state ${state.ok === null ? 'off' : state.ok ? 'ok' : 'bad'}`}>{state.text}</span>
+    <span className="backup-place-action">{action}</span>
+  </li>;
+  return <div className="backup-places">
+    <h3>Yedekleriniz nerede?</h3>
+    <ul>
+      {row(<HardDrive size={20} />, 'Bu bilgisayar', backup.folder ?? 'Mola klasörü', { ok: backup.lastSuccessAt ? backup.healthy : null, text: backup.lastSuccessAt ? `${backup.healthy ? '✓' : '!'} ${when(backup.lastSuccessAt)}` : 'Henüz yok' },
+        desktop ? <button type="button" className="btn secondary small-btn" onClick={() => openRail('open-backups')}><FolderOpen size={15} aria-hidden="true" />Klasörü aç</button> : null)}
+      {row(<Usb size={20} />, second ? `İkinci yer · ${second.label || placeName[second.kind]}` : 'İkinci yer', second ? second.folder : 'Flash bellek, OneDrive ya da Google Drive', second ? { ok: !second.lastError, text: second.lastError ? '! Alınamadı' : second.lastCopyAt ? `✓ ${when(second.lastCopyAt)}` : 'Bekleniyor' } : { ok: null, text: 'Kapalı' },
+        desktop ? second ? <button type="button" className="btn secondary small-btn" onClick={() => openRail('open-second')}><FolderOpen size={15} aria-hidden="true" />Klasörü aç</button> : <button type="button" className="btn secondary small-btn" onClick={() => openRail('backup')}>Aç</button> : null)}
+      {row(<Cloud size={20} />, 'Sunucu (bulut yedek)', cloudOn ? 'Mola Merkez · şifreli, Mola ekibi açamaz' : 'Paketinizde yok', cloudOn ? { ok: !backup.cloud!.failing, text: backup.cloud!.failing ? '! Gönderilemedi' : backup.cloud!.lastSuccessAt ? `✓ ${when(backup.cloud!.lastSuccessAt)}` : 'Bekleniyor' } : { ok: null, text: 'Kapalı' },
+        cloudOn ? <button type="button" className="btn secondary small-btn" disabled={busy || !backup.canDownload} onClick={() => void download()}><Download size={15} aria-hidden="true" />{busy ? 'Hazırlanıyor…' : 'İndir'}</button> : <button type="button" className="btn secondary small-btn" onClick={() => openFeatureLock('cloud-backup')}>Nedir?</button>)}
+    </ul>
+    {second?.lastError && <p className="backup-places-error">{second.lastError}</p>}
+    {error && <Notice tone="error">{error}</Notice>}
+    <p className="muted small">İndirilen yedek şifrelidir; yalnız işletmenizin kurtarma koduyla ya da yeni bilgisayarda “İşletmem var” girişiyle açılır.{backup.kept ? ` Bu bilgisayarda ${backup.kept} yedek saklanıyor.` : ''}</p>
+  </div>;
+}
 /** Güvenlik ve yedek → Yedek: the backup state and the rail's tools; the "Tanıtım işletmesi" reset; "Açık oturumlar" link. */
 export function BackupPage({ backup }: { backup: Backup | null }) {
   const desktop = typeof document !== 'undefined' && document.body.classList.contains('desktop-shell'), pk = usePackage();
   return <>
+    {backup?.enabled && <Card icon={<MapPin size={18} aria-hidden="true" />} title="Yedekleriniz nerede?" className="backup-places-card"><BackupPlaces backup={backup} /></Card>}
     <Card icon={<DatabaseBackup size={18} aria-hidden="true" />} title="Yedek" lead="Satışlarınız, menünüz ve ayarlarınız her gece 03:30'da şifreli olarak yedeklenir.">
       {!backup ? <p className="settings-card-note" aria-busy="true">Yedek durumu okunuyor…</p> : !backup.enabled ? <div className="settings-status warn"><ShieldAlert size={20} aria-hidden="true" /><div><strong>Bu kurulumda otomatik yedek kapalı.</strong><span>Mola ekibine danışın.</span></div></div>
         : <div className={`settings-status settings-backup ${backup.healthy || !backup.lastSuccessAt ? 'ok' : 'warn backup-warn'}`}>{backup.healthy || !backup.lastSuccessAt ? <ShieldCheck size={20} aria-hidden="true" /> : <ShieldAlert size={20} aria-hidden="true" />}<div>

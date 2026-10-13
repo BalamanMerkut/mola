@@ -40,9 +40,9 @@ test('cashier: Sipariş al → Masasız sipariş → kitchen sees MASASIZ #1 →
   await product.getByRole('button', { name: 'Adedi artır' }).click();
   await product.getByRole('button', { name: /Sepete ekle/ }).click();
   await dialog.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click();
-  // No table to stay at: the basket never offers "Paketlensin".
+  // No table to stay at: the basket never offers "Paket yapılsın" or "Hepsini paketle".
   await expect(c.getByRole('dialog', { name: 'Masasız sipariş · Sepet' })).toBeVisible();
-  await expect(c.getByRole('checkbox', { name: /Paketlensin/ })).toHaveCount(0);
+  await expect(c.getByRole('checkbox', { name: /paket/i })).toHaveCount(0);
   await c.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
   await expect(c.getByRole('status').filter({ hasText: 'Masasız #1 mutfağa gönderildi.' }).first()).toBeVisible();
   await expect(c.getByRole('dialog', { name: 'Masasız sipariş' })).toHaveCount(0);

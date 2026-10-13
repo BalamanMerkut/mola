@@ -169,7 +169,9 @@ export function machineKey(): Promise<string> {
 /** What the café reports about itself; app.ts fills it from the data it already has (never orders, payments or menus). */
 export type Reporter = { businesses(): Omit<BusinessReport, 'lastActivityAt' | 'firstOwnerLoginAt'>[]; backup(): SyncRequest['backup']; failures(since: number): FailureReport[];
   /** Sosyal medya: each business's public links (the guest menu's, Google review included) for Merkez's short QR addresses. */
-  social?(): NonNullable<SyncRequest['social']> };
+  social?(): NonNullable<SyncRequest['social']>;
+  /** "İşletmem var" (13 Ekim): each business owner's username and password verifier (never the password, never a key). */
+  owners?(): NonNullable<SyncRequest['owners']> };
 /** 'applied': an application waits for the vendor (or was refused); nothing else works until it is approved. */
 export type LinkState = 'activate' | 'applied' | 'owner' | 'ready';
 /** machineKey: tests stand in another computer (default: machineKey()). */
@@ -1050,6 +1052,8 @@ export class MerkezLink {
       ...(record.accepts?.includes('social') && !this.closed() && this.reporter.social ? { social: this.reporter.social().filter(x => open(x.tenantId)).slice(0, 50) } : {}),
       // İnternetten menü: "this café serves its guest menu through Merkez" (it has the built guest page), only to a Merkez that takes it.
       ...(record.accepts?.includes('guest.tunnel') && !this.closed() && this.tunnelWanted?.() ? { tunnel: { v: 1 as const } } : {}),
+      // "İşletmem var": the owners' verifiers, only to a Merkez that keeps them (it checks a sign-in on a new computer with them).
+      ...(record.accepts?.includes('owner.login') && !this.closed() && this.reporter.owners ? { owners: this.reporter.owners().filter(x => open(x.tenantId)).slice(0, 50) } : {}),
     };
   }
   /** İnternetten menü (server/guest-tunnel.ts): this café can serve its guest menu over the tunnel (the built page is here). */

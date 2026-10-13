@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { totp } from '../../server/totp';
-import { ADMIN_API, confirmStepUp, detailTab, enableAdminFactor, merkezPassword, openBusiness, openYonetim, yonetimGo, yonetimSettings, yonetimShot, yonetimState } from './helpers';
+import { ADMIN_API, confirmStepUp, detailTab, enableAdminFactor, merkezPassword, openBusiness, openYonetim, yonetimGo, yonetimPackages, yonetimSettings, yonetimShot, yonetimState } from './helpers';
 
 /** No sideways page scroll and nothing poking out of the right edge (as tests/browser/platform-layout.spec.ts). */
 async function fits(page: Page) {
@@ -78,7 +78,7 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await page.setViewportSize({ width: 1440, height: 1000 });
   await openYonetim(page);
   // Without two-step login a price change is refused, like publishing an update, with the way to Hesap güvenliği.
-  await yonetimSettings(page, 'Hizmet fiyatları');
+  await yonetimPackages(page, 'Hizmet fiyatları');
   let prices = page.getByRole('region', { name: 'Hizmet fiyatları' });
   await prices.getByLabel('QR menü aylık fiyat').fill('250');
   await prices.getByRole('button', { name: 'Fiyatları kaydet' }).click();
@@ -91,7 +91,7 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   // Two-step login on (every session ends); signed in again with a backup code.
   await enableAdminFactor(page.request);
   await openYonetim(page);
-  await yonetimSettings(page, 'Paketler');
+  await yonetimPackages(page, 'Paketler');
   const list = page.getByRole('region', { name: 'Paketler' });
   for (const name of ['Çay bahçesi', 'Kafe Standart', 'Restoran Pro']) await expect(list.getByRole('article', { name })).toBeVisible();
   await expect(list.getByRole('article', { name: 'Kafe Standart' })).toContainText('₺1.625');
@@ -131,7 +131,7 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   // Hizmet fiyatları: QR menü 250 TL; yearly follows (×10) unless typed; recorded in İşlem kayıtları. Within the
   // 10 minutes of that code no second code is asked.
   await page.setViewportSize({ width: 1280, height: 900 });
-  await yonetimSettings(page, 'Hizmet fiyatları');
+  await yonetimPackages(page, 'Hizmet fiyatları');
   prices = page.getByRole('region', { name: 'Hizmet fiyatları' });
   await expect(prices).toContainText('Yakında');
   await prices.getByLabel('QR menü aylık fiyat').fill('250');
@@ -142,7 +142,10 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `fiyatlar ${width}`).toBe('ok'); }
   const catalog = (await yonetimState(page.request)).catalog;
   expect(catalog.features.find((f: any) => f.id === 'qr-menu').monthly).toBe(25000);
-  // The items of the top bar (seven; six on a phone, Duyurular beside the bell): inside the screen, labels not cut.
+  // Paketler is its own place in the menu (13 Ekim), with Hizmet fiyatları as its sub-tab.
+  await expect(page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' }).getByRole('button', { name: 'Paketler', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('navigation', { name: 'Paketler bölümleri' }).getByRole('button')).toHaveText(['Paketler', 'Hizmet fiyatları']);
+  // The items of the top bar (eight; six on a phone, Duyurular and Paketler beside the bell): inside the screen, labels not cut.
   for (const [width, height] of sizes) {
     await page.setViewportSize({ width, height });
     const nav = page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' });

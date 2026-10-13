@@ -106,23 +106,30 @@
 .new-message-form .modal-actions .btn { gap:6px; }
 .new-message-why { margin:0 auto 0 0; }
 
-/* ---------- Menu: the seventh place (Duyurular) ----------
-   Tablets (600–899 px): seven equal parts of the top strip, icon above the label under 820 px so no label is cut.
-   Phones (under 600 px): the strip keeps its six parts; Duyurular is the megaphone beside the bell. */
-.yonetim-topbar-announce { display:none; }
+/* ---------- Menu: eight places (Paketler since 13 Ekim) ----------
+   Tablets (600–899 px): eight equal parts of the top strip, icon above the label so no label is cut.
+   Phones (under 600 px): the strip keeps its six parts; Duyurular and Paketler are icons beside the bell. */
+.yonetim-topbar-icon { display:none; }
 @media(max-width:899.98px) {
-  .platform-page.yonetim .yonetim-nav { grid-template-columns:repeat(7,minmax(0,1fr)); }
+  .platform-page.yonetim .yonetim-nav { grid-template-columns:repeat(8,minmax(0,1fr)); }
 }
-@media(min-width:600px) and (max-width:819.98px) {
+@media(min-width:600px) and (max-width:899.98px) {
   .platform-page.yonetim .yonetim-nav button { flex-direction:column; gap:2px; min-height:54px; padding:6px 2px; font-size:12px; line-height:1.2; }
   .platform-page.yonetim .yonetim-nav button>span:not(.nav-badge) { max-width:100%; }
   .platform-page.yonetim .nav-badge { position:absolute; top:3px; left:calc(50% + 6px); min-width:18px; height:18px; padding:0 5px; font-size:11px; }
 }
 @media(max-width:599.98px) {
   .platform-page.yonetim .yonetim-nav { grid-template-columns:repeat(6,minmax(0,1fr)); }
-  .platform-page.yonetim .yonetim-nav button.nav-announcements { display:none; }
-  .yonetim .yonetim-topbar-announce { display:inline-grid; place-items:center; width:44px; height:44px; padding:0; border-radius:12px; color:var(--y-muted); }
-  .yonetim .yonetim-topbar-announce.active { background:#e6efe3; color:var(--green); }
+  .platform-page.yonetim .yonetim-nav button:is(.nav-announcements, .nav-packages) { display:none; }
+  .yonetim .yonetim-topbar-icon { display:inline-grid; place-items:center; width:44px; height:44px; padding:0; border-radius:12px; color:var(--y-muted); }
+  .yonetim .yonetim-topbar-icon.active { background:#e6efe3; color:var(--green); }
+  .yonetim .yonetim-topbar-actions { gap:6px; }
+  .yonetim .yonetim-topbar-actions .btn { white-space:nowrap; }
+}
+/* Narrow phones: "Çıkış yap" keeps its name for screen readers, the door icon alone shows (two icons sit beside the bell). */
+@media(max-width:419.98px) {
+  .yonetim .yonetim-topbar-actions .btn { position:relative; width:44px; min-width:44px; height:44px; padding:0; justify-content:center; }
+  .yonetim .yonetim-logout-text { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 }
 @media(max-width:1099.98px) {
   .yonetim .ann-compose-grid { grid-template-columns:minmax(0,1fr); }

@@ -90,6 +90,9 @@ function ProductsTab({ data, view, onRecipe, onFirstItem, onTab }: { data: Staff
           // "Sınırlayan malzeme: Süt" ⓘ: outside the row's button (a button inside a button would open the recipe instead).
           const limiting = !none && status.limit && v.limitingId ? items.get(v.limitingId) : undefined, recipe = recipes.get(p.id);
           const limit = limiting && recipe ? <p className="stock-row-limit">Sınırlayan malzeme: <b>{status.limit}</b><HelpTip title="Sınırlayan malzeme">{limitText(p, v.makeable ?? 0, limiting, recipeUsage(recipe, '').get(limiting.id), recipe.items.length)}</HelpTip></p> : null;
+          // 13 Ekim tanıtım: "kaç tane orta şekerli yapabilirim": each option that changes the recipe, with its own figure.
+          const groups = new Set(v?.variants?.map(x => x.group));
+          const variants = !none && v.variants?.length ? <ul className="stock-variants" aria-label={`${p.name} seçeneklere göre`}>{v.variants.map(x => <li key={x.key}><span>{groups.size > 1 ? <small>{x.group} · </small> : null}{x.option}</span><b>≈ {x.makeable.toLocaleString('tr-TR')}{p.unit === 'kg' ? ' kg' : ''}</b></li>)}</ul> : null;
           const body = <>
             <span className="stock-row-name"><strong>{p.name}</strong>{sub && <small>{sub}</small>}</span>
             <span className={`stock-row-status ${none ? 'quiet' : ''}`}>
@@ -100,6 +103,7 @@ function ProductsTab({ data, view, onRecipe, onFirstItem, onTab }: { data: Staff
           return <li key={p.id} className={`stock-row ${v?.low && !none ? 'low' : ''} ${none ? 'untracked' : ''} ${limit ? 'limited' : ''}`}>
             {onRecipe ? <button type="button" className="stock-row-main" aria-label={`${p.name}: ${none ? 'takip yok' : `${status.value} ${status.label}`}${v?.low && !none ? ', azalıyor' : ''}`} onClick={() => onRecipe(p.id)}>{body}</button> : <div className="stock-row-main">{body}</div>}
             {limit}
+            {variants}
           </li>;
         })}</ul>
       </section>)}

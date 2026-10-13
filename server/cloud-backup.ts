@@ -8,7 +8,7 @@ import { DomainError } from '../packages/domain/engine.js';
 import { writeAtomic } from './key-vault.js';
 import { APP_VERSION } from './license.js';
 import { DATA_VERSION } from './data-version.js';
-import { BACKUP_KEY_FILE, masterFromCode, readBackupKeyFile } from './backup-key.js';
+import { BACKUP_KEY_FILE, masterFromCode, masterFromPassword, readBackupKeyFile } from './backup-key.js';
 import { packageFolders, type Completion } from './backup.js';
 import type { Security } from './security-routes.js';
 
@@ -207,6 +207,11 @@ export class CloudRestore {
     this.session = { ticket: answer.ticket, expiresAt: answer.expiresAt, name: answer.name, copies: answer.copies };
     return { name: answer.name, copies: answer.copies.map(({ list: _list, ...c }) => c) };
   }
+  /** "İşletmem var" (13 Ekim): the owner's sign-in and e-mail code gave the same kind of session directly (no taşıma kodu). */
+  useSession(answer: Session) {
+    this.session = { ticket: answer.ticket, expiresAt: answer.expiresAt, name: answer.name, copies: answer.copies };
+    return { name: answer.name, copies: answer.copies.map(({ list: _list, ...c }) => c) };
+  }
   private current() {
     if (!this.session || Date.parse(this.session.expiresAt) <= this.now().getTime()) throw new DomainError('TICKET_EXPIRED', 'Önce taşıma kodunu girin.', 409);
     return this.session;
@@ -254,7 +259,7 @@ export class CloudRestore {
  *   GET  /api/desktop/restore/merkez/progress                      → { stage, received, total } while it runs
  * The recovery code is checked against the downloaded copy before the taşıma kodu is spent, and counts like every try.
  */
-export function cloudRestoreRoutes(app: Express, guard: (req: Request) => void, ctx: { security?: Security; restore?: CloudRestore; clean: () => boolean }) {
+export function cloudRestoreRoutes(app: Express, guard: (req: Request) => void, ctx: { security?: Security; restore?: CloudRestore; clean: () => boolean; link?: TransferLink }) {
   const ready = () => {
     if (!ctx.restore || !ctx.security?.restore || !ctx.security.vault || ctx.security.vault.protection === 'off') throw new DomainError('RESTORE_OFF', 'Mola Merkez’den geri yükleme yalnız masaüstü uygulamasında (anahtar koruması açık) yapılır.', 409);
     if (!ctx.clean()) throw new DomainError('NOT_CLEAN', 'Bu bilgisayarda zaten işletme verisi var. Geri yükleme yalnız yeni kurulumda yapılır.', 409);
@@ -267,9 +272,27 @@ export function cloudRestoreRoutes(app: Express, guard: (req: Request) => void, 
     res.json(await r.open(code));
   });
   app.get('/api/desktop/restore/merkez/progress', (req, res) => { guard(req); res.json({ busy, progress: ctx.restore?.progress ?? null }); });
+  // "İşletmem var" (13 Ekim): the owner's own sign-in on a new computer. Merkez checks the password (its verifier) and sends a
+  // code to the business's e-mail; the right code opens the Sunucu yedeği session, or says there is none (then a flash drive).
+  app.post('/api/desktop/owner-login/start', async (req, res) => {
+    guard(req); ready();
+    const b = z.object({ email: z.string().trim().min(3).max(120), username: z.string().trim().min(1).max(50), password: z.string().min(1).max(200) }).parse(req.body);
+    res.json(await (await ctx.link!.transferPost('/owner-login/start', b, 60_000)).json());
+  });
+  app.post('/api/desktop/owner-login/verify', async (req, res) => {
+    guard(req); const r = ready();
+    const b = z.object({ ticket: z.string().min(1).max(64), code: z.string().trim().regex(/^\d{6}$/) }).parse(req.body);
+    const requester = ctx.security?.vault?.installId;
+    if (!requester) throw new DomainError('RESTORE_OFF', 'Bu kurulumda geri yükleme yapılamıyor.', 409);
+    const answer = await (await ctx.link!.transferPost('/owner-login/verify', { ...b, requester }, 30_000)).json() as { name: string; cloud: Session | null };
+    res.json({ name: answer.name, cloud: answer.cloud ? r.useSession(answer.cloud) : null });
+  });
   app.post('/api/desktop/restore/merkez', async (req, res) => {
     guard(req); const r = ready();
-    const b = z.object({ copy: z.string().min(1).max(200), code: z.string().min(1).max(64) }).parse(req.body);
+    // The recovery code, or (İşletmem var) the owner's username and password: the same restore, another key to the backup.
+    const b = z.object({ copy: z.string().min(1).max(200), code: z.string().min(1).max(64).optional(), username: z.string().trim().min(1).max(50).optional(), password: z.string().min(1).max(200).optional() }).parse(req.body);
+    const secret = b.code ? b.code : b.username && b.password ? { username: b.username, password: b.password } : undefined;
+    if (!secret) throw new DomainError('CODE_REQUIRED', 'Kurtarma kodunu ya da işletme sahibinin şifresini yazın.', 400);
     if (busy) throw new DomainError('RATE_LIMIT', 'Geri yükleme sürüyor. Bekleyin.', 429);
     busy = true;
     try {
@@ -279,10 +302,10 @@ export function cloudRestoreRoutes(app: Express, guard: (req: Request) => void, 
       await ctx.security!.attempts.run(async () => {
         const wrapper = await readBackupKeyFile(dir);
         if (!wrapper) throw new DomainError('OLD_BACKUP', 'Bu yedek kurtarma koduyla açılmıyor.', 409);
-        await masterFromCode(wrapper, b.code);
+        if (typeof secret === 'string') await masterFromCode(wrapper, secret); else await masterFromPassword(wrapper, secret.username, secret.password);
       });
       await r.finish(b.copy);
-      await ctx.security!.attempts.run(() => ctx.security!.restore!(dir, b.code));
+      await ctx.security!.attempts.run(() => ctx.security!.restore!(dir, secret));
       await fs.rm(r.folder, { recursive: true, force: true }).catch(() => {});
       res.json({ ok: true });
     } finally { busy = false; r.progress = undefined; }

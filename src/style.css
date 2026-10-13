@@ -287,3 +287,36 @@ input[type="checkbox"]{border-radius:4px}
 /* A search field whose box is the label (icon + bare input): the ring goes on the whole box, not on the inner input, so it never spills out of it. */
 :is(.search,.menu-search,.platform-search,.refund-search,.stock-search,.tc-search) > input:focus:not(:disabled){box-shadow:none;border-color:transparent;outline:none}
 :is(.search,.menu-search,.platform-search,.refund-search,.stock-search,.tc-search):focus-within{border-color:var(--focus-accent);box-shadow:0 0 0 3px var(--focus-ring)}
+
+/* 13 Ekim tanıtım: Kategorileri yönet, the order first (preview of the guest tabs, drag or arrows, one save). */
+.category-manager .category-preview{background:#f5f8f3;border:1px solid #e1e8dc;border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.category-preview-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 2px;scrollbar-width:thin}
+.category-preview-tabs span{flex:none;padding:7px 14px;border-radius:999px;background:#fff;border:1px solid #dfe6da;font-size:13px;font-weight:600;white-space:nowrap}
+.category-preview-tabs span:first-child{background:#234c3e;border-color:#234c3e;color:#fff}
+.category-preview-tabs span.moved{outline:2px solid #ad741e;outline-offset:1px}
+.category-order-list{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}
+.category-order-row{border:1px solid #e1e8dc;border-radius:14px;background:#fff;transition:box-shadow .15s,border-color .15s}
+.category-order-row.dragging{opacity:.55}
+.category-order-row.moved{border-color:#ad741e;box-shadow:0 0 0 3px rgba(173,116,30,.12)}
+.category-order-main{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.category-order-main .grow{display:flex;flex-direction:column;min-width:0}
+.category-order-main .grow small{font-size:12px}
+.category-grip{color:#9aa79f;cursor:grab;display:grid;place-items:center}
+.category-order-number{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#eef3ec;color:#234c3e;font-weight:700;font-size:13px}
+.category-order-edit{border-top:1px solid #eef2eb;padding:10px 14px 12px}
+.category-edit-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0}
+.category-order-save{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:12px;margin:6px 0 12px;border-radius:14px;background:#fff8ea;border:1px solid #ecd39d}
+.category-order-save span{margin-right:auto;font-weight:600;color:#7a4a0c}
+@media (max-width:560px){.category-order-main{flex-wrap:wrap}.category-order-main .btn{margin-left:auto}}
+/* 13 Ekim tanıtım: "Yedekleriniz nerede?" one row per place (this computer, the second place, the server). */
+.backup-places h3{display:none}
+.backup-places ul{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
+.backup-place{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e1e8dc;border-radius:14px;background:#fff}
+.backup-place-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#eef3ec;color:#234c3e}
+.backup-place-text{min-width:0;display:flex;flex-direction:column}
+.backup-place-text strong{font-size:14px}
+.backup-place-text small{color:#66746b;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.backup-place-state{font-size:13px;font-weight:600;white-space:nowrap;padding:4px 10px;border-radius:999px}
+.backup-place-state.ok{background:#e7f4ec;color:#2f6b55}.backup-place-state.bad{background:#fdecea;color:#a3352b}.backup-place-state.off{background:#f1f3f0;color:#7b867f}
+.backup-places-error{margin:0 0 8px;color:#a3352b;font-size:13px}
+@media (max-width:640px){.backup-place{grid-template-columns:auto 1fr;grid-template-areas:'i t' 's a'}.backup-place-icon{grid-area:i}.backup-place-text{grid-area:t}.backup-place-state{grid-area:s;justify-self:start}.backup-place-action{grid-area:a;justify-self:end}}
