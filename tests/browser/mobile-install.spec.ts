@@ -136,14 +136,15 @@ test('Ayarlar → Cihazlar shows one QR to /uygulama; the Android app keeps the 
   await expect(card.locator('.connect-tablet-address code')).toHaveText('192.168.1.20:3000/uygulama');
   await expect(card.getByRole('img', { name: 'Mola uygulaması kurulum sayfasının QR kodu' })).toBeVisible();
   await expect(card.getByTestId('network-profile-warning')).toHaveCount(0);
-  // Windows has this connection on the "Genel" profile (server/network-profile.ts, read only): the owner is told how to fix it.
+  // Windows has this connection on the "Genel" profile and Mola's firewall rule is the old one (server/network-profile.ts):
+  // the owner is sent to Tabletler → "İzni düzelt".
   await page.route('**/api/staff/network-profile', route => route.fulfill({ json: { checked: true, public: ['Wi-Fi'] } }));
   await page.reload();
   await openSettings(page, 'Cihazlar');
   const warning = page.locator('.connect-tablet').getByTestId('network-profile-warning');
-  await expect(warning).toContainText('Bu bilgisayarın ağı “Genel” olarak ayarlı; telefonlar ve tabletler bağlanamaz.');
-  await expect(warning).toContainText('Windows Ayarları → Ağ ve İnternet → Wi-Fi → Ağ profili: Özel.');
-  await expect(warning.getByRole('listitem')).toHaveCount(4);
+  await expect(warning).toContainText('Telefonlar ve tabletler bu bilgisayara bağlanamıyor: ağ “Genel” olarak ayarlı, Mola\'nın güvenlik duvarı izni eski.');
+  await expect(warning).toContainText('sol şeritten Tabletler → İzni düzelt\'e basın');
+  await expect(warning).toContainText('Ya da Windows Ayarları → Ağ ve İnternet → Wi-Fi → Ağ profili: Özel.');
 
   const { context, page: kitchen } = await phone(browser, `${ANDROID} MolaApp/0.1.0`, 820);
   // Plain http in the WebView: no Wake Lock API; the app's FLAG_KEEP_SCREEN_ON does the job.
@@ -156,7 +157,7 @@ test('Ayarlar → Cihazlar shows one QR to /uygulama; the Android app keeps the 
   await context.close();
 });
 
-test('Tabletler in the café computer\'s window: Windows\' "Genel" network profile is said, with how to change it (read only)', async ({ page }) => {
+test('Tabletler in the café computer\'s window: "Genel" with the old firewall rule is said, with "İzni düzelt" as the fix (read only)', async ({ page }) => {
   const key = readFileSync(join(e2eRun(), 'masaustu.anahtar'), 'utf8').trim();
   await page.addInitScript(() => { sessionStorage.setItem('mola-welcome', '1'); sessionStorage.setItem('mola-recovery-later', '1'); });
   // As on a café computer whose Ethernet Windows calls "Genel" (this test server listens on 127.0.0.1 only).
@@ -167,8 +168,8 @@ test('Tabletler in the café computer\'s window: Windows\' "Genel" network profi
   await page.getByRole('navigation', { name: 'Mola bilgisayar araçları' }).getByRole('button', { name: /Tabletler/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Tabletler' });
   const warning = dialog.getByTestId('network-profile-warning');
-  await expect(warning).toContainText('Bu bilgisayarın ağı “Genel” olarak ayarlı; telefonlar ve tabletler bağlanamaz.');
-  await expect(warning).toContainText('Windows Ayarları → Ağ ve İnternet → Ethernet → Ağ profili: Özel.');
-  await expect(warning).toContainText('Mola bu ayarı kendisi değiştirmez.');
+  await expect(warning).toContainText('Telefonlar ve tabletler bu bilgisayara bağlanamıyor: ağ “Genel” olarak ayarlı, Mola\'nın güvenlik duvarı izni eski.');
+  await expect(warning).toContainText('Aşağıdaki İzni düzelt\'e basın; Windows bir kez “Evet” diye sorar. Ağ ayarınız değişmez.');
+  await expect(warning).toContainText('Ya da Windows Ayarları → Ağ ve İnternet → Ethernet → Ağ profili: Özel.');
   await expect(dialog.locator('.desktop-address')).toContainText('192.168.1.20:3000/uygulama');
 });

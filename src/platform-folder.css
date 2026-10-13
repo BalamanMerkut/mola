@@ -10,7 +10,7 @@
 .yonetim .folder-places { display:flex; flex-wrap:wrap; gap:8px; min-width:0; }
 .yonetim .folder-place { display:inline-flex; align-items:center; gap:8px; min-height:44px; max-width:100%; padding:6px 12px; border:1px solid var(--y-line); border-radius:12px; background:var(--y-soft); color:#3d5345; font:inherit; text-align:left; cursor:pointer; min-width:0; }
 .yonetim .folder-place:hover:not(:disabled) { border-color:#cfdac9; background:#eef3ea; }
-.yonetim .folder-place.active { border-color:#8fb48a; background:#e6f1e3; }
+.yonetim .folder-place.active { border-color:#c9a368; background:#efe2c9; }
 .yonetim .folder-place.gdrive svg, .yonetim .folder-place.onedrive svg { color:#2d5579; }
 .yonetim .folder-place.usb svg { color:#55487d; }
 .yonetim .folder-place span { display:flex; flex-direction:column; min-width:0; line-height:1.25; }

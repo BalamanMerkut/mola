@@ -3,7 +3,12 @@
    running trial. Spacing scale: 4 · 8 · 12 · 16 · 24 · 32 · 48. Body text 15px, touch targets at least 44px.
    Under 900px the sidebar becomes a compact top bar whose five items always fit (no sideways scroll). */
 .platform-page.platform-v2.yonetim, .yonetim-auth {
-  --y-bg:#f5f6f2; --y-card:#fff; --y-line:#e3e8df; --y-line-soft:#edf0ea; --y-soft:#f1f5ee; --y-text:#22362b; --y-muted:#65706a; --y-faint:#868f87;
+  /* Matte cream, no bright white (14 Ekim, like the café's activation screen and the guides' paper). */
+  --y-bg:#ece5d7; --y-card:#f6f0e5; --y-line:#ddd5c4; --y-line-soft:#e8e1d3; --y-soft:#ece6d8; --y-field:#fbf8f1;
+  /* The study (14 Ekim): dark walnut sidebar and sign-in panel, brass for what is chosen, coffee for the main buttons.
+     The café app keeps Mola's green; states keep their own green / amber / red. */
+  --y-walnut:#3a281e; --y-walnut-line:#2a1c14; --y-walnut-hover:#4a3427; --y-walnut-text:#d8c7ad; --y-brass:#c9a368; --y-brass-soft:#5a412e;
+  --green:#4a3222; --focus-accent:#a67c45; --y-text:#22362b; --y-muted:#65706a; --y-faint:#868f87;
   --y-radius:20px; --y-radius-sm:12px; --y-shadow:0 1px 2px #1c2e2408, 0 8px 28px #1c2e240a;
   --ok-bg:#e6f1e3; --ok-fg:#2c6436; --ok-dot:#3f8a4c; --warn-bg:#f8edd5; --warn-fg:#7d520e; --warn-dot:#d39a2c; --bad-bg:#f8e6e0; --bad-fg:#983f28; --bad-dot:#c2553a;
   --idle-bg:#eef0ec; --idle-fg:#5c665f; --idle-dot:#97a097; --info-bg:#e6eef7; --info-fg:#2d5579; --info-dot:#5b86b0;
@@ -12,8 +17,8 @@
 }
 .platform-page.platform-v2.yonetim {
   max-width:none; margin:0; padding:0; min-height:100vh; min-height:100dvh; display:grid; grid-template-columns:248px minmax(0,1fr); align-items:start;
-  /* The sidebar column stays white down the whole page, however long the content. */
-  background:linear-gradient(to right, var(--y-card) calc(247px + var(--safe-l)), var(--y-line) calc(247px + var(--safe-l)), var(--y-line) calc(248px + var(--safe-l)), var(--y-bg) calc(248px + var(--safe-l)));
+  /* The sidebar column stays walnut down the whole page, however long the content. */
+  background:linear-gradient(to right, var(--y-walnut) calc(247px + var(--safe-l)), var(--y-walnut-line) calc(247px + var(--safe-l)), var(--y-walnut-line) calc(248px + var(--safe-l)), var(--y-bg) calc(248px + var(--safe-l)));
 }
 .yonetim h1 { font-size:28px; font-weight:650; letter-spacing:-.4px; line-height:1.2; margin:0; }
 .yonetim h2 { font-size:19px; font-weight:600; letter-spacing:-.15px; line-height:1.3; margin:0; }
@@ -35,14 +40,15 @@
 .yonetim .visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 
 /* ---------- Sidebar ---------- */
-.yonetim-sidebar { position:sticky; top:0; height:100vh; height:100dvh; display:flex; flex-direction:column; gap:28px; padding:28px 18px calc(24px + var(--safe-b)) calc(18px + var(--safe-l)); background:var(--y-card); min-width:0; overflow-y:auto; }
+.yonetim-sidebar { position:sticky; top:0; height:100vh; height:100dvh; display:flex; flex-direction:column; gap:28px; padding:28px 18px calc(24px + var(--safe-b)) calc(18px + var(--safe-l)); background:var(--y-walnut); min-width:0; overflow-y:auto; }
 .yonetim-brand { display:flex; flex-direction:column; gap:8px; padding:0 10px; }
 .yonetim .platform-caption { font-size:13px; font-weight:600; color:var(--y-muted); letter-spacing:.2px; }
+.yonetim-sidebar .platform-caption { color:var(--y-walnut-text); }
 .yonetim-nav { display:flex; flex-direction:column; gap:4px; flex:1; min-height:0; }
 .yonetim-nav-gap { flex:1; }
-.yonetim-nav button { position:relative; display:flex; align-items:center; gap:12px; width:100%; min-height:46px; padding:10px 14px; border:0; border-radius:12px; background:transparent; color:#56625a; font:inherit; font-size:15px; font-weight:500; text-align:left; cursor:pointer; }
-.yonetim-nav button:hover { background:var(--y-soft); color:var(--y-text); }
-.yonetim-nav button.active { background:#e6efe3; color:var(--green); font-weight:600; }
+.yonetim-nav button { position:relative; display:flex; align-items:center; gap:12px; width:100%; min-height:46px; padding:10px 14px; border:0; border-radius:12px; background:transparent; color:var(--y-walnut-text); font:inherit; font-size:15px; font-weight:500; text-align:left; cursor:pointer; }
+.yonetim-nav button:hover { background:var(--y-walnut-hover); color:#f3e8d6; }
+.yonetim-nav button.active { background:var(--y-brass-soft); color:var(--y-brass); font-weight:600; box-shadow:inset 3px 0 0 var(--y-brass); }
 .yonetim-nav button svg { flex-shrink:0; }
 .nav-badge { margin-left:auto; min-width:22px; height:22px; padding:0 7px; border-radius:11px; background:var(--warn-bg); color:var(--warn-fg); font-size:12px; font-weight:700; display:inline-grid; place-items:center; }
 .yonetim .platform-local-note { align-self:flex-start; margin:0 10px; font-size:12px; color:#6f6236; background:#f6f0dc; border-radius:999px; padding:3px 10px; white-space:nowrap; }
@@ -127,7 +133,7 @@
 /* ---------- İşletmeler: toolbar ---------- */
 .yonetim .platform-filters { display:flex; flex-direction:column; gap:14px; }
 .yonetim .platform-filter-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-.yonetim .platform-search { display:flex; align-items:center; gap:10px; flex:1 1 320px; min-width:0; margin:0; padding:0 16px; border:1px solid #d6ded2; border-radius:12px; background:var(--y-card); color:#7c8877; }
+.yonetim .platform-search { display:flex; align-items:center; gap:10px; flex:1 1 320px; min-width:0; margin:0; padding:0 16px; border:1px solid #d6ded2; border-radius:12px; background:var(--y-field); color:#7c8877; }
 .yonetim .platform-search input { border:0; outline:0; background:transparent; padding:10px 0; min-height:48px; width:100%; min-width:0; margin:0; box-shadow:none; font-weight:400; }
 .yonetim .platform-search:focus-within { border-color:var(--green); box-shadow:0 0 0 3px #234c3e1a; }
 .yonetim .platform-sort, .yonetim .platform-more { width:auto; min-height:48px; margin:0; padding:8px 34px 8px 14px; border-radius:12px; font-size:14px; }
@@ -237,9 +243,9 @@
 .yonetim .danger-row .btn { margin:0; }
 .yonetim .detail-delete { margin:0; padding:16px 0 0; border-top:1px solid #f0dcd5; }
 .yonetim .detail-danger>h2+.detail-delete { border-top:0; padding-top:0; }
-.yonetim .suspend-form { margin:0; display:grid; gap:10px; padding:16px; border:1px solid #eed8cf; border-radius:var(--y-radius-sm); background:#fff; }
+.yonetim .suspend-form { margin:0; display:grid; gap:10px; padding:16px; border:1px solid #eed8cf; border-radius:var(--y-radius-sm); background:var(--y-card,#fff); }
 .yonetim .suspend-form label { display:grid; gap:4px; margin:0; }
-.yonetim .detail-delete-confirm { display:grid; gap:10px; width:100%; padding:16px; border:1px solid #e7bebe; border-radius:var(--y-radius-sm); background:#fff; }
+.yonetim .detail-delete-confirm { display:grid; gap:10px; width:100%; padding:16px; border:1px solid #e7bebe; border-radius:var(--y-radius-sm); background:var(--y-card,#fff); }
 .yonetim .detail-delete-confirm p { margin:0; }
 .yonetim .detail-delete-confirm label { display:grid; gap:4px; margin:0; }
 .yonetim .detail-delete-confirm input { min-width:0; width:100%; }
@@ -367,13 +373,13 @@
 .yonetim .invoice-edit > .notice, .yonetim .invoice-edit > .application-actions { grid-column:1/-1; }
 .yonetim .application-reject label, .yonetim .invoice-edit label { display:grid; gap:4px; min-width:0; margin:0; }
 
-.profile-save-bar { position:sticky; bottom:0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:16px 0; border-top:1px solid var(--line); background:white; z-index:2; }
+.profile-save-bar { position:sticky; bottom:0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:16px 0; border-top:1px solid var(--line); background:var(--y-card,#fff); z-index:2; }
 .profile-save-bar>span { color:var(--muted); font-size:12px; }
 @media(max-width:480px) { .profile-save-bar .btn { width:100%; } }
 
 /* ---------- Login, first password, two-step: brand panel + one card ---------- */
 .yonetim-auth { min-height:100vh; min-height:100dvh; display:grid; grid-template-columns:minmax(0,5fr) minmax(0,6fr); background:var(--y-bg); }
-.auth-brand { position:relative; display:flex; flex-direction:column; gap:40px; padding:calc(48px + var(--safe-t)) 56px calc(40px + var(--safe-b)) calc(56px + var(--safe-l)); background:var(--green); color:#eef2ea; overflow:hidden; }
+.auth-brand { position:relative; display:flex; flex-direction:column; gap:40px; padding:calc(48px + var(--safe-t)) 56px calc(40px + var(--safe-b)) calc(56px + var(--safe-l)); background:var(--y-walnut); color:#f1e7d6; overflow:hidden; }
 .auth-brand::after { content:''; position:absolute; right:-140px; bottom:-140px; width:380px; height:380px; border-radius:50%; border:1px solid #ffffff1a; box-shadow:0 0 0 60px #ffffff08; pointer-events:none; }
 .auth-brand .brand small { color:#c9d6c8; }
 .auth-brand-text { margin-top:auto; display:flex; flex-direction:column; gap:14px; max-width:440px; }
@@ -455,6 +461,7 @@
   .yonetim-nav button { justify-content:center; min-height:48px; padding:6px 8px; gap:8px; font-size:14px; border-radius:12px; min-width:0; }
   .yonetim-nav button>span:not(.nav-badge) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
   .nav-badge { margin-left:0; }
+  .yonetim-nav button.active { box-shadow:inset 0 -3px 0 var(--y-brass); }
   .yonetim-main { padding:16px calc(24px + var(--safe-r)) calc(56px + var(--safe-b)) calc(24px + var(--safe-l)); }
   .yonetim-topbar { margin-bottom:12px; }
   .yonetim-topbar-brand { display:block; }
@@ -563,3 +570,9 @@
 .yonetim .detail-social-list li { display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; font-size:14px; }
 .yonetim .detail-social-list li > span { font-weight:600; min-width:120px; }
 .yonetim .detail-social-list a { overflow-wrap:anywhere; min-width:0; }
+/* The shared screens inside Mola Yönetim (panels, windows, fields, plain buttons) take its matte colours, not white. */
+.yonetim .panel, .yonetim .modal, .yonetim-auth .panel { background:var(--y-card); }
+.yonetim :is(input:not([type=checkbox]):not([type=radio]), select, textarea), .yonetim-auth :is(input:not([type=checkbox]):not([type=radio]), select, textarea) { background:var(--y-field); }
+.yonetim .btn.secondary, .yonetim-auth .btn.secondary { background:var(--y-field); }
+.yonetim .btn.secondary:hover, .yonetim-auth .btn.secondary:hover { background:var(--y-soft); }
+.yonetim .btn.primary:hover, .yonetim-auth .btn.primary:hover { background:#36241a; }

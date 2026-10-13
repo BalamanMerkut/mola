@@ -4,7 +4,7 @@
 .release-upload input[type=file] { width:100%; padding:8px 0; border:0; background:none; }
 .release-upload textarea, .release-notes textarea { width:100%; }
 .release-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
-.release-list > li { display:grid; gap:8px; padding:14px 16px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+.release-list > li { display:grid; gap:8px; padding:14px 16px; border:1px solid var(--line); border-radius:10px; background:var(--y-card,#fff); }
 .release-list p { margin:0; overflow-wrap:anywhere; }
 .release-head { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
 .release-head strong { font-size:18px; }

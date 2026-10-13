@@ -193,10 +193,10 @@ function TabletsDialog({ token, status, onClose }: { token: string; status: Desk
   const [image, setImage] = useState('');
   useEffect(() => { let live = true; // Loaded only when this dialog opens, so the QR library stays out of the first page load.
     if (page) void import('qrcode').then(m => m.default.toDataURL(page, { width: 260, margin: 2, color: { dark: '#234c3e', light: '#ffffff' } })).then(v => { if (live) setImage(v); }); return () => { live = false; }; }, [page]);
-  // Windows' "Genel" network profile: Mola's firewall rule (private networks only) keeps the phones out; read only.
+  // Windows' "Genel" network profile while Mola's firewall rule is the old private-only one; read only ("İzni düzelt" fixes it).
   const profile = useNetworkProfile(() => call<NetworkProfileView>(token, '/api/desktop/network-profile'), status.lan);
   return <Modal title="Tabletler" onClose={onClose}><div className="modal-body desktop-dialog">
-    <NetworkProfileNotice view={profile} />
+    <NetworkProfileNotice view={profile} here />
     <FirewallFix token={token} />
     {!status.lan ? <Notice>Mola şu anda yalnız bu bilgisayara açık. Tabletler bağlanamaz.</Notice>
       : !address ? <Notice tone="error">Bu bilgisayar bir ağa bağlı görünmüyor. Wi-Fi veya kablo bağlantısını kontrol edin.</Notice>

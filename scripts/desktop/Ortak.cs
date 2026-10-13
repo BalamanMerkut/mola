@@ -389,8 +389,17 @@ static class Taskbar {
 // Reading needs no administrator (HNetCfg.FwPolicy2, the same list "Gelişmiş ayarlar" shows). Changes run netsh with both the
 // rule's name and this program's path, so a rule of another program with the same name ("Node.js JavaScript Runtime" of a
 // developer's Node.js, another Mola folder's "Mola") is never touched.
+//
+// The rule (14 Ekim): every network profile, but only devices of the local network. A "private networks only" rule left the
+// tablets out whenever Windows called the café's network "Genel" (Public), which it does for every new Wi-Fi or modem, and the
+// owner had to find the setting in Windows. Now the profile does not matter; the internet still cannot reach Mola: only this
+// computer's own subnet and the private ranges a café network uses (10/8, 172.16/12, 192.168/16, so a modem with a second
+// router still works). Windows' network profile itself is never changed.
 static class Firewall {
-  public class Rule { public string Name, Program; public int Profiles, Protocol; public bool Allow, Enabled; public string Ports; }
+  public class Rule { public string Name, Program; public int Profiles, Protocol; public bool Allow, Enabled; public string Ports, Remote; }
+  /// <summary>netsh's remoteip for the rule; read back from Windows as "LocalSubnet,10.0.0.0/255.0.0.0,…" (Remote()).</summary>
+  public const string RemoteIps = "localsubnet,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16";
+  const int AllProfiles = 7;  // domain 1 | private 2 | public 4
 
   /// <summary>null when the firewall list cannot be read.</summary>
   public static List<Rule> Inbound(string node) {
@@ -409,6 +418,7 @@ static class Firewall {
           rule.Profiles = Convert.ToInt32(Get(r, "Profiles")); rule.Protocol = Convert.ToInt32(Get(r, "Protocol"));
           rule.Allow = Convert.ToInt32(Get(r, "Action")) == 1; rule.Enabled = Convert.ToBoolean(Get(r, "Enabled"));
           rule.Ports = Get(r, "LocalPorts") as string ?? "*";
+          rule.Remote = Get(r, "RemoteAddresses") as string ?? "*";
           found.Add(rule);
         } finally { Marshal.ReleaseComObject(r); }
       }
@@ -423,14 +433,39 @@ static class Firewall {
     catch (Exception) { return false; }
   }
 
-  /// <summary>Exactly what Mola wants: one enabled "allow" rule with Mola's name, private networks only, any port, nothing else.</summary>
+  /// <summary>Exactly what Mola wants: one enabled "allow" rule with Mola's name, every profile, local network only, any port, nothing else.</summary>
   public static bool Exact(List<Rule> rules, string name) {
-    return rules != null && rules.Count == 1 && rules[0].Name == name && rules[0].Allow && rules[0].Enabled && rules[0].Profiles == 2 && rules[0].Protocol == 256 && (rules[0].Ports == "*" || rules[0].Ports == "");
+    return rules != null && rules.Count == 1 && rules[0].Name == name && rules[0].Allow && rules[0].Enabled && (rules[0].Profiles & AllProfiles) == AllProfiles && rules[0].Protocol == 256 && (rules[0].Ports == "*" || rules[0].Ports == "") && LocalOnly(rules[0].Remote);
+  }
+
+  /// <summary>The remote addresses are exactly RemoteIps (Windows writes masks: 10.0.0.0/255.0.0.0 = 10.0.0.0/8).</summary>
+  public static bool LocalOnly(string remote) {
+    List<string> want = Addresses(RemoteIps), got = Addresses(remote ?? "");
+    if (want.Count != got.Count) return false;
+    for (int i = 0; i < want.Count; i++) if (want[i] != got[i]) return false;
+    return true;
+  }
+  static List<string> Addresses(string list) {
+    List<string> all = new List<string>();
+    foreach (string raw in list.Split(',')) {
+      string a = raw.Trim().ToLowerInvariant();
+      if (a.Length == 0) continue;
+      int slash = a.IndexOf('/');
+      if (slash > 0 && a.IndexOf('.', slash) > 0) {
+        int bits = 0;
+        foreach (string part in a.Substring(slash + 1).Split('.')) { int n; if (!int.TryParse(part, out n)) { bits = -1; break; } for (; n > 0; n >>= 1) bits += n & 1; }
+        a = a.Substring(0, slash) + "/" + bits;
+      } else if (slash < 0 && a.IndexOf('.') > 0) a += "/32";
+      all.Add(a);
+    }
+    all.Sort(StringComparer.Ordinal);
+    return all;
   }
 
   public static string Describe(Rule r) {
     string profile = r.Profiles == 2 ? "özel" : r.Profiles == 4 ? "ortak" : r.Profiles == 1 ? "etki alanı" : (r.Profiles & 0x7) == 0x7 ? "hepsi" : "profil " + r.Profiles;
-    return "\"" + r.Name + "\" (" + (r.Allow ? "izin" : "engel") + ", " + profile + (r.Enabled ? "" : ", kapalı") + ")";
+    string remote = LocalOnly(r.Remote) ? ", yerel ağ" : r.Remote == "*" || string.IsNullOrEmpty(r.Remote) ? ", her adres" : ", uzak: " + r.Remote;
+    return "\"" + r.Name + "\" (" + (r.Allow ? "izin" : "engel") + ", " + profile + remote + (r.Enabled ? "" : ", kapalı") + ")";
   }
 
   public static string State(List<Rule> rules, string name) { return rules == null ? "bilinmiyor" : Exact(rules, name) ? "tamam" : rules.Count == 0 ? "eksik" : "duzelt"; }
@@ -447,7 +482,7 @@ static class Firewall {
       if (r.Name.IndexOf('"') >= 0) continue;  // netsh cannot name it; reported by the caller as left over
       plan.Add("advfirewall firewall delete rule name=\"" + r.Name + "\" dir=in program=\"" + r.Program + "\"");
     }
-    if (add) plan.Add("advfirewall firewall add rule name=\"" + name + "\" dir=in action=allow program=\"" + node + "\" profile=private enable=yes" +
+    if (add) plan.Add("advfirewall firewall add rule name=\"" + name + "\" dir=in action=allow program=\"" + node + "\" profile=domain,private,public remoteip=" + RemoteIps + " enable=yes" +
       " description=\"" + P.Name + ": " + P.FirewallPurpose + "\"");
     return plan;
   }
@@ -479,7 +514,7 @@ static class Firewall {
     if (rules != null) for (int i = 0; i < rules.Count; i++) {
       Rule r = rules[i];
       s.Append(i > 0 ? "," : "").Append("{\"ad\":\"").Append(r.Name.Replace("\\", "\\\\").Replace("\"", "\\\"")).Append("\",\"izin\":").Append(r.Allow ? "true" : "false")
-       .Append(",\"acik\":").Append(r.Enabled ? "true" : "false").Append(",\"profiller\":").Append(r.Profiles).Append("}");
+       .Append(",\"acik\":").Append(r.Enabled ? "true" : "false").Append(",\"profiller\":").Append(r.Profiles).Append(",\"yerel\":").Append(LocalOnly(r.Remote) ? "true" : "false").Append("}");
     }
     return s.Append("]}").ToString();
   }

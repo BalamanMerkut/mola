@@ -14,10 +14,10 @@ static class P {
   public const string ServerCmd = "Merkez-Sunucu.cmd", StopCmd = "Merkez-Durdur.cmd", ServerFile = "app\\merkez.mjs", ServerLog = "logs\\merkez.log";
   public const string RegKey = "MolaYonetim";
   public const string UninstallShortcut = "Mola Yönetim'i kaldır";
-  /// <summary>Inbound rule for runtime\node.exe (private networks). Only when MERKEZ_LAN=1: otherwise Merkez listens on 127.0.0.1.</summary>
+  /// <summary>Inbound rule for runtime\node.exe (local network only, Ortak.cs Firewall). Only when MERKEZ_LAN=1: otherwise Merkez listens on 127.0.0.1.</summary>
   public const string FirewallRule = "Mola Yönetim";
   public static readonly bool FirewallOnlyWithLan = true;
-  public const string FirewallPurpose = "başka bilgisayarlardaki kafeler Merkez'e yalnız özel (ev/iş) ağdan bağlanır.";
+  public const string FirewallPurpose = "başka bilgisayarlardaki kafeler Merkez'e yalnız aynı yerel ağdan bağlanır.";
   public const string FirewallHint = "Başka bilgisayardaki kafeler bağlanamazsa kurulumu yeniden çalıştırıp Windows'un yönetici sorusuna Evet deyin.";
   public const int Port = 4000;
   public const string PortEnv = "MERKEZ_PORT", Health = "/api/merkez/v1/health";
@@ -51,7 +51,7 @@ static class P {
   public const string UninstallShortcut = "Mola'yı kaldır";
   public const string FirewallRule = "Mola";
   public static readonly bool FirewallOnlyWithLan = false;
-  public const string FirewallPurpose = "tabletler ve telefonlar bu bilgisayara yalnız özel (ev/iş) ağdan bağlanır.";
+  public const string FirewallPurpose = "tabletler ve telefonlar bu bilgisayara yalnız aynı yerel ağdan (kafenin Wi-Fi'ı) bağlanır.";
   public const string FirewallHint = "Tabletler bağlanamazsa Mola penceresinde Tabletler > \"İzni düzelt\"e basın.";
   public const int Port = 3000;
   public const string PortEnv = "PORT", Health = "/api/health";

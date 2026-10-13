@@ -1,10 +1,10 @@
 /* Mola Yönetim: notification centre, e-mail settings, backup card, renewal list, machines, notes. Same plain card style. */
 .visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-.alert-bell { position:relative; display:inline-grid; place-items:center; width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--green); }
+.alert-bell { position:relative; display:inline-grid; place-items:center; width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:var(--y-card,#fff); color:var(--green); }
 .alert-bell:hover { background:#f1f5ee; }
 .alert-bell-count { position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#b96844; color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; }
 .alert-list { list-style:none; margin:12px 0 0; padding:0; display:grid; gap:8px; }
-.alert-list li { display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:12px; align-items:start; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+.alert-list li { display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:12px; align-items:start; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--y-card,#fff); }
 .alert-list li.unread { background:#f7faf3; border-color:#cddfc7; }
 .alert-list li p { margin:2px 0; overflow-wrap:anywhere; }
 .alert-list li small { color:var(--muted); }
@@ -36,7 +36,7 @@
 .license-delivery { font-size:13px; margin:4px 0 10px; }
 .suspend-form { margin-top:12px; padding:12px; border:1px solid #eed8cf; border-radius:10px; background:#fff8f5; }
 .plan-choice { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0; }
-.plan-choice button { display:grid; gap:4px; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); }
+.plan-choice button { display:grid; gap:4px; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--y-card,#fff); color:var(--ink); }
 .plan-choice button.selected { border:2px solid var(--green); background:#f3f8f1; }
 .plan-choice button small { color:var(--muted); font-size:12px; line-height:1.4; }
 .plan-choice button:disabled { opacity:1; cursor:default; }

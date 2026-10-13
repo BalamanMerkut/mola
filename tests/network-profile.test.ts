@@ -5,9 +5,10 @@ import { NetworkProfile, type ProfileReader } from '../server/network-profile.js
 import { DESKTOP_KEY, merkezPair } from './merkez-fixture.js';
 
 /*
- * Windows' network profile (server/network-profile.ts): on a "Genel" (Public) connection Mola's firewall rule (private networks
- * only) keeps phones and tablets out. Mola only reads it (Get-NetConnectionProfile through the worker of server/programs.ts)
- * and says how to change it; here PowerShell is a fake.
+ * Windows' network profile (server/network-profile.ts): on a "Genel" (Public) connection the old firewall rule (private networks
+ * only, 0.1.12 and before) keeps phones and tablets out; the current rule (every profile, local network only) does not, so the
+ * warning shows only while the rule is the old one. Mola only reads the profile (Get-NetConnectionProfile through the worker of
+ * server/programs.ts); here PowerShell and the firewall helper are fakes.
  */
 const fake = (out: string, code = 0) => { const calls = { n: 0 }; const read: ProfileReader = async () => { calls.n++; return { code, out }; }; return { read, calls }; };
 
@@ -42,6 +43,21 @@ test('network profile: one PowerShell for many screens; asked again after 15 s, 
   // The owner sets "Özel ağ" in Windows and opens the window again.
   out = 'Private|Ethernet'; clock += 2_000;
   assert.deepEqual(await profile.view(), { checked: true, public: [] }); assert.equal(calls.n, 2);
+});
+
+test('network profile: no warning once the firewall rule covers every profile; the rule is asked only for a "Genel" connection', async () => {
+  let asked = 0, rule = true;
+  const covered = async () => { asked++; return rule; };
+  assert.deepEqual(await new NetworkProfile({ platform: 'win32', read: fake('Public|Ethernet').read, lan: () => ['Ethernet'], covered }).view(), { checked: true, public: [] });
+  assert.equal(asked, 1);
+  // Every connection "Özel": nothing to ask.
+  await new NetworkProfile({ platform: 'win32', read: fake('Private|Ethernet').read, lan: () => ['Ethernet'], covered }).view();
+  assert.equal(asked, 1);
+  // The old private-only rule (or none), or the helper failing: the warning stays, "İzni düzelt" fixes it.
+  rule = false;
+  assert.deepEqual(await new NetworkProfile({ platform: 'win32', read: fake('Public|Ethernet').read, lan: () => ['Ethernet'], covered }).view(), { checked: true, public: ['Ethernet'] });
+  const failing = async () => { throw new Error('helper'); };
+  assert.deepEqual(await new NetworkProfile({ platform: 'win32', read: fake('Public|Ethernet').read, lan: () => ['Ethernet'], covered: failing }).view(), { checked: true, public: ['Ethernet'] });
 });
 
 test('network profile routes: the Tabletler window (desktop key) and Ayarlar → Cihazlar (owner); read only', async t => {

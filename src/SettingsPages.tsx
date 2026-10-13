@@ -222,8 +222,8 @@ function ConnectTablet() {
   const [network] = useNetwork(), [image, setImage] = useState('');
   const base = network ? qrBase(network) : '', reachable = !!network && (network.lan || !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname));
   useEffect(() => { let live = true; if (base && reachable) void QRCode.toDataURL(`${base}/uygulama`, { width: 240, margin: 1 }).then(v => { if (live) setImage(v); }).catch(() => {}); return () => { live = false; }; }, [base, reachable]);
-  // On the café computer itself: Windows' "Genel" network profile keeps the phones out (Mola's firewall rule is for private
-  // networks only). A phone or tablet showing this page is already connected, so it is not told.
+  // On the café computer itself: Windows' "Genel" network profile keeps the phones out while Mola's firewall rule is the old
+  // private-only one. A phone or tablet showing this page is already connected, so it is not told.
   const here = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   const profile = useNetworkProfile(() => api<NetworkProfileView>('/api/staff/network-profile'), here && !!network?.lan);
   return <Card icon={<TabletSmartphone size={18} aria-hidden="true" />} title="Tablet ve telefon bağlama" className="connect-tablet">

@@ -333,7 +333,7 @@ del /q "%TARGET%\\Mola-Ac.cmd" "%TARGET%\\Mola-Arkaplan.vbs" 2>nul
 if "%~2"=="--no-shortcuts" goto done
 powershell -NoProfile -Command "$s=New-Object -ComObject WScript.Shell; foreach($f in @([Environment]::GetFolderPath('Desktop'),[Environment]::GetFolderPath('Programs'))){ $l=$s.CreateShortcut($f+'\\Mola.lnk'); $l.TargetPath='%TARGET%\\Mola.exe'; $l.WorkingDirectory='%TARGET%'; $l.Description='Mola adisyon ve QR menu'; $l.Save() }; $a=$s.CreateShortcut([Environment]::GetFolderPath('Startup')+'\\Mola.lnk'); $a.TargetPath='%TARGET%\\Mola.exe'; $a.Arguments='--arkaplan'; $a.WorkingDirectory='%TARGET%'; $a.Save(); $k=$s.CreateShortcut([Environment]::GetFolderPath('Programs')+'\\Mola''y'+[char]0x131+' kald'+[char]0x131+'r.lnk'); $k.TargetPath='%TARGET%\\Mola-Kaldir.exe'; $k.WorkingDirectory='%TARGET%'; $k.Save()"
 net session >nul 2>&1 && netsh advfirewall firewall delete rule name="Mola" program="%TARGET%\\runtime\\node.exe" >nul 2>&1
-net session >nul 2>&1 && netsh advfirewall firewall add rule name="Mola" dir=in action=allow program="%TARGET%\\runtime\\node.exe" profile=private >nul
+net session >nul 2>&1 && netsh advfirewall firewall add rule name="Mola" dir=in action=allow program="%TARGET%\\runtime\\node.exe" profile=domain,private,public remoteip=localsubnet,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16 >nul
 start "" "%TARGET%\\Mola.exe"
 :done
 echo Kurulum tamamlandi: %TARGET%
@@ -353,7 +353,7 @@ KURULUM: Mola Kurulum.exe'ye çift tıklayın.
 1. Bu klasörün tamamını flash bellekten kafenin bilgisayarına kopyalayın (ya da doğrudan flash bellekten çalıştırın).
 2. "Mola Kurulum.exe"ye çift tıklayın, "Kur" düğmesine basın. İnternet gerekmez.
    Windows bir kez "değişiklik yapılsın mı?" diye sorar: yalnız tabletlerin bağlanabilmesi için (güvenlik duvarı,
-   yalnız özel ağ). "Evet" deyin; "Hayır" derseniz kurulum yine biter, izni sonra Tabletler > "İzni düzelt" ile verebilirsiniz.
+   yalnız yerel ağ). "Evet" deyin; "Hayır" derseniz kurulum yine biter, izni sonra Tabletler > "İzni düzelt" ile verebilirsiniz.
    Program %LOCALAPPDATA%\\Mola klasörüne kurulur ("Değiştir" ile başka bir klasör seçilebilir).
    Masaüstüne ve Başlat menüsüne "Mola" simgesi eklenir.
    Bilgisayar açıldığında Mola arka planda kendiliğinden başlar; tabletler hemen bağlanabilir.
@@ -646,7 +646,7 @@ AYNI AĞDAKİ BAŞKA BİLGİSAYARLARDAKİ KAFELER (MERKEZ_LAN)
    1. %LOCALAPPDATA%\\Mola Yonetim klasöründe "ayarlar.cmd" adlı bir dosya oluşturun, içine şu satırı yazın:
           set MERKEZ_LAN=1
       (ya da PowerShell'de bir kez: setx MERKEZ_LAN 1)
-   2. "Mola Yönetim Kurulum.exe"yi yeniden çalıştırın: Windows bir kez yönetici onayı sorar ("Mola Yönetim" izni, yalnız özel ağ)
+   2. "Mola Yönetim Kurulum.exe"yi yeniden çalıştırın: Windows bir kez yönetici onayı sorar ("Mola Yönetim" izni, yalnız yerel ağ)
       ve Merkez ağa açık olarak yeniden başlar.
    3. Kafe paketini bu bilgisayarın ağ adresiyle hazırlayın, örneğin:
           $env:MOLA_MERKEZ_URL="http://192.168.1.20:4000"; npm.cmd run installer

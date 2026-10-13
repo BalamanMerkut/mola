@@ -231,7 +231,7 @@ export function Platform() {
   const topIcon = (id: Page, title: string, icon: ReactNode, extra: string) => <button type="button" className={`icon-btn yonetim-topbar-icon ${extra}${current === id ? ' active' : ''}`} aria-label={title} title={title} aria-current={current === id ? 'page' : undefined} disabled={busy} onClick={() => go(id)}>{icon}</button>;
   return <main className="platform-page platform-v2 yonetim">
     <aside className="yonetim-sidebar">
-      <div className="yonetim-brand"><YonetimBrand /></div>
+      <div className="yonetim-brand"><YonetimBrand light /></div>
       <nav className="yonetim-nav" aria-label="Mola Yönetim bölümleri">{nav.map(navButton)}<span className="yonetim-nav-gap" aria-hidden="true" />{pinned.map(navButton)}</nav>
       {devBadge && <span className="platform-local-note" title="Mola Merkez proje klasöründen (npm run merkez) çalışıyor. Kurulu Mola Yönetim’de bu etiket görünmez.">Yerel test ortamı</span>}
     </aside>

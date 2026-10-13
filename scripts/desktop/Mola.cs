@@ -6,7 +6,7 @@
 //
 //   Mola.exe                              window
 //   Mola.exe --arkaplan                   only the server (Windows start-up, the installer after an update)
-//   Mola.exe --guvenlik-duvari            firewall rule for runtime\node.exe, private networks (asks Windows once, UAC);
+//   Mola.exe --guvenlik-duvari            firewall rule for runtime\node.exe, local network only (asks Windows once, UAC);
 //                                         started by the window's Tabletler > "İzni düzelt" (server/desktop.ts). Exit code
 //                                         0 done / nothing to do, 1 failed, 3 the owner said no.
 //            --guvenlik-duvari --durum    read only: one JSON line, exit code 0 = as Mola wants it, 4 = needs fixing
@@ -266,7 +266,7 @@ static class Program {
       return code;
     }
     bool ok = Firewall.Run(plan, false, note) && Firewall.Exact(Firewall.Inbound(node), P.FirewallRule);
-    note(ok ? "\"" + P.FirewallRule + "\" kuralı hazır (özel ağ, gelen bağlantı)." : "kural tam olarak kurulamadı.");
+    note(ok ? "\"" + P.FirewallRule + "\" kuralı hazır (yalnız yerel ağ, gelen bağlantı)." : "kural tam olarak kurulamadı.");
     return ok ? 0 : 1;
   }
 
@@ -277,7 +277,7 @@ static class Program {
     form.TopMost = true; form.BackColor = P.Back; form.ForeColor = P.Cream; form.Font = new Font("Segoe UI", 10f); form.Text = P.Name + " · Güvenlik duvarı";
     form.Icon = Ui.AppIcon();
     Label text = new Label(); text.Location = Ui.S(20, 18); text.Size = Ui.Z(400, 60); text.ForeColor = P.Cream;
-    text.Text = "Güvenlik duvarı izni (yalnız özel ağ) için Windows yönetici onayı istiyor. Onay penceresi görünmüyorsa görev çubuğunda yanıp sönen simgeye tıklayın.";
+    text.Text = "Güvenlik duvarı izni (yalnız yerel ağ) için Windows yönetici onayı istiyor. Onay penceresi görünmüyorsa görev çubuğunda yanıp sönen simgeye tıklayın.";
     text.Height = Ui.TextHeight(text, 40); form.Controls.Add(text);
     form.ClientSize = new Size(Ui.S(440), text.Bottom + Ui.S(20));
     form.Show(); form.Activate(); Application.DoEvents();

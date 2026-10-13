@@ -13,24 +13,21 @@ export function useNetworkProfile(load: () => Promise<NetworkProfileView>, activ
 }
 
 /**
- * Tabletler (src/DesktopRail.tsx) and Ayarlar → Cihazlar (src/SettingsPages.tsx): Mola's firewall rule allows private networks
- * only, so on a "Genel" connection phones and tablets cannot reach Mola. Mola never changes the setting; this says how.
+ * Tabletler (src/DesktopRail.tsx) and Ayarlar → Cihazlar (src/SettingsPages.tsx): a "Genel" connection while Mola's firewall
+ * rule is still the old private-only one (server/network-profile.ts reports nothing once the rule covers every profile).
+ * The fix is "İzni düzelt" (Tabletler): Mola's own rule, the network setting stays as it is; Windows' setting is the other way.
  */
-export function NetworkProfileNotice({ view }: { view: NetworkProfileView | null }) {
+export function NetworkProfileNotice({ view, here = false }: { view: NetworkProfileView | null; /** In Tabletler, right above "İzni düzelt". */ here?: boolean }) {
   if (!view?.public.length) return null;
   const name = view.public.join(' / ');
   return <div className="network-profile-warning" role="alert" data-testid="network-profile-warning">
     <TriangleAlert size={18} aria-hidden="true" />
     <div>
-      <strong>Bu bilgisayarın ağı “Genel” olarak ayarlı; telefonlar ve tabletler bağlanamaz.</strong>
-      <p>Windows Ayarları → Ağ ve İnternet → {name} → Ağ profili: <b>Özel</b>.</p>
-      <ol>
-        <li>Başlat → <b>Ayarlar</b> → <b>Ağ ve İnternet</b>.</li>
-        <li>Bağlantıyı açın: <b>{name}</b>. Wi-Fi ise bağlı ağın <b>Özellikler</b>'ine girin.</li>
-        <li><b>Ağ profili türü</b> bölümünde <b>Özel ağ</b>'ı seçin.</li>
-        <li>Bu pencereyi kapatıp yeniden açın; uyarı kaybolur.</li>
-      </ol>
-      <small>Mola bu ayarı kendisi değiştirmez. Kafenin kendi Wi-Fi'si ya da kablolu ağı için “Özel” doğrudur.</small>
+      <strong>Telefonlar ve tabletler bu bilgisayara bağlanamıyor: ağ “Genel” olarak ayarlı, Mola'nın güvenlik duvarı izni eski.</strong>
+      {here
+        ? <p>Aşağıdaki <b>İzni düzelt</b>'e basın; Windows bir kez “Evet” diye sorar. Ağ ayarınız değişmez.</p>
+        : <p>Kasa bilgisayarındaki Mola penceresinde sol şeritten <b>Tabletler</b> → <b>İzni düzelt</b>'e basın; Windows bir kez “Evet” diye sorar. Ağ ayarınız değişmez.</p>}
+      <small>Ya da Windows Ayarları → Ağ ve İnternet → {name} → Ağ profili: Özel.</small>
     </div>
   </div>;
 }

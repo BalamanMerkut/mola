@@ -36,7 +36,7 @@
 .yonetim .ann-readers { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; }
 .yonetim .ann-readers section { padding:14px 16px; border-radius:12px; background:var(--y-soft); min-width:0; }
 .yonetim .ann-readers h3 { display:flex; align-items:center; gap:8px; font-size:14px; margin:0 0 8px; }
-.yonetim .ann-readers h3 span { font-size:12px; font-weight:700; background:#fff; border-radius:999px; padding:1px 8px; color:var(--y-muted); }
+.yonetim .ann-readers h3 span { font-size:12px; font-weight:700; background:var(--y-card,#fff); border-radius:999px; padding:1px 8px; color:var(--y-muted); }
 .yonetim .ann-readers ul { list-style:none; margin:0; padding:0; display:grid; gap:6px; max-height:240px; overflow-y:auto; }
 .yonetim .ann-readers li { display:grid; font-size:14px; overflow-wrap:anywhere; }
 .yonetim .ann-readers li small { font-size:12px; color:var(--y-muted); }
@@ -59,14 +59,14 @@
 .yonetim .ann-target { margin:0; padding:0; border:0; min-width:0; display:grid; gap:12px; }
 .yonetim .ann-target legend { padding:0; margin-bottom:10px; font-size:14px; font-weight:600; }
 .yonetim .ann-target-choices { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
-.yonetim .ann-target-choices button { display:grid; gap:2px; min-height:64px; padding:10px 14px; border:1.5px solid var(--y-line); border-radius:12px; background:#fff; text-align:left; font:inherit; color:inherit; cursor:pointer; min-width:0; }
+.yonetim .ann-target-choices button { display:grid; gap:2px; min-height:64px; padding:10px 14px; border:1.5px solid var(--y-line); border-radius:12px; background:var(--y-card,#fff); text-align:left; font:inherit; color:inherit; cursor:pointer; min-width:0; }
 .yonetim .ann-target-choices button strong { font-size:14px; line-height:1.3; }
 .yonetim .ann-target-choices button small { font-size:12px; color:var(--y-muted); }
 .yonetim .ann-target-choices button.selected { border-color:var(--green); background:#f2f7ef; box-shadow:0 0 0 1px var(--green) inset; }
 .yonetim .ann-target-choices button:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
 .yonetim .ann-fixed { display:flex; align-items:center; gap:8px; margin:0; padding:12px 14px; border-radius:12px; background:var(--y-soft); font-size:14px; }
 .yonetim .ann-packages { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px; }
-.yonetim .ann-check { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; column-gap:10px; min-height:48px; margin:0; padding:8px 12px; border:1px solid var(--y-line); border-radius:10px; background:#fff; font-weight:500; cursor:pointer; }
+.yonetim .ann-check { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; column-gap:10px; min-height:48px; margin:0; padding:8px 12px; border:1px solid var(--y-line); border-radius:10px; background:var(--y-card,#fff); font-weight:500; cursor:pointer; }
 .yonetim .ann-check.on { border-color:#9fbe95; background:#f3f8f0; }
 .yonetim .ann-check input { grid-row:1 / span 2; margin:0; }
 .yonetim .ann-check span { font-size:14px; overflow-wrap:anywhere; }
@@ -122,7 +122,7 @@
   .platform-page.yonetim .yonetim-nav { grid-template-columns:repeat(6,minmax(0,1fr)); }
   .platform-page.yonetim .yonetim-nav button:is(.nav-announcements, .nav-packages) { display:none; }
   .yonetim .yonetim-topbar-icon { display:inline-grid; place-items:center; width:44px; height:44px; padding:0; border-radius:12px; color:var(--y-muted); }
-  .yonetim .yonetim-topbar-icon.active { background:#e6efe3; color:var(--green); }
+  .yonetim .yonetim-topbar-icon.active { background:#efe2c9; color:var(--green); }
   .yonetim .yonetim-topbar-actions { gap:6px; }
   .yonetim .yonetim-topbar-actions .btn { white-space:nowrap; }
 }

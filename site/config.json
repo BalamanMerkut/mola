@@ -12,33 +12,33 @@
   "_indirAciklama": "Uygulamayı indir (/indir/). 'files' bölümünü npm.cmd run site:indir doldurur (dosya adı, boyut, SHA-256) ve dosyaları site/dist/indir'e kopyalar. 'enabled' false iken her platform 'Yakında' görünür; VDS için hazırlanmış kurulum dosyaları olunca true yapın ve npm.cmd run site:build (docs/VDS_KURULUM.md bölüm 13).",
   "downloads": {
     "enabled": true,
-    "version": "0.1.12",
-    "builtAt": "2026-10-13T20:58:49.507Z",
+    "version": "0.1.13",
+    "builtAt": "2026-10-13T21:24:02.184Z",
     "files": {
       "windows": {
-        "file": "Mola-Windows-0.1.12.zip",
-        "size": 44641588,
-        "sha256": "8c5d837cbdab3277411125ccc1476b8d1cb5ac6eef2c675a958234696dacb88b"
+        "file": "Mola-Windows-0.1.13.zip",
+        "size": 44643847,
+        "sha256": "2e7e67d2ed9312dc9f17feb2a10da5af0c8fd1f262e86da33151a325eed0b95f"
       },
       "macos-arm64": {
-        "file": "Mola-macOS-AppleSilicon-0.1.12.tar.gz",
-        "size": 49809725,
-        "sha256": "b53daa60784a74dcf91d84cd36ec8712955e2951ab30e2ba11ee04b1fc4cf96d"
+        "file": "Mola-macOS-AppleSilicon-0.1.13.tar.gz",
+        "size": 49810645,
+        "sha256": "9c86cd570151c3eeaa0da9cb6dd9f42ab65c8b3edc3b0aaccf688664882e496a"
       },
       "macos-x64": {
-        "file": "Mola-macOS-Intel-0.1.12.tar.gz",
-        "size": 51381216,
-        "sha256": "056eb2b5dedc15cb2c0161e646ecffb29a484f0e9be74c0e834680dfc8422fdc"
+        "file": "Mola-macOS-Intel-0.1.13.tar.gz",
+        "size": 51381648,
+        "sha256": "7a35cd6e471af8114f69f210253c4f41d9fc2b974004c2f9070f349f638aa6f0"
       },
       "linux-x64": {
-        "file": "Mola-Linux-x64-0.1.12.tar.gz",
-        "size": 54886593,
-        "sha256": "69e00dc3a1124df150b92834605774f0bac2b3f4a9caddfd731c07a3264e37db"
+        "file": "Mola-Linux-x64-0.1.13.tar.gz",
+        "size": 54887403,
+        "sha256": "2cc0849787dc2df1d41d28cc827c9a942496465fff92d1836e3b229b09fd63c9"
       },
       "android": {
-        "file": "Mola-Android-0.1.12.apk",
+        "file": "Mola-Android-0.1.13.apk",
         "size": 103873,
-        "sha256": "f3dbffc6bc729017afc37429b3d902f3fda78c02e2ca97c99d5f96563f6fb959"
+        "sha256": "86355fcb3e231634498a9c4f7b9486867d8cd3f86facd3d9a5687ea1c30c39df"
       }
     }
   }

@@ -6,7 +6,7 @@
 //
 // Order: (an update over a running Mola) ask "Şimdi güncelle / Kapanışta güncelle", take a backup through the running
 // server, close the Mola window, shut the server down; copy; register; shortcuts; firewall: if runtime\node.exe has not
-// exactly Mola's rule ("Mola", inbound, allow, private networks only), Windows asks ONCE for administrator approval (UAC)
+// exactly Mola's rule ("Mola", inbound, allow, local network only, Ortak.cs Firewall), Windows asks ONCE for administrator approval (UAC)
 // and only "--guvenlik-duvari" runs elevated, before the server ever listens, so Windows' own "Node.js JavaScript
 // Runtime" question does not come up; if the owner says no, the installation goes on (Tabletler > "İzni düzelt" later);
 // finally the server is started again in the background (Mola.exe --arkaplan).
@@ -263,7 +263,7 @@ class Setup {
     string node = Local.Node(Target);
     List<Firewall.Rule> rules = Firewall.Inbound(node);
     if (rules == null) { Log("Güvenlik duvarı kuralları okunamadı."); FirewallNeeded = true; return; }
-    if (Firewall.Exact(rules, P.FirewallRule)) { Log("Güvenlik duvarı: \"" + P.FirewallRule + "\" kuralı zaten var (özel ağ)."); FirewallAdded = true; return; }
+    if (Firewall.Exact(rules, P.FirewallRule)) { Log("Güvenlik duvarı: \"" + P.FirewallRule + "\" kuralı zaten var (yerel ağ)."); FirewallAdded = true; return; }
     foreach (Firewall.Rule r in rules) Log("Güvenlik duvarı: bu program için " + Firewall.Describe(r) + " kuralı var; düzeltilecek.");
     FirewallNeeded = true;
     if (IsAdmin()) { Step("Güvenlik duvarı izni ekleniyor…"); FirewallAdded = SetFirewall(false); }
@@ -667,7 +667,7 @@ class SetupWindow : Form {
     StringBuilder text = new StringBuilder();
     foreach (string w in setup.Warnings) text.AppendLine(w);
     if (P.FinishNote.Length > 0) text.AppendLine(P.FinishNote);
-    if (setup.FirewallAdded && setup.FirewallNeeded) text.AppendLine("Güvenlik duvarı izni eklendi (yalnız özel ağ); tabletler bağlanabilir.");
+    if (setup.FirewallAdded && setup.FirewallNeeded) text.AppendLine("Güvenlik duvarı izni eklendi (yalnız yerel ağ); tabletler bağlanabilir.");
     elevate.Visible = setup.FirewallNeeded && !setup.FirewallAdded;
     note.Text = text.ToString().Trim(); note.Visible = note.Text.Length > 0; note.ForeColor = setup.Warnings.Count > 0 ? Warn : Soft;
     status.Visible = false; open.Visible = true; close.Visible = true; close.Enabled = true; AcceptButton = open; open.Focus();
@@ -681,7 +681,7 @@ class SetupWindow : Form {
     if (code == 3) return;  // the owner said no to the Windows question
     bool ok = code == 0;
     note.ForeColor = ok ? Soft : Warn;
-    note.Text = ok ? "Güvenlik duvarı izni eklendi (yalnız özel ağ); tabletler bağlanabilir." : "Güvenlik duvarı izni eklenemedi. Ayrıntılar: " + Path.Combine(setup.Target, "logs\\kurulum.log");
+    note.Text = ok ? "Güvenlik duvarı izni eklendi (yalnız yerel ağ); tabletler bağlanabilir." : "Güvenlik duvarı izni eklenemedi. Ayrıntılar: " + Path.Combine(setup.Target, "logs\\kurulum.log");
     note.Visible = true; elevate.Visible = !ok; Relayout();
   }
 
