@@ -182,7 +182,9 @@ export function realHooks(job) {
       }
       mkdirSync(dirname(s.log), { recursive: true });
       const fd = openSync(s.log, 'a');
-      const child = spawn(s.node, s.args, { cwd: s.cwd, detached: true, stdio: ['ignore', fd, fd], env: s.env ?? process.env });
+      // windowsHide: a detached console program gets a window of its own on Windows; without it the café saw a black
+      // "node.exe nobetci.mjs" window after every update (13 Ekim), and closing it stopped Mola.
+      const child = spawn(s.node, s.args, { cwd: s.cwd, detached: true, stdio: ['ignore', fd, fd], windowsHide: true, env: s.env ?? process.env });
       child.unref(); closeSync(fd);
     },
     async stopServer() {
