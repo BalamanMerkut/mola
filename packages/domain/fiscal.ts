@@ -71,6 +71,8 @@ export type FiscalOpen = { id: string; kind: 'payment' | 'refund'; paymentId: st
  */
 export type CashFiscal = {
   rows: RateAmount[]; total: number; cash: number; card: number;
+  /** Kasa güvenliği → strictCount, the counter's copy: no cash / card split and no payment list (`cash`, `card` 0, `open` empty). */
+  hiddenSplit?: true;
   refundRows?: RateAmount[]; refunds?: number; platform?: number;
   /** Payments and refunds to enter, and how many were ticked "Girildi". */
   count: number; entered: number;

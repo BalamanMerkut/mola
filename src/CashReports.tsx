@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { ChevronDown, Clock3, CreditCard, TriangleAlert, UserRound, Wallet } from 'lucide-react';
-import { movementNames, tipRuleNames, type BlindClosing, type CashClosing, type CashCorrection, type CashOpening, type CloserSummary } from '../packages/domain/cash';
+import { movementNames, tipRuleNames, type BlindClosing, type CashClosing, type CashCorrection, type CashOpening, type CashReceipt, type CloserSummary } from '../packages/domain/cash';
 import { autoEnded, hoursText, type Shift } from '../packages/domain/shifts';
 import type { Range } from './SalesReports';
 import { api, money, moneyError, parseAdjustment, requestId } from './api';
@@ -18,7 +18,8 @@ import { DateTimeField } from './TimeField';
  * Kasa ve giderler → "Kapanışlar" (server/cash-closing.ts) and Personel → "Vardiya ve bahşiş" (server/shifts.ts; sub-tabs
  * Vardiyalar · Bahşiş), with the period chosen above them like every report.
  */
-type ClosingRow = CashClosing & { corrections: CashCorrection[]; corrected: number };
+/** `receipt` (Kasa güvenliği → receipt): the owner's "Teslim aldım", or null while the money taken out still waits. */
+type ClosingRow = CashClosing & { corrections: CashCorrection[]; corrected: number; receipt?: CashReceipt | null };
 /** `closings`: the newest page (`limit`), `closingCount` how many the period has; totals and people count every one. */
 type ClosingReport = { blind?: true; business: string; printing: boolean; closings: ClosingRow[]; closingCount?: number; openings: CashOpening[]; people: CloserSummary[]; totals: { count: number; difference: number; short: number; over: number; cashSales: number; cardDifference: number } };
 
@@ -94,10 +95,12 @@ function ClosingCard({ c, owner, open, onToggle, business, printing, onCorrected
     </button>
     {c.note && <p className="cash-closing-note"><strong>Not:</strong> {c.note}</p>}
     {!!c.fiscalZ?.difference && <p className="cash-closing-note"><strong>Yazar kasa:</strong> Z raporu farkı {signedMoney(c.fiscalZ.difference)}</p>}
+    {/* Kasa güvenliği → receipt: seen without opening the card (a short envelope is the gap the count hid). */}
+    {c.receiptAsked && <p className={`cash-closing-note${c.receipt?.difference ? ' cash-lines-warn' : ''}`}><strong>Teslim:</strong> {c.receipt ? `${money(c.receipt.received)} alındı${c.receipt.difference ? ` · fark ${signedMoney(c.receipt.difference)}` : ', tutuyor'}${c.receipt.note ? ` · ${c.receipt.note}` : ''}` : `${money(c.taken ?? 0)} teslim almanızı bekliyor (Bugün → Teslim al)`}</p>}
     {open && <div id={`${id}-details`} className="cash-closing-details">
       <div className="cash-result-grid">
         <section aria-label="Kasa"><h3><Wallet size={16} aria-hidden="true" />Kasa · {c.difference ? `sayım farkı ${signedMoney(c.difference)}` : 'fark yok'}</h3><ExpectedLines f={c.figures} /><NegativeExpected f={c.figures} />
-          <dl className="cash-lines"><div><dt>Sayılan nakit</dt><dd>{money(c.counted)}</dd></div>{c.mode === 'final' && <div><dt>Kasada bırakılan</dt><dd>{money(c.left ?? c.counted)}</dd></div>}{!!c.taken && <div><dt>Kapanışta çıkarılan</dt><dd>{money(c.taken)}</dd></div>}{c.unconfirmedOpening && <div className="cash-lines-quiet"><dt>Açılış onaylanmamıştı<small>Devreden tutar kullanıldı</small></dt><dd /></div>}</dl></section>
+          <dl className="cash-lines"><div><dt>Sayılan nakit</dt><dd>{money(c.counted)}</dd></div>{c.mode === 'final' && <div><dt>Kasada bırakılan</dt><dd>{money(c.left ?? c.counted)}</dd></div>}{!!c.taken && <div><dt>Kapanışta çıkarılan</dt><dd>{money(c.taken)}</dd></div>}{c.receiptAsked && <div className={c.receipt?.difference ? 'cash-lines-warn' : undefined}><dt>{c.receipt ? 'Teslim alınan' : 'Teslim'}{c.receipt?.note && <small>{c.receipt.note}</small>}</dt><dd>{c.receipt ? <>{money(c.receipt.received)}{c.receipt.difference !== 0 && <small> · fark {signedMoney(c.receipt.difference)}</small>}</> : 'Bekliyor'}</dd></div>}{c.unconfirmedOpening && <div className="cash-lines-quiet"><dt>Açılış onaylanmamıştı<small>Devreden tutar kullanıldı</small></dt><dd /></div>}</dl></section>
         <section aria-label="Kart ve platform"><h3><CreditCard size={16} aria-hidden="true" />Kart ve platform</h3><CardLines c={c} /></section>
       </div>
       {c.movements.length > 0 && <section className="cash-detail-list"><h4>Kasa hareketleri</h4><ul>{c.movements.map(m => <li key={m.id}><span>{clock(m.at)}</span><strong>{movementNames[m.type]}</strong><span>{money(m.amount)}</span><small>{m.byName}{m.note ? ` · ${m.note}` : ''}</small></li>)}</ul></section>}

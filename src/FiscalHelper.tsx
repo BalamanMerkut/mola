@@ -175,7 +175,8 @@ export function FiscalClosingSection({ fiscal, z, final, edit }: { fiscal: CashF
     <h3><ReceiptText size={16} aria-hidden="true" />Yazar kasa karşılaştırması</h3>
     <p className="fiscal-should"><span>{final ? 'Bugün yazar kasaya girilmesi gereken' : 'Bu kapanışta yazar kasaya girilmesi gereken'}:</span>{' '}
       <strong>{fiscal.rows.length ? `${ratesLine(fiscal.rows)} · ` : ''}Toplam {kasaMoney(fiscal.total)}</strong>{' '}
-      <small>(Nakit {kasaMoney(fiscal.cash)} / Kart {kasaMoney(fiscal.card)})</small></p>
+      {/* Kasa güvenliği → strictCount: the counter's copy has no split (it would give the expected cash away). */}
+      {!fiscal.hiddenSplit && <small>(Nakit {kasaMoney(fiscal.cash)} / Kart {kasaMoney(fiscal.card)})</small>}</p>
     {!!fiscal.refunds && <p className="fiscal-sub">İade / ters işlem: <strong>{fiscal.refundRows?.length ? ratesLine(fiscal.refundRows) : kasaMoney(fiscal.refunds)}</strong>{fiscal.refundRows && fiscal.refundRows.length > 1 && <> · Toplam {kasaMoney(fiscal.refunds)}</>}</p>}
     {!!fiscal.platform && <p className="fiscal-sub">Platform (online ödenen) {kasaMoney(fiscal.platform)}: toplama katılmadı. {PLATFORM_FISCAL.replace('Platform siparişi — ', '')}.</p>}
     {edit && final && <div className="fiscal-z-fields">
@@ -191,7 +192,7 @@ export function FiscalClosingSection({ fiscal, z, final, edit }: { fiscal: CashF
       <small>Z raporu {kasaMoney(result.total)} · Mola {kasaMoney(fiscal.total)}{result.rateDifferences?.filter(r => r.amount).map(r => ` · %${r.rate} farkı ${signed(r.amount)}`).join('') ?? ''}</small>
       <p>{zExplanation(fiscal, result)}</p>
     </div>}
-    {ticksUsed(fiscal) ? <div className="fiscal-open">
+    {fiscal.hiddenSplit ? null : ticksUsed(fiscal) ? <div className="fiscal-open">
       <h4>“Girildi” işaretlenmemiş {openCount ? `(${openCount})` : ''}</h4>
       {!openCount ? <p className="muted small">Hepsi “Girildi” olarak işaretlenmiş.</p> : <ul>{shown.map(o => <li key={o.id}>
         <span>{clock(o.at)}</span><strong>{o.tableName ?? 'Hesap'}{o.kind === 'refund' ? ' · iade' : ''}</strong><span>{kasaMoney(o.amount)} · {methodWord(o.method).toLocaleLowerCase('tr')}</span>

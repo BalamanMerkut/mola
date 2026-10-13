@@ -56,7 +56,7 @@ export const REAL_CHANGES: readonly string[] = [
   '/api/desktop/restore', '/api/desktop/restore/merkez', '/api/desktop/recovery/confirm', '/api/desktop/recovery/new',
   // Money, stock, shifts, reservations, notes
   '/api/staff/expenses', '/api/staff/expenses/edit', '/api/staff/expenses/delete', '/api/staff/recurring-expenses', '/api/staff/recurring-expenses/delete',
-  '/api/staff/cash/open', '/api/staff/cash/movements', '/api/staff/cash/count', '/api/staff/cash/finish', '/api/staff/cash/closing-shift', '/api/staff/cash/corrections', '/api/staff/cash/settings', '/api/staff/cash/revoke',
+  '/api/staff/cash/open', '/api/staff/cash/movements', '/api/staff/cash/count', '/api/staff/cash/finish', '/api/staff/cash/closing-shift', '/api/staff/cash/corrections', '/api/staff/cash/settings', '/api/staff/cash/revoke', '/api/staff/cash/receipts',
   '/api/staff/stock/items', '/api/staff/stock/items/delete', '/api/staff/stock/recipes', '/api/staff/stock/purchase', '/api/staff/stock/count', '/api/staff/stock/waste',
   '/api/staff/stock/return', '/api/staff/stock/entries/delete', '/api/staff/stock/answer', '/api/staff/profit/settings',
   '/api/staff/shifts/start', '/api/staff/shifts/end', '/api/staff/shifts/plan', '/api/staff/shifts/roles', '/api/staff/shifts/correct',

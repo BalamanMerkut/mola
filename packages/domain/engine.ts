@@ -531,7 +531,7 @@ export function recordPayment(s: State, actor: Actor, input: { selections?: impo
     if (input.amount > balance) throw new DomainError('OVERPAYMENT', 'Kalan hesaptan fazla tahsilat girilemez.', 409);
     if (input.method !== 'cash' && input.method !== 'card') throw new DomainError('INVALID_METHOD', 'Ödeme yöntemi geçersiz.');
     if (input.tendered < input.amount || (input.method === 'card' && input.tendered !== input.amount)) throw new DomainError('INVALID_TENDER', 'Alınan tutarı kontrol edin.');
-    const payment = { id: ctx.id(), accountId: a.id, amount: input.amount, tendered: input.tendered, change: input.method === 'cash' ? input.tendered - input.amount : 0, method: input.method, createdAt: ctx.now.toISOString(), commission: input.method === 'card' ? commissionOf(input.amount, s.commissionBps) : null };
+    const payment = { id: ctx.id(), accountId: a.id, amount: input.amount, tendered: input.tendered, change: input.method === 'cash' ? input.tendered - input.amount : 0, method: input.method, createdAt: ctx.now.toISOString(), commission: input.method === 'card' ? commissionOf(input.amount, s.commissionBps) : null, by: actor.id };
     const accountOrders = s.orders.filter(o => o.accountId === a.id && !['cancelled', 'awaiting_approval'].includes(o.status));
     const campaignTotal = accountOrders.flatMap(o => o.lines).filter(l => l.campaigns?.length).reduce((n, l) => n + l.total, 0);
     const previousPayments = s.payments.filter(p => p.accountId === a.id);

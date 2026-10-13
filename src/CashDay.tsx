@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Banknote, ChevronDown, CircleEllipsis, Clock3, HandCoins, Landmark, MoonStar, PlusCircle, QrCode, ReceiptText, RotateCcw, Sunrise, TriangleAlert, Undo2, Wallet } from 'lucide-react';
-import { movementNames, type CashMovementKind, type CashStatus } from '../packages/domain/cash';
+import { movementNames, type CashMovementKind, type CashStatus, type PendingReceipt } from '../packages/domain/cash';
 import type { StaffSnapshot } from '../packages/domain/types';
 import { api, ApiError, money, moneyError, moneyInput, parseMoney, requestId } from './api';
 import { Modal, Notice } from './components';
@@ -74,7 +74,7 @@ export function CashDayPanel({ data, visible, onToast, compact = false, onExpens
   const owner = data.role === 'owner';
   const { status, reload } = useCashStatus(true);
   const [closing, setClosing] = useState(false), [moving, setMoving] = useState(false), [code, setCode] = useState(false), [refund, setRefund] = useState(false), [revoking, setRevoking] = useState(false);
-  const [menu, setMenu] = useState(false), menuId = useId();
+  const [menu, setMenu] = useState(false), menuId = useId(), [receiving, setReceiving] = useState<PendingReceipt | null>(null);
   useEffect(() => { if (!menu) return; const close = (e: Event) => { if (e instanceof KeyboardEvent ? e.key === 'Escape' : !(e.target instanceof Element && e.target.closest('.cash-chip-wrap'))) setMenu(false); }; document.addEventListener('pointerdown', close); document.addEventListener('keydown', close); return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', close); }; }, [menu]);
   // "İade": owner and Müdür any refund, the cashier small ones (or a request to the owner); packages/domain/refund-rules.ts.
   const canRefund = refundPower(data.role) !== 'none';
@@ -113,6 +113,8 @@ export function CashDayPanel({ data, visible, onToast, compact = false, onExpens
       {compact && <div className="cash-chip-wrap"><button type="button" className={`cash-chip${status.afterClose || status.unclosedPrevious || status.showOpening ? ' warn' : ''}`} aria-expanded={menu} aria-controls={menuId} onClick={() => setMenu(m => !m)}><Banknote size={17} aria-hidden="true" /><span>{chip}</span><ChevronDown size={16} aria-hidden="true" /></button>
         {menu && <div className="cash-menu" id={menuId} role="group" aria-label="Kasa işlemleri">{actions}</div>}</div>}
       {status.showOpening && <OpeningCard status={status} owner={owner} onSaved={message => { onToast(message); void reload(); }} />}
+      {/* Kasa güvenliği → receipt: the money taken out at a gün sonu waits for the owner's count. */}
+      {owner && status.receipts?.map(r => <div className="cash-alert receipt" role="status" key={r.closingId}><HandCoins size={20} aria-hidden="true" /><div><strong>Teslim alınacak para: {money(r.taken)}</strong><span>{r.byName} {longDay(r.day)} gün sonunda kasadan çıkardı ({clock(r.at)}). Sayıp teslim alın.</span></div><button type="button" className="btn primary" onClick={() => setReceiving(r)}>Teslim al</button></div>)}
       {status.unclosedPrevious && !status.draft && <div className="cash-alert warn" role="status"><TriangleAlert size={20} aria-hidden="true" /><div><strong>Dünün kasası kapanmadı</strong><span>{longDay(status.unclosedPrevious.day)} açılan kasa sayılıp kapatılmadı. Yeni güne başlamadan önce gün sonunu yapın.</span></div><button type="button" className="btn primary" onClick={() => setClosing(true)}>Dünün kasasını kapat</button></div>}
       {status.draft && <div className="cash-alert" role="status"><Clock3 size={20} aria-hidden="true" /><div><strong>Kasa sayımı bekliyor</strong><span>{status.draft.byName} {saatEki(clock(status.draft.countedAt), 'de')} saydı; kapanış henüz tamamlanmadı.</span></div><button type="button" className="btn primary" onClick={() => setClosing(true)}>Kapanışı tamamla</button></div>}
       {remind && <div className="cash-alert" role="status"><MoonStar size={20} aria-hidden="true" /><div><strong>Bütün hesaplar kapandı</strong><span>Kapanış saati ({status.settings.closingTime}) geçti. Gün sonu kasasını sayıp kapatın.</span></div><button type="button" className="btn primary" onClick={() => setClosing(true)}>Gün sonunu yap</button></div>}
@@ -126,30 +128,39 @@ export function CashDayPanel({ data, visible, onToast, compact = false, onExpens
     </section>)}
     {closing && <ClosingDialog openBills={openBillsNote(data)} kitchen={kitchenNote(data)} status={status} printing={!!data.printing?.bill} business={data.name} owner={owner} onClose={() => { setClosing(false); void reload(); }} onDone={message => { onToast(message); void reload(); }} />}
     {moving && <MovementDialog status={status} owner={owner} onClose={() => setMoving(false)} onSaved={message => { setMoving(false); onToast(message); void reload(); }} />}
+    {receiving && <ReceiptDialog receipt={receiving} onClose={() => setReceiving(null)} onDone={message => { setReceiving(null); onToast(message); void reload(); }} />}
     {revoking && status.closedToday && <RevokeDialog status={status} onClose={() => setRevoking(false)} onDone={message => { setRevoking(false); onToast(message); void reload(); }} />}
     {code && <CounterCodeDialog onClose={() => setCode(false)} />}
     {refund && <RefundWindow onClose={() => setRefund(false)} onDone={message => { setRefund(false); onToast(message); void reload(); }} />}
   </>;
 }
 
-/** The morning: the carried amount to confirm (cashier), or to correct (owner). A cashier reports a difference with a note. */
+/**
+ * The morning: the carried amount to confirm (cashier), or to correct (owner). A cashier reports a difference with a note.
+ * Kasa güvenliği (14 Ekim): a blind opening (`status.blindOpening`) shows no carried amount and asks no note; after a
+ * "Vardiya devri" with handoverCount on, the incoming person counts the same way ("Vardiya devrini al").
+ */
 function OpeningCard({ status, owner, onSaved }: { status: CashStatus; owner: boolean; onSaved: (message: string) => void }) {
-  const id = useId(), carried = status.carried;
-  const [other, setOther] = useState(owner || carried === null), [amount, setAmount] = useState(carried === null ? '' : moneyInput(carried)), [note, setNote] = useState('');
+  const id = useId(), carried = status.carried, blind = !!status.blindOpening, handover = status.handoverWaiting;
+  const [other, setOther] = useState(owner || carried === null || blind), [amount, setAmount] = useState(carried === null ? '' : moneyInput(carried)), [note, setNote] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [touched, setTouched] = useState(false);
   const value = other ? parseMoney(amount) : carried ?? 0, differs = carried !== null && Number.isFinite(value) && value !== carried;
   const amountProblem = other && (touched || amount.trim()) ? moneyError(amount, { min: 0 }) : '';
   async function save() {
     if (busy || !Number.isFinite(value)) return;
     setBusy(true); setError('');
-    try { await api('/api/staff/cash/open', { requestId: requestId(), amount: value, ...(note.trim() ? { note: note.trim() } : {}) }); onSaved(`Kasa açıldı: ${money(value)}.`); }
+    try { await api('/api/staff/cash/open', { requestId: requestId(), amount: value, ...(note.trim() ? { note: note.trim() } : {}) }); onSaved(handover ? `Vardiya devri alındı: ${money(value)} sayıldı.` : `Kasa açıldı: ${money(value)}.`); }
     catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
+  const lead = handover && blind ? <>{handover.byName} kasayı {saatEki(clock(handover.at), 'de')} devretti. Devredilen tutarı görmeden kasayı sayıp yazın; fark işletme sahibine iletilir.</>
+    : handover ? <>{handover.byName} kasayı {saatEki(clock(handover.at), 'de')} devretti: <strong>{money(carried ?? 0)}</strong>. Kasayı sayın; tutar aynıysa onaylayın.</>
+    : blind ? 'Kasadaki nakdi sayıp yazın. Dünden devreden tutar gösterilmez; fark işletme sahibine iletilir.'
+    : carried === null ? 'İlk açılış: kasadaki nakdi sayıp yazın.' : <>Dünden devreden: <strong>{money(carried)}</strong>. Kasayı sayın; tutar aynıysa onaylayın.</>;
   return <form className="cash-opening" aria-labelledby={`${id}-title`} onSubmit={e => { e.preventDefault(); void save(); }}>
     <span className="cash-opening-icon" aria-hidden="true"><Sunrise size={22} /></span>
     <div className="cash-opening-copy">
-      <h2 id={`${id}-title`}>Kasa açılışı</h2>
-      <p>{carried === null ? 'İlk açılış: kasadaki nakdi sayıp yazın.' : <>Dünden devreden: <strong>{money(carried)}</strong>. Kasayı sayın; tutar aynıysa onaylayın.</>}</p>
+      <h2 id={`${id}-title`}>{handover ? 'Vardiya devrini al' : 'Kasa açılışı'}</h2>
+      <p>{lead}</p>
     </div>
     <div className="cash-opening-form">
       {other && <label htmlFor={`${id}-amount`}>Kasadaki nakit (TL)<input id={`${id}-amount`} aria-label="Açılış tutarı" inputMode="decimal" value={amount} aria-invalid={!!amountProblem} onBlur={() => setTouched(true)} onChange={e => setAmount(e.target.value)} placeholder="Örn. 500" />{amountProblem && <small className="field-error" role="alert">{amountProblem}</small>}</label>}
@@ -159,7 +170,7 @@ function OpeningCard({ status, owner, onSaved }: { status: CashStatus; owner: bo
       <div className="cash-opening-actions">
         {!other && <button type="button" className="btn secondary" onClick={() => setOther(true)}>Farklı tutar bildir</button>}
         {other && !owner && carried !== null && <button type="button" className="btn secondary" onClick={() => { setOther(false); setAmount(moneyInput(carried)); setNote(''); }}>Vazgeç</button>}
-        <button className="btn primary" disabled={busy || !Number.isFinite(value) || (other && amount.trim() === '') || (!owner && differs && !note.trim())}>{busy ? 'Kaydediliyor…' : other ? 'Açılışı kaydet' : `Açılışı onayla · ${money(value)}`}</button>
+        <button className="btn primary" disabled={busy || !Number.isFinite(value) || (other && amount.trim() === '') || (!owner && differs && !note.trim())}>{busy ? 'Kaydediliyor…' : handover && other ? 'Sayımı kaydet ve devri al' : other ? 'Açılışı kaydet' : handover ? `Devri onayla · ${money(value)}` : `Açılışı onayla · ${money(value)}`}</button>
       </div>
     </div>
   </form>;
@@ -177,6 +188,27 @@ const outKinds: { kind: CashMovementKind; label: string; icon: ReactNode }[] = [
   { kind: 'other_out', label: 'Başka bir şey', icon: <CircleEllipsis size={18} aria-hidden="true" /> },
 ];
 const groupOf = (k: CashMovementKind): MovementGroup => k === 'exchange' ? 'exchange' : k === 'owner_in' ? 'in' : 'out';
+/**
+ * "Teslim aldım" (Kasa güvenliği → receipt): the owner counts the money taken out at a gün sonu and writes what is there; a
+ * difference needs a short note and stays with the closing (Kapanışlar).
+ */
+function ReceiptDialog({ receipt, onClose, onDone }: { receipt: PendingReceipt; onClose: () => void; onDone: (message: string) => void }) {
+  const id = useId(), [amount, setAmount] = useState(''), [note, setNote] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [request] = useState(requestId);
+  const value = parseMoney(amount), problem = amount.trim() ? moneyError(amount, { min: 0 }) : '', differs = amount.trim() !== '' && Number.isFinite(value) && value !== receipt.taken;
+  async function save() {
+    if (busy || !Number.isFinite(value) || (differs && !note.trim())) return; setBusy(true); setError('');
+    try { await api('/api/staff/cash/receipts', { requestId: request, closingId: receipt.closingId, received: value, ...(note.trim() ? { note: note.trim() } : {}) }); onDone(differs ? `Teslim alındı; ${signedMoney(value - receipt.taken)} fark kaydedildi.` : 'Teslim alındı; tutar tutuyor.'); }
+    catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+  }
+  return <Modal title="Parayı teslim al" onClose={() => { if (!busy) onClose(); }}><form className="modal-body cash-receipt" onSubmit={e => { e.preventDefault(); void save(); }}>
+    <p>{receipt.byName}, {longDay(receipt.day)} gün sonunda kasadan <strong>{money(receipt.taken)}</strong> çıkardığını yazdı. Parayı sayın ve elinize geçen tutarı yazın.</p>
+    <label htmlFor={`${id}-amount`}>Saydığınız tutar (TL) *<input id={`${id}-amount`} aria-label="Teslim alınan tutar" inputMode="decimal" value={amount} aria-invalid={!!problem} autoFocus onChange={e => setAmount(e.target.value)} />{problem && <small className="field-error" role="alert">{problem}</small>}</label>
+    {differs && <p className="cash-opening-diff">Fark: <strong>{signedMoney(value - receipt.taken)}</strong>. Kısa bir not yazın; kapanışta görünür.</p>}
+    {differs && <label htmlFor={`${id}-note`}>Not *<input id={`${id}-note`} aria-label="Teslim notu" value={note} maxLength={300} onChange={e => setNote(e.target.value)} placeholder="Örn. Zarfta 200 TL eksik çıktı" /></label>}
+    {error && <Notice tone="error">{error}</Notice>}
+    <div className="modal-actions"><button type="button" className="btn secondary" disabled={busy} onClick={onClose}>Vazgeç</button><button className="btn primary" disabled={busy || !amount.trim() || !!problem || (differs && !note.trim())}>{busy ? 'Kaydediliyor…' : 'Teslim aldım'}</button></div>
+  </form></Modal>;
+}
 /** "Gün sonunu geri al": why, then the closing is taken back and the kasa is open again (server/cash-closing.ts revoke). */
 function RevokeDialog({ status, onClose, onDone }: { status: CashStatus; onClose: () => void; onDone: (message: string) => void }) {
   const id = useId(), [reason, setReason] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [request] = useState(requestId);

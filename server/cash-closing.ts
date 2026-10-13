@@ -9,8 +9,8 @@ import { cashierExpenseAlerts, fromDrawer } from '../packages/domain/expense-rul
 import { cashierRefundLimits } from '../packages/domain/refund-rules.js';
 import { reportRange } from '../packages/domain/reports.js';
 import { printMoney, type PrinterConfig, type Ticket } from '../packages/domain/printing.js';
-import { blindClosing, closingFor, seesCashResult, cashDayOf, cashDayStart, closerSummaries, correctedDifference, countTotal, DENOMINATIONS, denominationName, differenceLimit, movementNames, movementSign, needsNote, OWNER_MOVEMENTS, TIME_PATTERN, windowFigures,
-  type CashClosing, type CashCorrection, type CashMovement, type CashMovementKind, type CashOpening, type CashRecord, type CashShiftSettings, type CashStatus, type CloserSummary, type TipRecord } from '../packages/domain/cash.js';
+import { blindClosing, closingFor, guardOn, seesCashResult, cashDayOf, cashDayStart, closerSummaries, correctedDifference, countTotal, DENOMINATIONS, denominationName, differenceLimit, movementNames, movementSign, needsNote, OWNER_MOVEMENTS, TIME_PATTERN, windowFigures,
+  type CashClosing, type CashCorrection, type CashGuard, type CashMovement, type CashMovementKind, type CashOpening, type CashReceipt, type CashRecord, type CashShiftSettings, type CashStatus, type CloserSummary, type PendingReceipt, type TipRecord } from '../packages/domain/cash.js';
 import { open, seal } from './sealing.js';
 import { lastDay, monthSegments, readyFor } from './history.js';
 import { dayOfMs, maskDays } from './year-packages.js';
@@ -188,20 +188,63 @@ export class CashBook {
   }
   tips(tenant: string, from = -8.64e15, to = 8.64e15) { return this.list<TipRecord>(tenant, ['tip'], from, to); }
 
-  /** Where the running window stands: start, opening amount, what waits. Reads only the few latest records. */
-  position(tenant: string, now: number) {
+  /**
+   * Where the running window stands: start, opening amount, what waits. Reads only the few latest records. `guard`
+   * (Kasa güvenliği): with handoverCount on, a closed "Vardiya devri" waits for the incoming person's count (an opening
+   * after it, `handoverWaiting`); its counted amount is what they are compared with.
+   */
+  position(tenant: string, now: number, guard?: CashGuard) {
     const lastAny = this.latest<CashClosing>(tenant, ['closing', 'handover']), lastFinal = lastAny?.mode === 'final' ? lastAny : this.latest<CashClosing>(tenant, ['closing']);
     const lastOpening = this.latest<CashOpening>(tenant, ['opening']);
     const opening = lastOpening && (!lastFinal || Date.parse(lastOpening.at) >= Date.parse(lastFinal.to)) ? lastOpening : undefined;
     const start = lastAny ? Date.parse(lastAny.to) : opening ? Date.parse(opening.at) : null;
-    const carried = lastFinal ? lastFinal.left ?? lastFinal.counted : null;
     const handoverRunning = lastAny?.mode === 'handover' && (!opening || Date.parse(opening.at) < Date.parse(lastAny.to));
+    const handoverWaiting = !!guard?.handoverCount && handoverRunning && lastAny!.status === 'closed';
+    const carried = handoverWaiting ? lastAny!.counted : lastFinal ? lastFinal.left ?? lastFinal.counted : null;
     const amount = handoverRunning ? lastAny!.counted : opening ? opening.amount : carried ?? 0;
     const draft = lastAny?.status === 'counted' ? lastAny : undefined;
     const today = cashDayOf(now);
-    return { lastAny, lastFinal, opening, start, carried, amount, confirmed: !!opening || handoverRunning, handoverRunning, draft, today,
-      needsOpening: !opening && !draft && (!lastAny || lastAny.mode === 'final'),
+    return { lastAny, lastFinal, opening, start, carried, amount, confirmed: (!!opening || handoverRunning) && !handoverWaiting, handoverRunning, handoverWaiting, draft, today,
+      needsOpening: !draft && (handoverWaiting || (!opening && (!lastAny || lastAny.mode === 'final'))),
       unclosedPrevious: !draft && opening && cashDayOf(opening.at) < today ? { day: cashDayOf(opening.at) } : null };
+  }
+  /**
+   * Kasa güvenliği → receipt: gün sonları of the last 31 cash days whose taken-out money still waits for the owner's
+   * "Teslim aldım" (newest first).
+   */
+  pendingReceipts(tenant: string, now: number): PendingReceipt[] {
+    const today = cashDayOf(now), from = cashDayOf(now - 31 * 86400_000);
+    const asked = this.days<CashClosing>(tenant, ['closing'], from, today).filter(c => c.receiptAsked && c.status === 'closed' && (c.taken ?? 0) > 0);
+    if (!asked.length) return [];
+    const done = new Set(this.receiptsFor(tenant, asked.map(c => c.id)).keys());
+    return asked.filter(c => !done.has(c.id)).reverse().map(c => ({ closingId: c.id, day: c.day, at: c.closedAt ?? c.to, byName: c.closedBy ?? c.byName, taken: c.taken! }));
+  }
+  /** The owner's "Teslim aldım" records of these closings (by closing id). */
+  receiptsFor(tenant: string, closingIds: string[]) {
+    const out = new Map<string, CashReceipt>();
+    for (let i = 0; i < closingIds.length; i += 400) {
+      const part = closingIds.slice(i, i + 400);
+      if (!part.length) continue;
+      for (const r of this.rows(tenant, `SELECT id,at,payload FROM cash_records WHERE tenant=? AND kind='receipt' AND ref IN (${part.map(() => '?').join(',')}) AND $WHERE ORDER BY at, rowid`, part)) { const x = this.read<CashReceipt>(tenant, r); out.set(x.closingId, x); }
+    }
+    return out;
+  }
+  /** "Teslim aldım": the owner counted the money taken out at that gün sonu; a difference is kept with it. */
+  receive(s: State, actor: Actor, b: { requestId: string; closingId: string; received: number; note?: string }, ctx: Context) {
+    requireRole(s, actor, ['owner']);
+    return once(s, actor, 'cash-receipt', b.requestId, b, () => {
+      const tenant = s.tenantId, c = this.get<CashClosing>(tenant, b.closingId);
+      if (!c || c.kind !== 'closing' || c.status !== 'closed' || !c.receiptAsked || !(c.taken && c.taken > 0)) throw new DomainError('NOT_FOUND', 'Teslim alınacak para bulunamadı.', 404);
+      if (this.receiptsFor(tenant, [c.id]).has(c.id)) throw new DomainError('ALREADY_RECEIVED', 'Bu para zaten teslim alındı.', 409);
+      assertInt(b.received, 0, 100_000_000);
+      const note = b.note?.trim() || undefined, difference = b.received - c.taken;
+      if (difference !== 0 && !note) throw new DomainError('NOTE_REQUIRED', `Saydığınız tutar ${money(c.taken)} değil (fark ${signed(difference)}): kısa bir not yazın.`);
+      const at = ctx.now.toISOString(), user = s.staffUsers?.find(u => u.id === actor.id);
+      const r: CashReceipt = { id: ctx.id(), kind: 'receipt', closingId: c.id, at, day: cashDayOf(ctx.now.getTime()), expected: c.taken, received: b.received, difference, ...(note ? { note } : {}), by: actor.id, byName: user?.name ?? 'İşletme sahibi', role: 'owner' };
+      this.insert(tenant, r, c.id);
+      s.audit.push({ action: 'cash.receipt', actor: actor.id, target: c.id, at });
+      return r;
+    });
   }
   /** Whether anything was sold since `from`: the floor's payments, else a bill settled into history since then (no amount). */
   private soldSince(tenant: string, s: State, from: number) {
@@ -210,24 +253,29 @@ export class CashBook {
     return this.store.packages.sources('history_archives', m => maskDays(m, 'day'), dayOfMs(from), undefined, tenant).some(src => !!src.db.prepare(`SELECT 1 FROM history_archives WHERE tenant=? AND closed_at>=? AND ${src.where} LIMIT 1`).get(tenant, from));
   }
   status(tenant: string, s: State, actor: Actor, now: number): CashStatus {
-    const p = this.position(tenant, now), settings = s.cashShift ?? {};
+    const settings = s.cashShift ?? {}, guard = settings.guard, p = this.position(tenant, now, guard);
     const finalDay = p.lastFinal?.day;
+    // Kasa güvenliği: a blind opening (or the incoming count after a devir) never shows this person the amount to match.
+    const blind = actor.role !== 'owner' && p.needsOpening && (!!guard?.blindOpening || p.handoverWaiting);
     const closedToday = p.lastFinal && p.lastFinal.status === 'closed' && p.lastFinal.day === p.today ? { at: p.lastFinal.closedAt ?? p.lastFinal.to, byName: p.lastFinal.byName, id: p.lastFinal.id, revoke: this.revokeBlock(s, actor, p.lastFinal, now) } : null;
     // Sales on the floor after today's gün sonu (the night went on): the strip asks for one more closing ("Ek kapanış").
     // Measured from the count (the window's end), not from "Kapanışı tamamla": a bill paid in between belongs to the next window.
     const countedAt = closedToday ? p.lastFinal!.to : '';
     const afterClose = !!closedToday && (s.payments.some(x => x.createdAt > countedAt) || s.archives.some(a => a.payments.some(x => x.createdAt > countedAt)) || s.orders.some(o => o.createdAt > countedAt && o.status !== 'cancelled' && o.status !== 'awaiting_approval'));
-    const handover = p.handoverRunning && p.lastAny ? { at: p.lastAny.closedAt ?? p.lastAny.to, byName: p.lastAny.byName, amount: p.lastAny.counted } : null;
+    const handover = p.handoverRunning && p.lastAny && !blind ? { at: p.lastAny.closedAt ?? p.lastAny.to, byName: p.lastAny.byName, amount: p.lastAny.counted } : null;
     return {
       sold: p.start !== null && this.soldSince(tenant, s, p.opening ? Math.min(p.start, Date.parse(p.opening.at)) : p.start),
       afterClose,
       handover,
       today: p.today,
-      settings: { closingTime: settings.closingTime ?? null, differenceNote: differenceLimit(settings), shiftTracking: !!settings.shiftTracking, ...(actor.role === 'owner' ? { expenseAlert: settings.expenseAlert ?? null } : {}) },
+      settings: { closingTime: settings.closingTime ?? null, differenceNote: differenceLimit(settings), shiftTracking: !!settings.shiftTracking, ...(actor.role === 'owner' ? { expenseAlert: settings.expenseAlert ?? null } : {}), ...(guard?.posRequired ? { posRequired: true } : {}) },
       start: p.start === null ? null : new Date(p.start).toISOString(),
-      opening: { amount: p.amount, confirmed: p.confirmed, ...(p.opening ? { at: p.opening.at, byName: p.opening.byName, ...(p.opening.note ? { note: p.opening.note } : {}) } : {}) },
-      carried: p.carried,
-      showOpening: p.needsOpening && (!finalDay || finalDay < p.today),
+      opening: { amount: blind ? 0 : p.amount, confirmed: p.confirmed, ...(p.opening ? { at: p.opening.at, byName: p.opening.byName, ...(p.opening.note ? { note: p.opening.note } : {}) } : {}) },
+      carried: blind ? null : p.carried,
+      ...(blind ? { blindOpening: true } : {}),
+      handoverWaiting: p.handoverWaiting && p.lastAny ? { at: p.lastAny.closedAt ?? p.lastAny.to, byName: p.lastAny.byName } : null,
+      ...(actor.role === 'owner' ? { receipts: this.pendingReceipts(tenant, now) } : {}),
+      showOpening: p.needsOpening && (p.handoverWaiting || !finalDay || finalDay < p.today),
       unclosedPrevious: p.unclosedPrevious,
       closedToday,
       draft: p.draft ? { id: p.draft.id, byName: p.draft.byName, countedAt: p.draft.to, mode: p.draft.mode, mine: p.draft.by === actor.id } : null,
@@ -249,14 +297,17 @@ export class CashBook {
   openDay(s: State, actor: Actor, b: { requestId: string; amount: number; note?: string }, ctx: Context) {
     requireRole(s, actor, ['owner', 'manager', 'cashier']);
     return once(s, actor, 'cash-open', b.requestId, b, () => {
-      const tenant = s.tenantId, at = ctx.now.toISOString(), p = this.position(tenant, ctx.now.getTime());
+      const tenant = s.tenantId, at = ctx.now.toISOString(), p = this.position(tenant, ctx.now.getTime(), s.cashShift?.guard);
       if (p.draft) throw new DomainError('CLOSING_DRAFT', 'Bekleyen bir kasa sayımı var. Önce o kapanışı tamamlayın.', 409);
       if (!p.needsOpening) throw new DomainError(p.unclosedPrevious ? 'CASH_UNCLOSED' : 'CASH_ALREADY_OPEN', p.unclosedPrevious ? 'Önceki günün kasası kapanmadı. Önce “Gün sonu” ile kapatın.' : 'Kasa zaten açık.', 409);
       assertInt(b.amount, 0, 100_000_000);
       const note = b.note?.trim() || undefined, difference = p.carried === null ? 0 : b.amount - p.carried;
-      if (actor.role !== 'owner' && difference !== 0 && !note) throw new DomainError('NOTE_REQUIRED', 'Kasadaki tutar devredenden farklı: farkı açıklayan kısa bir not yazın.');
+      // A blind count (Kasa güvenliği) cannot be asked to explain a difference the counter never saw.
+      const blind = actor.role !== 'owner' && (!!s.cashShift?.guard?.blindOpening || p.handoverWaiting);
+      if (actor.role !== 'owner' && !blind && difference !== 0 && !note) throw new DomainError('NOTE_REQUIRED', 'Kasadaki tutar devredenden farklı: farkı açıklayan kısa bir not yazın.');
       const user = s.staffUsers?.find(u => u.id === actor.id);
-      const r: CashOpening = { id: ctx.id(), kind: 'opening', at, day: cashDayOf(ctx.now.getTime()), carried: p.carried, amount: b.amount, difference, ...(note ? { note } : {}), by: actor.id, byName: user?.name ?? 'Kasiyer', role: actor.role as 'owner' | 'manager' | 'cashier' };
+      const handover = p.handoverWaiting && p.lastAny ? { closingId: p.lastAny.id, byName: p.lastAny.byName } : undefined;
+      const r: CashOpening = { id: ctx.id(), kind: 'opening', at, day: cashDayOf(ctx.now.getTime()), carried: p.carried, amount: b.amount, difference, ...(note ? { note } : {}), ...(blind ? { blind: true as const } : {}), ...(handover ? { handover } : {}), by: actor.id, byName: user?.name ?? 'Kasiyer', role: actor.role as 'owner' | 'manager' | 'cashier' };
       this.insert(tenant, r);
       s.audit.push({ action: 'cash.opened', actor: actor.id, target: r.id, at });
       return r;
@@ -264,7 +315,7 @@ export class CashBook {
   }
   /** The drawer's expected cash right now (owner only: a count stays blind for the cashier); null before the kasa is open. */
   expectedNow(tenant: string, s: State, now: number) {
-    const p = this.position(tenant, now);
+    const p = this.position(tenant, now, s.cashShift?.guard);
     if (p.start === null && !p.opening) return null;
     // Up to and with this very moment: a record written just now (the expense this answer follows) counts.
     return this.figures(tenant, s, Math.min(now, p.start ?? cashDayStart(p.today)), now + 1, p.amount).figures.expected;
@@ -292,7 +343,7 @@ export class CashBook {
     // `confirm` is not part of the request's fingerprint: "Yine de kaydet" resends the same request.
     if (actor.role === 'owner' && movementSign(b.type) < 0 && Number.isSafeInteger(b.amount)) this.guardBelowZero(s.tenantId, s, b.amount, ctx.now.getTime(), confirm, 'movement');
     return once(s, actor, 'cash-movement', b.requestId, b, () => {
-      const tenant = s.tenantId, at = ctx.now.toISOString(), p = this.position(tenant, ctx.now.getTime());
+      const tenant = s.tenantId, at = ctx.now.toISOString(), p = this.position(tenant, ctx.now.getTime(), s.cashShift?.guard);
       if (p.start === null && !p.opening) throw new DomainError('CASH_NOT_OPEN', 'Önce kasa açılışını yapın.', 409);
       assertInt(b.amount, 1, 100_000_000);
       const note = b.note?.trim() || undefined;
@@ -308,7 +359,7 @@ export class CashBook {
   count(s: State, actor: Actor, b: { requestId: string; mode: 'final' | 'handover'; counted?: number; denominations?: Record<string, number>; pos?: number | null }, ctx: Context) {
     requireRole(s, actor, ['owner', 'manager', 'cashier']);
     return once(s, actor, 'cash-count', b.requestId, b, () => {
-      const tenant = s.tenantId, now = ctx.now.getTime(), p = this.position(tenant, now);
+      const tenant = s.tenantId, now = ctx.now.getTime(), p = this.position(tenant, now, s.cashShift?.guard);
       if (p.draft) throw new DomainError('CLOSING_DRAFT', 'Bekleyen bir kasa sayımı var. Önce o kapanışı tamamlayın.', 409);
       if (b.mode === 'handover' && p.start === null) throw new DomainError('CASH_NOT_OPEN', 'Vardiya devri için önce kasa açılışı yapılmalı.', 409);
       let counted = b.counted;
@@ -324,6 +375,10 @@ export class CashBook {
       // Never opened at all: the window starts this cash day at 05:00 with the carried amount (0 the very first time).
       const from = Math.min(now, p.start ?? cashDayStart(p.today));
       const { figures, expenses, movements, refunds } = this.figures(tenant, s, from, now, p.amount);
+      // Kasa güvenliği → posRequired: a window with card money is not counted without the bank POS total (only "there was
+      // card" is said, never an amount; a window without card needs nothing).
+      if (s.cashShift?.guard?.posRequired && (b.pos === undefined || b.pos === null) && (figures.cardSales || figures.cardTips || figures.cardRefunds || figures.cardDeposits))
+        throw new DomainError('POS_REQUIRED', 'Bu vardiyada kartla ödeme alındı: banka POS cihazının gün sonu (toplam) fişindeki tutarı yazın.');
       // A second gün sonu of the same cash day: the night kept selling after the first one ("Ek kapanış").
       const day = p.opening ? cashDayOf(p.opening.at) : cashDayOf(now), extra = b.mode === 'final' && p.lastFinal?.status === 'closed' && p.lastFinal.day === day;
       const user = s.staffUsers?.find(u => u.id === actor.id), to = ctx.now.toISOString();
@@ -370,7 +425,9 @@ export class CashBook {
       for (const x of b.fiscalZ.rates ?? []) { assertInt(x.rate, 0, 100); assertInt(x.amount, 0, 100_000_000); }
       fiscalZ = zCompare(fiscal, b.fiscalZ);
     }
-    const closed: CashClosing = { ...r, status: 'closed', closedAt: at, ...(note ? { note } : {}), left, taken: r.counted - left, ...(actor.id !== r.by ? { closedBy: user?.name ?? 'Kasiyer' } : {}), ...(fiscal ? { fiscal } : {}), ...(fiscalZ ? { fiscalZ } : {}) };
+    // Kasa güvenliği → receipt: money taken out by someone else than the owner waits for the owner's "Teslim aldım".
+    const asked = r.mode === 'final' && r.counted - left > 0 && actor.role !== 'owner' && !!s.cashShift?.guard?.receipt;
+    const closed: CashClosing = { ...r, status: 'closed', closedAt: at, ...(note ? { note } : {}), left, taken: r.counted - left, ...(actor.id !== r.by ? { closedBy: user?.name ?? 'Kasiyer' } : {}), ...(fiscal ? { fiscal } : {}), ...(fiscalZ ? { fiscalZ } : {}), ...(asked ? { receiptAsked: true as const } : {}) };
     if (r.mode === 'final' && endShifts) { const n = endShifts(at, { day: r.day, before: at, except: actor.id }); if (n) closed.shiftsEnded = n; }
     this.finishRow(tenant, closed);
     s.audit.push({ action: r.mode === 'final' ? 'cash.closed' : 'cash.handover', actor: actor.id, target: r.id, at });
@@ -383,9 +440,11 @@ export class CashBook {
    */
   revokeBlock(s: State, actor: Actor, r: CashClosing | undefined, now: number): string | null {
     if (!r || r.kind !== 'closing' || r.mode !== 'final' || r.status !== 'closed') return 'Geri alınacak gün sonu bulunamadı.';
-    const p = this.position(s.tenantId, now);
+    const p = this.position(s.tenantId, now, s.cashShift?.guard);
     if (p.lastAny?.id !== r.id) return 'Bu gün sonundan sonra yeni bir kasa kaydı var; geri alınamaz.';
     if (r.day !== cashDayOf(now)) return 'Gün sonu yalnız aynı iş günü içinde (gece 05:00’e kadar) geri alınabilir.';
+    // Kasa güvenliği → strictCount: a count taken back can be counted again knowing the result, so only the owner may.
+    if (s.cashShift?.guard?.strictCount && actor.role !== 'owner') return 'Gün sonunu yalnız işletme sahibi geri alabilir (Kasa güvenliği).';
     if (actor.role !== 'owner' && actor.role !== 'manager' && actor.id !== r.by) return 'Bu gün sonunu siz yapmadınız. İşletme sahibi ya da Müdür geri alabilir.';
     const after = (iso: string) => iso > r.to;
     if (s.payments.some(x => after(x.createdAt)) || s.archives.some(a => a.payments.some(x => after(x.createdAt)))) return 'Gün sonundan sonra ödeme alındı; geri alınamaz. Gece kapanmadan “Ek kapanış” yapın.';
@@ -496,8 +555,9 @@ export function closingTicket(c: CashClosing, corrections: CashCorrection[], bus
   ];
 }
 
-/** The counter's slip (cashier, Müdür): what was counted and left, the yazar kasa part; no expected cash, no difference. */
-export function blindTicket(c: CashClosing, business: string): Ticket {
+/** The counter's slip (cashier, Müdür): what was counted and left, the yazar kasa part; no expected cash, no difference. `strict`: no cash / card split either. */
+export function blindTicket(full: CashClosing, business: string, strict = false): Ticket {
+  const c = strict && full.fiscal ? { ...full, fiscal: { ...full.fiscal, cash: 0, card: 0, open: [], more: undefined } } : full;
   return [
     { text: business, align: 'center', bold: true, large: true },
     { text: c.mode === 'final' ? (c.extra ? 'GÜN SONU · EK KAPANIŞ' : 'GÜN SONU KASA SAYIMI') : 'VARDİYA DEVRİ', align: 'center', bold: true },
@@ -521,7 +581,9 @@ const note = z.string().max(500).optional();
 /** The cashier's refund limits with their defaults filled in (packages/domain/refund-rules.ts). */
 const refundLimitsOf = (s: CashShiftSettings) => { const l = cashierRefundLimits(s); return { cashierRefundMax: l.max, cashierRefundDay: l.day }; };
 const settingsInput = z.object({ expenseAlert: z.number().int().min(1).max(100_000_000).nullable().optional(), expenseDayAlert: z.number().int().min(1).max(100_000_000).nullable().optional(), cashierRefundMax: z.number().int().min(0).max(100_000_000).optional(), cashierRefundDay: z.number().int().min(0).max(100_000_000).optional(),closingTime: z.string().regex(TIME_PATTERN).nullable().optional(), differenceNote: z.number().int().min(0).max(100_000_000).optional(), shiftTracking: z.boolean().optional(), /** K-B: with shiftTracking on: 'next' = at the next sign-in, 'now' (default) = at once. */ shiftStart: z.enum(['next', 'now']).optional(), tipCashOut: z.boolean().optional(), tipRule: z.enum(['equal', 'hours', 'orders']).optional(),
-  fiscalHelper: z.boolean().optional(), fiscalConfirm: z.boolean().optional() });
+  fiscalHelper: z.boolean().optional(), fiscalConfirm: z.boolean().optional(),
+  /** Kasa güvenliği: only the switches sent change (14 Ekim). */
+  guard: z.object({ blindOpening: z.boolean(), receipt: z.boolean(), handoverCount: z.boolean(), strictCount: z.boolean(), posRequired: z.boolean(), methodAlert: z.boolean() }).partial().strict().optional() });
 /** The yazar kasa switches with their defaults (on / off), for every reader of the settings. */
 const fiscalOf = (s: CashShiftSettings) => { const f = fiscalSettings(s); return { fiscalHelper: f.enabled, fiscalConfirm: !!s.fiscalConfirm }; };
 
@@ -544,6 +606,10 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
   const book = options.book ?? new CashBook(store), ctx = () => ({ now: now(), id: randomUUID });
   const counter = (req: Request) => { const a = actorFor(req); requireRole(store.read(a.tenantId), a, ['owner', 'manager', 'cashier']); return a; };
   const owner = (req: Request) => { const a = actorFor(req); requireRole(store.read(a.tenantId), a, ['owner']); return a; };
+  /** Kasa güvenliği → strictCount of this business: the counter's copies lose the yazar kasa cash / card split. */
+  const strictOf = (tenant: string) => guardOn(store.read(tenant).cashShift, 'strictCount');
+  /** The owner's view of a closing: its "Teslim aldım" record (or that it still waits). */
+  const receiptOf = (tenant: string, c: CashClosing) => { if (!c.receiptAsked) return {}; const r = book.receiptsFor(tenant, [c.id]).get(c.id); return { receipt: r ?? null }; };
   const notify = (tenant: string, key: string, title: string, text: string) => { try { options.notifications?.add(tenant, key, { kind: 'cash', title, text }); } catch (error) { console.warn(`Kasa bildirimi yazılamadı: ${error instanceof Error ? error.message : error}`); } };
 
   // A cashier's cash expense above the owner's limit: the owner hears about it at once (who, how much, what for, when).
@@ -610,7 +676,10 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
     const a = counter(req), b = z.object({ requestId, amount, note }).parse(req.body);
     const r = store.mutate(a.tenantId, s => book.openDay(s, a, b, ctx()));
     options.cashOpened?.(a.tenantId);
-    if (r.role !== 'owner' && r.difference !== 0) notify(a.tenantId, `cash-opening:${r.id}`, `Açılışta kasa farkı: ${signed(r.difference)}`, `${r.byName} · Devreden ${money(r.carried ?? 0)}, kasada ${money(r.amount)}${r.note ? ` · Not: ${r.note}` : ''}.`);
+    // An incoming count after a devir (Kasa güvenliği) is named so: the gap belongs between the two people.
+    if (r.role !== 'owner' && r.difference !== 0) notify(a.tenantId, `cash-opening:${r.id}`, r.handover ? `Vardiya devrinde fark: ${signed(r.difference)}` : `Açılışta kasa farkı: ${signed(r.difference)}`,
+      r.handover ? `${r.handover.byName} ${money(r.carried ?? 0)} devretti, ${r.byName} kör sayımda ${money(r.amount)} saydı${r.note ? ` · Not: ${r.note}` : ''}. Kasa ve giderler → Kapanışlar.`
+        : `${r.byName} · Devreden ${money(r.carried ?? 0)}, kasada ${money(r.amount)}${r.blind ? ' (kör sayım)' : ''}${r.note ? ` · Not: ${r.note}` : ''}.`);
     res.json(r);
   });
   app.post('/api/staff/cash/movements', (req, res) => {
@@ -621,7 +690,7 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
     const a = counter(req), b = z.object({ requestId, mode: z.enum(['final', 'handover']), counted: amount.optional(), denominations: z.record(z.string().regex(/^\d{1,6}$/), z.number().int().min(0).max(100_000)).optional(), pos: amount.nullable().optional() }).parse(req.body);
     if (b.denominations && Object.keys(b.denominations).some(k => !(DENOMINATIONS as readonly number[]).includes(Number(k)))) throw new DomainError('INVALID_COUNT', 'Sayımı kontrol edin.');
     // Blind for everyone but the owner: the counter gets back what they typed, never the expected cash or the difference.
-    res.json(closingFor(store.mutate(a.tenantId, s => book.count(s, a, b, ctx())), a.role));
+    res.json(closingFor(store.mutate(a.tenantId, s => book.count(s, a, b, ctx())), a.role, strictOf(a.tenantId)));
   });
   app.post('/api/staff/cash/finish', (req, res) => {
     const a = counter(req), b = z.object({ id: z.string().min(1).max(100), note, left: amount.optional(), fiscalZ: z.object({ total: amount, rates: z.array(z.object({ rate: z.number().int().min(0).max(100), amount })).max(6).optional() }).optional() }).parse(req.body);
@@ -637,9 +706,9 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
       const limit = differenceLimit(store.read(a.tenantId).cashShift), big = Math.abs(c.difference) > limit;
       // The owner hears about every closing done by someone else, and about any of their own with a large difference.
       if (a.role !== 'owner' || big) notify(a.tenantId, `cash-closing:${c.id}`, `${c.mode === 'final' ? 'Kasa kapatıldı' : 'Vardiya devri'}: ${c.difference === 0 ? 'fark yok' : `fark ${signed(c.difference)}`}`,
-        `${c.byName} · Beklenen ${money(c.figures.expected)} · Sayılan ${money(c.counted)}${c.cardDifference ? ` · Kart farkı ${signed(c.cardDifference)}` : ''}${c.note ? ` · Not: ${c.note}` : ''}. Kasa ve giderler → Kapanışlar.`);
+        `${c.byName} · Beklenen ${money(c.figures.expected)} · Sayılan ${money(c.counted)}${c.cardDifference ? ` · Kart farkı ${signed(c.cardDifference)}` : ''}${c.mode === 'final' && c.taken ? ` · Kasadan çıkarılan ${money(c.taken)}, kasada bırakılan ${money(c.left ?? 0)}${c.receiptAsked ? ' (teslim almanızı bekliyor)' : ''}` : ''}${c.note ? ` · Not: ${c.note}` : ''}. Kasa ve giderler → Kapanışlar.`);
     }
-    res.json({ closing: closingFor(c, a.role), corrections: [], ...(ownShift ? { ownShift } : {}) });
+    res.json({ closing: closingFor(c, a.role, strictOf(a.tenantId)), corrections: [], ...(ownShift ? { ownShift } : {}) });
   });
   // "Gün sonunu geri al" (13 Ekim): the same cash day, before any new payment; the owner hears about it with the reason, and
   // the QR ordering pause of the gün sonu ends like after a kasa opening.
@@ -649,6 +718,16 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
     options.cashOpened?.(a.tenantId);
     notify(a.tenantId, `cash-revoked:${r.id}`, 'Gün sonu geri alındı', `${r.revokedByName} · ${new Date(r.closedAt ?? r.to).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' })} gün sonu (${r.byName}) geri alındı, kasa yeniden açık. Neden: ${r.revokeReason}.`);
     res.json({ ok: true, id: r.id });
+  });
+  // Kasa güvenliği → receipt: the owner's list of money waiting, and "Teslim aldım" with the amount counted.
+  app.get('/api/staff/cash/receipts', (req, res) => {
+    const a = owner(req);
+    res.setHeader('Cache-Control', 'no-store'); res.json({ receipts: book.pendingReceipts(a.tenantId, now().getTime()) });
+  });
+  app.post('/api/staff/cash/receipts', (req, res) => {
+    const a = owner(req), b = z.object({ requestId, closingId: z.string().min(1).max(100), received: amount, note: z.string().max(300).optional() }).parse(req.body);
+    const r = store.mutate(a.tenantId, s => book.receive(s, a, b, ctx()));
+    res.json(r);
   });
   // "Tamam" on the gün sonu result: the closing person's own shift of the closed cash day ends now (kind "closing").
   app.post('/api/staff/cash/closing-shift', (req, res) => {
@@ -672,7 +751,7 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
     if (!c || c.kind !== 'closing' || (a.role !== 'owner' && a.role !== 'manager' && c.status === 'closed' && !recent(c.closedAt))) throw new DomainError('NOT_FOUND', 'Kasa kapanışı bulunamadı.', 404);
     res.setHeader('Cache-Control', 'no-store');
     // Not behind the report code: the Müdür and the cashier get the blind copy (the Müdür reads closings in Kasa kapanışları).
-    res.json(seesCashResult(a.role) ? { closing: c, corrections: book.corrections(a.tenantId, [c.id]).get(c.id) ?? [] } : { closing: blindClosing(c), corrections: [] });
+    res.json(seesCashResult(a.role) ? { closing: c, corrections: book.corrections(a.tenantId, [c.id]).get(c.id) ?? [], ...receiptOf(a.tenantId, c) } : { closing: blindClosing(c, strictOf(a.tenantId)), corrections: [] });
   });
   const prints = new Map<string, { count: number; until: number }>();
   app.post('/api/staff/cash/print', async (req, res) => {
@@ -684,7 +763,7 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
     if (!c || c.kind !== 'closing' || c.status !== 'closed') throw new DomainError('NOT_FOUND', 'Kasa kapanışı bulunamadı.', 404);
     const printer = s.printers?.find(p => p.enabled && p.bill);
     if (!printer || !options.print) throw new DomainError('NO_PRINTER', 'Fiş için yazıcı seçilmemiş. Ayarlar → Cihazlar → Yazıcılar bölümünden ekleyin ya da A4 yazdırın.', 409);
-    await options.print(printer, seesCashResult(a.role) ? closingTicket(c, book.corrections(a.tenantId, [c.id]).get(c.id) ?? [], s.name) : blindTicket(c, s.name));
+    await options.print(printer, seesCashResult(a.role) ? closingTicket(c, book.corrections(a.tenantId, [c.id]).get(c.id) ?? [], s.name) : blindTicket(c, s.name, guardOn(s.cashShift, 'strictCount')));
     res.json({ ok: true });
   });
   app.post('/api/staff/cash/corrections', (req, res) => {
@@ -700,7 +779,8 @@ export function cashRoutes(app: Express, store: Store, actorFor: (req: Request) 
     const a = owner(req), b = settingsInput.parse(req.body);
     res.json(store.mutate(a.tenantId, s => {
       requireRole(s, a, ['owner']);
-      const next: CashShiftSettings = { ...(s.cashShift ?? {}) }, { shiftStart, ...values } = b, wasOn = !!next.shiftTracking;
+      const next: CashShiftSettings = { ...(s.cashShift ?? {}) }, { shiftStart, guard, ...values } = b, wasOn = !!next.shiftTracking;
+      if (guard) next.guard = { ...(next.guard ?? {}), ...guard };
       for (const [k, v] of Object.entries(values) as [keyof typeof values, unknown][]) if (v !== undefined) (next as Record<string, unknown>)[k] = v;
       // K-B (9 Ekim, sahibin kararı): turned on in the middle of the day, "Bir sonraki girişte" leaves the people already signed
       // in working; their next sign-in asks for the code (server/shifts.ts). "Hemen" (or no answer: older screens) locks at once.
@@ -736,12 +816,14 @@ export function cashReportRoutes(app: Express, store: Store, actorFor: (req: Req
     // A closing made before its unused payment list was dropped (CashBook.finish) still carries it: it is never shown, so it
     // is not sent either (five years of a busy café: 111 MB instead of 4 MB; docs/HIZ_TESTI_5_YIL.md).
     const shown = (c: CashClosing): CashClosing => c.fiscal && !ticksUsed(c.fiscal) && c.fiscal.open.length ? { ...c, fiscal: { ...c.fiscal, open: [], more: c.fiscal.open.length + (c.fiscal.more ?? 0) } } : c;
-    const rows = page.closings.map(c => { const list = corrections.get(c.id) ?? []; return { ...shown(c), corrections: list, corrected: correctedDifference(c, list) }; });
+    // Kasa güvenliği → receipt: each closing's "Teslim aldım" (or null while it waits).
+    const receipts = book.receiptsFor(tenant, page.closings.filter(c => c.receiptAsked).map(c => c.id));
+    const rows = page.closings.map(c => { const list = corrections.get(c.id) ?? []; return { ...shown(c), corrections: list, corrected: correctedDifference(c, list), ...(c.receiptAsked ? { receipt: receipts.get(c.id) ?? null } : {}) }; });
     res.setHeader('Cache-Control', 'no-store');
     const s = store.read(tenant);
     // K1 (8 Ekim, sahibin kararı): the Müdür gets the closings blind — day, who, counted; never expected cash, a difference,
     // the people's differences or the opening differences (the same copy the cashier gets at the count).
-    if (!seesCashResult(a.role)) { res.json({ from: q.from, to: q.to, business: s.name, printing: !!s.printers?.some(p => p.enabled && p.bill), blind: true, closings: page.closings.map(c => blindClosing(shown(c))), closingCount: page.total, openings: [], people: [], totals: { count: span.closed.count }, movementNames }); return; }
+    if (!seesCashResult(a.role)) { res.json({ from: q.from, to: q.to, business: s.name, printing: !!s.printers?.some(p => p.enabled && p.bill), blind: true, closings: page.closings.map(c => blindClosing(shown(c), guardOn(s.cashShift, 'strictCount'))), closingCount: page.total, openings: [], people: [], totals: { count: span.closed.count }, movementNames }); return; }
     // `openings`: those with a difference (the only ones the screen lists), newest first.
     res.json({ from: q.from, to: q.to, business: s.name, printing: !!s.printers?.some(p => p.enabled && p.bill), closings: rows, closingCount: page.total, openings: [...span.openings].reverse(), people: span.people, totals: span.closed, movementNames });
   });

@@ -9,6 +9,7 @@ import { ShiftRoleSettings } from './ShiftRoleSettings';
 import { CashierLimitsSettings } from './CashierLimitsSettings';
 // "Yazar kasa yardımcısı" (on/off, "Girildi" onayı): its own card, src/FiscalSettings.tsx.
 import { FiscalSettings } from './FiscalSettings';
+import { CashGuardSettings } from './CashGuardSettings';
 import { TimeField } from './TimeField';
 // Hizmet paketi: vardiya takibi and bahşiş paylaşımı are "Vardiya, bahşiş ve personel raporu" (tips at payment stay core).
 import { LockedRow, usePackage } from './FeatureLock';
@@ -27,7 +28,7 @@ const tl = (kurus: number | null) => kurus === null ? '' : moneyInput(kurus);
 /** "Kim ne yapabilir": the money rights of the cashier, the manager and the owner, in one ⓘ bubble. */
 const WHO = "Kasiyer kasadan yalnız gider ve para bozdurma kaydeder; “Sahip aldı”, “Bankaya yatırıldı” gibi çıkışları yalnız siz kaydedersiniz. Müdür kasada kasiyer gibidir (gider, para bozdurma, gün sonu). Kasiyer küçük iadeleri sınırlar içinde kendisi yapar; daha büyüğü için size istek gönderir. Gider tutarını yalnız siz düzeltip silebilirsiniz; önceki hâli kaydında kalır. Kapanış kayıtları değişmez; sonradan bulunan fark için Kasa ve giderler → Kapanışlar'dan düzeltme eklersiniz.";
 
-export type CashSettingsView = 'closing' | 'card' | 'limits' | 'shifts' | 'tips';
+export type CashSettingsView = 'closing' | 'card' | 'limits' | 'guard' | 'shifts' | 'tips';
 export function CashSettingsPage({ view, commission }: { view: CashSettingsView; commission?: ReactNode }) {
   const id = useId(), shiftsOn = usePackage().has('shifts');
   const [saved, setSaved] = useState<Settings | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
@@ -49,6 +50,8 @@ export function CashSettingsPage({ view, commission }: { view: CashSettingsView;
     try { count = (await api<{ count: number }>('/api/staff/shifts/working')).count; } catch { /* asked as if nobody were signed in */ }
     if (count > 0) setAsking({ count, when: 'next' }); else await save({ shiftTracking: true });
   }
+  // Kasa güvenliği (14 Ekim): its own page, src/CashGuardSettings.tsx.
+  if (view === 'guard') return <CashGuardSettings />;
   if (!saved) return error ? <Notice tone="error">{error}</Notice> : <p className="muted" role="status">Yükleniyor…</p>;
   const noteValue = note.trim() === '' ? 0 : parseMoney(note);
   // These save by themselves on leaving the field; a value that cannot be saved says so right under it ("Kaydedilmedi").

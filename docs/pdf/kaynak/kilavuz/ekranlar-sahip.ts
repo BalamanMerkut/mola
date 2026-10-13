@@ -535,6 +535,9 @@ const sahipAyarlar: Grup = async (browser, { sahip }) => {
   if (await km.count()) { await km.scrollIntoViewIfNeeded(); await sleep(400); await dene('s-mutfak-modu', () => cek(s, 's-mutfak-modu', { kirp: km, pay: 8, isaretler: [{ n: 1, loc: s.locator('.kitchen-mode-option').nth(0), yon: 'ust' }, { n: 2, loc: s.locator('.kitchen-mode-option').nth(1), yon: 'ust' }] })); }
   await ev(s, 'Kasa ve giderler', 'Kasa ayarları', 'Gün sonu');
   await dene('s-kasa-odeme', async () => cek(s, 's-kasa-odeme'));
+  // Kasa güvenliği (14 Ekim): the switches as they come (all off), never changed by the pictures.
+  await ev(s, 'Kasa ve giderler', 'Kasa ayarları', 'Kasa güvenliği'); await sleep(800);
+  await dene('s-kasa-guvenligi', async () => cek(s, 's-kasa-guvenligi', { isaretler: [{ n: 1, loc: s.getByRole('button', { name: 'Önerilenleri aç' }), yon: 'alt' }] }));
   await ev(s, 'Personel', 'Personel ayarları', 'Vardiya');
   await dene('s-vardiya-bahsis', async () => cek(s, 's-vardiya-bahsis'));
   await ev(s, 'Kasa ve giderler', 'Giderler', 'Otomatik giderler');

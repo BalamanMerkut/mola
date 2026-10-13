@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { CalendarClock, Clock3, CreditCard, Gift, ListChecks, MapPinned, MoonStar, Repeat, ShieldCheck } from 'lucide-react';
+import { CalendarClock, Clock3, CreditCard, Gift, ListChecks, LockKeyhole, MapPinned, MoonStar, Repeat, ShieldCheck } from 'lucide-react';
 import type { Expense, ExpenseChange, StaffSnapshot } from '../packages/domain/types';
 import type { FinancialReport } from '../packages/domain/reports';
 import { businessDay } from '../packages/domain/business-day';
@@ -30,7 +30,7 @@ import './settings-workspace.css';
 /*
  * The record books and settings of two homes (10 Ekim düzeni, docs/BILGI_MIMARISI_ONERISI.md), loaded when first opened:
  * - Kasa ve giderler: Giderler (Kayıtlar · Otomatik giderler), Kapanışlar, İadeler, Kasa ayarları (Gün sonu · Kart ve yazar
- *   kasa · Kasiyer yetkileri);
+ *   kasa · Kasiyer yetkileri · Kasa güvenliği);
  * - Personel: Vardiya ve bahşiş (Vardiyalar · Bahşiş) and Personel ayarları (Vardiya · Bahşiş · Garson ataması).
  * Two levels at most: the home's icon tabs (src/Homes.tsx), then these quieter sub-tabs (PillTabs variant "sub", the same
  * row as Ayarlar' parts). Every sub-tab stays chosen on this device. The money books sit behind the same "telefon kodu"
@@ -48,13 +48,13 @@ function SubTabs<T extends string>({ label, value, onChange, items }: { label: s
 }
 
 const EXPENSE_PARTS = ['records', 'auto'] as const;
-const CASH_SETTING_PARTS = ['closing', 'card', 'limits'] as const;
+const CASH_SETTING_PARTS = ['closing', 'card', 'limits', 'guard'] as const;
 export function CashBooks({ tab, open, data, onSaved }: { tab: Exclude<CashTab, 'today'>; open?: CashOpening; data: StaffSnapshot; onSaved: () => void }) {
   const owner = usePackage().owner, [range, setRange] = useState<Range>(todayRange);
   const [expensePart, setExpensePart] = useRememberedTab<typeof EXPENSE_PARTS[number]>('mola-cash-expenses-part', owner ? EXPENSE_PARTS : ['records'], 'records', open?.tab === 'expenses' ? open.part as never : undefined, open?.key);
   const [settingsPart, setSettingsPart] = useRememberedTab<typeof CASH_SETTING_PARTS[number]>('mola-cash-settings-part', CASH_SETTING_PARTS, 'closing', open?.tab === 'settings' ? open.part as never : undefined, open?.key);
   if (tab === 'settings') return <>
-    <SubTabs label="Kasa ayarları bölümleri" value={settingsPart} onChange={setSettingsPart} items={[{ id: 'closing', label: 'Gün sonu', icon: MoonStar }, { id: 'card', label: 'Kart ve yazar kasa', icon: CreditCard }, { id: 'limits', label: 'Kasiyer yetkileri', icon: ShieldCheck }]} />
+    <SubTabs label="Kasa ayarları bölümleri" value={settingsPart} onChange={setSettingsPart} items={[{ id: 'closing', label: 'Gün sonu', icon: MoonStar }, { id: 'card', label: 'Kart ve yazar kasa', icon: CreditCard }, { id: 'limits', label: 'Kasiyer yetkileri', icon: ShieldCheck }, { id: 'guard', label: 'Kasa güvenliği', icon: LockKeyhole }]} />
     <SettingsFrame><CashSettingsTab key={settingsPart} view={settingsPart} data={data} onSaved={onSaved} /></SettingsFrame>
   </>;
   const books = (view: string, name: string, body: ReactNode, period = true) => <FinancialAccess><div className="reports-workspace reports-v2 home-books">

@@ -52,7 +52,36 @@ export type CashShiftSettings = {
   fiscalConfirm?: boolean;
   /** "Kart bahşişini kasadan nakit öde" (8 Ekim, K2): a card tip asks at payment whether the waiter got it in cash from the drawer; "Evet" records a "Kart bahşişi nakit ödendi" movement. Missing = off. */
   tipCashOut?: boolean;
+  /** Kasa güvenliği (14 Ekim): each switch on its own; missing = off. */
+  guard?: CashGuard;
 };
+/**
+ * Kasa güvenliği (14 Ekim, sahibin kararı: "hepsini yap ama esnek olsun, isteyen açsın"). The blind count alone does not stop
+ * a cashier who took 400 TL and counts 400 more: the gap only shows when someone else really counts. Each switch closes one
+ * place the gap could hide; all are off until the owner turns them on (nothing changes for a business that does not want it).
+ *   blindOpening   Açılışta kör sayım: the morning count without the carried amount; any difference reaches the owner.
+ *   receipt        Kasadan çıkarılan parayı teslim al: the money taken out at the gün sonu waits for the owner's "Teslim
+ *                  aldım" with the amount the owner counted; a difference is recorded.
+ *   handoverCount  Devri alan da sayar: after a "Vardiya devri" the incoming person counts blind before going on.
+ *   strictCount    Sayımı sıkılaştır: only the owner takes a gün sonu back; the counter's copy of the yazar kasa part has no
+ *                  cash / card split (with the opening, they made the expected cash easy to work out).
+ *   posRequired    POS toplamı zorunlu: a window with card payments is not counted without the bank POS total.
+ *   methodAlert    Ödeme türü değişince bildir: a payment's method changed afterwards (Müdür) reaches the owner, with who
+ *                  took the payment.
+ */
+export type CashGuard = { blindOpening?: boolean; receipt?: boolean; handoverCount?: boolean; strictCount?: boolean; posRequired?: boolean; methodAlert?: boolean };
+export type CashGuardKey = keyof CashGuard;
+export const CASH_GUARD_KEYS: CashGuardKey[] = ['blindOpening', 'receipt', 'handoverCount', 'strictCount', 'posRequired', 'methodAlert'];
+/** The screen's words for each switch (src/CashGuardSettings.tsx): title, what it does, what it does when off. */
+export const cashGuardText: Record<CashGuardKey, { title: string; on: string; off: string }> = {
+  blindOpening: { title: 'Açılışta kör sayım', on: 'Sabah kasayı açan devreden tutarı görmeden sayar. Farkı size bildirilir.', off: 'Açan kişi dünden devreden tutarı görür; tutar aynıysa tek düğmeyle onaylar.' },
+  receipt: { title: 'Kasadan çıkarılan parayı teslim al', on: 'Gün sonunda kasadan çıkarılan para siz “Teslim aldım” deyip saydığınız tutarı yazana kadar bekler.', off: 'Kasadan çıkarılan para yalnız kapanışta yazılır; kimin aldığı kaydedilmez.' },
+  handoverCount: { title: 'Vardiya devrini alan da sayar', on: 'Vardiya devrinden sonra gelen kişi kasayı devreden tutarı görmeden sayar.', off: 'Devreden kişinin saydığı tutar sonraki vardiyanın başlangıcı olur.' },
+  strictCount: { title: 'Sayımı sıkılaştır', on: 'Gün sonunu yalnız siz geri alırsınız. Sayan kişi yazar kasa bölümünde nakit / kart ayrımını görmez.', off: 'Gün sonunu yapan kişi aynı gece geri alabilir; yazar kasa bölümü nakit ve kartı ayrı gösterir.' },
+  posRequired: { title: 'POS toplamı zorunlu', on: 'Kartlı ödeme alınan bir vardiya, banka POS cihazının toplamı yazılmadan sayılamaz.', off: 'POS toplamı isteğe bağlıdır.' },
+  methodAlert: { title: 'Ödeme türü değişince bildir', on: 'Bir ödemenin nakit / kart türü sonradan değişirse size bildirilir; ödemeyi kimin aldığı yazar.', off: 'Ödeme türü düzeltmesi yalnız İade ve düzeltme kaydında görünür.' },
+};
+export const guardOn = (s: CashShiftSettings | undefined, key: CashGuardKey) => !!s?.guard?.[key];
 export const DEFAULT_DIFFERENCE_NOTE = 5000;
 export const differenceLimit = (s?: CashShiftSettings) => s?.differenceNote ?? DEFAULT_DIFFERENCE_NOTE;
 export const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -78,7 +107,8 @@ export const movementSign = (k: CashMovementKind) => k === 'owner_in' ? 1 : k ==
 
 type Who = { by: string; byName: string; role: 'owner' | 'manager' | 'cashier' };
 /** "Kasa açılışı": the float counted in the morning. `carried`: what the last closing left in the drawer (null the first time). */
-export type CashOpening = Who & { id: string; kind: 'opening'; at: string; day: string; carried: number | null; amount: number; difference: number; note?: string };
+/** `blind`: counted without seeing `carried` (Kasa güvenliği); `handover`: the incoming count after that "Vardiya devri". */
+export type CashOpening = Who & { id: string; kind: 'opening'; at: string; day: string; carried: number | null; amount: number; difference: number; note?: string; blind?: true; handover?: { closingId: string; byName: string } };
 export type CashMovement = Who & { id: string; kind: 'movement'; type: CashMovementKind; at: string; day: string; amount: number; note?: string };
 /** A cash expense paid from the drawer during the window, as the closing saw it. */
 export type CashExpenseLine = { id: string; at: string; amount: number; description: string; byName: string };
@@ -123,6 +153,8 @@ export type CashClosing = Who & {
   fiscal?: import('./fiscal.js').CashFiscal;
   /** The Z raporu typed when finishing (optional) and its difference from `fiscal`. */
   fiscalZ?: import('./fiscal.js').FiscalZ;
+  /** Kasa güvenliği → receipt was on when it closed and money was taken out: it waits for the owner's CashReceipt. */
+  receiptAsked?: true;
 };
 /**
  * Who sees the result of a count (owner's decision, 8 Ekim): only the işletme sahibi. The cashier and the Müdür count blind
@@ -135,11 +167,13 @@ export const seesCashResult = (role: string) => role === 'owner';
 export type BlindClosing = Pick<CashClosing, 'id' | 'kind' | 'mode' | 'status' | 'day' | 'from' | 'to' | 'closedAt' | 'counted' | 'denominations' | 'pos' | 'note' | 'left' | 'taken' | 'closedBy' | 'extra' | 'fiscal' | 'fiscalZ' | 'shiftsEnded' | 'by' | 'byName' | 'role'> & { blind: true };
 export type ClosingView = CashClosing | BlindClosing;
 export const isBlind = (c: ClosingView): c is BlindClosing => 'blind' in c && c.blind === true;
-export function blindClosing(c: CashClosing): BlindClosing {
-  const { id, kind, mode, status, day, from, to, closedAt, counted, denominations, pos, note, left, taken, closedBy, extra, fiscal, fiscalZ, shiftsEnded, by, byName, role } = c;
+/** `strict` (Kasa güvenliği → strictCount): the yazar kasa part loses its cash / card split and payment list too. */
+export function blindClosing(c: CashClosing, strict = false): BlindClosing {
+  const { id, kind, mode, status, day, from, to, closedAt, counted, denominations, pos, note, left, taken, closedBy, extra, fiscalZ, shiftsEnded, by, byName, role } = c;
+  const fiscal = c.fiscal && strict ? { ...c.fiscal, cash: 0, card: 0, open: [], more: undefined, hiddenSplit: true as const } : c.fiscal;
   return Object.fromEntries(Object.entries({ id, kind, mode, status, day, from, to, closedAt, counted, denominations, pos, note, left, taken, closedBy, extra, fiscal, fiscalZ, shiftsEnded, by, byName, role, blind: true }).filter(([, v]) => v !== undefined)) as BlindClosing;
 }
-export const closingFor = (c: CashClosing, role: string): ClosingView => seesCashResult(role) ? c : blindClosing(c);
+export const closingFor = (c: CashClosing, role: string, strict = false): ClosingView => seesCashResult(role) ? c : blindClosing(c, strict);
 /**
  * Why the expected cash is below zero, in plain words (owner only): more cash went out "from the drawer" than came in.
  * Either the opening was written too low, or part of those expenses was really paid from outside the drawer.
@@ -149,9 +183,13 @@ export function negativeExpectedText(f: Pick<CashFigures, 'expected' | 'cashExpe
   return `Beklenen nakit eksi çıktı: kayıtlara göre kasadan, kasaya girenden ${money(-f.expected)} fazla nakit çıktı. Kasadan ödendi yazılan giderlerin (${money(f.cashExpenses)}) bir kısmı kasa dışından (cepten / bankadan) ödendiyse Kasa ve giderler → Giderler'de "Kasa dışı nakit" olarak düzeltin; açılış tutarı eksik yazıldıysa farkın nedeni odur.`;
 }
 export type CashCorrection = Who & { id: string; kind: 'correction'; closingId: string; at: string; day: string; amount: number; note: string };
+/** "Teslim aldım" (Kasa güvenliği → receipt): what the owner counted of the money taken out at a gün sonu (`expected`: the closing's `taken`). */
+export type CashReceipt = Who & { id: string; kind: 'receipt'; closingId: string; at: string; day: string; expected: number; received: number; difference: number; note?: string };
+/** A gün sonu whose taken-out money waits for the owner (GET /api/staff/cash/receipts, the owner's Bugün). */
+export type PendingReceipt = { closingId: string; day: string; at: string; byName: string; taken: number };
 /** A tip taken with a payment ("Bahşiş"); not a sale. `takers`: staff who took the account's orders, with their order amounts. */
 export type TipRecord = { id: string; kind: 'tip'; paymentId: string; at: string; day: string; amount: number; method: 'cash' | 'card'; takers: [string, number][]; byName?: string };
-export type CashRecord = CashOpening | CashMovement | CashClosing | CashCorrection | TipRecord | import('./fiscal.js').FiscalMark;
+export type CashRecord = CashOpening | CashMovement | CashClosing | CashCorrection | CashReceipt | TipRecord | import('./fiscal.js').FiscalMark;
 
 /** Opening + cash sales − cash refunds − cash expenses + owner in − owner out + cash tips + cash kapora − kapora given back in cash. */
 export function expectedCash(f: Pick<CashFigures, 'opening' | 'cashSales' | 'cashRefunds' | 'cashExpenses' | 'ownerIn' | 'ownerOut' | 'cashTips' | 'deposits' | 'depositRefunds' | 'tipsPaidOut'>) {
@@ -218,7 +256,13 @@ export type CashStatus = {
   afterClose?: boolean;
   /** The running window began with a "Vardiya devri": when, by whom, and the amount handed over. */
   handover?: { at: string; byName: string; amount: number } | null;
-  settings: { closingTime: string | null; differenceNote: number; shiftTracking: boolean; expenseAlert?: number | null };
+  settings: { closingTime: string | null; differenceNote: number; shiftTracking: boolean; expenseAlert?: number | null; posRequired?: boolean };
+  /** Kasa güvenliği: this person's opening is counted blind (`carried` is null for them then). */
+  blindOpening?: boolean;
+  /** Kasa güvenliği → handoverCount: the last "Vardiya devri" waits for the incoming person's blind count. */
+  handoverWaiting?: { at: string; byName: string } | null;
+  /** The owner's: gün sonları whose taken-out money waits for "Teslim aldım". */
+  receipts?: PendingReceipt[];
   /** Start of the running window (previous closing or the first opening); null before anything was recorded. */
   start: string | null;
   opening: { amount: number; confirmed: boolean; at?: string; byName?: string; note?: string };

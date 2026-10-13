@@ -7,6 +7,8 @@ import { adjustPayment, declineRefundRequest, pruneRequests, refundableItems, re
 import { cashierRefundLimits, OWNER_REQUIRED_TEXT, REFUND_REASONS, refundPower, type RefundReason } from '../packages/domain/refund-rules.js';
 import { businessDay, dayStart } from '../packages/domain/business-day.js';
 import { addTillNotice, awayFromTill, markTillNoticeSeen, tillNoticeText } from '../packages/domain/till-notices.js';
+import { guardOn } from '../packages/domain/cash.js';
+import { saatEki } from '../packages/domain/saat-eki.js';
 import type { Store } from './store.js';
 import type { Notifications } from './notifications.js';
 
@@ -109,6 +111,14 @@ export function refundRoutes(app: Express, store: Store, actorFor: (req: Request
     if (row.kind === 'refund' && power !== 'full') {
       const table = store.history.refundAccount(a.tenantId, store.read(a.tenantId), row.paymentId)?.tableName ?? 'Masa';
       notify(a.tenantId, `refund:${row.id}`, `Kasiyer iadesi: ${money(row.amount)} · ${table}`, `${row.byName ?? 'Kasiyer'} · ${row.items?.length ? refundItemsText(row.items) : 'tutar olarak'} · ${row.reason} · ${methodName(row.method)} · ${clock(row.createdAt)}${row.restock ? ' · stoğa eklendi' : ''}. Kasa ve giderler → İadeler'de görünür.`);
+    }
+    // Kasa güvenliği → methodAlert (14 Ekim): cash written as card (or back) afterwards by someone else than the owner; the
+    // owner hears who changed it and who took the payment (Payment.by, missing on older payments).
+    if (row.kind === 'method' && a.role !== 'owner' && guardOn(store.read(a.tenantId).cashShift, 'methodAlert')) {
+      const now$ = store.read(a.tenantId), account = store.history.refundAccount(a.tenantId, now$, row.paymentId), paid = account?.payments.find(p => p.id === row.paymentId);
+      const taker = paid?.by ? now$.staffUsers?.find(u => u.id === paid.by)?.name : undefined, changer = row.byName ?? now$.staffUsers?.find(u => u.id === a.id)?.name ?? 'Müdür';
+      notify(a.tenantId, `payment-method:${row.id}`, `Ödeme türü değişti: ${money(row.amount)} · ${account?.tableName ?? 'Masa'}`,
+        `${changer} ${saatEki(clock(row.createdAt), 'de')} ödemeyi ${methodName(row.method)} olarak düzeltti${paid ? ` (ödeme ${saatEki(clock(paid.createdAt), 'de')} alınmıştı${taker ? `, alan: ${taker}` : ''})` : ''} · Neden: ${row.reason}. Kasa ve giderler → İadeler'de görünür.`);
     }
     if (body.fromRequest && power === 'full') handled(a.tenantId, a.id, body.fromRequest);
     // K-A (9 Ekim kullanıcı testi): a refund done away from the till (the owner's phone, the Müdür) reaches the cashier: a green
