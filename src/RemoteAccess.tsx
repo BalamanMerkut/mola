@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import QRCode from 'qrcode';
-import { CheckCircle2, Copy, Globe2, KeyRound, Laptop, Link2, ListChecks, LockKeyhole, Smartphone, Tablet, Trash2 } from 'lucide-react';
+import { CheckCircle2, Copy, Globe2, KeyRound, Laptop, Link2, ListChecks, LockKeyhole, MonitorSmartphone, Smartphone, Tablet, Trash2 } from 'lucide-react';
 import { deviceKindOf, type DeviceKind } from '../packages/domain/remote-crypto';
 import { api, ApiError } from './api';
 import { Notice } from './components';
@@ -33,9 +33,11 @@ type Phone = { id: string; name: string; ownerName: string; pairedAt: string; la
 type View = { phones: Phone[]; max: number; pairing: { expiresAt: string } | null; relay: { connected: boolean; error: string | null }; code?: boolean };
 const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 /** Devices paired before 0.1.21 say nothing: phones. */
-const kindOf = (p: Phone): DeviceKind => p.kind ?? 'phone';
-const KIND_ICON: Record<DeviceKind, ReactNode> = { phone: <Smartphone size={18} aria-hidden="true" />, tablet: <Tablet size={18} aria-hidden="true" />, computer: <Laptop size={18} aria-hidden="true" /> };
-const KIND_NAME: Record<DeviceKind, string> = { phone: 'Telefon', tablet: 'Tablet', computer: 'Bilgisayar' };
+// A device paired before 0.1.21 has no kind: shown as "Cihaz" and not taken for the phone (14 Ekim: a laptop paired with 0.1.20
+// read "Telefonunuz bağlı: laptop" after the real phone was removed).
+const kindOf = (p: Phone): DeviceKind | 'unknown' => p.kind ?? 'unknown';
+const KIND_ICON: Record<DeviceKind | 'unknown', ReactNode> = { unknown: <MonitorSmartphone size={18} aria-hidden="true" />, phone: <Smartphone size={18} aria-hidden="true" />, tablet: <Tablet size={18} aria-hidden="true" />, computer: <Laptop size={18} aria-hidden="true" /> };
+const KIND_NAME: Record<DeviceKind | 'unknown', string> = { unknown: 'Cihaz', phone: 'Telefon', tablet: 'Tablet', computer: 'Bilgisayar' };
 const thisDevice = () => deviceKindOf(navigator.userAgent, navigator.maxTouchPoints);
 
 export function RemoteAccess() {

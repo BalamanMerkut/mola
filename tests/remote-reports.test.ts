@@ -243,7 +243,7 @@ test('owner’s own account only, password again: Müdür and staff 403, wrong p
   for (const path of ['/api/staff/remote-reports/pair', '/api/staff/remote-reports/phones/remove']) assert.ok(remoteRefusal('POST', path, { id, password: DEMO_PASSWORD, code: '123456' }), path);
 });
 
-test('the phone first (0.1.21): a tablet or a computer waits for a phone; devices without a kind count as phones; the report says "Kafeyi yönet"', async t => {
+test('the phone first (0.1.21): a tablet or a computer waits for a phone; devices without a kind do not count as phones; the report says "Kafeyi yönet"', async t => {
   const { pair, owner, tenant, remote, phone, pairPhone } = await setup('remote-kinds');
   t.after(() => pair.close());
   // What the Raporlarım page says it is, from its own user agent (iPad asking for the desktop site: a Mac with touch).
@@ -277,9 +277,11 @@ test('the phone first (0.1.21): a tablet or a computer waits for a phone; device
   // The phone removed on the café computer: the laptop stays, a new tablet waits for a phone again.
   assert.equal((await owner('/staff/remote-reports/phones/remove', { id: phoneId, password: DEMO_PASSWORD })).status, 200);
   assert.equal((await pairPhone('Tablet', 'tablet')).answer.data.code, 'PHONE_FIRST');
-  // A device paired before 0.1.21 (no kind) counts as a phone: then a tablet may come.
+  // A device paired before 0.1.21 (no kind) does not stand in for the phone; a new phone, then the tablet may come.
   (remote as unknown as { write: (t: string, fn: (r: { phones: { kind?: string }[] }) => void) => void }).write(tenant, r => { for (const p of r.phones) delete p.kind; });
   assert.equal((await owner('/staff/remote-reports')).data.phones[0].kind, null);
+  assert.equal((await pairPhone('Tablet', 'tablet')).answer.data.code, 'PHONE_FIRST');
+  assert.equal((await pairPhone('Yeni telefon', 'phone')).answer.status, 200);
   const tablet = await pairPhone('Tablet', 'tablet');
   assert.equal(tablet.answer.status, 200, JSON.stringify(tablet.answer.data));
   // A poll's list still without it forgets a phone once the grace is over.

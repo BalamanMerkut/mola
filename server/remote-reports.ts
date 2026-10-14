@@ -31,7 +31,7 @@ import { featureRefusal } from './feature-guard.js';
  *            token and postbox). The phone first (0.1.21): the Raporlarım page says what it is ('phone' | 'tablet' |
  *            'computer', from its own user agent) inside the sealed request, so Mola Merkez cannot change it; while no phone is
  *            paired, a tablet or a computer is refused ("Önce telefonunuzu eşleştirin."). Devices paired before 0.1.21 have no
- *            kind and count as phones.
+ *            kind and do not count as the phone (a 0.1.20 laptop must not stand in for it).
  *   Live     The phone asks through Merkez (relay kind `phone`): HMAC-signed, fresh (±5 min) and one-time (nonce); the answer
  *            is the report sealed for that phone, bound to the question.
  *   Postbox  Every RELAY postbox period while this computer runs (MOLA_POSTBOX_MS), after a gün sonu and when Mola closes,
@@ -137,7 +137,7 @@ export class RemoteReports {
     this.write(p.tenant, x => {
       if (x.phones.length >= RELAY.MAX_PHONES) throw new DomainError('PHONE_LIMIT', `En fazla ${RELAY.MAX_PHONES} cihaz eşleştirilebilir.`, 409);
       // The QR stays open: the owner can scan it with the phone now.
-      if (kind !== 'phone' && !x.phones.some(v => (v.kind ?? 'phone') === 'phone')) throw new DomainError('PHONE_FIRST', 'Önce telefonunuzu eşleştirin. Sonra bu cihazı aynı yerden ekleyebilirsiniz.', 409);
+      if (kind !== 'phone' && !x.phones.some(v => v.kind === 'phone')) throw new DomainError('PHONE_FIRST', 'Önce telefonunuzu eşleştirin. Sonra bu cihazı aynı yerden ekleyebilirsiniz.', 409);
       x.phones.push({ id, name, pub: r.request.phonePub, ownerId: owner.id, ownerName: owner.name, pairedAt: at, kind });
       x.log.push({ at, text: `Cihaz eşleştirildi: ${name} (${owner.name}).` });
     });
