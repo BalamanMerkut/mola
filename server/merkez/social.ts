@@ -33,11 +33,13 @@ export function newSocialCode(taken: Set<string>) {
     if (!taken.has(code)) return code;
   }
 }
+/** Every short code given so far (social, menu, Kalıcı bağlantı): a new one never repeats any of them, whatever it is for. */
+export const takenCodes = (d: MerkezData) => new Set(d.businesses.flatMap(b => [b.social?.code, b.menu?.code, b.lanCode]).filter((c): c is string => !!c));
 
 /** The heartbeat's `social` part: keeps each listed business's checked links, gives a code once; the answer for the café. */
 export function recordSocial(d: MerkezData, mine: MerkezBusiness[], sent: SyncRequest['social'], time: string, publicOrigin?: string): SyncResponse['social'] | undefined {
   if (!sent) return undefined;
-  const taken = new Set(d.businesses.map(b => b.social?.code).filter((c): c is string => !!c));
+  const taken = takenCodes(d);
   const codes: { tenantId: string; code: string }[] = [];
   for (const item of sent) {
     const biz = mine.find(b => b.tenantId === item.tenantId); if (!biz) continue;
@@ -68,18 +70,20 @@ export function socialOpen(b: MerkezBusiness, d: MerkezData, now: Date) {
   return !!seen && now.getTime() - Date.parse(seen) < OFFLINE_DAYS * DAY;
 }
 
-const page = (status: 'unavailable' | 'missing' | 'busy') => {
-  const [tr, en] = status === 'unavailable' ? ['Bu işletmenin bu hizmeti şu anda kullanılamıyor.', 'This service of the business is currently unavailable.']
-    : status === 'missing' ? ['Bu bağlantı bulunamadı.', 'This link could not be found.']
-      : ['Çok sık deneme yapıldı. Biraz bekleyip tekrar deneyin.', 'Too many tries. Please wait a moment and try again.'];
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Mola</title><style>
+/** The small Mola page of the public short addresses (also Kalıcı bağlantı's, server/merkez/lan-link.ts): `inner` is HTML. */
+export const molaPage = (status: string, inner: string, title = 'Mola', css = '') => `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title><style>
 :root{color-scheme:light dark;--bg:#f4f1ea;--card:#fff;--ink:#22352c;--muted:#66746b;--brand:#2f6b55}
 @media (prefers-color-scheme:dark){:root{--bg:#141a17;--card:#1d2621;--ink:#e8eee9;--muted:#9fb0a5;--brand:#7cc3a4}}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;padding:16px}
 main{max-width:420px;width:100%;background:var(--card);border-radius:20px;padding:32px 24px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.08)}
 .mark{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--brand);color:var(--card);font-weight:800;font-size:22px;margin-bottom:14px}
-h1{font-size:19px;margin:0 0 8px;line-height:1.35}p{margin:0;color:var(--muted);font-size:15px}small{display:block;margin-top:22px;color:var(--muted);font-size:12px}
-</style></head><body><main data-status="${status}"><div class="mark" aria-hidden="true">M</div><h1>${tr}</h1><p lang="en">${en}</p><small>Mola</small></main></body></html>`;
+h1{font-size:19px;margin:0 0 8px;line-height:1.35}p{margin:0;color:var(--muted);font-size:15px}small{display:block;margin-top:22px;color:var(--muted);font-size:12px}${css}
+</style></head><body><main data-status="${status}"><div class="mark" aria-hidden="true">M</div>${inner}<small>Mola</small></main></body></html>`;
+export const page = (status: 'unavailable' | 'missing' | 'busy') => {
+  const [tr, en] = status === 'unavailable' ? ['Bu işletmenin bu hizmeti şu anda kullanılamıyor.', 'This service of the business is currently unavailable.']
+    : status === 'missing' ? ['Bu bağlantı bulunamadı.', 'This link could not be found.']
+      : ['Çok sık deneme yapıldı. Biraz bekleyip tekrar deneyin.', 'Too many tries. Please wait a moment and try again.'];
+  return molaPage(status, `<h1>${tr}</h1><p lang="en">${en}</p>`);
 };
 
 type Entry = { tenantId: string; links: SocialLinks; open: boolean };

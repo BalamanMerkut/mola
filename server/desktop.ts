@@ -120,7 +120,9 @@ export function desktopGuard(desktop: Desktop | undefined) {
 export type DesktopSecurity = { protection: string; recoveryConfirmed: boolean; recoveryAvailable: boolean; warning: string | null; secondFolder: string | null; secondError: string | null; clean: boolean; owner?: boolean; /** Hizmet paketi: "İki ekran" is in the package (the rail fades "İkiye böl" otherwise). */ split?: boolean };
 /** Open tables (accounts) and orders not yet served, over every business here: the installer warns before an update. */
 export type DesktopActivity = { openAccounts: number; pendingOrders: number };
-export function desktopRoutes(app: Express, desktop: Desktop | undefined, network: { lan: boolean; port: number }, backups?: BackupScheduler, security?: () => DesktopSecurity, activity?: () => DesktopActivity, profile?: NetworkProfile) {
+/** Kalıcı bağlantı (server/kafe-link.ts lanAddress): the business's permanent `<Merkez>/k/<kod>`, or why there is none yet. */
+export type DesktopLanLink = { url: string } | { problem: 'inactive' | 'old' | 'waiting' | 'off' };
+export function desktopRoutes(app: Express, desktop: Desktop | undefined, network: { lan: boolean; port: number }, backups?: BackupScheduler, security?: () => DesktopSecurity, activity?: () => DesktopActivity, profile?: NetworkProfile, lanLink?: () => DesktopLanLink) {
   const allow = desktopGuard(desktop);
   let asking = false;
   // Tabletler: is the connection phones use on Windows' "Genel" profile while Mola's firewall rule is still the old private-only
@@ -167,7 +169,7 @@ export function desktopRoutes(app: Express, desktop: Desktop | undefined, networ
   });
   app.get('/api/desktop/status', (req, res) => {
     allow(req);
-    res.json({ ok: true, lan: network.lan, addresses: network.lan ? lanOrigins(network.port) : [], backup: backupView(), ...(security ? { security: security() } : {}) });
+    res.json({ ok: true, lan: network.lan, addresses: network.lan ? lanOrigins(network.port) : [], backup: backupView(), ...(security ? { security: security() } : {}), ...(lanLink ? { link: lanLink() } : {}) });
   });
   app.post('/api/desktop/backup', async (req, res) => {
     allow(req);

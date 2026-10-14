@@ -47,6 +47,8 @@ import { LEGACY_FULL, LEGACY_MENU } from '../../packages/domain/service-pricing.
 import { announcementRoutes, deliverAnnouncements, forgetAnnouncementsOf } from './announcements.js';
 // Sosyal medya kısa adresleri (server/merkez/social.ts): the cafés' public links and the QR codes' /s/<code>/<platform>.
 import { recordSocial, socialRoutes, socialView } from './social.js';
+// Kalıcı bağlantı (server/merkez/lan-link.ts): the café computer's network addresses and the owner's permanent /k/<code>.
+import { lanLinkRoutes, recordLan } from './lan-link.js';
 import { ownerLoginRoutes, recordOwners } from './owner-login.js';
 import { shortLinkOrigin, siteLeadRoutes } from './site-leads.js';
 // İnternetten menü (server/merkez/guest-tunnel.ts): the cafés' guest tunnels and the public /q/<kod>/… addresses.
@@ -179,8 +181,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   const httpsOrigin = options.httpSecurity?.publicOrigin;
   app.use((req, res, next) => {
     // /s/: the social QR codes' public short addresses (server/merkez/social.ts), reachable like the café calls; /q/: the guest
-    // menu over the internet (server/merkez/guest-tunnel.ts).
-    if (req.path === MERKEZ_API || req.path.startsWith(`${MERKEZ_API}/`) || req.path.startsWith('/s/') || req.path.startsWith('/q/') || (httpsOrigin ? req.secure : loopbackRequest(req))) return next();
+    // menu over the internet (server/merkez/guest-tunnel.ts); /k/: Kalıcı bağlantı (server/merkez/lan-link.ts).
+    if (req.path === MERKEZ_API || req.path.startsWith(`${MERKEZ_API}/`) || req.path.startsWith('/s/') || req.path.startsWith('/q/') || req.path.startsWith('/k/') || (httpsOrigin ? req.secure : loopbackRequest(req))) return next();
     res.status(403);
     if (req.path.startsWith('/api/')) res.json({ code: 'LOCAL_ONLY', message: 'Mola Yönetim yalnız Mola Merkez’in çalıştığı bilgisayardan açılır.' });
     else res.type('text/plain').send('Mola Yönetim yalnız Mola Merkez’in çalıştığı bilgisayardan açılır.');
@@ -878,6 +880,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   // ---------- Café installs ----------
   // Sosyal medya: the public short addresses of the cafés' social QR codes (outside /api: no request log).
   socialRoutes(app, { store, now });
+  // Kalıcı bağlantı: the owner's permanent link to the café computer (outside /api: no request log).
+  lanLinkRoutes(app, { store, now, publicOrigin: httpsOrigin });
   app.get(`${MERKEZ_API}/health`, (_req, res) => { res.json({ ok: true, role: 'merkez', version: APP_VERSION, mode: process.env.MOLA_MODE === 'installed' ? 'installed' : 'development' }); });
   /*
    * "Mola ekibi iletişim bilgileri" for a café that is not activated yet (no install secret to sign with): the vendor's contact
@@ -1174,6 +1178,9 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
       const announcements = replaced ? undefined : deliverAnnouncements(d, owned, b.announcements);
       // Sosyal medya: the businesses' public links in, their short-address codes out (a replaced computer's are not kept).
       const social = replaced ? undefined : recordSocial(d, mine, b.social, time, shortLinkOrigin(options.httpSecurity?.publicOrigin));
+      // Kalıcı bağlantı: the café computer's network addresses and where its heartbeat came from in, the /k/ codes out (a
+      // replaced computer's are not kept: the new one's addresses stay).
+      const lanLink = replaced ? undefined : recordLan(d, install, mine, b.lan, clientKey(req), time, httpsOrigin);
       // İşletmem var: the owners' password verifiers (a replaced computer's are not kept).
       if (!replaced) recordOwners(d, mine, b.owners, time);
       // İnternetten menü: each business's menu code for the table QR codes (only when the café asks; a replaced computer gets none).
@@ -1184,7 +1191,7 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
       const removed = removals(d, caller.id);
       const contact = signedContact(d);
       return { v: 1, serverTime: time, licenses: replaced ? [] : mine.flatMap(x => x.signed ? [x.signed] : []), tickets: d.tickets.filter(x => owned.has(x.tenantId)).slice(-50), delivered, next: 600, pulse, ...(removed.length ? { removed } : {}), ...(contact ? { contact } : {}), accepts: guestOrigin ? [...MERKEZ_ACCEPTS, MENU_ORIGIN_FLAG] : MERKEZ_ACCEPTS,...(update !== undefined ? { update } : {}), ...notes,
-        ...(!replaced ? (m => m ? { integrityManifest: m } : {})(integrity.manifestFor(releases, b.integrity)) : {}), ...(announcements ? { announcements } : {}), ...(social ? { social } : {}), ...(tunnel ? { tunnel } : {}) };
+        ...(!replaced ? (m => m ? { integrityManifest: m } : {})(integrity.manifestFor(releases, b.integrity)) : {}), ...(announcements ? { announcements } : {}), ...(social ? { social } : {}), ...(tunnel ? { tunnel } : {}), ...(lanLink ? { lanLink } : {}) };
     });
     sendSigned(res, caller.secret, nonce, answer);
   });

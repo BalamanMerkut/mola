@@ -81,6 +81,11 @@ export type MerkezBusiness = License & {
    * given once when its café first asks (heartbeat `tunnel`) and never changed: printed table QR codes keep working.
    */
   menu?: { code: string; since: string };
+  /**
+   * Kalıcı bağlantı (14 Ekim): the business's code for `/k/<code>` (server/merkez/lan-link.ts), random, given once when its café
+   * first sends its network addresses and never changed: the link the owner saved on laptops and phones keeps working.
+   */
+  lanCode?: string;
 };
 export type BusinessServices = { packageId: string | null; features: FeatureId[]; discount?: Discount; updatedAt: string };
 /** "Hizmet fiyatları" and "Paketler" (Ayarlar) and the KDV rate of Satışlarım; made once, with the starting packages. */
@@ -95,7 +100,12 @@ export type Catalog = {
  */
 export type InstallMachine = { hash: string; firstSeenAt: string; lastSeenAt: string; replacedAt?: string; restoredAt?: string };
 /** `activationId`: set when the café chose the install id itself (retry-safe activation); older installs have none. */
-export type Install = { id: string; secret: string; createdAt: string; machineId?: string; lastSeenAt?: string; appVersion?: string; revokedAt?: string; activationId?: string; machines?: InstallMachine[] };
+/**
+ * `lan` (Kalıcı bağlantı, server/merkez/lan-link.ts): the addresses the café computer serves Mola on in its own network, the
+ * public address its heartbeat came from (clientKey: IPv4, or the IPv6 /64) and when; gone once a heartbeat comes without them.
+ */
+export type Install = { id: string; secret: string; createdAt: string; machineId?: string; lastSeenAt?: string; appVersion?: string; revokedAt?: string; activationId?: string; machines?: InstallMachine[];
+  lan?: { origins: string[]; client: string; at: string } };
 export type ActivationCode = { hash: string; tenantId: string; createdAt: string; expiresAt: string; usedAt?: string };
 export type Notification = { id: string; ticketId: string; event: 'ticket.created' | 'ticket.closed'; channel: 'email' | 'sms'; audience: 'platform' | 'business'; status: 'awaiting_configuration'; at: string };
 /**

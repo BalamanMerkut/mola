@@ -5,6 +5,7 @@ import { MolaCup } from './MolaLogo';
 import { desktopCall as call, desktopToken, forgetDesktopToken } from './desktop-call';
 import { CashCloseReminder } from './CashDay';
 import { NetworkProfileNotice, useNetworkProfile, type NetworkProfileView } from './NetworkProfileNotice';
+import { PermanentLink, type LanLink } from './PermanentLink';
 import { cloudLine, type CloudView } from './cloudBackupText';
 import type { DesktopSecurity, SecurityDialogKind } from './DesktopSecurity';
 import { readSplit, SplitView, writeSplit, type SplitState } from './SplitView';
@@ -23,7 +24,8 @@ import { PACKAGE_PRIVACY_TEXT } from '../packages/domain/package-privacy';
 type Backup = { enabled: boolean; running?: boolean; lastSuccessAt?: string | null; lastError?: string | null; nextRunAt?: string | null; note?: string | null; set?: { at: string; tier: 'daily' | 'weekly' | 'monthly' }[]; packages?: { year: string; bytes: number; ok: boolean }[]; safetyCopy?: { removeAt: string }; cloud?: CloudView };
 const longDay = (iso: string) => new Date(iso).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 const TIER = { daily: 'Günlük', weekly: 'Haftalık', monthly: 'Aylık' } as const;
-type DesktopStatus = { lan: boolean; addresses: { name: string; origin: string }[]; backup: Backup; security?: DesktopSecurity; locked?: boolean };
+/** `link`: Kalıcı bağlantı (the business's permanent Merkez link to this computer), from a server that knows it. */
+type DesktopStatus = { lan: boolean; addresses: { name: string; origin: string }[]; backup: Backup; security?: DesktopSecurity; locked?: boolean; link?: LanLink };
 // Key protection screens: loaded only when the desktop window needs them, never on tablets and phones.
 const SecurityDialog = lazy(() => import('./DesktopSecurity'));
 const SecondPlace = lazy(() => import('./DesktopSecurity').then(m => ({ default: m.SecondPlace })));
@@ -207,6 +209,7 @@ function TabletsDialog({ token, status, onClose }: { token: string; status: Desk
         <p className="desktop-address">{status.addresses.map(a => <code key={a.origin}>{a.origin}/uygulama</code>)}</p>
         <p className="muted small">Cihaz bu bilgisayarla aynı Wi-Fi ağında olmalı. Bağlanmıyorsa bilgisayarın güvenlik duvarında Mola'ya izin verin.</p>
       </>}
+    <PermanentLink link={status.link} />
   </div></Modal>;
 }
 

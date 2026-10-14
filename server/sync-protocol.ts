@@ -14,6 +14,10 @@ import type { AnnouncementDelivery } from '../packages/domain/announcement.js';
  * field, with the same strict rule. `update` (otomatik güncelleme): platform, state and version only, never a path or a name.
  */
 const id = z.string().min(1).max(100), at = z.string().max(40);
+const OCTET = String.raw`(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)`;
+const LAN_ORIGIN = new RegExp(String.raw`^http://(?:10\.${OCTET}|172\.(?:1[6-9]|2\d|3[01])|192\.168)\.${OCTET}\.${OCTET}:([1-9]\d{0,4})$`);
+/** Kalıcı bağlantı: `http://<10.x | 172.16-31.x | 192.168.x>:<port>` and nothing else (both sides check it: the café before sending). */
+export const privateLanOrigin = (value: string) => { const m = LAN_ORIGIN.exec(value); return !!m && Number(m[1]) <= 65535; };
 export const businessReport = z.object({
   tenantId: id, name: z.string().max(200), sector: z.enum(sectors), setupCompleted: z.boolean(), setupCompletedAt: at.optional(),
   counts: z.object({ tables: z.number().int().min(0).max(100000), staff: z.number().int().min(0).max(100000), products: z.number().int().min(0).max(100000) }).strict(),
@@ -117,6 +121,13 @@ export const syncRequest = z.object({
    */
   owners: z.array(z.object({ tenantId: id, username: z.string().min(1).max(50), stamp: z.string().regex(/^[a-f0-9]{8,64}$/),
     verifier: z.object({ salt: z.string().regex(/^[A-Za-z0-9+/=]{16,64}$/), N: z.number().int(), r: z.number().int(), p: z.number().int(), hash: z.string().regex(/^[a-f0-9]{64}$/) }).strict() }).strict()).max(50).optional(),
+  /**
+   * Kalıcı bağlantı (14 Ekim): the addresses this café computer serves Mola on in its own network (server/desktop.ts
+   * lanOrigins), each exactly `http://<private IPv4>:<port>`; nothing else (no name, no path, no public address). Merkez sends
+   * a visitor of `<Merkez>/k/<kod>` on the café's network there (server/merkez/lan-link.ts). Sent only to a Merkez that listed
+   * 'lan.link' and only while the café serves its network; a heartbeat without it clears Merkez's copy.
+   */
+  lan: z.object({ origins: z.array(z.string().max(40).refine(privateLanOrigin)).min(1).max(4) }).strict().optional(),
 }).strict();
 export type SyncRequest = z.infer<typeof syncRequest>;
 export type BusinessReport = z.infer<typeof businessReport>;
@@ -154,7 +165,12 @@ export type SyncResponse = { v: 1; serverTime: string; licenses: SignedLicense[]
    * İnternetten menü, only for a café that sent `tunnel`: each of its businesses' menu code (given once, never changed) and the
    * public address the table QR codes should hold (MERKEZ_SITE_ORIGIN, else PUBLIC_ORIGIN; missing: the café's Merkez address).
    */
-  tunnel?: { base?: string; codes: { tenantId: string; code: string }[] } };
+  tunnel?: { base?: string; codes: { tenantId: string; code: string }[] };
+  /**
+   * Kalıcı bağlantı, only for a café that sent `lan`: each of its businesses' code for `<base>/k/<kod>` (given once, never
+   * changed) and the public address it is on (the same as `social.base`; missing: the café's Merkez address).
+   */
+  lanLink?: { base?: string; codes: { tenantId: string; code: string }[] } };
 /** A release Merkez offers one café: its signed manifest and archive come from /releases/:id/manifest and /paket. */
 export type UpdateOffer = { id: string; version: string; size: number; notes: string };
 /** Optional heartbeat fields of this version: an older Merkez (strict schema) never lists them, so it never gets them. */
@@ -179,7 +195,8 @@ export type UpdateOffer = { id: string; version: string; size: number; notes: st
 export const MENU_ORIGIN_FLAG = 'guest.menu-origin';
 // 'owner.login' (13 Ekim): this Merkez keeps the owners' password verifiers (`owners`) for "İşletmem var" on a new computer;
 // 'owner.email' (13 Ekim): it keeps a verified e-mail per business for İşletmem var (POST /owner-email/*, server/merkez/owner-login.ts).
-export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login', 'owner.email'];
+// 'lan.link' (14 Ekim): Kalıcı bağlantı: the café's network addresses up (`lan`), its businesses' `/k/<kod>` codes down (`lanLink`).
+export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login', 'owner.email', 'lan.link'];
 /** Activation answer: the install credentials (kept only on the café computer, sealed) and the first signed licence. */
 export type ActivationResult = { installId: string; secret: string; tenantId: string; name: string; sector?: typeof sectors[number]; license: SignedLicense; serverTime: string };
 // ---------- Hesap açma başvurusu ----------

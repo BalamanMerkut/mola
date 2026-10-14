@@ -295,8 +295,10 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     const actor = staffActor(req), printed = store.read(actor.tenantId).qrPrint;
     const address = link.menuAddress(actor.tenantId);
     const internet = !guestTunnel.ready() ? { publicProblem: 'local' as const } : 'base' in address ? { public: { base: address.base, connected: guestTunnel.connected() } } : { publicProblem: address.problem };
-    if (httpSecurity.publicOrigin) return res.json({ lan: true, addresses: [{ name: 'HTTPS test', origin: httpSecurity.publicOrigin }], printed, ...internet });
-    res.json({ lan: network.lan, addresses: network.lan ? lanOrigins(network.port) : [], printed, ...internet });
+    // Kalıcı bağlantı (Ayarlar → Cihazlar): the owner's and Müdür's permanent link to this computer, never a waiter's.
+    const permanent = ['owner', 'manager'].includes(actor.role) ? { link: link.lanAddress(actor.tenantId) } : {};
+    if (httpSecurity.publicOrigin) return res.json({ lan: true, addresses: [{ name: 'HTTPS test', origin: httpSecurity.publicOrigin }], printed, ...internet, ...permanent });
+    res.json({ lan: network.lan, addresses: network.lan ? lanOrigins(network.port) : [], printed, ...internet, ...permanent });
   });
   // Ayarlar → Cihazlar ("Tablet ve telefon bağlama"): the connection phones use is on Windows' "Genel" profile, so Mola's
   // firewall rule (private networks only) keeps them out. Read only (server/network-profile.ts); the owner or Müdür reads it.
@@ -886,6 +888,8 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     // Sosyal medya: the guest menu's public links (Google review included), for the permanent QR codes' short addresses at Merkez.
     social: () => (store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]).map(({ tenant }) => ({ tenantId: tenant, links: socialLinksOf(store.read(tenant)) ?? {} })),
     owners: () => security?.vault?.ownerLogins() ?? [],
+    // Kalıcı bağlantı: where laptops and phones on the café's network reach this computer now (Merkez's /k/<kod> sends them there).
+    lan: () => network.lan ? lanOrigins(network.port).map(a => a.origin) : [],
   };
   const clean = () => !store.db.prepare('SELECT tenant FROM snapshots LIMIT 1').get() && !link.read();
   restoreRoutes(app, localDesktop, { security, backups, clean });
@@ -952,7 +956,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   desktopRoutes(app, desktop, network, backups, () => {
     const view = recoveryView(security), second = backups?.second?.status();
     return { protection: view.protection, recoveryConfirmed: view.confirmed, recoveryAvailable: view.available, warning: view.warning, secondFolder: second?.folder ?? null, secondError: second?.folder ? second.lastError ?? null : null, clean: clean(), owner: hasOwner(), split: link.installHas('split-screen') };
-  }, activity, networkProfile);
+  }, activity, networkProfile, () => link.installLanAddress());
   // Otomatik güncelleme: the owner's banner and "Şimdi kur" (server/update-routes.ts); the agent asks the same activity question.
   updates?.attach({ activity });
   updateRoutes(app, store, staffActor, updates);

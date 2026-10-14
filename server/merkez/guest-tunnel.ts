@@ -17,7 +17,7 @@ import { tableHash } from '../menu-mirror.js';
 import type { MenuMirrorStore } from './menu-mirror.js';
 import { WsSocket, wsAccept } from '../ws-frames.js';
 import { noticePage } from './notice-page.js';
-import { newSocialCode } from './social.js';
+import { newSocialCode, takenCodes } from './social.js';
 import { licenseFeatures, type MerkezBusiness, type MerkezData, type MerkezStore } from './store.js';
 
 /*
@@ -52,7 +52,7 @@ const OFFLINE_EN = 'The menu can’t be opened right now. Please ask your waiter
 /** The heartbeat's `tunnel` part: every business of this café gets its menu code once; the answer for the café. */
 export function recordTunnel(d: MerkezData, mine: MerkezBusiness[], sent: SyncRequest['tunnel'], time: string, publicOrigin?: string): SyncResponse['tunnel'] | undefined {
   if (!sent) return undefined;
-  const taken = new Set(d.businesses.flatMap(b => [b.menu?.code, b.social?.code]).filter((c): c is string => !!c));
+  const taken = takenCodes(d);
   const codes: { tenantId: string; code: string }[] = [];
   for (const biz of mine) {
     if (!biz.menu) { const code = newSocialCode(taken); taken.add(code); biz.menu = { code, since: time }; }

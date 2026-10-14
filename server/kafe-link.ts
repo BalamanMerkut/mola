@@ -20,7 +20,7 @@ import type { StaffUser } from './accounts.js';
 import type { Store } from './store.js';
 import { SOCIAL_CODE } from '../packages/domain/social-links.js';
 import { merkezAddress, verifyNote, type DemoClaims, type DemoReset, type DemoSector, type SignedAddress, type SignedDemo } from './signed-notes.js';
-import { KEY_MISMATCH, MENU_ORIGIN_FLAG, MERKEZ_API, type ActivationResult, type ApplicationAnswer, type ApplicationForm, type BusinessReport, type FailureReport, type SyncRequest, type SyncResponse, type UpdateOffer } from './sync-protocol.js';
+import { KEY_MISMATCH, MENU_ORIGIN_FLAG, MERKEZ_API, privateLanOrigin, type ActivationResult, type ApplicationAnswer, type ApplicationForm, type BusinessReport, type FailureReport, type SyncRequest, type SyncResponse, type UpdateOffer } from './sync-protocol.js';
 
 /*
  * The café's link to Mola Merkez ("Kafe" role). One sealed row in merchant.sqlite (table merkez_link, sealed with the data
@@ -109,6 +109,11 @@ export type LinkRecord = {
    * when it named one; the table QR codes hold `<base>/q/<code>/<masa kodu>` (else the café's Merkez address).
    */
   tunnel?: { base?: string; codes: Record<string, string> };
+  /**
+   * Kalıcı bağlantı (server/merkez/lan-link.ts): Merkez's `/k/<code>` per business (given once, never changed) and its public
+   * address when it named one: `<base>/k/<code>` opens this computer's Mola on the café's network whatever its address is.
+   */
+  lanLink?: { base?: string; codes: Record<string, string> };
   /** Businesses for which a licence with `features` was accepted here once (see LEGACY_LICENCE_UNTIL); also kept in the mark. */
   withFeatures?: Record<string, true>;
 };
@@ -171,7 +176,9 @@ export type Reporter = { businesses(): Omit<BusinessReport, 'lastActivityAt' | '
   /** Sosyal medya: each business's public links (the guest menu's, Google review included) for Merkez's short QR addresses. */
   social?(): NonNullable<SyncRequest['social']>;
   /** "İşletmem var" (13 Ekim): each business owner's username and password verifier (never the password, never a key). */
-  owners?(): NonNullable<SyncRequest['owners']> };
+  owners?(): NonNullable<SyncRequest['owners']>;
+  /** Kalıcı bağlantı: the addresses Mola is served on in the café's network (none while it is open to this computer only). */
+  lan?(): string[] };
 /** 'applied': an application waits for the vendor (or was refused); nothing else works until it is approved. */
 export type LinkState = 'activate' | 'applied' | 'owner' | 'ready';
 /** machineKey: tests stand in another computer (default: machineKey()). */
@@ -1054,6 +1061,9 @@ export class MerkezLink {
       ...(record.accepts?.includes('guest.tunnel') && !this.closed() && this.tunnelWanted?.() ? { tunnel: { v: 1 as const } } : {}),
       // "İşletmem var": the owners' verifiers, only to a Merkez that keeps them (it checks a sign-in on a new computer with them).
       ...(record.accepts?.includes('owner.login') && !this.closed() && this.reporter.owners ? { owners: this.reporter.owners().filter(x => open(x.tenantId)).slice(0, 50) } : {}),
+      // Kalıcı bağlantı: this computer's network addresses (checked here too: one odd address must not cost the heartbeat), only
+      // to a Merkez that takes them and only while the café serves its network; without them Merkez forgets the old ones.
+      ...(record.accepts?.includes('lan.link') && !this.closed() ? (list => list.length ? { lan: { origins: list } } : {})((this.reporter.lan?.() ?? []).filter(privateLanOrigin).slice(0, 4)) : {}),
     };
   }
   /** İnternetten menü (server/guest-tunnel.ts): this café can serve its guest menu over the tunnel (the built page is here). */
@@ -1114,6 +1124,25 @@ export class MerkezLink {
     if (!code || !SOCIAL_CODE.test(code)) return { problem: 'waiting' };
     if (links && r.social?.sent?.[tenant] !== JSON.stringify(links)) return { problem: 'waiting' };
     return { base: `${(r.social?.base ?? this.url).replace(/\/+$/, '')}/s/${code}` };
+  }
+  /**
+   * Kalıcı bağlantı: this business's permanent link to this computer (`<base>/k/<code>`), or why there is none: 'inactive'
+   * (Mola is not activated here, or the record was closed), 'off' (Mola is open to this computer only), 'old' (this Mola
+   * Merkez does not keep them yet), 'waiting' (no code yet: the next heartbeat brings it).
+   */
+  lanAddress(tenant: string): { url: string } | { problem: 'inactive' | 'old' | 'waiting' | 'off' } {
+    const r = this.read();
+    if (!r || this.removed(tenant) || !r.licenses[tenant]) return { problem: 'inactive' };
+    if (!(this.reporter.lan?.() ?? []).some(privateLanOrigin)) return { problem: 'off' };
+    if (r.accepts && !r.accepts.includes('lan.link')) return { problem: 'old' };
+    const code = r.lanLink?.codes[tenant];
+    if (!code || !SOCIAL_CODE.test(code)) return { problem: 'waiting' };
+    return { url: `${(r.lanLink?.base ?? this.url).replace(/\/+$/, '')}/k/${code}` };
+  }
+  /** The desktop window's Tabletler: the link of this computer's business (the first one when it has several). */
+  installLanAddress() {
+    const tenant = Object.keys(this.read()?.licenses ?? {}).find(t => !this.removed(t));
+    return tenant ? this.lanAddress(tenant) : { problem: 'inactive' as const };
   }
   /**
    * Merkez's list is the whole truth for this computer: one it no longer names was withdrawn (it goes, with its read marks);
@@ -1209,6 +1238,12 @@ export class MerkezLink {
           const tunnel = r.tunnel ??= { codes: {} }, base = answer.tunnel.base;
           for (const c of answer.tunnel.codes.slice(0, 50)) if (c && typeof c.tenantId === 'string' && typeof c.code === 'string' && /^[A-Za-z0-9]{10}$/.test(c.code) && r.licenses[c.tenantId]) tunnel.codes[c.tenantId] = c.code;
           const menuBase = menuBaseAddress(base); if (menuBase) tunnel.base = menuBase; else delete tunnel.base;
+        }
+        // Kalıcı bağlantı: the /k/ codes of this install's businesses (a code never changes once given) and Merkez's public address.
+        if (body.lan && answer.lanLink && Array.isArray(answer.lanLink.codes)) {
+          const lan = r.lanLink ??= { codes: {} }, base = answer.lanLink.base;
+          for (const c of answer.lanLink.codes.slice(0, 50)) if (c && typeof c.tenantId === 'string' && typeof c.code === 'string' && SOCIAL_CODE.test(c.code) && r.licenses[c.tenantId]) lan.codes[c.tenantId] = c.code;
+          if (typeof base === 'string' && merkezAddress.safeParse(base).success) lan.base = merkezAddress.parse(base); else delete lan.base;
         }
         if (key) for (const signed of Array.isArray(answer.demo) ? answer.demo.slice(0, 50) : []) {
           try {

@@ -18,6 +18,7 @@ import { SoundSettings } from './SoundPreview';
 import { DeviceChecks } from './DeviceChecks';
 import { NetworkProfileNotice, useNetworkProfile, type NetworkProfileView } from './NetworkProfileNotice';
 import { PhotoStorage } from './PhotoStorage';
+import { PermanentLink } from './PermanentLink';
 import { ReportSecurity } from './ReportSecurity';
 import { OwnerLockSettings } from './OwnerLock';
 import { RemoteAdminSettings } from './RemoteAdminSettings';
@@ -232,6 +233,8 @@ function ConnectTablet() {
       <div className="connect-tablet-qr">{image ? <img src={image} width={160} height={160} alt="Mola uygulaması kurulum sayfasının QR kodu" /> : <span />}</div>
       <div><p className="settings-card-note"><strong>Telefon ya da tabletin kamerasıyla okutun.</strong> Açılan sayfa Mola'yı Android'e uygulama olarak, iPhone ve iPad'e ana ekrana kurmayı anlatır. Cihaz bu bilgisayarla aynı Wi-Fi ağında olmalı.</p><p className="connect-tablet-address"><code>{base.replace(/^https?:\/\//, '')}/uygulama</code></p><p className="muted small">Garsona ve mutfağa kendi hesaplarını Personel → Çalışanlar'dan açın.</p></div>
     </div> : <p className="settings-card-note">Mola şu anda yalnız bu bilgisayara açık; tabletler bağlanamaz. Kasa bilgisayarındaki Mola penceresinde sol şerit → <strong>Tabletler</strong>'e bakın.</p>}
+    {/* Kalıcı bağlantı: the owner's (and Müdür's) link for laptops and phones, whatever address the modem gives this computer. */}
+    <PermanentLink link={network?.link} />
   </Card>;
 }
 export function DevicesPage() {

@@ -230,3 +230,10 @@ body.desktop-shell #root{margin-left:68px}
 .payment-changes .order-change-notice{margin:0}
 .order-change-notice.ready-change{background:#eef4fb;border-color:#c9d8ea;border-left-color:#5b7fa8;color:#30465f}
 .editor-ready-made{margin-top:4px}
+/* Kalıcı bağlantı (src/PermanentLink.tsx): Tabletler and Ayarlar → Cihazlar. */
+.permanent-link{margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);text-align:left}
+.permanent-link>strong{display:flex;align-items:center;gap:6px;color:var(--green);font-size:13px;margin-bottom:8px}
+.permanent-link-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.permanent-link-row code{flex:1;min-width:0;padding:6px 10px;border-radius:8px;background:var(--field,var(--surface-soft,#f0f3ec));font-size:13px;overflow-wrap:anywhere;user-select:all}
+.permanent-link p{margin:8px 0 0}
+.permanent-link-wait{margin-top:12px}
