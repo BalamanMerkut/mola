@@ -31,31 +31,15 @@
 .phone-list .btn{min-height:44px;display:inline-flex;align-items:center;gap:6px}
 .phone-confirm{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
 .phone-confirm input{width:160px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--field,var(--paper));color:var(--ink)}
-.phone-pairing-needs-code{align-items:center}
 .phone-list .btn.danger{background:#a8584a;border-color:#a8584a;color:#fff}
-/* The open pairing: the QR on the left; on the right one heading, one line, "Bu cihazı eşleştir" (off the café computer), the
-   9-minute note and one row of quiet actions. Narrow: the QR above. */
-.pairing-qr{display:flex;gap:22px;align-items:flex-start;margin-top:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-soft,#f7faf5)}
-.pairing-qr img{flex-shrink:0;width:220px;height:220px;border-radius:10px;background:#fff;padding:6px;border:1px solid var(--line)}
-.pairing-qr-side{flex:1;min-width:0;display:grid;gap:10px;align-content:start}
-.pairing-qr-side h4{margin:0;font-size:15px;color:var(--ink)}
-.pairing-qr-side p{margin:0;font-size:13px;line-height:1.5;color:var(--ink)}
-.pairing-qr-side p.muted{color:var(--muted)}
-.pairing-qr-code svg{vertical-align:-2px}
-.pairing-qr-here{display:grid;gap:6px;justify-items:start}
-.pairing-qr-here .btn{min-height:44px;text-decoration:none}
-.pairing-qr-side input.pairing-link{width:100%;min-height:40px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field,var(--paper));color:var(--ink);font-size:12px}
-.pairing-qr-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;padding-top:10px;border-top:1px solid var(--line)}
-.pairing-qr-actions .btn{min-height:40px}
-@media(max-width:620px){.pairing-qr{flex-direction:column;align-items:center}.pairing-qr-side{width:100%}.pairing-qr-here .btn{justify-self:stretch}}
-/* "Telefonu eşleştir" / "Uzaktan destek iznini aç": the device's name and the owner's password again, before anything happens. */
-.pairing-ask,.reauth-ask{display:grid;gap:6px;max-width:420px;margin-top:12px;padding:14px 16px;border:1px solid #d7e4d3;border-radius:14px;background:var(--surface-soft,#f7faf5)}
-.pairing-ask label,.reauth-ask label{display:block;min-height:0;margin:4px 0 0;padding:0;font-size:13px;font-weight:600;color:var(--ink)}
-.pairing-ask input,.reauth-ask input{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--field,#fff)}
-.pairing-ask .settings-field-hint,.reauth-ask .settings-field-hint{display:flex;gap:6px;align-items:flex-start;margin:2px 0 4px}
-.pairing-ask .settings-field-hint svg,.reauth-ask .settings-field-hint svg{flex-shrink:0;margin-top:2px}
-.pairing-ask .settings-actions,.reauth-ask .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 0}
-.pairing-ask .btn,.reauth-ask .btn{min-height:44px}
+/* "Uzaktan destek iznini aç": the owner's password again, before anything opens. */
+.reauth-ask{display:grid;gap:6px;max-width:420px;margin-top:12px;padding:14px 16px;border:1px solid #d7e4d3;border-radius:14px;background:var(--surface-soft,#f7faf5)}
+.reauth-ask label{display:block;min-height:0;margin:4px 0 0;padding:0;font-size:13px;font-weight:600;color:var(--ink)}
+.reauth-ask input{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--field,#fff)}
+.reauth-ask .settings-field-hint{display:flex;gap:6px;align-items:flex-start;margin:2px 0 4px}
+.reauth-ask .settings-field-hint svg{flex-shrink:0;margin-top:2px}
+.reauth-ask .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 0}
+.reauth-ask .btn{min-height:44px}
 
 /* "Mola ekibi bağlı": on every staff screen while a support session is open (and Mola destek's own frame). */
 .support-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 14px;border-radius:12px;border:1px solid #f0d3a8;background:#fff8ec;color:#5d4520;font-size:13px;line-height:1.4}
@@ -90,16 +74,10 @@
 .support-ended h1{margin:0;font-size:22px}
 .support-ended p{margin:0;color:#4d5c51;line-height:1.5}
 
-/* Ayarlar → Uzaktan erişim (src/RemoteAccess.tsx, 0.1.21): numbered steps, one column, calm. */
+/* Ayarlar → Uzaktan erişim (src/RemoteAccess.tsx, 0.1.22): five numbered steps, one column, calm. */
 .remote-access{display:grid;gap:16px;max-width:760px}
 .remote-done{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:600;color:var(--green)}
 .remote-done svg{flex-shrink:0}
-.remote-where{display:grid;gap:8px;margin-top:4px}
-.remote-where p{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
-.remote-where .btn{min-height:44px}
-.remote-where .btn[aria-pressed="true"]{box-shadow:0 0 0 2px var(--green) inset}
-.remote-substeps{display:grid;gap:14px;margin:6px 0 0;padding-left:22px}
-.remote-substeps h4{margin:0 0 6px;font-size:14px;color:var(--ink)}
 .remote-code{display:grid;gap:6px;max-width:420px}
 .remote-code label{margin:4px 0 0;font-size:13px;font-weight:600;color:var(--ink)}
 .remote-code input,.remote-code textarea{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--field,#fff);color:var(--ink)}
@@ -110,3 +88,15 @@
 .remote-key code{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper,#fff);overflow-wrap:anywhere;font-size:13px}
 .remote-code-qr{width:200px;height:200px;border-radius:10px;background:#fff;padding:6px;border:1px solid var(--line)}
 .remote-step .settings-actions .btn{min-height:44px;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+/* 3 · Cihazlarınızı bağlayın: the Raporlarım address in big letters, Kopyala, a small QR of the same address. */
+.remote-connect{display:grid;gap:10px}
+.remote-address{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border:1px solid #d7e4d3;border-radius:14px;background:var(--surface-soft,#f7faf5)}
+.remote-address-text{font-size:20px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;min-width:0;flex:1 1 220px}
+.remote-address .btn{min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.remote-address-qr{width:120px;height:120px;border-radius:10px;background:#fff;padding:4px;border:1px solid var(--line)}
+.remote-connect input.remote-address-copy{width:100%;min-height:40px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field,var(--paper));color:var(--ink);font-size:13px}
+.remote-email{display:grid;gap:6px;max-width:420px}
+.remote-email label{margin:4px 0 0;font-size:13px;font-weight:600;color:var(--ink)}
+.remote-email input{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--field,#fff);color:var(--ink)}
+.remote-email .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 0}
+.remote-email .btn{min-height:44px}

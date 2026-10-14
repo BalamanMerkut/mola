@@ -4,9 +4,10 @@
  * Mola Merkez only passes these objects along: it never holds a private key, the pairing secret or a plaintext report.
  *
  * Keys: every paired phone has an X25519 pair made on the phone (private key non-extractable, kept in IndexedDB); every
- * business has a static X25519 pair on the café computer (sealed in merchant.sqlite). The café's public key reaches the phone
- * in the pairing QR (never through Merkez), the phone's public key reaches the café inside the pairing request, authenticated
- * by the one-time pairing secret that is also only in the QR (the URL fragment never goes to a server).
+ * business has a static X25519 pair on the café computer (sealed in merchant.sqlite). Since 0.1.22 a device signs in on the
+ * Raporlarım page (e-mail, the owner's password and phone code): the café's public key comes from Mola Merkez for that
+ * e-mail (the café sends it with its heartbeat), the device's public key goes to the café inside the sealed sign-in, which
+ * only the café opens and checks (`loginRequest` below). Before 0.1.22 a QR made at the café carried both.
  *
  * Report box ("kutu"): a fresh ephemeral X25519 pair per message; key = HKDF-SHA256(DH(eph, phone) ‖ DH(café, phone)) so only
  * the café (static key) can make a box the phone accepts and only the phone can open it; AES-256-GCM with the box's own
@@ -88,28 +89,21 @@ export async function openReport<T>(phonePrivate: CryptoKey, cafePublic: string,
 }
 
 // ---------- Live questions (phone → café) ----------
-export type LiveRequest = { phone: string; at: number; nonce: string; mac: string };
+/** `op: 'forget'` ("Çıkış", 0.1.22): the device asks the café to drop it; signed the same way, never taken for a question. */
+export type LiveRequest = { phone: string; at: number; nonce: string; mac: string; op?: 'forget' };
 const requestKey = async (priv: CryptoKey, peer: string, phone: string) => hkdf(await dh(priv, peer), SALT, `istek|${phone}`);
-const liveText = (r: Pick<LiveRequest, 'phone' | 'at' | 'nonce'>) => `istek|${r.phone}|${r.at}|${r.nonce}`;
-export async function signLive(phonePrivate: CryptoKey, cafePublic: string, phone: string, at = Date.now()): Promise<LiveRequest> {
-  const r = { phone, at, nonce: randomB64u(16) };
+const liveText = (r: Pick<LiveRequest, 'phone' | 'at' | 'nonce' | 'op'>) => `${r.op === 'forget' ? 'cikis' : 'istek'}|${r.phone}|${r.at}|${r.nonce}`;
+export async function signLive(phonePrivate: CryptoKey, cafePublic: string, phone: string, at = Date.now(), op?: 'forget'): Promise<LiveRequest> {
+  const r = { phone, at, nonce: randomB64u(16), ...(op ? { op } : {}) };
   return { ...r, mac: await hmac(await requestKey(phonePrivate, cafePublic, phone), liveText(r)) };
 }
 export async function liveSigned(cafePrivate: CryptoKey, phonePublic: string, r: LiveRequest) {
-  if (!r || typeof r.phone !== 'string' || !Number.isSafeInteger(r.at) || !/^[A-Za-z0-9_-]{22}$/.test(r.nonce ?? '')) return false;
+  if (!r || typeof r.phone !== 'string' || !Number.isSafeInteger(r.at) || !/^[A-Za-z0-9_-]{22}$/.test(r.nonce ?? '') || (r.op !== undefined && r.op !== 'forget')) return false;
   return hmacMatches(await requestKey(cafePrivate, phonePublic, r.phone), liveText(r), r.mac);
 }
 
-// ---------- Pairing ----------
-/** What the QR carries after "#e=": pairing id, one-time secret, the business's public key, and "1" when a report code is asked. */
-export type PairingLink = { pairId: string; secret: string; cafePublic: string; code: boolean };
-export const pairingFragment = (p: PairingLink) => `e=${p.pairId}.${p.secret}.${p.cafePublic}.${p.code ? 1 : 0}`;
-export function readPairingFragment(hash: string): PairingLink | null {
-  const m = /^#?e=([A-Za-z0-9_-]{22})\.([A-Za-z0-9_-]{43})\.([A-Za-z0-9_-]{43})\.([01])$/.exec(hash.trim());
-  return m ? { pairId: m[1], secret: m[2], cafePublic: m[3], code: m[4] === '1' } : null;
-}
-export type PairRequest = { pairId: string; phonePub: string; iv: string; ct: string; mac: string };
-/** What the paired device is, as its own browser tells (0.1.21: the phone must be paired first). */
+// ---------- Giriş (0.1.22): a new device signs in on the Raporlarım page ----------
+/** What the device is, as its own browser tells (the phone must come first). */
 export type DeviceKind = 'phone' | 'tablet' | 'computer';
 export const DEVICE_KINDS: readonly DeviceKind[] = ['phone', 'tablet', 'computer'];
 /** From the user agent: iPad (also when it asks for the desktop site with a Mac user agent and a touch screen) and an Android without "Mobile" are tablets. */
@@ -118,27 +112,51 @@ export function deviceKindOf(ua: string, touchPoints = 0): DeviceKind {
   if (/iPhone|iPod/.test(ua) || (/Android/.test(ua) && /Mobile/.test(ua))) return 'phone';
   return /Android/.test(ua) ? 'tablet' : 'computer';
 }
-/** The phone's own words for the café: its name, what it is and, when the café asks, the 6-digit report code. Encrypted to the café. */
-export type PairInner = { name: string; code?: string; kind?: DeviceKind };
-const pairInfo = (pairId: string, phonePub: string) => `eslestir|${pairId}|${phonePub}`;
-export async function pairRequest(phonePrivate: CryptoKey, phonePublic: string, link: PairingLink, inner: PairInner): Promise<PairRequest> {
-  const secret = fromB64u(link.secret), info = pairInfo(link.pairId, phonePublic);
-  const key = await hkdf(await dh(phonePrivate, link.cafePublic), secret, info), iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
-  const ct = toB64u(await subtle().encrypt({ name: 'AES-GCM', iv, additionalData: utf8(info) }, await aes(key, 'encrypt'), utf8(JSON.stringify(inner))));
-  return { pairId: link.pairId, phonePub: phonePublic, iv: toB64u(iv), ct, mac: await hmac(secret, `${info}|${toB64u(iv)}|${ct}`) };
+/** The name the sign-in suggests for this device ("Bu cihazın adı"); the owner may change it. */
+export function deviceNameOf(ua: string, touchPoints = 0) {
+  if (/iPhone|iPod/.test(ua)) return 'iPhone';
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1)) return 'iPad';
+  if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'Android telefon' : 'Tablet';
+  return /Macintosh/.test(ua) ? 'Mac' : 'Laptop';
 }
-/** The café checks the pairing secret's MAC and opens the phone's words; null when anything does not fit. */
-export async function openPairRequest(cafePrivate: CryptoKey, secret: string, r: PairRequest): Promise<PairInner | null> {
+/*
+ * The device makes its own key pair P (non-extractable) and a fresh ephemeral pair E. k = HKDF(DH(E, C) ‖ DH(P, C)) where C
+ * is the business's static key, handed out by Mola Merkez for the typed e-mail (trust on first use: a Merkez that lied about
+ * C could read what follows; docs/GELISTIRICI_REHBERI.md). Only the holder of C opens the request, and it learns that the
+ * sender holds P. Inside, AES-256-GCM under k: the owner's password and phone code (or, after "En fazla 3 cihaz", the café's
+ * one-time ticket and the device to replace), the device's name and kind. The café answers under the same k: only it could
+ * make k, so Mola Merkez cannot fake "giriş tamam".
+ */
+export type LoginInner = { password?: string; code?: string; ticket?: string; replace?: string; name: string; kind: DeviceKind };
+export type LoginRequest = { v: 1; phonePub: string; at: number; nonce: string; eph: string; iv: string; ct: string };
+/** A paired device as the sign-in lists it when the limit is reached ("Hangisinin yerine?"). */
+export type LoginDevice = { id: string; name: string; kind: DeviceKind | null; lastSeenAt: string | null };
+export type LoginAnswer = { ok: true; phoneId: string; business: string; name: string } | { ok: false; code: string; message: string; devices?: LoginDevice[]; ticket?: string };
+const LOGIN_SALT = utf8('mola-giris-v1');
+const loginInfo = (r: Pick<LoginRequest, 'phonePub' | 'at' | 'nonce' | 'eph'>) => `giris|${r.phonePub}|${r.at}|${r.nonce}|${r.eph}`;
+/** The device: its sealed request and the key that opens the café's answer. */
+export async function loginRequest(phonePrivate: CryptoKey, phonePublic: string, cafePublic: string, inner: LoginInner, at = Date.now()) {
+  const pair = await subtle().generateKey(X25519, false, ['deriveBits']) as CryptoKeyPair, eph = toB64u(await subtle().exportKey('raw', pair.publicKey));
+  const head = { v: 1 as const, phonePub: phonePublic, at, nonce: randomB64u(16), eph }, info = loginInfo(head);
+  const key = await hkdf(concat(await dh(pair.privateKey, cafePublic), await dh(phonePrivate, cafePublic)), LOGIN_SALT, info), iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  const ct = toB64u(await subtle().encrypt({ name: 'AES-GCM', iv, additionalData: utf8(info) }, await aes(key, 'encrypt'), utf8(JSON.stringify(inner))));
+  return { request: { ...head, iv: toB64u(iv), ct } as LoginRequest, key };
+}
+/** The café: the device's words and the answer key, or null when it was not sealed for this business (or was edited). */
+export async function readLogin(cafePrivate: CryptoKey, r: LoginRequest): Promise<{ inner: LoginInner; key: Uint8Array } | null> {
   try {
-    if (!PUBLIC_KEY.test(r.phonePub)) return null;
-    const raw = fromB64u(secret), info = pairInfo(r.pairId, r.phonePub);
-    if (!await hmacMatches(raw, `${info}|${r.iv}|${r.ct}`, r.mac)) return null;
-    const key = await hkdf(await dh(cafePrivate, r.phonePub), raw, info);
+    if (!PUBLIC_KEY.test(r.phonePub) || !PUBLIC_KEY.test(r.eph)) return null;
+    const info = loginInfo(r), key = await hkdf(concat(await dh(cafePrivate, r.eph), await dh(cafePrivate, r.phonePub)), LOGIN_SALT, info);
     const plain = await subtle().decrypt({ name: 'AES-GCM', iv: bytes(fromB64u(r.iv)), additionalData: utf8(info) }, await aes(key, 'decrypt'), bytes(fromB64u(r.ct)));
-    const inner = JSON.parse(td.decode(plain)) as PairInner;
-    return typeof inner?.name === 'string' && (inner.code === undefined || typeof inner.code === 'string') && (inner.kind === undefined || DEVICE_KINDS.includes(inner.kind)) ? inner : null;
+    const x = JSON.parse(td.decode(plain)) as LoginInner, text = (v: unknown) => v === undefined || (typeof v === 'string' && v.length <= 200);
+    return typeof x?.name === 'string' && x.name.length <= 200 && DEVICE_KINDS.includes(x.kind) && text(x.password) && text(x.code) && text(x.ticket) && text(x.replace) ? { inner: x, key } : null;
   } catch { return null; }
 }
-/** "Eşleşti", from the café: only the pairing secret's holder can say it, so Mola Merkez cannot fake a pairing. */
-export const pairConfirm = (secret: string, pairId: string, phonePub: string, phoneId: string) => hmac(fromB64u(secret), `tamam|${pairId}|${phonePub}|${phoneId}`);
-export const pairConfirmed = (secret: string, pairId: string, phonePub: string, phoneId: string, mac: string) => hmacMatches(fromB64u(secret), `tamam|${pairId}|${phonePub}|${phoneId}`, mac);
+const answerInfo = (nonce: string) => `giris-cevap|${nonce}`;
+export async function sealLoginAnswer(key: Uint8Array, nonce: string, answer: LoginAnswer) {
+  const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  return { iv: toB64u(iv), ct: toB64u(await subtle().encrypt({ name: 'AES-GCM', iv, additionalData: utf8(answerInfo(nonce)) }, await aes(key, 'encrypt'), utf8(JSON.stringify(answer)))) };
+}
+export async function openLoginAnswer(key: Uint8Array, nonce: string, box: { iv: string; ct: string }) {
+  return JSON.parse(td.decode(await subtle().decrypt({ name: 'AES-GCM', iv: bytes(fromB64u(box.iv)), additionalData: utf8(answerInfo(nonce)) }, await aes(key, 'decrypt'), bytes(fromB64u(box.ct))))) as LoginAnswer;
+}

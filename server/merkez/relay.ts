@@ -6,10 +6,11 @@ import { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
 import { DomainError } from '../../packages/domain/engine.js';
 import { sessionCookie } from '../http-security.js';
-import type { Install, MerkezData, MerkezStore } from './store.js';
+import { licenseFeatures, type Install, type MerkezBusiness, type MerkezData, type MerkezStore } from './store.js';
 import { addAlert } from './alerts.js';
-import { MERKEZ_API } from '../sync-protocol.js';
-import { liveRequestSchema, pairingBody, pairRequestSchema, phoneId, postboxBody, RELAY, RELAY_HEADERS, replyBody, stateBody, tenantId as tenantIdSchema, type RelayCall, type RelayReply, type RelayRequest, type TenantState } from '../relay-protocol.js';
+import { businessByOwnerEmail } from './owner-login.js';
+import { MERKEZ_API, type SyncRequest } from '../sync-protocol.js';
+import { liveRequestSchema, loginRequestSchema, phoneId, postboxBody, RELAY, RELAY_HEADERS, replyBody, stateBody, tenantId as tenantIdSchema, type RelayCall, type RelayReply, type RelayRequest, type TenantState } from '../relay-protocol.js';
 
 /*
  * Mola Merkez's end of the köprü (server/relay-protocol.ts). Cafés poll (HMAC-signed, the heartbeat's own checks); Merkez
@@ -19,7 +20,10 @@ import { liveRequestSchema, pairingBody, pairRequestSchema, phoneId, postboxBody
  *   support_sessions  who connected when (history for Mola Yönetim and the owner's Destek)
  *   kutu.sqlite       the postbox, beside the data folder (`<data>-kutu/`, never in a backup): one encrypted box per phone,
  *                     deleted when the phone fetches it or after RELAY.POSTBOX_DAYS. Merkez cannot open a box: it never sees a
- *                     private key or the pairing secret (packages/domain/remote-crypto.ts).
+ *                     private key, the owner's password or phone code (packages/domain/remote-crypto.ts).
+ * Raporlarım giriş (0.1.22): a new device types the business's verified owner e-mail; Merkez finds the business, hands out
+ * the public key its café sent with the heartbeat (MerkezBusiness.remoteLogin) and passes the sealed sign-in to the café,
+ * which checks the password and the phone code. Merkez only learns whether a device was added (it gives it a token).
  * Uzaktan destek: "Kafeye bağlan" (Mola Yönetim, admin session) starts a session at the café and sets the browser's
  * `mola_destek` cookie; with it the café's own screens (index.html from this Merkez's build) talk to /api/staff/* here, which
  * is passed to the café as it is. The café decides what support may see (server/support-session.ts); Merkez adds limits,
@@ -39,6 +43,16 @@ const hash = (text: string) => createHash('sha256').update(text).digest('hex');
 const same = (a: string, b: string) => { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && timingSafeEqual(x, y); };
 const cookieOf = (req: Request, name: string) => (req.headers.cookie ?? '').split(';').map(v => v.trim()).find(v => v.startsWith(`${name}=`))?.slice(name.length + 1);
 const DAY = 86400000;
+const CAFE_OFF = 'Kasa bilgisayarı şu an kapalı. Yeni cihaz, kasa açıkken bağlanır.';
+/** The heartbeat's `remote` (0.1.22): kept on this install's businesses; one the café no longer lists has no sign-in. An older café sends nothing: nothing changes. */
+export function recordRemoteLogin(mine: MerkezBusiness[], sent: SyncRequest['remote'], time: string) {
+  if (!sent) return;
+  for (const b of mine) {
+    const x = sent.find(s => s.tenantId === b.tenantId);
+    if (!x) { delete b.remoteLogin; continue; }
+    if (b.remoteLogin?.pub !== x.pub || b.remoteLogin.code !== x.code) b.remoteLogin = { pub: x.pub, code: x.code, at: time };
+  }
+}
 /** A phone paired this recently is not forgotten for missing from a poll's list (see `tenants`). */
 export const PAIRED_GRACE_MS = 2 * 60_000;
 export const SUPPORT_COOKIE = 'mola_destek';
@@ -48,7 +62,6 @@ export class RelayHub {
   private queues = new Map<string, RelayRequest[]>();
   private pending = new Map<string, Pending>();
   private lastPoll = new Map<string, number>();
-  private pairings = new Map<string, { install: string; tenant: string; expiresAt: number }>();
   private sessions = new Map<string, Session>();
   private counters = new Map<string, Counter>();
   readonly box: DatabaseSync;
@@ -75,7 +88,6 @@ export class RelayHub {
   sweep() {
     const t = this.now().getTime();
     this.box.prepare('DELETE FROM postbox WHERE created < ?').run(t - RELAY.POSTBOX_DAYS * DAY);
-    for (const [id, p] of this.pairings) if (p.expiresAt <= t) this.pairings.delete(id);
     for (const s of [...this.sessions.values()]) if (t - s.lastAt > RELAY.SESSION_IDLE_MS || t - s.startedAt > RELAY.SESSION_MAX_MS) this.endSession(s.id, 'timeout', true);
     // A business deleted in Mola Yönetim takes its routing rows, phones and boxes with it.
     const known = new Set(this.store.read().businesses.map(b => b.tenantId));
@@ -159,14 +171,7 @@ export class RelayHub {
     return true;
   }
   // ---------- Phones ----------
-  pairing(install: string, tenant: string, pairId: string, expiresAt: string) {
-    const t = this.now().getTime(), until = Math.min(Date.parse(expiresAt) || 0, t + RELAY.PAIRING_MS);
-    if (until <= t) throw new DomainError('INVALID', 'Süre geçersiz.', 400);
-    for (const [id, p] of this.pairings) if (p.tenant === tenant) this.pairings.delete(id);
-    this.pairings.set(pairId, { install, tenant, expiresAt: until });
-  }
-  pairingOf(pairId: string) { const p = this.pairings.get(pairId); return p && p.expiresAt > this.now().getTime() ? p : undefined; }
-  usedPairing(pairId: string) { this.pairings.delete(pairId); }
+  phoneTenant(phone: string) { return (this.store.db.prepare('SELECT tenant FROM relay_phones WHERE phone=?').get(phone) as { tenant: string } | undefined)?.tenant; }
   addPhone(phone: string, install: string, tenant: string) {
     const token = randomBytes(32).toString('base64url');
     this.store.db.prepare('INSERT OR REPLACE INTO relay_phones (phone,tenant,install,token,created,seen) VALUES (?,?,?,?,?,NULL)').run(phone, tenant, install, hash(token), this.now().toISOString());
@@ -174,7 +179,7 @@ export class RelayHub {
   }
   phone(phone: string, token: string) {
     const r = this.store.db.prepare('SELECT phone, tenant, install, token FROM relay_phones WHERE phone=?').get(phone) as { phone: string; tenant: string; install: string; token: string } | undefined;
-    if (!r || !same(r.token, hash(token))) throw new DomainError('PHONE_UNKNOWN', 'Bu cihaz eşleştirilmemiş ya da eşleşmesi kaldırılmış. Kafede Ayarlar → Uzaktan erişim’den yeniden eşleştirin.', 403);
+    if (!r || !same(r.token, hash(token))) throw new DomainError('PHONE_UNKNOWN', 'Bu cihaz bağlı değil ya da bağlantısı kaldırıldı. Yeniden giriş yapabilirsiniz.', 403);
     this.store.db.prepare('UPDATE relay_phones SET seen=? WHERE phone=?').run(this.now().toISOString(), phone);
     return r;
   }
@@ -289,12 +294,6 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
     const { install, nonce } = cafe(req, 'reply', 600), b = replyBody.parse(req.body);
     deps().sendSigned(res, install.secret, nonce, { ok: hub.reply(install.id, b) });
   });
-  app.post(`${MERKEZ_API}/relay/pairing`, (req, res) => {
-    const { install, nonce, d } = cafe(req, 'pairing', 10), b = pairingBody.parse(req.body);
-    if (!d.businesses.some(x => x.tenantId === b.tenantId && x.installId === install.id)) throw new DomainError('NOT_FOUND', 'İşletme bulunamadı.', 404);
-    hub.pairing(install.id, b.tenantId, b.pairId, b.expiresAt);
-    deps().sendSigned(res, install.secret, nonce, { ok: true });
-  });
   app.post(`${MERKEZ_API}/relay/postbox`, (req, res) => {
     const { install, nonce, d } = cafe(req, 'postbox', 30), b = postboxBody.parse(req.body);
     deps().sendSigned(res, install.secret, nonce, { ok: true, kept: hub.putBoxes(install.id, b.items, d) });
@@ -302,20 +301,53 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
 
   // ---------- The owner's phone (public; the phone proves itself with its token, the café with its own keys) ----------
   const phoneLimits = (req: Request, purpose: string, max: number) => deps().limitAddress(req, `phone-${purpose}`, max, 60_000);
-  app.post(`${MERKEZ_API}/phone/pair`, async (req, res) => {
-    phoneLimits(req, 'pair', 20);
-    const r = pairRequestSchema.parse(req.body), p = hub.pairingOf(r.pairId);
-    if (!p) throw new DomainError('PAIRING_EXPIRED', 'Eşleştirme kodunun süresi doldu ya da kullanıldı. Kafede Ayarlar → Uzaktan erişim’den yeniden eşleştirin.', 410);
-    hub.take(`pair:${r.pairId}`, 8, 10 * 60_000);
-    const reply = await hub.send(p.install, { kind: 'pair', tenantId: p.tenant, request: r }, 15_000);
-    const j = (reply.json ?? {}) as { ok?: boolean; phoneId?: string; business?: string; confirm?: string; code?: string; message?: string };
-    if (reply.status !== 200 || !j.ok || !phoneId.safeParse(j.phoneId).success) { res.status(reply.status === 200 ? 502 : reply.status).json({ code: j.code ?? 'PAIRING_FAILED', message: j.message ?? 'Eşleştirme tamamlanamadı.' }); return; }
-    hub.usedPairing(r.pairId);
-    const token = hub.addPhone(j.phoneId!, p.install, p.tenant);
-    deps().store.mutate(d => { d.audit.push({ action: 'remote.phone_paired', target: p.tenant, at: deps().now().toISOString(), by: 'cafe' }); });
-    res.json({ ok: true, phoneId: j.phoneId, business: j.business, confirm: j.confirm, token });
+  /*
+   * Raporlarım giriş (0.1.22). Merkez only routes: e-mail → business → its café; the password and the phone code are sealed
+   * to the café, which alone checks them. What a caller can learn here is whether an e-mail is a Mola business's owner
+   * e-mail (the plain answers: not in the package, no phone code, café off, "önce doğrulayın" for an application e-mail);
+   * an unknown e-mail reads like a wrong password. Slowed per address (30 in 15 minutes, both steps) and per business.
+   */
+  const loginTarget = (email: string) => {
+    const found = businessByOwnerEmail(deps().store, email), b = found.business;
+    if (!b?.installId) throw found.unverified ? new DomainError('EMAIL_UNVERIFIED', 'Önce kasada Ayarlar → Uzaktan erişim’de e-postanızı doğrulayın.', 409) : new DomainError('LOGIN_FAILED', 'E-posta, şifre ya da kod hatalı.', 403);
+    if (!licenseFeatures(b).includes('remote-reports')) throw new DomainError('NO_PACKAGE', 'Bu işletmenin paketinde uzaktan raporlar yok. Mola ekibine ulaşın.', 403);
+    if (b.remoteLogin && !b.remoteLogin.code) throw new DomainError('CODE_MISSING', 'Önce kasada Ayarlar → Uzaktan erişim’de telefon kodunu kurun.', 409);
+    if (!hub.online(b.installId)) throw new DomainError('CAFE_OFFLINE', CAFE_OFF, 503);
+    if (!b.remoteLogin) throw new DomainError('CAFE_NOT_READY', 'Kasa bilgisayarı hazırlanıyor. Birkaç dakika sonra yeniden deneyin.', 503);
+    return { tenant: b.tenantId, install: b.installId, pub: b.remoteLogin.pub };
+  };
+  const loginBody = z.object({ email: z.string().trim().min(3).max(120) });
+  app.post(`${MERKEZ_API}/phone/login/start`, (req, res) => {
+    deps().limitAddress(req, 'phone-login', 30, 15 * 60_000);
+    res.json({ cafePublic: loginTarget(loginBody.strict().parse(req.body).email).pub });
+  });
+  app.post(`${MERKEZ_API}/phone/login`, async (req, res) => {
+    deps().limitAddress(req, 'phone-login', 30, 15 * 60_000);
+    const b = loginBody.extend({ request: loginRequestSchema }).strict().parse(req.body), t = loginTarget(b.email);
+    hub.take(`login:${t.tenant}`, 30, 15 * 60_000);
+    const reply = await hub.send(t.install, { kind: 'login', tenantId: t.tenant, request: b.request }, 15_000).catch((e: DomainError) => ({ status: e.status, json: { code: e.code, message: e.status === 503 || e.status === 504 ? CAFE_OFF : e.message } }) as RelayReply);
+    const j = (reply.json ?? {}) as { ok?: boolean; phoneId?: string; removed?: unknown; box?: { iv?: unknown; ct?: unknown }; code?: string; message?: string };
+    if (reply.status !== 200) { res.status(reply.status).json({ code: j.code ?? 'LOGIN_FAILED', message: j.message ?? 'Giriş tamamlanamadı.' }); return; }
+    const box = j.box && typeof j.box.iv === 'string' && typeof j.box.ct === 'string' && j.box.ct.length < 20_000 ? { iv: j.box.iv, ct: j.box.ct } : null;
+    if (!box) { res.status(502).json({ code: 'LOGIN_FAILED', message: 'Giriş tamamlanamadı.' }); return; }
+    // The answer stays sealed for the device (why it failed, or the business's name); Merkez only sees whether one was added.
+    if (!j.ok || !phoneId.safeParse(j.phoneId).success) { res.json({ ok: false, box }); return; }
+    // Devices the café dropped for this one (the same name and kind again, or "Hangisinin yerine?"): gone here too.
+    for (const id of Array.isArray(j.removed) ? j.removed : []) if (typeof id === 'string' && hub.phoneTenant(id) === t.tenant) hub.forgetPhone(id);
+    const token = hub.addPhone(j.phoneId!, t.install, t.tenant);
+    deps().store.mutate(d => { d.audit.push({ action: 'remote.phone_paired', target: t.tenant, at: deps().now().toISOString(), by: 'cafe' }); });
+    res.json({ ok: true, phoneId: j.phoneId, token, box });
   });
   const phoneBody = z.object({ phoneId, token: z.string().regex(/^[A-Za-z0-9_-]{43}$/) });
+  // "Çıkış" on the device: the café drops it from its list when it is on; Merkez forgets the token and the box either way.
+  app.post(`${MERKEZ_API}/phone/forget`, async (req, res) => {
+    phoneLimits(req, 'forget', 20);
+    const b = phoneBody.extend({ request: liveRequestSchema }).strict().parse(req.body), p = hub.phone(b.phoneId, b.token);
+    if (b.request.op !== 'forget') throw new DomainError('INVALID', 'Geçersiz istek.', 400);
+    const cafe = hub.online(p.install) ? await hub.send(p.install, { kind: 'phone', tenantId: p.tenant, phoneId: b.phoneId, request: b.request }, 12_000).then(r => r.status === 200, () => false) : false;
+    hub.forgetPhone(b.phoneId);
+    res.json({ ok: true, cafe });
+  });
   app.post(`${MERKEZ_API}/phone/live`, async (req, res) => {
     phoneLimits(req, 'live', 120);
     const b = phoneBody.extend({ request: liveRequestSchema }).strict().parse(req.body), p = hub.phone(b.phoneId, b.token);

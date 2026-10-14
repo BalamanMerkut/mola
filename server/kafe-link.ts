@@ -178,7 +178,9 @@ export type Reporter = { businesses(): Omit<BusinessReport, 'lastActivityAt' | '
   /** "İşletmem var" (13 Ekim): each business owner's username and password verifier (never the password, never a key). */
   owners?(): NonNullable<SyncRequest['owners']>;
   /** Kalıcı bağlantı: the addresses Mola is served on in the café's network (none while it is open to this computer only). */
-  lan?(): string[] };
+  lan?(): string[];
+  /** Raporlarım giriş (0.1.22): each business's public key and whether the owner has the phone code (server/remote-reports.ts). */
+  remote?(): NonNullable<SyncRequest['remote']> };
 /** 'applied': an application waits for the vendor (or was refused); nothing else works until it is approved. */
 export type LinkState = 'activate' | 'applied' | 'owner' | 'ready';
 /** machineKey: tests stand in another computer (default: machineKey()). */
@@ -1064,6 +1066,8 @@ export class MerkezLink {
       // Kalıcı bağlantı: this computer's network addresses (checked here too: one odd address must not cost the heartbeat), only
       // to a Merkez that takes them and only while the café serves its network; without them Merkez forgets the old ones.
       ...(record.accepts?.includes('lan.link') && !this.closed() ? (list => list.length ? { lan: { origins: list } } : {})((this.reporter.lan?.() ?? []).filter(privateLanOrigin).slice(0, 4)) : {}),
+      // Raporlarım giriş: the businesses' public keys and phone-code state, always the whole list (a missing one has no sign-in).
+      ...(record.accepts?.includes('remote.login') && !this.closed() && this.reporter.remote ? { remote: this.reporter.remote().filter(x => open(x.tenantId)).slice(0, 50) } : {}),
     };
   }
   /** İnternetten menü (server/guest-tunnel.ts): this café can serve its guest menu over the tunnel (the built page is here). */

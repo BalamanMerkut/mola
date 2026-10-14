@@ -265,9 +265,11 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   // Raporlarım shows "Kafeyi yönet" only with Uzaktan yönetim in the package (the report says whether it is on).
   remote.adminState = tenant => { try { return link.has(tenant, 'remote-admin') ? remoteAdmin.read(tenant).on ? 'on' : 'off' : undefined; } catch { return undefined; } };
   link.onStop.push(() => remote.close()); link.beforeClose.push(() => remote.push('shutdown', true));
-  // Turning support on, pairing and removing a device ask the owner's password again (confirmPassword, below the login);
-  // pairing also the owner's phone code, checked by reportSecurity (registered later, hence the late lookup).
-  supportRoutes(app, store, desk, staffActor, confirmPassword); remoteReportRoutes(app, store, remote, staffActor, confirmPassword, (a, code) => (app.locals.ownerCode as OwnerCode)(a, code));
+  // Turning support on and removing a device ask the owner's password again (confirmPassword, below the login). A new
+  // device's sign-in (Raporlarım, through the köprü) checks the owner's phone code with reportSecurity (registered later,
+  // hence the late lookup).
+  remote.ownerCode = (a, code) => (app.locals.ownerCode as OwnerCode)(a, code);
+  supportRoutes(app, store, desk, staffActor, confirmPassword); remoteReportRoutes(app, store, remote, staffActor, confirmPassword);
   remoteAdminRoutes(app, store, remoteAdmin, staffActor, confirmPassword, now);
   app.locals.relay = relay; app.locals.support = desk; app.locals.remote = remote;
   relay.refresh();
@@ -893,6 +895,8 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     owners: () => security?.vault?.ownerLogins() ?? [],
     // Kalıcı bağlantı: where laptops and phones on the café's network reach this computer now (Merkez's /k/<kod> sends them there).
     lan: () => network.lan ? lanOrigins(network.port).map(a => a.origin) : [],
+    // Raporlarım giriş (0.1.22): each business's public key and whether its owner has the phone code (never a secret).
+    remote: () => remote.loginReport(),
   };
   const clean = () => !store.db.prepare('SELECT tenant FROM snapshots LIMIT 1').get() && !link.read();
   restoreRoutes(app, localDesktop, { security, backups, clean });

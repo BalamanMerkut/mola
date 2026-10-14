@@ -202,7 +202,9 @@ test('changing the address: the old address\'s code first, then the new address\
     const old = await call<{ ticket: string; email: string }>('/owner-email/old-code', {});
     assert.equal(old.email, maskEmail(EMAIL)); assert.equal(w.mails.at(-1)!.to, EMAIL);
     const oldCode = codeTo(w.mails, EMAIL);
-    await assert.rejects(call('/owner-email/new-code', { email: EMAIL, old: { ticket: old.ticket, code: oldCode } }), (e: DomainError) => e.code === 'SAME_EMAIL');
+    // 0.1.22: the application's address itself may be verified as it is (its own code proves it; Raporlarım giriş needs a
+    // verified address): no old code is spent for that.
+    assert.equal((await call<{ email: string }>('/owner-email/new-code', { email: EMAIL, old: { ticket: old.ticket, code: oldCode } })).email, maskEmail(EMAIL));
     await assert.rejects(call('/owner-email/new-code', { email: NEW, old: { ticket: old.ticket, code: oldCode === '000000' ? '111111' : '000000' } }), (e: DomainError) => e.code === 'WRONG_CODE');
     const sent = await call<{ ticket: string }>('/owner-email/new-code', { email: NEW, old: { ticket: old.ticket, code: oldCode } });
     // The old code works once only.

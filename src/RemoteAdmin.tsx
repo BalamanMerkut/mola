@@ -6,7 +6,8 @@ import './remote-admin.css';
 
 /*
  * "Kafeyi yönet" on Mola Merkez's /yonet page (the owner's paired device; server/remote-admin.ts). The device's keys come
- * from Raporlarım's own safe (src/phoneVault.ts, same origin). Every sign-in asks the owner's password and the 6-digit code;
+ * from Raporlarım's own safe (src/phoneVault.ts, same origin); a device that is not signed in there goes to Raporlarım's
+ * sign-in (0.1.22). Every session here asks the owner's password and the 6-digit code;
  * then the café's usual screens (src/Workspace.tsx) run here with every request sealed through src/remoteTransport.ts.
  * When the session ends (Çıkış, "Bütün uzak oturumları kapat", 05:00, the device removed…) this page comes back with why.
  */
@@ -21,7 +22,8 @@ export function RemoteShell() {
     if (!window.isSecureContext || !globalThis.crypto?.subtle || !('indexedDB' in window)) { setPhase('https'); return; }
     void (async () => {
       let p: Paired | undefined; try { p = await readPaired(); } catch { p = undefined; }
-      if (!p) { setPhase('unpaired'); return; }
+      // Not signed in on this device: Raporlarım's sign-in first (e-mail, password, phone code), then "Kafeyi yönet" there.
+      if (!p) { setPhase('unpaired'); location.replace('/raporlarim'); return; }
       setPaired(p);
       const s = await resumeRemote(p);
       if (s) { setSession(s); setPhase('in'); } else setPhase('login');
@@ -40,9 +42,9 @@ export function RemoteShell() {
     <main>
       {phase === 'checking' && <p className="remote-muted" aria-busy="true">Açılıyor…</p>}
       {phase === 'https' && <section className="remote-card" role="alert"><h1>Bu sayfa burada açılamıyor</h1><p>Kafeyi yönet yalnız güvenli bağlantıyla (https://) ve güncel bir tarayıcıda açılır.</p></section>}
-      {(phase === 'unpaired' || phase === 'revoked') && <section className="remote-card"><h1>{phase === 'revoked' ? 'Bu cihazın eşleşmesi kaldırıldı' : 'Bu cihaz eşleşmemiş'}</h1>
-        <p>Kafeyi uzaktan yönetmek için önce bu cihazı eşleştirin: kafede <strong>Ayarlar → Uzaktan erişim</strong>’deki adımlar.</p>
-        <a className="remote-link" href="/raporlarim">Raporlarım’a dön</a></section>}
+      {(phase === 'unpaired' || phase === 'revoked') && <section className="remote-card"><h1>{phase === 'revoked' ? 'Bu cihazın bağlantısı kaldırıldı' : 'Bu cihaz bağlı değil'}</h1>
+        <p>Kafeyi uzaktan yönetmek için önce Raporlarım’a e-posta, şifre ve telefon kodunuzla giriş yapın.</p>
+        <a className="remote-link" href="/raporlarim">Raporlarım’a giriş yap</a></section>}
       {phase === 'login' && paired && <Login paired={paired} notice={notice} onIn={s => { setNotice(''); setSession(s); setPhase('in'); }} onRevoked={() => setPhase('revoked')} />}
     </main>
     <footer className="remote-foot">Bütün istekler bu cihazla kafe bilgisayarı arasında şifrelenir. Mola Merkez yalnız iletir, okuyamaz.</footer>
@@ -74,7 +76,7 @@ function Login({ paired, notice, onIn, onRevoked }: { paired: Paired; notice: st
     <input id={`${id}-code`} value={code} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required placeholder="6 haneli kod" disabled={busy} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
     {error && <p className="remote-error" role="alert">{error}</p>}
     <button type="submit" className="remote-btn" disabled={busy || !password || code.length !== 6}>{busy ? 'Bağlanılıyor…' : 'Giriş yap'}</button>
-    <p className="remote-muted">Uzaktan yönetim kafede Ayarlar → Uzaktan erişim → <strong>Uzaktan yönetim</strong>’den açılır. Yedekten geri yükleme, kurtarma kodu ve cihaz eşleştirme yalnız kafede yapılır.</p>
+    <p className="remote-muted">Uzaktan yönetim kafede Ayarlar → Uzaktan erişim → <strong>Uzaktan yönetim</strong>’den açılır. Yedekten geri yükleme, kurtarma kodu ve cihaz kaldırma yalnız kafede yapılır.</p>
     <a className="remote-link" href="/raporlarim">Raporlarım’a dön</a>
   </form>;
 }

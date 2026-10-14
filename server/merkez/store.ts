@@ -49,8 +49,13 @@ export type MerkezBusiness = License & {
   activationId?: string;
   /** "İşletmem var" (13 Ekim): the owner's username and password verifier from the café (server/merkez/owner-login.ts). */
   ownerLogin?: import('./owner-login.js').OwnerLogin;
-  /** The e-mail the owner verified in the café's Ayarlar (İşletmem var code and notices), next to the invoice e-mail. */
+  /** The e-mail the owner verified in the café's Ayarlar (İşletmem var code and notices, Raporlarım giriş), next to the invoice e-mail. */
   ownerEmail?: import('./owner-login.js').OwnerEmail;
+  /**
+   * Raporlarım giriş (0.1.22, the heartbeat's `remote`): the business's static public key the café sent (handed to a device
+   * signing in with `ownerEmail`; trust on first use) and whether the owner has the phone code. Absent: no sign-in.
+   */
+  remoteLogin?: { pub: string; code: boolean; at: string };
   /** The vendor's own notes about this business (never sent to the café). */
   notes?: string;
   /** Why the vendor suspended it (shown in Mola Yönetim and the history). */

@@ -15,6 +15,9 @@ import type { FailureEvent } from '../server/request-diagnostics.js';
 import { totp } from '../server/totp.js';
 import { AGREEMENT_VERSION } from '../packages/domain/agreement.js';
 import { featureIds } from '../packages/domain/feature-gate.js';
+import type { PhonePost } from '../packages/domain/remote-login.js';
+import type { RemoteReports } from '../server/remote-reports.js';
+import type { RelayHub } from '../server/merkez/relay.js';
 
 /*
  * Test helpers for the Kafe/Merkez split.
@@ -114,5 +117,31 @@ export async function merkezPair(name: string, options: { now?: () => Date; demo
       (merkezApp.locals.relayHub as { close(): void } | undefined)?.close();
       store.close(); merkezStore.close();
     },
+  };
+}
+
+/** The business's verified owner e-mail in the Raporlarım giriş tests. */
+export const OWNER_EMAIL = 'sahip@ornekkafe.com';
+/**
+ * Raporlarım giriş (0.1.22) ready in a test: the owner e-mail verified at Merkez, the café's key and phone-code state there
+ * (a heartbeat for `accepts`, the key made, a heartbeat with it), the köprü open. The owner must have the phone code already.
+ */
+export async function remoteLoginReady(pair: Awaited<ReturnType<typeof merkezPair>>, tenant: string, email = OWNER_EMAIL) {
+  const sleep = () => new Promise(r => setTimeout(r, 10));
+  pair.merkezStore.mutate(d => { d.businesses.find(b => b.tenantId === tenant)!.ownerEmail = { email, verifiedAt: new Date().toISOString() }; });
+  const remote = pair.kafeApp.locals.remote as RemoteReports, hub = pair.merkezApp.locals.relayHub as RelayHub;
+  await pair.link.sync(); remote.loginReport();
+  for (let i = 0; !remote.read(tenant).key; i++) { if (i > 500) throw new Error('İşletme anahtarı oluşmadı.'); await sleep(); }
+  await pair.link.sync(); remote.codeChanged();
+  for (let i = 0; !hub.online(pair.link.read()!.installId); i++) { if (i > 800) throw new Error('Köprü açılmadı.'); await sleep(); }
+}
+/** The device's calls to Mola Merkez (/api/merkez/v1/phone/…), each body and answer also written to `wire` when given. */
+export function phonePost(merkezBase: string, wire?: string[]): PhonePost {
+  return async (path, body) => {
+    const text = JSON.stringify(body); wire?.push(text);
+    const r = await fetch(`${merkezBase}/api/merkez/v1/phone/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: text });
+    const out = await r.text(); wire?.push(out);
+    let data: Record<string, any> = {}; try { data = JSON.parse(out || '{}'); } catch { /* not JSON */ }
+    return { status: r.status, data };
   };
 }

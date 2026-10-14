@@ -196,8 +196,10 @@ export function ownerLoginRoutes(app: Express, deps: () => Deps) {
   app.post(`${MERKEZ_API}/owner-email/new-code`, async (req, res) => {
     const { install, nonce, biz } = cafe(req, 'code', 10), c = current(biz);
     const b = z.object({ tenantId: z.string(), email: z.string().trim().toLowerCase().max(120).email('Geçerli bir e-posta adresi yazın.'), old: z.object({ ticket: ticketSchema, code: code6 }).strict().optional() }).strict().parse(req.body);
-    if (c) {
-      if (!b.old) throw new DomainError('OLD_CODE_REQUIRED', 'Önce eski adrese gelen kodu yazın.', 409);
+    // 0.1.22: the application's address itself may be verified as it is (its own code proves it; Raporlarım giriş needs a
+    // verified address). Any other address while one is known: the old address's code first.
+    if (c && !(c.source === 'invoice' && b.email === c.email)) {
+      if (!b.old) throw new DomainError('OLD_CODE_REQUIRED', c.source === 'invoice' ? `Başvurudaki adresiniz ${maskEmail(c.email)}. Önce o adresi doğrulayın; başka bir adres için Güvenlik ve yedek → Yedek → “Yeni bilgisayar için e-posta” → Değiştir.` : 'Önce eski adrese gelen kodu yazın.', 409);
       if (b.email === c.email) throw new DomainError('SAME_EMAIL', 'Bu zaten kayıtlı adres. Başka bir adres yazın.', 409);
       checkCode(biz, 'old', b.old.ticket, b.old.code);
     }
@@ -232,6 +234,17 @@ export function ownerLoginRoutes(app: Express, deps: () => Deps) {
     });
     res.json({ ok: true });
   });
+}
+/**
+ * Raporlarım giriş (0.1.22, server/merkez/relay.ts): the business whose verified owner e-mail this is (the newest verified
+ * when several have it), else whether it is only some business's application e-mail (then: "önce doğrulayın").
+ */
+export function businessByOwnerEmail(store: MerkezStore, email: string) {
+  const typed = email.trim().toLowerCase(), all = store.read().businesses.filter(b => b.installId);
+  const found = all.filter(b => b.ownerEmail?.email === typed).sort((x, y) => y.ownerEmail!.verifiedAt.localeCompare(x.ownerEmail!.verifiedAt))[0];
+  if (found) return { business: found, unverified: false };
+  const tenants = new Set((store.db.prepare("SELECT tenant FROM contact_index WHERE hash=? AND kind='email'").all(store.contactHash('email', typed)) as { tenant: string }[]).map(r => r.tenant));
+  return { business: undefined, unverified: all.some(b => tenants.has(b.tenantId) && !b.ownerEmail) };
 }
 /** A verifier that never matches (the work of a real check for an unknown e-mail or username). */
 const DUMMY: OwnerVerifier = { salt: 'AAAAAAAAAAAAAAAAAAAAAA==', N: 2 ** 15, r: 8, p: 1, hash: '0'.repeat(64) };

@@ -50,7 +50,7 @@ export const REAL_CHANGES: readonly string[] = [
   // Staff and security
   '/api/staff/users', '/api/staff/users/update', '/api/staff/users/password', '/api/staff/password', '/api/staff/setup',
   '/api/staff/report-security/setup', '/api/staff/report-security/enable', '/api/staff/report-security/recover',
-  '/api/staff/remote-support', '/api/staff/remote-support/end', '/api/staff/remote-reports/pair', '/api/staff/remote-reports/pair/cancel', '/api/staff/remote-reports/phones/remove',
+  '/api/staff/remote-support', '/api/staff/remote-support/end', '/api/staff/remote-reports/phones/remove',
   '/api/staff/remote-admin', '/api/staff/remote-admin/end-all',
   '/api/desktop/owner-password/owners', '/api/desktop/owner-password', '/api/desktop/owner-password/vendor/owners', '/api/desktop/owner-password/vendor',
   '/api/desktop/restore', '/api/desktop/restore/merkez', '/api/desktop/recovery/confirm', '/api/desktop/recovery/new',

@@ -31,7 +31,7 @@ import { attachmentIds, attachmentRoutes, Attachments } from './attachments.js';
 import { BackupVault, backupVaultRoutes, sweepVault } from './backup-vault.js';
 // Tanıtım işletmesi and "Merkez adresi" (Dalga 3): their routes and signed heartbeat parts (server/merkez/demo.ts).
 import { demoRoutes, demoView, merkezAddressFrom, recordDemoReports, setAddress, signedNotes } from './demo.js';
-import { RelayHub, relayRoutes } from './relay.js';
+import { RelayHub, recordRemoteLogin, relayRoutes } from './relay.js';
 import { remoteAdminRoutes } from './remote-admin.js';
 // İşlem kayıtları, Çalışma klasörü, Geliştirici erişimi (server/merkez/journal*.ts, workfolder.ts, access-tokens.ts).
 import { ADMIN_ACTOR, contextFor, journalContext } from './journal.js';
@@ -1184,6 +1184,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
       const lanLink = replaced ? undefined : recordLan(d, install, mine, b.lan, clientKey(req), time, httpsOrigin);
       // İşletmem var: the owners' password verifiers (a replaced computer's are not kept).
       if (!replaced) recordOwners(d, mine, b.owners, time);
+      // Raporlarım giriş: each business's public key and phone-code state (a replaced computer's are not kept).
+      if (!replaced) recordRemoteLogin(mine, b.remote, time);
       // İnternetten menü: each business's menu code for the table QR codes (only when the café asks; a replaced computer gets none).
       const tunnel = replaced ? undefined : recordTunnel(d, mine, b.tunnel, time, guestOrigin ?? siteOrigin);
       const notes = signedNotes(store, d, caller.id, replaced ? [] : mine, when);

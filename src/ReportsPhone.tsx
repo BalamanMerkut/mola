@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { deviceKindOf, newPhoneKeys, openReport, pairConfirmed, pairRequest, readPairingFragment, signLive, type PairingLink, type ReportBox } from '../packages/domain/remote-crypto';
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { deviceKindOf, deviceNameOf, newPhoneKeys, openReport, signLive, type DeviceKind, type ReportBox } from '../packages/domain/remote-crypto';
+import { deviceLogin, type LoginResult } from '../packages/domain/remote-login';
 import type { PhoneReport } from '../packages/domain/remote-report';
 import { forgetPaired, readPaired, savePaired, type Paired } from './phoneVault';
 
 /*
- * "Raporlarım" on the owner's phone (served by Mola Merkez; read only). Pairing: the QR from Ayarlar → Uzaktan erişim (or
- * "Bu telefonu eşleştir" / "Bu cihazı eşleştir" there, on the device itself) opens this page with the pairing secret in the URL fragment (#e=…; never sent to a
- * server). The phone makes its own key pair here (the private key never leaves this browser), sends its public key through
- * Mola Merkez sealed with that secret, and keeps what it needs in IndexedDB (src/phoneVault.ts).
+ * "Raporlarım" (served by Mola Merkez; read only). 0.1.22, the owner's decision: one website sign-in. A device that is not
+ * paired shows "Giriş yap": the business's verified owner e-mail, the owner's password, the 6-digit phone code and a name for
+ * this device. The device makes its own key pair here (the private key never leaves this browser), seals the password and
+ * the code to the café computer, which checks them (packages/domain/remote-login.ts, server/remote-reports.ts), and keeps
+ * what it needs in IndexedDB (src/phoneVault.ts), in whatever browser or Home Screen icon the owner uses. "Çıkış" forgets
+ * this device here and asks the café to drop it (a shared laptop).
  * Reports: asked live from the café computer through Mola Merkez and opened here (packages/domain/remote-crypto.ts); while the
  * café computer is off, the last encrypted snapshot it left at Mola Merkez. Mola Merkez only carries ciphertext.
  */
@@ -31,65 +34,82 @@ async function cryptoReady() {
 /** The permanent link's code this page came through (/k/<kod> → /raporlarim#k=<kod>), kept for this tab: "Kafedeyim, kasayı aç". */
 const LINK_KEY = 'mola-kalici-kod', LINK_CODE = /^[A-Za-z0-9]{10}$/;
 function readStart() {
-  const link = readPairingFragment(location.hash), k = /^#k=([A-Za-z0-9]{10})$/.exec(location.hash)?.[1];
+  const k = /^#k=([A-Za-z0-9]{10})$/.exec(location.hash)?.[1];
   try { if (k) sessionStorage.setItem(LINK_KEY, k); } catch { /* the link only */ }
-  // The secret (and the code) leave the address bar at once: not in history, not in a bookmark.
+  // Nothing stays in the address bar (not in history, not in a bookmark); an old pairing link (#e=…, before 0.1.22) just
+  // lands on the sign-in.
   if (location.hash) history.replaceState(null, '', location.pathname);
   let code = k ?? null; try { code ??= sessionStorage.getItem(LINK_KEY); } catch { /* none */ }
-  return { link, code: code && LINK_CODE.test(code) ? code : null };
+  return code && LINK_CODE.test(code) ? code : null;
 }
-/** An iPhone's Home Screen web app: its storage is not Safari's, so a device paired in Safari is not paired there. */
-const iosWebApp = () => (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 export function ReportsPhone() {
   const [ready, setReady] = useState<'checking' | 'ok' | 'https' | 'old'>('checking');
   const [paired, setPaired] = useState<Paired | null | undefined>(undefined);
-  // The QR's pairing link: read once and taken out of the address bar (the secret stays out of history and bookmarks).
-  const [start] = useState(readStart), [link, setLink] = useState<PairingLink | null>(start.link);
-  const [revoked, setRevoked] = useState(false), [justPaired, setJustPaired] = useState('');
-  const k = start.code;
+  const [k] = useState(readStart), [notice, setNotice] = useState(''), [justPaired, setJustPaired] = useState('');
   useEffect(() => { void cryptoReady().then(r => setReady(r as 'ok' | 'https' | 'old')); void readPaired().then(p => setPaired(p ?? null)).catch(() => setPaired(null)); }, []);
   if (ready === 'checking' || paired === undefined) return <Shell><p className="rp-muted" aria-busy="true">Açılıyor…</p></Shell>;
-  if (ready !== 'ok') return <Shell><div className="rp-card rp-warn" role="alert"><h2>Bu sayfa burada açılamıyor</h2><p>{ready === 'https' ? 'Raporlarım yalnız güvenli bağlantıyla (https://) açılır. Kafe bilgisayarındaki QR kodunu yeniden okutun ya da Mola ekibine danışın.' : 'Bu tarayıcı gereken şifrelemeyi desteklemiyor. Cihazınızı ve tarayıcınızı güncelleyip yeniden deneyin.'}</p></div></Shell>;
-  // After "Eşleştir" the pairing link is spent: a later "eşleşme kaldırıldı" shows as such, never as the same form again
-  // (0.1.21: the owner saw the form stay as it was while the café computer listed the device).
-  if (link && (!paired || revoked)) return <Shell k={k}><PairForm link={link} replacing={!!paired} onPaired={p => { setLink(null); setRevoked(false); setJustPaired(p.business); setPaired(p); }} /></Shell>;
-  if (!paired) return <Shell k={k}><div className="rp-card"><h2>{revoked ? 'Bu cihazın eşleşmesi kaldırıldı' : 'Bu cihaz henüz eşleşmedi'}</h2>
-    {iosWebApp() ? <p>Bu simge Safari’den ayrı açılıyor; eşleşmeniz Safari’de. Simgeyi silin, Safari’de <strong>Paylaş → Ana Ekrana Ekle</strong> ile yeniden ekleyin ve “Web Uygulaması olarak aç”ı kapatın.</p>
-      : <p>Kafede, işletme sahibi hesabıyla <strong>Ayarlar → Uzaktan erişim</strong>’i açın ve adımları izleyin: önce telefonunuz, sonra laptop ya da tablet.</p>}</div></Shell>;
-  return <Reports paired={paired} justPaired={justPaired} k={k} onRevoked={() => { setRevoked(true); setPaired(null); void forgetPaired(); }} />;
+  if (ready !== 'ok') return <Shell><div className="rp-card rp-warn" role="alert"><h2>Bu sayfa burada açılamıyor</h2><p>{ready === 'https' ? 'Raporlarım yalnız güvenli bağlantıyla (https://) açılır. Adresi https:// ile yazın ya da Mola ekibine danışın.' : 'Bu tarayıcı gereken şifrelemeyi desteklemiyor. Cihazınızı ve tarayıcınızı güncelleyip yeniden deneyin.'}</p></div></Shell>;
+  if (!paired) return <Shell k={k}><Login notice={notice} onPaired={p => { setNotice(''); setJustPaired(p.business); setPaired(p); }} /></Shell>;
+  return <Reports paired={paired} justPaired={justPaired} k={k} onGone={why => { setNotice(why); setJustPaired(''); setPaired(null); void forgetPaired().catch(() => {}); }} />;
 }
 
 /** `k`: the permanent link's code, for "Kafedeyim, kasayı aç" (the same link, told to open the café computer). */
-function Shell({ children, business, k }: { children: ReactNode; business?: string; k?: string | null }) {
-  return <div className="rp-page"><header className="rp-head"><span className="rp-logo" aria-hidden="true">M</span><div><strong>Raporlarım</strong>{business && <span>{business}</span>}</div></header><main>{children}</main>
+function Shell({ children, business, k, action }: { children: ReactNode; business?: string; k?: string | null; action?: ReactNode }) {
+  return <div className="rp-page"><header className="rp-head"><span className="rp-logo" aria-hidden="true">M</span><div><strong>Raporlarım</strong>{business && <span>{business}</span>}</div>{action}</header><main>{children}</main>
     {k && <a className="rp-cafe" href={`/k/${k}?kafe=1`}>Kafedeyim, kasayı aç</a>}
     <footer className="rp-foot">Raporlar kafe bilgisayarında yalnız bu cihaz için şifrelenir. Mola Merkez yalnız iletir, okuyamaz.</footer></div>;
 }
 
-/** The device's name is the one the owner typed on the café computer before the QR showed (server/remote-reports.ts). */
-function PairForm({ link, replacing, onPaired }: { link: PairingLink; replacing: boolean; onPaired: (p: Paired) => void }) {
-  const [code, setCode] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  async function submit(e: FormEvent) {
-    e.preventDefault(); setBusy(true); setError('');
-    try {
-      // What this device is (from its own browser), sealed with the rest: the café pairs the phone first.
-      const keys = await newPhoneKeys(), request = await pairRequest(keys.privateKey, keys.publicKey, link, { name: '', kind: deviceKindOf(navigator.userAgent, navigator.maxTouchPoints), ...(link.code ? { code: code.replace(/\D/g, '') } : {}) });
-      const r = await call('pair', request);
-      if (r.status !== 200 || !r.data.ok) { setError(r.data.message ?? 'Eşleştirme tamamlanamadı. Biraz sonra yeniden deneyin.'); return; }
-      // "Eşleşti" must come from the café computer itself (only it holds the QR's secret), not from Mola Merkez.
-      if (!await pairConfirmed(link.secret, link.pairId, keys.publicKey, r.data.phoneId, r.data.confirm ?? '')) { setError('Eşleştirme doğrulanamadı. QR kodunu yeniden okutun.'); return; }
-      const p: Paired = { v: 1, phoneId: r.data.phoneId, token: r.data.token, cafePublic: link.cafePublic, business: r.data.business ?? 'İşletme', pairedAt: new Date().toISOString(), privateKey: keys.privateKey, publicKey: keys.publicKey };
-      await savePaired(p); onPaired(p);
-    } catch { setError('Bağlantı kurulamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.'); }
-    finally { setBusy(false); }
+const KIND_NAME: Record<DeviceKind | 'unknown', string> = { unknown: 'Cihaz', phone: 'Telefon', tablet: 'Tablet', computer: 'Bilgisayar' };
+type Full = Extract<LoginResult, { kind: 'full' }>;
+/** "Giriş yap": checked by the café computer, never by Mola Merkez (it only carries the sealed request). */
+function Login({ notice, onPaired }: { notice: string; onPaired: (p: Paired) => void }) {
+  const id = useId(), kind = deviceKindOf(navigator.userAgent, navigator.maxTouchPoints);
+  const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [code, setCode] = useState('');
+  const [name, setName] = useState(() => deviceNameOf(navigator.userAgent, navigator.maxTouchPoints));
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [full, setFull] = useState<Full | null>(null);
+  // The same keys for "Hangisinin yerine?": the café's ticket is for this device's key.
+  const keys = useRef<{ privateKey: CryptoKey; publicKey: string } | null>(null);
+  async function finish(r: LoginResult) {
+    if (r.kind === 'full') { setFull(r); return; }
+    if (r.kind === 'error') { setError(r.message); return; }
+    const p: Paired = { v: 1, phoneId: r.phoneId, token: r.token, cafePublic: r.cafePublic, business: r.business, pairedAt: new Date().toISOString(), privateKey: keys.current!.privateKey, publicKey: keys.current!.publicKey };
+    await savePaired(p); onPaired(p);
   }
-  return <form className="rp-card rp-pair" onSubmit={e => void submit(e)} aria-label="Bu cihazı eşleştir">
-    <h2>Bu cihazı eşleştir</h2>
-    <p>Bu cihaz (telefon, tablet ya da bilgisayar) işletmenizin raporlarını görebilecek; kafe bilgisayarında verdiğiniz adla listelenir. {replacing ? 'Önceki eşleşmenin yerine geçer.' : ''}</p>
-    {link.code && <label>Raporlar için telefon kodu<input value={code} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required placeholder="6 haneli kod" onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} /><small>Doğrulama uygulamanızdaki kodu yazın. Yalnız bu eşleştirmede bir kez sorulur.</small></label>}
+  async function run(fn: () => Promise<LoginResult>) {
+    setBusy(true); setError('');
+    try { await finish(await fn()); } catch { setError('Bağlantı kurulamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.'); } finally { setBusy(false); }
+  }
+  function submit(e: FormEvent) {
+    e.preventDefault(); setFull(null);
+    const typed = { password, code: code.replace(/\D/g, '') }; setPassword(''); setCode('');
+    void run(async () => { keys.current = await newPhoneKeys(); return deviceLogin(call, keys.current, email.trim(), { ...typed, name: name.trim(), kind }); });
+  }
+  if (full) return <div className="rp-card rp-login" role="group" aria-label="Hangi cihazın yerine?">
+    <h2>{full.message}</h2>
+    <p className="rp-muted">Seçtiğiniz cihazın bağlantısı kalkar; bu cihaz onun yerine geçer.</p>
+    <ul className="rp-replace">{full.devices.map(d => <li key={d.id}><button type="button" className="rp-choice" disabled={busy} onClick={() => void run(() => deviceLogin(call, keys.current!, email.trim(), { ticket: full.ticket, replace: d.id, name: name.trim(), kind }, { cafePublic: full.cafePublic }))}>
+      <strong>{d.name}</strong><small>{KIND_NAME[d.kind ?? 'unknown']} · {d.lastSeenAt ? `Son rapor: ${when(d.lastSeenAt)}` : 'Henüz rapor almadı'}</small></button></li>)}</ul>
     {error && <p className="rp-error" role="alert">{error}</p>}
-    <button type="submit" className="rp-btn" disabled={busy}>{busy ? 'Eşleştiriliyor…' : 'Eşleştir'}</button>
+    <button type="button" className="rp-refresh" disabled={busy} onClick={() => { setFull(null); setError(''); }}>Vazgeç</button>
+  </div>;
+  return <form className="rp-card rp-login" onSubmit={submit} aria-label="Giriş yap">
+    <h2>Giriş yap</h2>
+    <p className="rp-muted">İşletme sahibi bilgilerinizle bir kez girin; bu cihaz hatırlanır.</p>
+    {notice && <p className="rp-note" role="status">{notice}</p>}
+    <label htmlFor={`${id}-email`}>E-posta</label>
+    <input id={`${id}-email`} type="email" inputMode="email" autoComplete="username" maxLength={120} required value={email} disabled={busy} onChange={e => setEmail(e.target.value)} />
+    <label htmlFor={`${id}-password`}>Şifre</label>
+    <input id={`${id}-password`} type="password" autoComplete="current-password" maxLength={200} required value={password} disabled={busy} onChange={e => setPassword(e.target.value)} />
+    <label htmlFor={`${id}-code`}>Telefon kodu</label>
+    <input id={`${id}-code`} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required placeholder="6 haneli kod" value={code} disabled={busy} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+    <small>Doğrulama uygulamanızdaki güncel kod.</small>
+    <label htmlFor={`${id}-name`}>Bu cihazın adı</label>
+    <input id={`${id}-name`} maxLength={40} required autoComplete="off" value={name} disabled={busy} onChange={e => setName(e.target.value)} />
+    {error && <p className="rp-error" role="alert">{error}</p>}
+    <button type="submit" className="rp-btn" disabled={busy || !email.trim() || !password || code.length !== 6 || !name.trim()}>{busy ? 'Giriş yapılıyor…' : 'Giriş yap'}</button>
+    <p className="rp-muted rp-small">Kasa bilgisayarı açık olmalı. E-posta ve telefon kodu kasada Ayarlar → Uzaktan erişim’de kurulur.</p>
   </form>;
 }
 
@@ -97,8 +117,11 @@ type Shown = { report: PhoneReport; kind: 'live' | 'snapshot' };
 /** Never back to an older report than the one on screen (a stale postbox box after a live answer). */
 const newer = (a: Shown | undefined, b: Shown) => !a || Date.parse(b.report.at) >= Date.parse(a.report.at);
 
-function Reports({ paired, justPaired, k, onRevoked }: { paired: Paired; justPaired: string; k: string | null; onRevoked: () => void }) {
-  const [shown, setShown] = useState<Shown | undefined>(paired.last);
+const REVOKED = 'Bu cihazın bağlantısı kaldırıldı. Yeniden giriş yapabilirsiniz.';
+function Reports({ paired, justPaired, k, onGone }: { paired: Paired; justPaired: string; k: string | null; onGone: (why: string) => void }) {
+  const [shown, setShown] = useState<Shown | undefined>(paired.last), [leaving, setLeaving] = useState(false);
+  const gone = useRef(onGone); gone.current = onGone;
+  const onRevoked = useCallback(() => gone.current(REVOKED), []);
   const [status, setStatus] = useState<{ kind: 'live' | 'offline' | 'error' | 'loading'; text?: string }>({ kind: 'loading' });
   const busy = useRef(false), current = useRef(paired);
   const keep = useCallback(async (next: Shown) => {
@@ -139,23 +162,39 @@ function Reports({ paired, justPaired, k, onRevoked }: { paired: Paired; justPai
     : status.kind === 'offline' ? <p className="rp-status off" role="status">Kafe bilgisayarı kapalı{r ? ` · Son durum ${when(r.at)}` : ''}</p>
     : status.kind === 'error' ? <p className="rp-status off" role="status">{status.text}{r ? ` · Son durum ${when(r.at)}` : ''}</p>
     : <p className="rp-status" role="status" aria-busy="true">Güncelleniyor…</p>;
-  return <Shell business={r?.business ?? paired.business} k={k}>
-    {justPaired && <p className="rp-paired" role="status">Eşleşti ✓ · {justPaired}</p>}
+  return <Shell business={r?.business ?? paired.business} k={k} action={<button type="button" className="rp-logout" onClick={() => setLeaving(true)}>Çıkış</button>}>
+    {leaving && <Logout paired={paired} onCancel={() => setLeaving(false)} onDone={() => gone.current('Çıkış yapıldı. Bu cihaz unutuldu.')} />}
+    {justPaired && <p className="rp-paired" role="status">Giriş yapıldı ✓ · {justPaired}</p>}
     <div className="rp-bar">{line}<button type="button" className="rp-refresh" onClick={() => void refresh()}>Yenile</button></div>
     {/* Sahibin uzaktan yönetimi: the café's full screens on this paired device (src/RemoteAdmin.tsx, password + code each time),
         only with it in the package (the report says so; while it is off, /yonet says where to turn it on). */}
     {r?.admin && <a className="rp-refresh rp-manage" href="/yonet">Kafeyi yönet · Satış ve Raporlar, menü, ayarlar</a>}
-    {!r ? <div className="rp-card"><p>{status.kind === 'loading' ? 'Rapor isteniyor…' : 'Henüz rapor gelmedi. Kafe bilgisayarı açılınca burada görünür.'}</p></div> : <ReportView r={r} />}
+    {!r ? <div className="rp-card"><p>{status.kind === 'loading' ? 'Rapor isteniyor…' : 'Henüz rapor gelmedi. Kafe bilgisayarı açılınca burada görünür.'}</p></div> : <ReportView r={r} live={status.kind === 'live'} />}
   </Shell>;
 }
 
-function ReportView({ r }: { r: PhoneReport }) {
+/** "Çıkış": this device is forgotten here and the café drops it (Mola Merkez forgets its token even when the café is off). */
+function Logout({ paired, onCancel, onDone }: { paired: Paired; onCancel: () => void; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  async function out() {
+    setBusy(true);
+    try { await call('forget', { phoneId: paired.phoneId, token: paired.token, request: await signLive(paired.privateKey, paired.cafePublic, paired.phoneId, Date.now(), 'forget') }); } catch { /* forgotten here anyway */ }
+    onDone();
+  }
+  return <div className="rp-card rp-confirm" role="group" aria-label="Çıkış">
+    <p>Bu cihaz unutulsun mu? Raporlar burada bir daha açılmaz; istediğinizde yeniden giriş yaparsınız.</p>
+    <div className="rp-actions"><button type="button" className="rp-btn" disabled={busy} onClick={() => void out()}>{busy ? 'Çıkılıyor…' : 'Evet, çıkış yap'}</button><button type="button" className="rp-refresh" disabled={busy} onClick={onCancel}>Vazgeç</button></div>
+  </div>;
+}
+
+/** `live` false: the last state the café left (it is off or out of reach), labelled so, never as "Bugün". */
+function ReportView({ r, live }: { r: PhoneReport; live: boolean }) {
   const t = r.today, maxDay = Math.max(1, ...r.days.map(d => d.sales)), month = r.days.reduce((a, d) => a + d.sales, 0);
   const best = r.days.reduce<{ day: string; sales: number } | null>((a, d) => !a || d.sales > a.sales ? d : a, null);
   const change = t.previous && t.previous.sales > 0 ? Math.round((t.sales - t.previous.sales) / t.previous.sales * 100) : null;
   return <div className="rp-report" aria-label="Özet">
     <section className="rp-card rp-hero" aria-label="Bugünün satışı">
-      <span className="rp-label">Bugün · {dayName(r.day)}</span>
+      <span className="rp-label">{live ? 'Bugün' : 'Son durum'} · {dayName(r.day)}</span>
       <strong className="rp-big">{tl(t.sales)}</strong>
       {change !== null && <span className={`rp-change ${change >= 0 ? 'up' : 'down'}`}>{change >= 0 ? '▲' : '▼'} %{Math.abs(change)} · dün {t.previous!.partial ? 'aynı saate kadar ' : ''}{tl(t.previous!.sales)}</span>}
       <div className="rp-split"><div><span>Nakit</span><strong>{tl(t.cash)}</strong></div><div><span>Kart</span><strong>{tl(t.card)}</strong></div><div><span>Platform</span><strong>{tl(t.platform)}</strong></div></div>

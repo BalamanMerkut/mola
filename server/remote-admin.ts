@@ -34,7 +34,7 @@ import { FEATURE_NOT_IN_PACKAGE, notInPackage } from '../packages/domain/feature
  *             leaves this process: each decrypted request is replayed on a loopback listener with the token and this
  *             process's secret marker (x-mola-remote), the answer is sealed for the device. The marker is checked in `gate`
  *             before every route, and a remote session's token is refused without it (server/app.ts staffActor).
- *   Yalnız kafede  Restoring a backup, the recovery code and every /api/desktop call, pairing or removing devices, setting up
+ *   Yalnız kafede  Restoring a backup, the recovery code and every /api/desktop call, removing devices, setting up
  *             or resetting the phone code, turning remote management or Mola destek on, installing an update: 403
  *             REMOTE_FORBIDDEN with a plain message. Changing the owner password needs the current password and the code.
  *             Replayed requests carry a `forwarded` header, so "this computer only" checks (loopbackRequest) never pass.
@@ -70,7 +70,7 @@ export const REMOTE_ENDED = (why?: EndedBy) => new DomainError('REMOTE_ENDED', `
 const CAFE_ONLY_TEXT = 'Bu işlem yalnız kafedeki bilgisayardan yapılır: yedekten geri yükleme, kurtarma kodu ve masaüstü işlemleri uzaktan açılmaz.';
 const MEDIA = /^\/media\/[a-zA-Z0-9][a-zA-Z0-9_-]{0,99}\/[a-f0-9-]{36}(-small)?\.webp$/;
 const CAFE_ONLY: [string, RegExp, string, ((body: Record<string, unknown>) => boolean)?][] = [
-  ['POST', /^\/api\/staff\/remote-reports\/(pair|pair\/cancel|phones\/remove)$/, 'Cihaz eşleştirmek ve kaldırmak yalnız kafede olur (Ayarlar → Uzaktan erişim).'],
+  ['POST', /^\/api\/staff\/remote-reports\/phones\/remove$/, 'Cihaz kaldırmak yalnız kafede olur (Ayarlar → Uzaktan erişim).'],
   ['POST', /^\/api\/staff\/report-security\/(setup|enable|recover)$/, 'Telefon kodu yalnız kafedeki bilgisayardan kurulur ya da sıfırlanır.'],
   ['POST', /^\/api\/staff\/remote-admin$/, 'Uzaktan yönetim yalnız kafedeki bilgisayardan açılır. Buradan kapatabilirsiniz.', b => b.on === true],
   ['POST', /^\/api\/staff\/remote-support$/, 'Mola ekibine uzaktan destek izni yalnız kafedeki bilgisayardan verilir. Buradan kapatabilirsiniz.', b => b.on === true],
@@ -173,7 +173,7 @@ export class RemoteAdmin {
   private phone(tenant: string, phoneId: string) {
     const p = this.reports().read(tenant).phones.find(x => x.id === phoneId);
     const owner = p && this.store.read(tenant).staffUsers?.find(u => u.id === p.ownerId && u.role === 'owner' && u.active);
-    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın eşleşmesi kaldırıldı. Kafe bilgisayarında yeniden eşleştirin.', 403);
+    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın bağlantısı kaldırıldı. Raporlarım’a yeniden giriş yapın.', 403);
     return { p, owner };
   }
   private cafeKey(tenant: string) {

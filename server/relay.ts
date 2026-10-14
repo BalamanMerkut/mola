@@ -4,7 +4,8 @@ import { RELAY, type RelayKind, type RelayReply, type RelayRequest, type TenantS
 
 /*
  * The café's end of the köprü (server/relay-protocol.ts). Runs only while a feature needs it: some business here has
- * "Uzaktan destek izni" on or a paired phone (`tenants()`), and Mola is activated. One long-poll at a time; every request it
+ * "Uzaktan destek izni" on or a paired phone (`tenants()`), or a new device could sign in to Raporlarım (`holds`: the package
+ * and the owner's phone code, server/remote-reports.ts), and Mola is activated. One long-poll at a time; every request it
  * brings is handled on its own (handlers by kind) and answered with its own signed reply. After a failure it waits 1, 2, 5,
  * 10, 30, 60 s before asking again; the wait resets after a good poll. `announce()` tells Merkez at once what changed (the
  * owner switched support off, a phone was removed), also when the loop is about to stop because nothing needs it any more.
@@ -19,7 +20,7 @@ export class RelayClient {
   lastPollAt = 0; lastError: string | null = null;
   /** What each business allows right now (support on, phone ids); set by server/support-session.ts and server/remote-reports.ts. */
   sources: (() => TenantState[])[] = [];
-  /** Something else needs the relay for a while (a phone pairing QR on screen). */
+  /** Something else needs the relay (Raporlarım giriş possible: server/remote-reports.ts loginOpen). */
   holds: (() => boolean)[] = [];
   constructor(private link: MerkezLink) {}
   on(kind: RelayKind, handler: RelayHandler) { this.handlers[kind] = handler; }

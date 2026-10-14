@@ -21,7 +21,7 @@ async function kod() {
     await sleep(1000);
   }
 }
-async function adminApi(): Promise<APIRequestContext> {
+export async function adminApi(): Promise<APIRequestContext> {
   const api = await pwRequest.newContext();
   const r = await api.post(`${ADMIN}/login`, { data: { username: 'admin', password: ADMIN_PASSWORD, ...(factor ? { code: await kod() } : {}) } });
   if (!r.ok()) throw new Error(`Mola Yönetim girişi: ${await r.text()}`);

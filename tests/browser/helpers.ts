@@ -2,8 +2,9 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { expect, request as playwrightRequest, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 import { totp } from '../../server/totp';
+import { decodeParts, fakeSmtp } from '../fake-smtp';
 import { scenario } from './protected-server';
 
 export async function ensureSetup(request: APIRequestContext) {
@@ -47,6 +48,54 @@ export function codesOf(secret: string) {
       await new Promise(r => setTimeout(r, 1000));
     }
   };
+}
+/** The verified owner e-mail the Raporlarım giriş suites use. */
+export const OWNER_EMAIL = 'sahip@ornekkafe.com';
+/**
+ * Mail from this run's Mola Merkez to a fake SMTP server here (the e-mail codes of "E-postanızı doğrulayın"): `lastCode`
+ * waits for the newest code mailed to an address.
+ */
+export async function merkezMail() {
+  const smtp = await fakeSmtp('kullanilmaz'), api = await playwrightRequest.newContext();
+  await adminLogin(api);
+  const r = await api.post(`${ADMIN_API}/email`, { data: { enabled: true, host: '127.0.0.1', port: smtp.port, security: 'none', user: '', to: 'bildirim@example.com', from: 'mola@example.com' } });
+  expect(r.ok(), await r.text()).toBe(true);
+  const to = (email: string) => smtp.received.filter(m => m.to.some(t => t.includes(email)));
+  return {
+    async lastCode(email: string, after = 0) {
+      await expect.poll(() => to(email).length, { timeout: 15_000 }).toBeGreaterThan(after);
+      return /\b(\d{6})\b/.exec(decodeParts(to(email).at(-1)!.data).find(p => !p.name)?.text ?? '')![1];
+    },
+    count: (email: string) => to(email).length,
+    async close() { await api.dispose(); await smtp.close(); },
+  };
+}
+/** The owner's e-mail verified over the API (Ayarlar → Uzaktan erişim → 2 · E-posta does the same on screen). */
+export async function ownerEmailOn(request: APIRequestContext, email = OWNER_EMAIL, password = 'MolaDemo!2026') {
+  const mail = await merkezMail();
+  try {
+    // Right after the servers start the café has not heard Merkez's `accepts` yet (its first heartbeat brings them).
+    await expect.poll(async () => (await (await request.get('/api/staff/owner-email')).json() as { available?: boolean }).available, { timeout: 30_000, intervals: [500, 1000, 2000] }).toBe(true);
+    const sent = await request.post('/api/staff/owner-email/new-code', { data: { email, password } });
+    expect(sent.ok(), await sent.text()).toBe(true);
+    const { ticket } = await sent.json() as { ticket: string };
+    expect((await request.post('/api/staff/owner-email/confirm', { data: { ticket, code: await mail.lastCode(email) } })).ok()).toBe(true);
+  } finally { await mail.close(); }
+}
+/** Until Mola Merkez can let a new device in for this e-mail (the café's heartbeat brought its key, the köprü is open). */
+export async function remoteLoginOpen(email = OWNER_EMAIL) {
+  const api = await playwrightRequest.newContext();
+  try { await expect.poll(async () => (await api.post(`${MERKEZ}/api/merkez/v1/phone/login/start`, { data: { email } })).status(), { timeout: 30_000, intervals: [500, 1000, 2000] }).toBe(200); }
+  finally { await api.dispose(); }
+}
+/** Raporlarım's "Giriş yap" (src/ReportsPhone.tsx) on this page: e-mail, password, phone code, and the device's name when given. */
+export async function raporlarimLogin(page: Page, o: { code: string; email?: string; password?: string; name?: string }) {
+  const form = page.getByRole('form', { name: 'Giriş yap' });
+  await form.getByLabel('E-posta').fill(o.email ?? OWNER_EMAIL);
+  await form.getByLabel('Şifre', { exact: true }).fill(o.password ?? 'MolaDemo!2026');
+  await form.getByLabel('Telefon kodu').fill(o.code);
+  if (o.name) await form.getByLabel('Bu cihazın adı').fill(o.name);
+  await form.getByRole('button', { name: 'Giriş yap' }).click();
 }
 /** The browser tests' Mola Merkez (scripts/test-server.mjs); the café is the default baseURL (port 3100). */
 export const MERKEZ = `http://127.0.0.1:${process.env.E2E_MERKEZ_PORT ?? '3190'}`;

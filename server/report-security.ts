@@ -79,7 +79,7 @@ export function reportSecurity(app: Express, store: Store, actorFor: (r: Request
     wrong.delete(k);
     return secret;
   }
-  // Pairing a device (server/remote-reports.ts) asks the owner's own code too: the same check and the same counters.
+  // A new device's Raporlarım sign-in (server/remote-reports.ts) asks the owner's own code too: the same check and counters.
   app.locals.ownerCode = (a: Actor, code: string) => { attempt(a); checkCode(a, code); };
   app.post('/api/staff/report-security/verify', (req, res) => {
     const a = reader(req); attempt(a); const { code } = z.object({ code: z.string().max(6) }).parse(req.body);

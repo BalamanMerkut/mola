@@ -131,7 +131,7 @@ test('café: routes match exactly (letter case, trailing slash), report code and
   const owner = pair.kafe(); assert.equal((await owner('/login', { username: 'isletme', password: DEMO_PASSWORD })).status, 200);
   assert.equal((await owner('/staff/state')).status, 200);
   // Express would match these to /api/staff/state while the guards in front (sahip kilidi, uzaktan yönetim, paket) did not.
-  for (const path of ['/Staff/state', '/STAFF/STATE', '/staff/State', '/staff/state/', '/staff/remote-reports/pair/', '/staff/Remote-Reports/pair']) assert.equal((await owner(path)).status, 404, path);
+  for (const path of ['/Staff/state', '/STAFF/STATE', '/staff/State', '/staff/state/', '/staff/remote-reports/', '/staff/Remote-Reports']) assert.equal((await owner(path)).status, 404, path);
   for (const path of ['/staff/password/', '/Staff/password', '/staff/remote-support/']) assert.equal((await owner(path, { currentPassword: 'x', password: 'YeniSifre!2026x' })).status, 404, path);
   // A network printer path makes Windows connect to that computer: refused unless it is installed here.
   const printer = await owner('/staff/printers', { printer: { name: 'Mutfak', enabled: true, connection: { type: 'windows', printerName: '\\\\saldirgan.example\\p' }, width: 80, charset: 'ascii', orders: false, bill: true } });

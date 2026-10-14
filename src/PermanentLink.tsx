@@ -14,8 +14,8 @@ export function copyText(text: string) {
 export const loopbackPage = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 export const onCafeComputer = () => loopbackPage() || document.body.classList.contains('desktop-shell');
 /**
- * Cihaz bağla (desktop window), Ayarlar → Cihazlar → Cihaz bağla and Ayarlar → Uzaktan erişim: the link laptops and phones
- * keep, which finds this computer even after the modem gave it another address. 'off' and 'old' say nothing (the network
+ * Cihaz bağla (desktop window) and Ayarlar → Cihazlar → Cihaz bağla: the link laptops and phones keep for the café (0.1.22:
+ * away from it the owner signs in to Raporlarım instead), which finds this computer even after the modem gave it another address. 'off' and 'old' say nothing (the network
  * screen already says Mola is closed to it). Off the café computer: "Bu cihaza kısayol ekle" (0.1.21; no file downloads any
  * more: a .url ended up as ".download" in the owner's test) opens Mola Merkez's /k/<kod>/kur, which installs a web app or
  * says the one way this browser adds a shortcut (server/merkez/lan-link.ts). The address is the permanent link, never the LAN one.

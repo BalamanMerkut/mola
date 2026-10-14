@@ -128,6 +128,13 @@ export const syncRequest = z.object({
    * 'lan.link' and only while the café serves its network; a heartbeat without it clears Merkez's copy.
    */
   lan: z.object({ origins: z.array(z.string().max(40).refine(privateLanOrigin)).min(1).max(4) }).strict().optional(),
+  /**
+   * Raporlarım giriş (0.1.22): for each business with Uzaktan raporlar in its package, its static public key (Merkez hands it
+   * to a device signing in with the business's e-mail; it opens nothing) and whether the owner set up the phone code (else
+   * the sign-in says "Önce telefon kodunu kurun"). Sent only to a Merkez that listed 'remote.login'; a business missing from
+   * the list has no sign-in.
+   */
+  remote: z.array(z.object({ tenantId: id, pub: z.string().regex(/^[A-Za-z0-9_-]{43}$/), code: z.boolean() }).strict()).max(50).optional(),
 }).strict();
 export type SyncRequest = z.infer<typeof syncRequest>;
 export type BusinessReport = z.infer<typeof businessReport>;
@@ -196,7 +203,8 @@ export const MENU_ORIGIN_FLAG = 'guest.menu-origin';
 // 'owner.login' (13 Ekim): this Merkez keeps the owners' password verifiers (`owners`) for "İşletmem var" on a new computer;
 // 'owner.email' (13 Ekim): it keeps a verified e-mail per business for İşletmem var (POST /owner-email/*, server/merkez/owner-login.ts).
 // 'lan.link' (14 Ekim): Kalıcı bağlantı: the café's network addresses up (`lan`), its businesses' `/k/<kod>` codes down (`lanLink`).
-export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login', 'owner.email', 'lan.link'];
+// 'remote.login' (0.1.22): Raporlarım giriş: each business's public key and phone-code state up (`remote`).
+export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login', 'owner.email', 'lan.link', 'remote.login'];
 /** Activation answer: the install credentials (kept only on the café computer, sealed) and the first signed licence. */
 export type ActivationResult = { installId: string; secret: string; tenantId: string; name: string; sector?: typeof sectors[number]; license: SignedLicense; serverTime: string };
 // ---------- Hesap açma başvurusu ----------

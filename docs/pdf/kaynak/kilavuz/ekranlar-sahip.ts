@@ -4,6 +4,8 @@ import { join, resolve } from 'node:path';
 import type { Locator, Page } from '@playwright/test';
 import type { Grup } from './ekranlar.ts';
 import { totp } from '../../../../server/totp.ts';
+import { decodeParts, fakeSmtp } from '../../../../tests/fake-smtp.ts';
+import { adminApi } from './ekranlar-yonetim.ts';
 import { KAFE, MERKEZ } from './sunucular.ts';
 import { cek, dene, giris, hazirGoruntu, sesiAc, sleep, yeniSayfa, type Hedef } from './cekim.ts';
 
@@ -577,27 +579,37 @@ const sahipDestek: Grup = async browser => {
   await git(s, 'Destek');
   await s.getByRole('tab', { name: /Uzaktan erişim/ }).click(); await sleep(900);
   await dene('s-uzaktan-erisim', () => cek(s, 's-uzaktan-erisim'));
-  // Raporlarım: Ayarlar → Uzaktan erişim (0.1.21; once Güvenlik ve yedek → Telefonum): önce telefon. Eşleştirme telefon kodu
-  // ister: kod API'den kurulur, çekimden sonra kurtarma koduyla kapatılır (sonraki çekimlerde raporlar kod sormaz).
+  // Raporlarım (0.1.22): kasada telefon kodu ve e-posta (Ayarlar → Uzaktan erişim), sonra telefon tek adresten girer. Kod
+  // API'den kurulur; e-posta Mola Merkez'in sahte SMTP'ye gönderdiği kodla doğrulanır (çekimden sonra Merkez'in e-postası
+  // yeniden kapatılır); çekimden sonra telefon kodu kurtarma koduyla kapatılır (sonraki çekimlerde raporlar kod sormaz).
   const kurulum = await (await s.request.post(`${KAFE}/api/staff/report-security/setup`, { data: { password: 'MolaDemo!2026' } })).json() as { secret: string };
   const acildi = await (await s.request.post(`${KAFE}/api/staff/report-security/enable`, { data: { code: totp(kurulum.secret, Date.now() - 30_000) } })).json() as { recoveryCodes: string[] };
+  const EPOSTA = 'serkan@ornekkafe.com', smtp = await fakeSmtp('kullanilmaz'), yonetim = await adminApi();
+  const posta = (enabled: boolean) => yonetim.post(`${MERKEZ}/api/merkez/admin/email`, { data: { enabled, host: enabled ? '127.0.0.1' : 'smtp.gmail.com', port: enabled ? smtp.port : 465, security: enabled ? 'none' : 'tls', user: '', to: 'bildirim@ornekkafe.com', from: enabled ? 'mola@ornekkafe.com' : '' } });
+  await posta(true);
+  const gonderildi = await (await s.request.post(`${KAFE}/api/staff/owner-email/new-code`, { data: { email: EPOSTA, password: 'MolaDemo!2026' } })).json() as { ticket: string };
+  const gelen = () => smtp.received.filter(m => m.to.some(t => t.includes(EPOSTA)));
+  for (let i = 0; !gelen().length && i < 150; i++) await sleep(100);
+  const ekod = /\b(\d{6})\b/.exec(decodeParts(gelen().at(-1)!.data).find(p => !p.name)?.text ?? '')![1];
+  await s.request.post(`${KAFE}/api/staff/owner-email/confirm`, { data: { ticket: gonderildi.ticket, code: ekod } });
+  await posta(false); await yonetim.dispose(); await smtp.close();
   await ayar(s, 'Uzaktan erişim');
-  const card = s.locator('.remote-access .settings-card').first();
-  // On the café computer: the computer's way at once (QR codes), the pairing form once the page sees the code.
-  const ask = card.getByRole('form', { name: 'QR kodu göster' });
-  await ask.waitFor({ timeout: 20_000 });
-  await ask.getByLabel('Cihazın adı').fill('Serkan’ın telefonu');
-  await ask.getByLabel('Şifreniz').fill('MolaDemo!2026');
-  await ask.getByLabel('Telefon kodu').fill(totp(kurulum.secret, Date.now()));
-  await dugme(ask, 'QR kodu göster').click();
-  await s.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' }).waitFor();
+  const card = s.locator('.remote-access');
+  await s.locator('.remote-address').waitFor({ timeout: 20_000 });
   await sleep(600);
-  const url = (await dugme(card, 'Bağlantıyı kopyala').getAttribute('title'))!;
-  await dene('s-telefon-eslestir', () => cek(s, 's-telefon-eslestir', { kirp: card, pay: 10, isaretler: [{ n: 1, loc: s.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' }), yon: 'sag' }] }));
+  await dene('s-cihaz-baglayin', () => cek(s, 's-cihaz-baglayin', { kirp: card, pay: 10, isaretler: [{ n: 1, loc: s.locator('.remote-address'), yon: 'alt' }] }));
   const tel = await yeniSayfa(browser, 'telefon', { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' });
   await tel.context().route(`${KAFE}/**`, r => r.abort());
-  await tel.goto(url);
-  await dugme(tel, 'Eşleştir').click();
+  // Mola Merkez lets a new device in once the café's heartbeat brought its key (a few seconds).
+  for (let i = 0; i < 20; i++) { if ((await fetch(`${MERKEZ}/api/merkez/v1/phone/login/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: EPOSTA }) })).status === 200) break; await sleep(2000); }
+  await tel.goto(`${MERKEZ}/raporlarim`);
+  const giris = tel.getByRole('form', { name: 'Giriş yap' });
+  await giris.getByLabel('E-posta').fill(EPOSTA);
+  await giris.getByLabel('Şifre', { exact: true }).fill('MolaDemo!2026');
+  await giris.getByLabel('Telefon kodu').fill(totp(kurulum.secret, Date.now()));
+  await giris.getByLabel('Bu cihazın adı').fill('Serkan’ın telefonu');
+  await dene('t-raporlarim-giris', () => cek(tel, 't-raporlarim-giris', { isaretler: [{ n: 1, loc: giris.getByLabel('E-posta'), yon: 'alt' }] }));
+  await dugme(giris, 'Giriş yap').click();
   await tel.getByRole('region', { name: 'Bugünün satışı' }).waitFor({ timeout: 30000 });
   await sleep(800);
   await dene('t-raporlarim', () => cek(tel, 't-raporlarim', { isaretler: [{ n: 1, loc: tel.getByRole('region', { name: 'Bugünün satışı' }), yon: 'alt' }] }));
@@ -606,7 +618,6 @@ const sahipDestek: Grup = async browser => {
   await s.request.post(`${KAFE}/api/staff/report-security/recover`, { data: { password: 'MolaDemo!2026', recoveryCode: acildi.recoveryCodes[0] } });
   await tel.context().close();
   await s.context().close();
-  void MERKEZ;
 };
 
 // ---------------------------------------------------------------- Sahip: kilit, kasa bilgisayarı penceresi (şerit, yedek, iki ekran)

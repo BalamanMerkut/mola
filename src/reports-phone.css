@@ -14,9 +14,9 @@ html,body{margin:0;background:var(--rp-paper);color:var(--rp-ink);font-family:In
 .rp-card p{margin:0;line-height:1.5}
 .rp-warn{border-color:#ecc7bf;background:#fff6f3}
 .rp-muted{color:var(--rp-muted);font-size:14px}
-.rp-pair label{display:grid;gap:6px;font-size:14px;font-weight:600}
-.rp-pair input{font:inherit;font-weight:400;font-size:16px;min-height:48px;padding:10px 12px;border:1px solid #cdd6ca;border-radius:12px;background:var(--field,#fff);color:var(--rp-ink)}
-.rp-pair small{font-weight:400;color:var(--rp-muted);font-size:12px}
+.rp-login label{font-size:14px;font-weight:600;margin-bottom:-4px}
+.rp-login input{font:inherit;font-weight:400;font-size:16px;min-height:48px;padding:10px 12px;border:1px solid #cdd6ca;border-radius:12px;background:var(--field,#fff);color:var(--rp-ink);width:100%;min-width:0}
+.rp-login small{font-weight:400;color:var(--rp-muted);font-size:12px;margin-top:-4px}
 .rp-btn{font:inherit;font-weight:700;font-size:16px;min-height:50px;border:0;border-radius:12px;background:var(--rp-green);color:#fff}
 .rp-btn:disabled{opacity:.6}
 .rp-error{color:var(--rp-warn);font-size:14px}
@@ -60,3 +60,14 @@ html,body{margin:0;background:var(--rp-paper);color:var(--rp-ink);font-family:In
 /* "Eşleşti ✓ · <işletme>" right after pairing; "Kafedeyim, kasayı aç" quiet under the page (0.1.21). */
 .rp-paired{margin:0 0 12px;padding:12px 14px;border-radius:12px;background:#e3f1e8;color:var(--rp-green);font-weight:700;font-size:15px}
 .rp-cafe{display:block;margin-top:14px;padding:10px;text-align:center;font-size:13px;color:var(--rp-muted)}
+/* 0.1.22: the sign-in (calm, like the report cards), "Hangisinin yerine?", "Çıkış" in the header. */
+.rp-note{margin:0;padding:10px 12px;border-radius:12px;background:#fff6e8;color:var(--rp-amber);font-size:14px;font-weight:600}
+.rp-small{font-size:12px}
+.rp-replace{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rp-choice{font:inherit;width:100%;text-align:left;display:grid;gap:2px;padding:12px 14px;min-height:56px;border:1px solid var(--rp-line);border-radius:12px;background:var(--rp-card);color:var(--rp-ink)}
+.rp-choice small{color:var(--rp-muted);font-size:12px}
+.rp-choice:disabled{opacity:.6}
+.rp-logout{margin-left:auto;font:inherit;font-size:14px;font-weight:600;min-height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--rp-line);background:var(--rp-card);color:var(--rp-muted)}
+.rp-confirm p{margin:0}
+.rp-actions{display:flex;flex-wrap:wrap;gap:8px}
+.rp-actions .rp-btn{flex:1 1 160px;padding:0 14px}

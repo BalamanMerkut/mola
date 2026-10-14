@@ -6,21 +6,30 @@ import { DEMO_PASSWORD } from '../server/app.js';
 import { signedHeaders } from '../server/install-auth.js';
 import { totp, base32 } from '../server/totp.js';
 import { MERKEZ_API } from '../server/sync-protocol.js';
-import { newCafeKeys, cafePrivateKey, deviceKindOf, newPhoneKeys, openReport, pairConfirmed, pairRequest, readPairingFragment, sealReport, signLive, liveSigned, type DeviceKind, type ReportBox } from '../packages/domain/remote-crypto.js';
+import { newCafeKeys, cafePrivateKey, deviceKindOf, deviceNameOf, loginRequest, newPhoneKeys, openLoginAnswer, openReport, readLogin, sealLoginAnswer, sealReport, signLive, liveSigned, type DeviceKind, type ReportBox } from '../packages/domain/remote-crypto.js';
+import { deviceLogin } from '../packages/domain/remote-login.js';
 import type { PhoneReport } from '../packages/domain/remote-report.js';
 import type { RelayClient } from '../server/relay.js';
 import type { RemoteReports } from '../server/remote-reports.js';
 import type { RelayHub } from '../server/merkez/relay.js';
 import { remoteRefusal } from '../server/remote-admin.js';
-import { merkezPair } from './merkez-fixture.js';
+import { merkezPair, OWNER_EMAIL, phonePost, remoteLoginReady } from './merkez-fixture.js';
 
+/*
+ * Raporlarım (server/remote-reports.ts, 0.1.22): a device signs in on the Raporlarım page with the business's verified owner
+ * e-mail, the owner's password and phone code; the café computer checks them, Mola Merkez only routes by the e-mail and
+ * carries ciphertext. Then live reports, the postbox while the café is off, "Kaldır" and "Çıkış".
+ */
 const rid = () => randomUUID().replace(/-/g, '');
 const wait = async (check: () => boolean | Promise<boolean>, ms = 8000) => { const end = Date.now() + ms; while (!(await check())) { if (Date.now() > end) throw new Error('Beklenen durum gelmedi.'); await new Promise(r => setTimeout(r, 25)); } };
-const json = (data: unknown) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-/** The owner's "Raporlar için telefon kodu" (pairing a new device needs it since 0.1.20). */
+/** The owner's "Raporlar için telefon kodu". */
 const SECRET = base32(Buffer.from('12345678901234567890'));
+const WRONG = 'E-posta, şifre ya da kod hatalı.';
+/** A start time at least an hour clear of 05:00 (the clock moves a minute per sign-in; the owner's sign-in ends at 05:00). */
+const awayFrom5 = (ms: number) => { const h = new Date(ms).getHours(); return h >= 3 && h < 5 ? ms + 3 * 3600_000 : ms; };
+type Keys = { privateKey: CryptoKey; publicKey: string };
 
-test('crypto: a box opens only on its phone, from its café, unedited and for its own question', async () => {
+test('crypto: a box opens only on its phone, from its café, unedited and for its own question; the sign-in only at its café', async () => {
   const cafe = await newCafeKeys(), other = await newCafeKeys(), phone = await newPhoneKeys(), stranger = await newPhoneKeys();
   const priv = await cafePrivateKey(cafe.privateKey), report = { sales: 125000, top: 'Caffè Latte' };
   const box = await sealReport(priv, phone.publicKey, { kind: 'live', phone: 'p'.repeat(22), at: new Date().toISOString(), ref: 'n'.repeat(22) }, report);
@@ -38,40 +47,59 @@ test('crypto: a box opens only on its phone, from its café, unedited and for it
   // A forged box Mola Merkez could make (it knows the phone's public key, not the café's private key) does not open.
   const forged = await sealReport(await cafePrivateKey(other.privateKey), phone.publicKey, { kind: 'snapshot', phone: 'p'.repeat(22), at: box.at }, { sales: 1 });
   await assert.rejects(openReport(phone.privateKey, cafe.publicKey, forged, { phone: 'p'.repeat(22) }));
-  // Live questions: signed with the phone's key, checked with the café's.
+  // Live questions: signed with the phone's key, checked with the café's; "Çıkış" is signed apart (never taken for a question).
   const q = await signLive(phone.privateKey, cafe.publicKey, 'p'.repeat(22));
   assert.equal(await liveSigned(priv, phone.publicKey, q), true);
   assert.equal(await liveSigned(priv, stranger.publicKey, q), false);
   assert.equal(await liveSigned(priv, phone.publicKey, { ...q, at: q.at + 1 }), false);
+  const out = await signLive(phone.privateKey, cafe.publicKey, 'p'.repeat(22), Date.now(), 'forget');
+  assert.equal(await liveSigned(priv, phone.publicKey, out), true);
+  assert.equal(await liveSigned(priv, phone.publicKey, { ...out, op: undefined }), false, 'a forget signature is no live question');
+  assert.equal(await liveSigned(priv, phone.publicKey, { ...q, op: 'forget' }), false, 'a live question is no forget');
+  // The sign-in: only the café whose key it was sealed to opens it; the password never shows; edited, it opens nowhere.
+  const { request, key } = await loginRequest(phone.privateKey, phone.publicKey, cafe.publicKey, { password: 'Gizli!Sifre-2026', code: '123456', name: 'iPhone', kind: 'phone' });
+  assert.equal(JSON.stringify(request).includes('Gizli'), false); assert.equal(JSON.stringify(request).includes('123456'), false);
+  const opened = (await readLogin(priv, request))!;
+  assert.deepEqual(opened.inner, { password: 'Gizli!Sifre-2026', code: '123456', name: 'iPhone', kind: 'phone' });
+  assert.equal(await readLogin(await cafePrivateKey(other.privateKey), request), null, 'Mola Merkez (or another café) cannot open it');
+  assert.equal(await readLogin(priv, { ...request, phonePub: stranger.publicKey }), null, 'the device key is bound');
+  assert.equal(await readLogin(priv, { ...request, at: request.at + 1 }), null, 'the time is bound');
+  // The café's answer opens only with the device's key, for that request.
+  const answer = await sealLoginAnswer(opened.key, request.nonce, { ok: true, phoneId: 'p'.repeat(22), business: 'Mola Kafe', name: 'iPhone' });
+  assert.deepEqual(await openLoginAnswer(key, request.nonce, answer), { ok: true, phoneId: 'p'.repeat(22), business: 'Mola Kafe', name: 'iPhone' });
+  await assert.rejects(openLoginAnswer(key, 'x'.repeat(22), answer), 'another request');
+  // The name the sign-in suggests, from the user agent.
+  assert.deepEqual([deviceNameOf('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)'), deviceNameOf('Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile'), deviceNameOf('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5), deviceNameOf('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')], ['iPhone', 'Android telefon', 'iPad', 'Laptop']);
 });
 
-async function setup(name: string, now?: () => Date) {
-  /** Everything café ↔ Merkez said, both ways (Merkez's side of the wire). */
+async function setup(name: string, options: { mail?: { to: string; text: string }[] } = {}) {
+  let time = awayFrom5(Date.now());
+  const clock = { now: () => time, add: (ms: number) => { time += ms; } };
+  /** Everything café ↔ Merkez and device ↔ Merkez said, both ways (Merkez's side of the wire). */
   const wire: string[] = [];
   const recording: typeof fetch = async (input, init) => { if (typeof init?.body === 'string') wire.push(init.body); const r = await fetch(input, init); wire.push(await r.clone().text()); return r; };
-  const pair = await merkezPair(name, { demo: true, fetch: recording, ...(now ? { now } : {}) });
+  const pair = await merkezPair(name, { demo: true, fetch: recording, now: () => new Date(time), ...(options.mail ? { merkez: { ownerLoginMail: async (_s, to, _subject, text) => { options.mail!.push({ to, text }); } } } : {}) });
   await pair.importDemo(); await pair.adminLogin();
   const owner = pair.kafe(); assert.equal((await owner('/login', { username: 'isletme', password: DEMO_PASSWORD })).status, 200);
   const tenant = pair.store.findUser('isletme')!.tenantId;
-  pair.store.mutate(tenant, s => { s.staffUsers!.find(x => x.username === 'isletme')!.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; });
-  /** The owner's current phone code. A code step is good once: the step is forgotten so several pairings may run in one 30 s. */
-  const code = () => { pair.store.mutate(tenant, s => { const u = s.staffUsers!.find(x => x.username === 'isletme')!; if (u.mfa) u.mfa.lastStep = -1; }); return totp(SECRET, (now ? now() : new Date()).getTime()); };
+  const mfa = (on: boolean) => pair.store.mutate(tenant, s => { const u = s.staffUsers!.find(x => x.username === 'isletme')!; if (on) u.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; else delete u.mfa; });
+  mfa(true);
   const relay = pair.kafeApp.locals.relay as RelayClient, remote = pair.kafeApp.locals.remote as RemoteReports, hub = pair.merkezApp.locals.relayHub as RelayHub;
-  /** The phone's calls to Mola Merkez (recorded too). */
-  const phone = async (path: string, body: unknown) => { wire.push(JSON.stringify(body)); const r = await fetch(`${pair.merkezBase}${MERKEZ_API}/phone/${path}`, json(body)); const text = await r.text(); wire.push(text); return { status: r.status, data: JSON.parse(text) }; };
-  /** "Telefonu eşleştir" on the café computer (the device's name, the owner's password and phone code), then the phone scans the QR. */
-  const pairPhone = async (name = 'Test telefonu', kind?: DeviceKind) => {
-    const started = await owner('/staff/remote-reports/pair', { name, password: DEMO_PASSWORD, code: code() });
-    assert.equal(started.status, 200, JSON.stringify(started.data));
-    const url = new URL(started.data.url), link = readPairingFragment(url.hash)!;
-    assert.equal(url.pathname, '/raporlarim'); assert.ok(link);
-    await wait(() => hub.online(pair.link.read()!.installId));
-    // The Raporlarım page sends no name of its own any more (an older one may): the owner's name on the café computer wins.
-    const keys = await newPhoneKeys(), request = await pairRequest(keys.privateKey, keys.publicKey, link, { name: 'Eski sayfanın adı', ...(kind ? { kind } : {}) });
-    const answer = await phone('pair', request);
-    return { link, keys, request, answer, started };
+  await remoteLoginReady(pair, tenant);
+  const install = pair.link.read()!.installId, phone = phonePost(pair.merkezBase, wire);
+  /** The owner's current phone code (the clock moves on a minute before every sign-in: a new code, the per-minute limits clear). */
+  const code = () => totp(SECRET, time);
+  /** "Giriş yap" on a device: by default an iPhone with the owner's right password and code. */
+  const login = async (o: { name?: string; kind?: DeviceKind; password?: string; code?: string; email?: string; keys?: Keys; ticket?: string; replace?: string; cafePublic?: string; stay?: boolean } = {}) => {
+    if (!o.stay) clock.add(61_000);
+    await wait(() => hub.online(install));
+    const keys = o.keys ?? await newPhoneKeys(), device = { name: o.name ?? 'iPhone', kind: o.kind ?? 'phone' as DeviceKind };
+    const inner = o.ticket ? { ticket: o.ticket, ...(o.replace ? { replace: o.replace } : {}), ...device } : { password: o.password ?? DEMO_PASSWORD, code: o.code ?? code(), ...device };
+    return { keys, result: await deviceLogin(phone, keys, o.email ?? OWNER_EMAIL, inner, { at: time, ...(o.cafePublic ? { cafePublic: o.cafePublic } : {}) }) };
   };
-  return { pair, owner, tenant, relay, remote, hub, wire, phone, pairPhone, code };
+  const paired = (r: Awaited<ReturnType<typeof login>>) => { assert.equal(r.result.kind, 'paired', JSON.stringify(r.result)); return { ...r.result as Extract<typeof r.result, { kind: 'paired' }>, keys: r.keys }; };
+  const devices = async () => (await owner('/staff/remote-reports')).data.phones as { id: string; name: string; kind: DeviceKind | null; lastSeenAt: string | null }[];
+  return { pair, owner, tenant, relay, remote, hub, wire, phone, login, paired, devices, code, clock, mfa, install };
 }
 
 /** A real sale: a guest order paid by card (the report must show it). */
@@ -85,166 +113,123 @@ async function sell(owner: ReturnType<Awaited<ReturnType<typeof merkezPair>>['ka
   assert.equal((await owner('/staff/payments', { requestId: rid(), accountId: table.account.id, version: table.account.version, method: 'card', amount: 49500, tendered: 49500 })).status, 200);
 }
 
-test('pairing → live report → postbox, end to end; Merkez never stores or forwards a readable sales figure', async t => {
-  const { pair, owner, tenant, relay, remote, hub, wire, phone, pairPhone } = await setup('remote-reports');
+test('sign-in → live report → postbox → "Çıkış", end to end; Merkez never sees the password, the code or a sales figure', async t => {
+  const { pair, owner, tenant, relay, remote, hub, wire, phone, login, paired, devices, clock, mfa } = await setup('remote-reports');
   t.after(() => pair.close());
   await sell(owner, pair.kafe());
-  const { link, keys, request, answer } = await pairPhone();
-  assert.equal(answer.status, 200, JSON.stringify(answer.data));
-  const { phoneId, token, confirm, business } = answer.data;
-  // Only the café (holder of the QR's secret) can say "eşleşti": Mola Merkez could not fake it.
-  assert.equal(await pairConfirmed(link.secret, link.pairId, keys.publicKey, phoneId, confirm), true);
+  const { phoneId, token, business, cafePublic, keys } = paired(await login({ name: 'Ahmet’in telefonu' }));
   assert.equal(business, pair.store.read(tenant).name);
-  // The same QR does not pair a second phone.
-  assert.equal((await phone('pair', request)).status, 410);
-  assert.equal((await owner('/staff/remote-reports')).data.phones.length, 1);
-  await wait(() => relay.needed());
+  // The café computer lists it as typed, as a phone; the owner is told.
+  assert.deepEqual((await devices()).map(p => [p.id, p.name, p.kind]), [[phoneId, 'Ahmet’in telefonu', 'phone']]);
+  const inbox = (await owner('/staff/notifications')).data.items as { title: string; text: string }[];
+  assert.ok(inbox.some(n => n.title === 'Yeni cihaz bağlandı' && n.text === 'Yeni cihaz bağlandı: Ahmet’in telefonu. Siz değilseniz Ayarlar → Uzaktan erişim’den kaldırın.'), JSON.stringify(inbox));
+  // Merkez gave the token to the very device id the café named (the café's own sealed word).
+  assert.equal(hub.phones(tenant), 1);
   // Live: the café answers through Merkez, sealed for this phone and this question.
-  const q = await signLive(keys.privateKey, link.cafePublic, phoneId);
-  const live = await phone('live', { phoneId, token, request: q });
+  const s = await signLive(keys.privateKey, cafePublic, phoneId, clock.now()), live = await phone('live', { phoneId, token, request: s });
   assert.equal(live.status, 200, JSON.stringify(live.data));
-  const report = await openReport<PhoneReport>(keys.privateKey, link.cafePublic, live.data.box, { phone: phoneId, ref: q.nonce, kind: 'live' });
+  const report = await openReport<PhoneReport>(keys.privateKey, cafePublic, live.data.box, { phone: phoneId, ref: s.nonce, kind: 'live' });
   assert.equal(report.today.sales, 49500); assert.equal(report.today.card, 49500); assert.equal(report.reason, 'live');
   assert.ok(report.topProducts.some(p => p.qty === 3)); assert.equal(report.days.length, 30); assert.equal(report.business, business);
   // The same question again is refused (replay), and an unknown token gets nothing.
-  assert.equal((await phone('live', { phoneId, token, request: q })).status, 403);
-  assert.equal((await phone('live', { phoneId, token: 'x'.repeat(43), request: await signLive(keys.privateKey, link.cafePublic, phoneId) })).status, 403);
-  // Postbox: a snapshot sealed for the phone waits at Merkez, is handed over once, then gone.
+  assert.equal((await phone('live', { phoneId, token, request: s })).status, 403);
+  assert.equal((await phone('live', { phoneId, token: 'x'.repeat(43), request: await signLive(keys.privateKey, cafePublic, phoneId, clock.now()) })).status, 403);
+  // Postbox: the very same report sealed for the phone waits at Merkez, is handed over once, then gone.
   assert.equal(await remote.push('periodic', true), 1);
   const box = await phone('postbox', { phoneId, token });
   assert.equal(box.status, 200);
-  const snapshot = await openReport<PhoneReport>(keys.privateKey, link.cafePublic, box.data.box as ReportBox, { phone: phoneId, kind: 'snapshot' });
-  assert.equal(snapshot.today.sales, 49500);
+  const snapshot = await openReport<PhoneReport>(keys.privateKey, cafePublic, box.data.box as ReportBox, { phone: phoneId, kind: 'snapshot' });
+  assert.equal(snapshot.today.sales, 49500); assert.deepEqual(Object.keys(snapshot).sort(), Object.keys(report).sort(), 'the snapshot holds everything Raporlarım shows');
   assert.equal((await phone('postbox', { phoneId, token })).data.box, null, 'deleted on fetch');
-  // The privacy check: nothing Merkez received, sent or keeps is readable sales data.
+  // The privacy check: nothing Merkez received, sent or keeps is the password, the phone code or readable sales data.
   await remote.push('periodic', true);
   const product = report.topProducts[0].name, tables: string[] = [];
   for (const db of [pair.merkezStore.db, hub.box]) for (const { name } of db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]) tables.push(JSON.stringify(db.prepare(`SELECT * FROM "${name}"`).all(), (_k, v) => v instanceof Uint8Array ? Buffer.from(v).toString('latin1') : v));
-  for (const text of [...wire, ...tables]) for (const marker of [product, '"topProducts"', '"closedAccounts"', '"sales"', '"lastClosing"', 'Kart', '49500', '495,00']) assert.equal(text.includes(marker), false, `Merkez saw "${marker}" in: ${text.slice(0, 200)}`);
-  assert.ok(wire.some(w => w.includes('"ct"')), 'the boxes did pass through');
-  // Removing the phone on the café computer revokes it at once: Merkez forgets the token and the box.
-  assert.equal((await owner('/staff/remote-reports/phones/remove', { id: phoneId, password: DEMO_PASSWORD })).status, 200);
-  await wait(async () => (await phone('postbox', { phoneId, token })).status === 403);
+  for (const text of [...wire, ...tables]) for (const marker of [DEMO_PASSWORD, '"password"', product, '"topProducts"', '"closedAccounts"', '"sales"', '"lastClosing"', 'Kart', '49500', '495,00']) assert.equal(text.includes(marker), false, `Merkez saw "${marker}" in: ${text.slice(0, 200)}`);
+  assert.ok(wire.some(w => w.includes('"ct"')), 'the sealed sign-in and boxes did pass through');
+  // "Çıkış" on the device: the café drops it, Merkez forgets the token and the box.
+  const out = await phone('forget', { phoneId, token, request: await signLive(keys.privateKey, cafePublic, phoneId, clock.now(), 'forget') });
+  assert.equal(out.status, 200, JSON.stringify(out.data)); assert.equal(out.data.cafe, true);
+  assert.deepEqual(await devices(), []);
+  assert.equal((await phone('postbox', { phoneId, token })).status, 403);
   assert.equal(hub.hasBox(phoneId), false);
-  // Nothing needs the relay any more: the café stops polling.
+  // The phone code reset: Merkez hears it, a new sign-in is told what to do, and the café stops polling (nothing needs it).
+  mfa(false); remote.codeChanged(); await pair.link.sync();
+  const missing = await phone('login/start', { email: OWNER_EMAIL });
+  assert.equal(missing.status, 409); assert.equal(missing.data.message, 'Önce kasada Ayarlar → Uzaktan erişim’de telefon kodunu kurun.');
   await wait(() => !relay.needed());
 });
 
-test('pairing: the phone code first, 10 minutes, one use, at most 3 phones, owner only; paired devices outlive the code', async t => {
-  let time = Date.now();
-  const { pair, owner, tenant, phone, pairPhone, code } = await setup('remote-pairing', () => new Date(time));
+test('wrong password or code: the same words, counted per business, then a wait; an unknown e-mail reads the same; a wrong password does not burn the code', async t => {
+  const { pair, owner, tenant, phone, login, paired, devices, clock } = await setup('remote-login-wrong');
   t.after(() => pair.close());
-  // Staff other than the owner cannot pair.
-  const cashier = pair.kafe(); await cashier('/login', { username: 'kasiyer', password: DEMO_PASSWORD });
-  assert.equal((await cashier('/staff/remote-reports/pair', { name: 'Kasa', password: DEMO_PASSWORD })).status, 403);
-  // No phone code set up: 409 before the password is even checked; the view says so.
-  pair.store.mutate(tenant, s => { delete s.staffUsers!.find(x => x.username === 'isletme')!.mfa; });
-  assert.equal((await owner('/staff/remote-reports')).data.code, false);
-  const needs = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD });
-  assert.equal(needs.status, 409); assert.equal(needs.data.code, 'PHONE_CODE_REQUIRED'); assert.equal(needs.data.url, undefined);
-  pair.store.mutate(tenant, s => { s.staffUsers!.find(x => x.username === 'isletme')!.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; });
-  assert.equal((await owner('/staff/remote-reports')).data.code, true);
-  // The right password but no code, or a wrong one: no QR. Wrong codes count on the report code's own counters (after 5,
-  // even the right code waits a minute, and so does Satış ve Raporlar' own code check).
-  const noCode = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD });
-  assert.equal(noCode.status, 400); assert.equal(noCode.data.code, 'CODE_REQUIRED');
-  const wrong = String((Number(totp(SECRET, time)) + 1) % 1_000_000).padStart(6, '0');
-  for (let i = 0; i < 5; i++) {
-    const r = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD, code: wrong });
-    assert.equal(r.status, 403, JSON.stringify(r.data)); assert.equal(r.data.code, 'INVALID_CODE'); assert.equal(r.data.url, undefined);
-  }
-  assert.equal((await owner('/staff/remote-reports')).data.pairing, null, 'no QR was made');
-  assert.equal((await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD, code: code() })).status, 429);
-  assert.equal((await owner('/staff/report-security/verify', { code: code() })).status, 429, 'the same counters as the reports’ code');
-  time += 61_000;
-  const pairBody = () => ({ name: 'Ahmet’in telefonu', password: DEMO_PASSWORD, code: code() });
-  // An expired QR.
-  const started = await owner('/staff/remote-reports/pair', pairBody());
-  assert.equal(started.status, 200, JSON.stringify(started.data));
-  const link = readPairingFragment(new URL(started.data.url).hash)!, keys = await newPhoneKeys();
-  // The device is not asked the code again (typed at the café a moment before).
-  assert.equal(link.code, false);
-  time += 11 * 60_000;
-  assert.equal((await phone('pair', await pairRequest(keys.privateKey, keys.publicKey, link, { name: 'Geç kalan' }))).status, 410);
-  // A QR with a wrong secret (or edited on the way) is refused and counted.
-  const fresh = await owner('/staff/remote-reports/pair', pairBody()), good = readPairingFragment(new URL(fresh.data.url).hash)!;
-  const forged = await pairRequest(keys.privateKey, keys.publicKey, { ...good, secret: 'A'.repeat(43) }, { name: 'Sahte' });
-  assert.equal((await phone('pair', forged)).status, 403);
-  // An older Raporlarım page may still send a code of its own: ignored.
-  const ok = await phone('pair', await pairRequest(keys.privateKey, keys.publicKey, good, { name: 'Eski sayfa', code: '000000' }));
-  assert.equal(ok.status, 200, JSON.stringify(ok.data));
-  // At most three phones.
-  for (const name of ['İkinci', 'Üçüncü']) assert.equal((await pairPhone(name)).answer.status, 200);
-  // Full: said before the password is even checked (no wasted try).
-  assert.equal((await owner('/staff/remote-reports/pair', { name: 'Dördüncü' })).data.code, 'PHONE_LIMIT');
-  assert.equal((await owner('/staff/remote-reports/pair', pairBody())).data.code, 'PHONE_LIMIT');
-  assert.deepEqual((await owner('/staff/remote-reports')).data.phones.map((p: { name: string }) => p.name), ['Ahmet’in telefonu', 'İkinci', 'Üçüncü']);
+  // An unknown e-mail: Merkez answers with the very words a wrong password gets.
+  const unknown = await phone('login/start', { email: 'baskasi@ornek.com' });
+  assert.equal(unknown.status, 403); assert.equal(unknown.data.message, WRONG);
+  // A wrong password and a wrong code read the same; Merkez only sees a sealed box (no reason in plain text).
+  const wrongPassword = await login({ password: 'yanlis-sifre-1' });
+  assert.deepEqual(wrongPassword.result, { kind: 'error', code: 'LOGIN_FAILED', message: WRONG });
+  const wrongCode = await login({ code: String((Number(totp(SECRET, clock.now() + 61_000)) + 1) % 1_000_000).padStart(6, '0') });
+  assert.deepEqual(wrongCode.result, { kind: 'error', code: 'LOGIN_FAILED', message: WRONG });
+  // A wrong password leaves the code unspent: the same code with the right password still works, once.
+  const c = totp(SECRET, clock.now() + 61_000);
+  assert.equal((await login({ password: 'yanlis-sifre-2', code: c })).result.kind, 'error');
+  paired(await login({ code: c, name: 'Telefonum', stay: true }));
+  assert.deepEqual((await login({ code: c, name: 'Başka', stay: true })).result, { kind: 'error', code: 'LOGIN_FAILED', message: WRONG }, 'a code is good once');
+  // Five wrong in a row (the count started again after the right one): the next waits even with everything right; the
+  // owner hears it once.
+  for (let i = 0; i < 4; i++) assert.equal((await login({ password: `yanlis-${i}` })).result.kind, 'error');
+  const waiting = await login({ name: 'Bekleyen', stay: true });
+  assert.equal(waiting.result.kind, 'error'); assert.match((waiting.result as { message: string }).message, /^Çok fazla hatalı deneme\. \d+ dakika sonra yeniden deneyin\.$/);
+  assert.ok(((await owner('/staff/notifications')).data.items as { title: string }[]).some(n => n.title === 'Raporlarım: hatalı girişler'));
+  assert.ok(pair.store.auditLog(tenant, 50).some(a => a.action === 'remote.login_failed'));
+  // After the wait the right one goes in (and the wrong count starts over).
+  clock.add(15 * 60_000);
+  paired(await login({ name: 'Sonunda' }));
+  assert.deepEqual((await devices()).map(p => p.name), ['Telefonum', 'Sonunda']);
 });
 
-test('owner’s own account only, password again: Müdür and staff 403, wrong password on the login limiter, then the QR; device names and last report', async t => {
-  let time = Date.now();
-  const { pair, owner, tenant, relay, phone, pairPhone, code } = await setup('remote-reauth', () => new Date(time));
+test('what is missing is said plainly: no package, the e-mail not verified (the application’s address verified as it is), no phone code, café off', async t => {
+  const mail: { to: string; text: string }[] = [];
+  const { pair, owner, tenant, relay, phone, login, paired, clock, hub } = await setup('remote-login-missing', { mail });
   t.after(() => pair.close());
-  const MANAGER = 'MudurDeneme!2026';
-  const made = await owner('/staff/users', { username: 'mudur', name: 'Müdür Mehmet', role: 'manager', password: MANAGER });
-  assert.equal(made.status, 200, JSON.stringify(made.data));
-  const manager = pair.kafe(); assert.equal((await manager('/login', { username: 'mudur', password: MANAGER })).status, 200);
-  const cashier = pair.kafe(); assert.equal((await cashier('/login', { username: 'kasiyer', password: DEMO_PASSWORD })).status, 200);
-  // Müdür and other staff: 403 on every pairing and support switch, with their own password or even the owner's.
-  for (const [who, own] of [[manager, MANAGER], [cashier, DEMO_PASSWORD]] as const) {
-    for (const [path, body] of [['/staff/remote-reports/pair', { name: 'Benim', password: own }], ['/staff/remote-reports/pair', { name: 'Benim', password: DEMO_PASSWORD }], ['/staff/remote-reports/pair/cancel', {}], ['/staff/remote-reports/phones/remove', { id: 'p'.repeat(22) }], ['/staff/remote-support', { on: true, password: own }], ['/staff/remote-support', { on: false }]] as const) {
-      const r = await who(path, body); assert.equal(r.status, 403, `${path} ${JSON.stringify(r.data)}`); assert.equal(r.data.code, 'FORBIDDEN', path); assert.equal(r.data.url, undefined);
-    }
-    assert.equal((await who('/staff/remote-reports')).status, 403);
-  }
-  // No password or no name: no QR.
-  const none = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', code: code() });
-  assert.equal(none.status, 400); assert.equal(none.data.code, 'PASSWORD_REQUIRED'); assert.equal(none.data.url, undefined);
-  assert.equal((await owner('/staff/remote-reports/pair', { name: '   ', password: DEMO_PASSWORD })).data.code, 'NAME_REQUIRED');
-  // Wrong password: 403, no QR, counted on the login's own limiter (12 wrong per user and device in a minute).
-  for (let i = 0; i < 12; i++) {
-    const r = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: `yanlis-${i}`, code: code() });
-    assert.equal(r.status, 403); assert.equal(r.data.code, 'INVALID_PASSWORD'); assert.equal(r.data.url, undefined);
-  }
-  assert.equal((await owner('/staff/remote-reports')).data.pairing, null, 'no QR was made');
-  assert.equal((await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD, code: code() })).status, 429, 'even the right password waits');
-  assert.equal((await owner('/staff/remote-support', { on: true, password: DEMO_PASSWORD })).status, 429);
-  assert.equal((await pair.kafe()('/login', { username: 'isletme', password: DEMO_PASSWORD })).status, 429, 'the very same limiter as the login');
-  assert.equal((await owner('/staff/remote-support')).data.on, false);
-  // A minute later the right password gives the QR, named as typed.
-  time += 61_000;
-  const ahmet = await pairPhone('  Ahmet’in   telefonu ');
-  assert.equal(ahmet.started.data.name, 'Ahmet’in telefonu'); assert.equal(ahmet.answer.status, 200, JSON.stringify(ahmet.answer.data));
-  const laptop = await pairPhone('Ev laptopu');
-  assert.equal(laptop.answer.status, 200);
-  let view = (await owner('/staff/remote-reports')).data;
-  assert.deepEqual(view.phones.map((p: { name: string; lastSeenAt: string | null }) => [p.name, p.lastSeenAt]), [['Ahmet’in telefonu', null], ['Ev laptopu', null]]);
-  // "Son rapor": when each device last fetched a live report.
-  await wait(() => relay.needed());
-  const { phoneId, token } = laptop.answer.data;
-  const live = await phone('live', { phoneId, token, request: await signLive(laptop.keys.privateKey, laptop.link.cafePublic, phoneId) });
-  assert.equal(live.status, 200, JSON.stringify(live.data));
-  view = (await owner('/staff/remote-reports')).data;
-  assert.equal(view.phones.find((p: { name: string }) => p.name === 'Ev laptopu').lastSeenAt, new Date(time).toISOString());
-  assert.equal(view.phones.find((p: { name: string }) => p.name === 'Ahmet’in telefonu').lastSeenAt, null);
-  // A device paired before keeps working when the owner has no phone code (only new pairings need it).
-  pair.store.mutate(tenant, s => { delete s.staffUsers!.find(x => x.username === 'isletme')!.mfa; });
-  assert.equal((await phone('live', { phoneId, token, request: await signLive(laptop.keys.privateKey, laptop.link.cafePublic, phoneId) })).status, 200);
-  // "Kaldır": the password again, not the phone code (the lost phone may hold the authenticator app).
-  const id = ahmet.answer.data.phoneId;
-  const bare = await owner('/staff/remote-reports/phones/remove', { id });
-  assert.equal(bare.status, 400); assert.equal(bare.data.code, 'PASSWORD_REQUIRED');
-  const wrongPassword = await owner('/staff/remote-reports/phones/remove', { id, password: 'yanlis' });
-  assert.equal(wrongPassword.status, 403); assert.equal(wrongPassword.data.code, 'INVALID_PASSWORD');
-  assert.equal((await owner('/staff/remote-reports')).data.phones.length, 2);
-  assert.equal((await owner('/staff/remote-reports/phones/remove', { id, password: DEMO_PASSWORD })).status, 200);
-  assert.deepEqual((await owner('/staff/remote-reports')).data.phones.map((p: { name: string }) => p.name), ['Ev laptopu']);
-  // A remote session ("Kafeyi yönet") can neither pair nor remove, password or not.
-  for (const path of ['/api/staff/remote-reports/pair', '/api/staff/remote-reports/phones/remove']) assert.ok(remoteRefusal('POST', path, { id, password: DEMO_PASSWORD, code: '123456' }), path);
+  const biz = () => pair.merkezStore.read().businesses.find(b => b.tenantId === tenant)!;
+  // No Uzaktan raporlar in the package: a clear line, nothing reaches the café.
+  pair.merkezStore.mutate(d => { d.businesses.find(b => b.tenantId === tenant)!.services = { packageId: null, features: ['qr-menu'] as never, updatedAt: new Date().toISOString() }; });
+  const none = await phone('login/start', { email: OWNER_EMAIL });
+  assert.equal(none.status, 403); assert.equal(none.data.message, 'Bu işletmenin paketinde uzaktan raporlar yok. Mola ekibine ulaşın.');
+  pair.merkezStore.mutate(d => { delete d.businesses.find(b => b.tenantId === tenant)!.services; });
+  // Only the application's e-mail, not verified: "önce doğrulayın".
+  pair.merkezStore.mutate(d => { const b = d.businesses.find(x => x.tenantId === tenant)!; delete b.ownerEmail; b.invoice = { legalName: 'Mola Ltd.', taxOffice: 'Kadıköy', taxType: 'company', taxNumber: '1111111114', city: 'İstanbul', district: 'Kadıköy', address: 'Moda Cd. 1', email: OWNER_EMAIL, phone: '05551112233' } as never; d.mail = { settings: { enabled: true, host: 'smtp.example.com', port: 465, security: 'tls', user: 'x', password: 'y', to: 'x@example.com', updatedAt: new Date().toISOString() }, queue: [] }; });
+  pair.merkezStore.indexContact(tenant, { email: OWNER_EMAIL, phone: '05551112233' });
+  const unverified = await phone('login/start', { email: OWNER_EMAIL });
+  assert.equal(unverified.status, 409); assert.equal(unverified.data.message, 'Önce kasada Ayarlar → Uzaktan erişim’de e-postanızı doğrulayın.');
+  // Ayarlar → Uzaktan erişim → 2: the application's address itself, verified with the code sent to it (no "old address"
+  // step); another address is said plainly to go through Yedek's change.
+  const status = (await owner('/staff/owner-email')).data;
+  assert.equal(status.source, 'invoice');
+  const other = await owner('/staff/owner-email/new-code', { email: 'yeni@ornek.com', password: DEMO_PASSWORD });
+  assert.equal(other.status, 409); assert.match(other.data.message, /^Başvurudaki adresiniz s\*+@ornekkafe\.com\. Önce o adresi doğrulayın/);
+  const sent = await owner('/staff/owner-email/new-code', { email: OWNER_EMAIL, password: DEMO_PASSWORD });
+  assert.equal(sent.status, 200, JSON.stringify(sent.data));
+  const emailCode = /\b(\d{6})\b/.exec(mail.at(-1)!.text)![1];
+  assert.equal((await owner('/staff/owner-email/confirm', { ticket: sent.data.ticket, code: emailCode })).status, 200);
+  assert.equal(biz().ownerEmail?.email, OWNER_EMAIL);
+  paired(await login());
+  // No phone code at the café: Merkez knows it from the heartbeat and says what to do.
+  pair.merkezStore.mutate(d => { d.businesses.find(b => b.tenantId === tenant)!.remoteLogin!.code = false; });
+  const noCode = await phone('login/start', { email: OWNER_EMAIL });
+  assert.equal(noCode.status, 409); assert.equal(noCode.data.message, 'Önce kasada Ayarlar → Uzaktan erişim’de telefon kodunu kurun.');
+  pair.merkezStore.mutate(d => { d.businesses.find(b => b.tenantId === tenant)!.remoteLogin!.code = true; });
+  // The café computer off: a new device waits for it (paired ones read the postbox meanwhile).
+  relay.stop(); await new Promise(r => setTimeout(r, 800)); clock.add(60_000);
+  assert.equal(hub.online(pair.link.read()!.installId), false);
+  const off = await phone('login/start', { email: OWNER_EMAIL });
+  assert.equal(off.status, 503); assert.equal(off.data.message, 'Kasa bilgisayarı şu an kapalı. Yeni cihaz, kasa açıkken bağlanır.');
 });
 
-test('the phone first (0.1.21): a tablet or a computer waits for a phone; devices without a kind do not count as phones; the report says "Kafeyi yönet"', async t => {
-  const { pair, owner, tenant, remote, phone, pairPhone } = await setup('remote-kinds');
+test('at most 3 devices: "Hangisinin yerine?" with a one-time ticket; the same name and kind again replaces its own line; the phone first', async t => {
+  const { pair, owner, tenant, remote, hub, phone, login, paired, devices, clock } = await setup('remote-login-devices');
   t.after(() => pair.close());
   // What the Raporlarım page says it is, from its own user agent (iPad asking for the desktop site: a Mac with touch).
   const UA = { iphone: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
@@ -253,53 +238,102 @@ test('the phone first (0.1.21): a tablet or a computer waits for a phone; device
     ipad: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
     windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0' };
   assert.deepEqual([deviceKindOf(UA.iphone), deviceKindOf(UA.android), deviceKindOf(UA.androidTablet), deviceKindOf(UA.ipad, 5), deviceKindOf(UA.ipad, 0), deviceKindOf(UA.windows)], ['phone', 'phone', 'tablet', 'tablet', 'computer', 'computer']);
-  // No phone yet: a laptop is refused with a plain line, and nothing is listed.
-  const laptop = await pairPhone('Ev laptopu', 'computer');
-  assert.equal(laptop.answer.status, 409, JSON.stringify(laptop.answer.data)); assert.equal(laptop.answer.data.code, 'PHONE_FIRST');
-  assert.match(laptop.answer.data.message, /^Önce telefonunuzu eşleştirin\./);
-  assert.equal((await pairPhone('Tablet', 'tablet')).answer.data.code, 'PHONE_FIRST');
-  assert.equal((await owner('/staff/remote-reports')).data.phones.length, 0);
-  // The phone, then the laptop.
-  const mine = await pairPhone('Telefonum', 'phone');
-  assert.equal(mine.answer.status, 200, JSON.stringify(mine.answer.data));
-  // Merkez keeps a phone it paired a moment ago against a poll's list from before the pairing (the poll can arrive after
-  // the pairing's reply); a removal announced by the café (/relay/state) is not held back.
-  const hub = pair.merkezApp.locals.relayHub as RelayHub, install = pair.link.read()!.installId, { phoneId, token } = mine.answer.data;
+  // No phone yet: a laptop is refused with a plain line, nothing is listed and Merkez adds no token.
+  const early = await login({ name: 'Laptop', kind: 'computer' });
+  assert.equal(early.result.kind, 'error'); assert.equal((early.result as { code: string }).code, 'PHONE_FIRST');
+  assert.match((early.result as { message: string }).message, /^Önce telefonunuzdan giriş yapın\./);
+  assert.deepEqual(await devices(), []); assert.equal(hub.phones(tenant), 0);
+  // The phone, then the same phone again (Safari forgot the site): its own line is replaced, the old token is gone.
+  const iphone = paired(await login({ name: 'iPhone' })), again1 = paired(await login({ name: 'iphone' }));
+  assert.equal((await phone('postbox', { phoneId: iphone.phoneId, token: iphone.token })).status, 403, 'the second sign-in of the same iPhone replaced the first');
+  assert.deepEqual((await devices()).map(p => [p.id, p.name, p.kind]), [[again1.phoneId, 'iphone', 'phone']]);
+  assert.equal(hub.phones(tenant), 1);
+  // A laptop and a tablet now; the report says "Kafeyi yönet" is in the package (not turned on yet).
+  const laptop = paired(await login({ name: 'Laptop', kind: 'computer' }));
+  const q = await signLive(laptop.keys.privateKey, laptop.cafePublic, laptop.phoneId, clock.now()), asked = await phone('live', { phoneId: laptop.phoneId, token: laptop.token, request: q });
+  assert.equal((await openReport<PhoneReport>(laptop.keys.privateKey, laptop.cafePublic, asked.data.box, { phone: laptop.phoneId, ref: q.nonce, kind: 'live' })).admin, 'off');
+  paired(await login({ name: 'iPad', kind: 'tablet' }));
+  assert.deepEqual((await devices()).map(p => p.name), ['iphone', 'Laptop', 'iPad']);
+  // A fourth: the right password and code get the list and a ticket; nothing is added yet.
+  const fourth = await login({ name: 'Ev laptopu', kind: 'computer' });
+  assert.equal(fourth.result.kind, 'full', JSON.stringify(fourth.result));
+  const full = fourth.result as Extract<typeof fourth.result, { kind: 'full' }>;
+  assert.equal(full.message, 'En fazla 3 cihaz. Hangisinin yerine?');
+  assert.deepEqual(full.devices.map(d => [d.name, d.kind]), [['iphone', 'phone'], ['Laptop', 'computer'], ['iPad', 'tablet']]);
+  assert.equal(hub.phones(tenant), 3);
+  // The ticket is for this device's key only, and once.
+  const stolen = await login({ keys: await newPhoneKeys(), ticket: full.ticket, replace: full.devices[1].id, name: 'Ev laptopu', kind: 'computer', cafePublic: full.cafePublic });
+  assert.equal((stolen.result as { code: string }).code, 'LOGIN_EXPIRED');
+  const again = await login({ name: 'Ev laptopu', kind: 'computer' }), ticket = (again.result as typeof full);
+  const replaced = paired(await login({ keys: again.keys, ticket: ticket.ticket, replace: ticket.devices.find(d => d.name === 'Laptop')!.id, name: 'Ev laptopu', kind: 'computer', cafePublic: ticket.cafePublic }));
+  assert.deepEqual((await devices()).map(p => p.name), ['iphone', 'iPad', 'Ev laptopu']);
+  assert.equal((await phone('postbox', { phoneId: laptop.phoneId, token: laptop.token })).status, 403, 'the replaced laptop is gone at Merkez too');
+  assert.equal((await login({ keys: again.keys, ticket: ticket.ticket, replace: ticket.devices[0].id, name: 'Ev laptopu', kind: 'computer', cafePublic: ticket.cafePublic })).result.kind, 'error', 'a ticket is good once');
+  void replaced;
+  // Merkez keeps a device added a moment ago against a poll's list from before it (the poll can arrive after the sign-in's
+  // reply); a removal announced by the café (/relay/state) is not held back.
+  const install = pair.link.read()!.installId;
   hub.tenants(install, [], pair.merkezStore.read(), true);
-  assert.doesNotThrow(() => hub.phone(phoneId, token));
-  const live = await phone('live', { phoneId, token, request: await signLive(mine.keys.privateKey, mine.link.cafePublic, phoneId) });
-  assert.equal(live.status, 200, JSON.stringify(live.data));
-  const report = await openReport<PhoneReport>(mine.keys.privateKey, mine.link.cafePublic, live.data.box, { phone: phoneId, kind: 'live' });
-  // "Kafeyi yönet" in the package (the demo licence has every service), not turned on yet.
-  assert.equal(report.admin, 'off');
-  assert.equal((await pairPhone('Ev laptopu', 'computer')).answer.status, 200);
-  assert.deepEqual((await owner('/staff/remote-reports')).data.phones.map((p: { name: string; kind: string }) => [p.name, p.kind]), [['Telefonum', 'phone'], ['Ev laptopu', 'computer']]);
-  // The phone removed on the café computer: the laptop stays, a new tablet waits for a phone again.
+  assert.doesNotThrow(() => hub.phone(replaced.phoneId, replaced.token));
+  pair.merkezStore.db.prepare('UPDATE relay_phones SET created=? WHERE phone=?').run(new Date(Date.now() - 3 * 60_000).toISOString(), replaced.phoneId);
+  hub.tenants(install, [], pair.merkezStore.read(), true);
+  assert.throws(() => hub.phone(replaced.phoneId, replaced.token), /bağlı değil/);
+  // The phone removed on the café computer: a new laptop waits for a phone again; devices paired before 0.1.21 (no kind)
+  // do not stand in for it.
+  const phoneId = (await devices()).find(p => p.kind === 'phone')!.id;
   assert.equal((await owner('/staff/remote-reports/phones/remove', { id: phoneId, password: DEMO_PASSWORD })).status, 200);
-  assert.equal((await pairPhone('Tablet', 'tablet')).answer.data.code, 'PHONE_FIRST');
-  // A device paired before 0.1.21 (no kind) does not stand in for the phone; a new phone, then the tablet may come.
   (remote as unknown as { write: (t: string, fn: (r: { phones: { kind?: string }[] }) => void) => void }).write(tenant, r => { for (const p of r.phones) delete p.kind; });
-  assert.equal((await owner('/staff/remote-reports')).data.phones[0].kind, null);
-  assert.equal((await pairPhone('Tablet', 'tablet')).answer.data.code, 'PHONE_FIRST');
-  assert.equal((await pairPhone('Yeni telefon', 'phone')).answer.status, 200);
-  const tablet = await pairPhone('Tablet', 'tablet');
-  assert.equal(tablet.answer.status, 200, JSON.stringify(tablet.answer.data));
-  // A poll's list still without it forgets a phone once the grace is over.
-  pair.merkezStore.db.prepare('UPDATE relay_phones SET created=? WHERE phone=?').run(new Date(Date.now() - 3 * 60_000).toISOString(), tablet.answer.data.phoneId);
-  hub.tenants(install, [], pair.merkezStore.read(), true);
-  assert.throws(() => hub.phone(tablet.answer.data.phoneId, tablet.answer.data.token), /eşleştirilmemiş/);
+  assert.deepEqual((await devices()).map(p => p.kind), [null, null]);
+  assert.equal(((await login({ name: 'Mutfak laptopu', kind: 'computer' })).result as { code: string }).code, 'PHONE_FIRST');
+});
+
+test('the owner’s own list: Müdür and staff 403, "Kaldır" asks the password (not the code), no pairing routes left; a device keeps working without the code; "Son rapor"', async t => {
+  const { pair, owner, tenant, phone, login, paired, devices, mfa, clock } = await setup('remote-reauth');
+  t.after(() => pair.close());
+  const MANAGER = 'MudurDeneme!2026';
+  const made = await owner('/staff/users', { username: 'mudur', name: 'Müdür Mehmet', role: 'manager', password: MANAGER });
+  assert.equal(made.status, 200, JSON.stringify(made.data));
+  const manager = pair.kafe(); assert.equal((await manager('/login', { username: 'mudur', password: MANAGER })).status, 200);
+  const cashier = pair.kafe(); assert.equal((await cashier('/login', { username: 'kasiyer', password: DEMO_PASSWORD })).status, 200);
+  for (const who of [manager, cashier]) {
+    assert.equal((await who('/staff/remote-reports')).status, 403);
+    const r = await who('/staff/remote-reports/phones/remove', { id: 'p'.repeat(22), password: DEMO_PASSWORD }); assert.equal(r.status, 403); assert.equal(r.data.code, 'FORBIDDEN');
+  }
+  // The QR pairing is gone (0.1.22): its routes answer nothing.
+  for (const path of ['/staff/remote-reports/pair', '/staff/remote-reports/pair/cancel']) assert.equal((await owner(path, { name: 'X', password: DEMO_PASSWORD, code: '123456' })).status, 404, path);
+  // The view tells the Raporlarım address and whether the owner has the code.
+  const view = (await owner('/staff/remote-reports')).data;
+  assert.equal(view.address, `${pair.merkezBase}/raporlarim`); assert.equal(view.code, true);
+  const ahmet = paired(await login({ name: 'Ahmet’in telefonu' })), laptop = await login({ name: 'Ev laptopu', kind: 'computer' }), lp = paired(laptop);
+  // "Son rapor": when each device last fetched a live report.
+  const live = await phone('live', { phoneId: lp.phoneId, token: lp.token, request: await signLive(laptop.keys.privateKey, lp.cafePublic, lp.phoneId, clock.now()) });
+  assert.equal(live.status, 200, JSON.stringify(live.data));
+  const seen = await devices();
+  assert.equal(seen.find(p => p.name === 'Ev laptopu')!.lastSeenAt, new Date(clock.now()).toISOString());
+  assert.equal(seen.find(p => p.name === 'Ahmet’in telefonu')!.lastSeenAt, null);
+  // A device signed in before keeps working when the owner turns the code off (only new sign-ins need it).
+  mfa(false);
+  assert.equal((await phone('live', { phoneId: lp.phoneId, token: lp.token, request: await signLive(laptop.keys.privateKey, lp.cafePublic, lp.phoneId, clock.now()) })).status, 200);
+  // "Kaldır": the password again, not the phone code (the lost phone may hold the authenticator app).
+  const bare = await owner('/staff/remote-reports/phones/remove', { id: ahmet.phoneId });
+  assert.equal(bare.status, 400); assert.equal(bare.data.code, 'PASSWORD_REQUIRED');
+  const wrongPassword = await owner('/staff/remote-reports/phones/remove', { id: ahmet.phoneId, password: 'yanlis' });
+  assert.equal(wrongPassword.status, 403); assert.equal(wrongPassword.data.code, 'INVALID_PASSWORD');
+  assert.equal((await owner('/staff/remote-reports/phones/remove', { id: ahmet.phoneId, password: DEMO_PASSWORD })).status, 200);
+  assert.deepEqual((await devices()).map(p => p.name), ['Ev laptopu']);
+  // A remote session ("Kafeyi yönet") cannot remove, password or not.
+  assert.ok(remoteRefusal('POST', '/api/staff/remote-reports/phones/remove', { id: ahmet.phoneId, password: DEMO_PASSWORD }));
+  void tenant;
 });
 
 test('postbox: only the café’s own phones, size limit, deleted after 7 days', async t => {
-  let time = Date.now();
-  const { pair, hub, phone, pairPhone } = await setup('remote-postbox', () => new Date(time));
+  const { pair, hub, phone, login, paired, clock } = await setup('remote-postbox');
   t.after(() => pair.close());
-  const { answer, keys, link } = await pairPhone();
-  const { phoneId, token } = answer.data;
+  const { phoneId, token, keys } = paired(await login());
   const record = pair.link.read()!, path = `${MERKEZ_API}/relay/postbox`;
-  const send = (body: unknown) => { const text = JSON.stringify(body); return fetch(pair.merkezBase + path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...signedHeaders(record.installId, record.secret, 'POST', path, text, time) }, body: text }); };
+  const send = (body: unknown) => { const text = JSON.stringify(body); return fetch(pair.merkezBase + path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...signedHeaders(record.installId, record.secret, 'POST', path, text, clock.now()) }, body: text }); };
   const tenantId = pair.store.findUser('isletme')!.tenantId;
-  const box = await sealReport(await cafePrivateKey((await newCafeKeys()).privateKey), keys.publicKey, { kind: 'snapshot', phone: phoneId, at: new Date(time).toISOString() }, { x: 1 });
+  const box = await sealReport(await cafePrivateKey((await newCafeKeys()).privateKey), keys.publicKey, { kind: 'snapshot', phone: phoneId, at: new Date(clock.now()).toISOString() }, { x: 1 });
   // Too large: refused as a whole.
   assert.equal((await send({ items: [{ tenantId, phoneId, box: { ...box, ct: 'A'.repeat(400 * 1024) } }] })).status, 400);
   // A phone of another business / an unknown phone: not kept.
@@ -307,8 +341,7 @@ test('postbox: only the café’s own phones, size limit, deleted after 7 days',
   assert.equal((await (await send({ items: [{ tenantId, phoneId, box }] })).json()).kept, 1);
   assert.equal(hub.hasBox(phoneId), true);
   // Not fetched for 8 days: gone.
-  time += 8 * 86400_000; hub.sweep();
+  clock.add(8 * 86400_000); hub.sweep();
   assert.equal(hub.hasBox(phoneId), false);
   assert.equal((await phone('postbox', { phoneId, token })).data.box, null);
-  void link;
 });

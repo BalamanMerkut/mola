@@ -5,11 +5,12 @@ process.env.MOLA_REMOTE_PART_CHARS = '8000';
 import { DEMO_PASSWORD } from '../server/app.js';
 import { totp, base32 } from '../server/totp.js';
 import { MERKEZ_API } from '../server/sync-protocol.js';
-import { newPhoneKeys, pairRequest, readPairingFragment } from '../packages/domain/remote-crypto.js';
+import { newPhoneKeys } from '../packages/domain/remote-crypto.js';
+import { deviceLogin } from '../packages/domain/remote-login.js';
 import { adminOpen, deviceSession, openReply, readOpenAnswer, sealCall, type AdminCall, type TunnelResponse } from '../packages/domain/remote-admin-crypto.js';
 import type { RelayHub } from '../server/merkez/relay.js';
 import { remoteRefusal, type RemoteAdmin } from '../server/remote-admin.js';
-import { merkezPair } from './merkez-fixture.js';
+import { merkezPair, OWNER_EMAIL, phonePost, remoteLoginReady } from './merkez-fixture.js';
 
 /*
  * Sahibin uzaktan yönetimi (server/remote-admin.ts): the paired device opens the café's screens through Mola Merkez, end to
@@ -31,18 +32,17 @@ async function setup(name: string) {
   const owner = pair.kafe(); assert.equal((await owner('/login', { username: 'isletme', password: DEMO_PASSWORD })).status, 200);
   const tenant = pair.store.findUser('isletme')!.tenantId;
   const hub = pair.merkezApp.locals.relayHub as RelayHub, admin = pair.kafeApp.locals.remoteAdmin as RemoteAdmin;
-  // Pair a device (Raporlarım) the usual way: password and phone code (0.1.20). The code goes off again right after: the
-  // paired device keeps working, and the tests below turn the code on when they need it.
+  // A device signs in to Raporlarım the usual way (0.1.22: e-mail, password and phone code on the device). The code goes off
+  // again right after: the device keeps working, and the tests below turn the code on when they need it.
   const mfa = (on: boolean) => pair.store.mutate(tenant, s => { const u = s.staffUsers!.find(u => u.username === 'isletme')!; if (on) u.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; else delete u.mfa; });
   mfa(true);
-  const started = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD, code: totp(SECRET, time) });
-  assert.equal(started.status, 200, JSON.stringify(started.data));
-  const link = readPairingFragment(new URL(started.data.url).hash)!, keys = await newPhoneKeys();
-  await wait(() => hub.online(pair.link.read()!.installId));
-  const merkez = async (path: string, body: unknown) => { const text = JSON.stringify(body); wire.push(text); const r = await fetch(`${pair.merkezBase}${MERKEZ_API}/phone/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: text }); const out = await r.text(); wire.push(out); return { status: r.status, data: JSON.parse(out || '{}') }; };
-  const paired = await merkez('pair', await pairRequest(keys.privateKey, keys.publicKey, link, { name: '' }));
-  assert.equal(paired.status, 200, JSON.stringify(paired.data));
-  const { phoneId, token } = paired.data as { phoneId: string; token: string };
+  await remoteLoginReady(pair, tenant);
+  // The heartbeats above say counts ("products": 12) and are no part of this: the wire is checked from the sign-in on.
+  wire.length = 0;
+  const merkez = phonePost(pair.merkezBase, wire), keys = await newPhoneKeys();
+  const paired = await deviceLogin(merkez, keys, OWNER_EMAIL, { password: DEMO_PASSWORD, code: totp(SECRET, time), name: 'Ahmet’in telefonu', kind: 'phone' }, { at: time });
+  assert.equal(paired.kind, 'paired', JSON.stringify(paired));
+  const { phoneId, token, cafePublic } = paired as Extract<typeof paired, { kind: 'paired' }>, link = { cafePublic };
   mfa(false);
   /** The owner's code on: the TOTP secret, as "Telefon kodunu kur" would leave it. */
   const codeOn = () => pair.store.mutate(tenant, s => { s.staffUsers!.find(u => u.username === 'isletme')!.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; });
@@ -59,7 +59,7 @@ async function setup(name: string) {
         const o = await adminOpen(keys.privateKey, link.cafePublic, phoneId, { password, code: c }, time);
         const r = await raw(o.request);
         if (r.status !== 200) return { ok: false as const, code: r.data.code as string, status: r.status, request: o.request };
-        const answer = await readOpenAnswer(o.k1, o.request.nonce, r.data);
+        const answer = await readOpenAnswer(o.k1, o.request.nonce, r.data as { iv: string; ct: string });
         if (!answer.ok) return { ok: false as const, code: answer.code, status: r.status, message: answer.message, request: o.request };
         s = { sid: answer.sid, key: await deviceSession(o.k1, o.ephPrivate, o.request.eph, answer.eph, answer.sid) };
         return { ok: true as const, answer, request: o.request };
@@ -204,7 +204,7 @@ test('wrong password or code: counted per device, then waits; café-only actions
   const ok = await d.open(DEMO_PASSWORD, code());
   assert.equal(ok.ok, true, JSON.stringify(ok));
   // Café-only: refused before any route, with a plain reason.
-  for (const [m, p, body] of [['POST', '/api/staff/remote-reports/pair', { name: 'X', password: DEMO_PASSWORD }], ['POST', '/api/staff/remote-reports/phones/remove', { id: 'p'.repeat(22) }], ['GET', '/api/desktop/recovery', undefined], ['POST', '/api/desktop/restore', {}], ['POST', '/api/staff/report-security/setup', { password: DEMO_PASSWORD }], ['POST', '/api/staff/remote-admin', { on: true, password: DEMO_PASSWORD, code: '123456' }], ['POST', '/api/staff/remote-support', { on: true, password: DEMO_PASSWORD }], ['POST', '/api/login', { username: 'isletme', password: DEMO_PASSWORD }], ['GET', '/api/activation', undefined]] as const) {
+  for (const [m, p, body] of [['POST', '/api/staff/remote-reports/phones/remove', { id: 'p'.repeat(22) }], ['GET', '/api/desktop/recovery', undefined], ['POST', '/api/desktop/restore', {}], ['POST', '/api/staff/report-security/setup', { password: DEMO_PASSWORD }], ['POST', '/api/staff/remote-admin', { on: true, password: DEMO_PASSWORD, code: '123456' }], ['POST', '/api/staff/remote-support', { on: true, password: DEMO_PASSWORD }], ['POST', '/api/login', { username: 'isletme', password: DEMO_PASSWORD }], ['GET', '/api/activation', undefined]] as const) {
     const r = await d.call(m, p, body);
     assert.equal(r.status, 403, `${p} ${JSON.stringify(r.data)}`); assert.equal(r.code, 'REMOTE_FORBIDDEN', p); assert.ok(r.data.message.length > 10);
   }

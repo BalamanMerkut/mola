@@ -34,9 +34,9 @@ const WIDE_PARTS = new Set<SettingsPart>(['package', 'tableSetup', 'printers', '
  * src/LicenseCard.tsx). Masalar ve QR → Masalar ve QR (tables with Masa ekle / çıkar, cleaning, the QR address and
  * Wi-Fi/internet state, renewing one code), QR kodlarını yazdır (A4 and A6), Engellenen telefonlar. Sipariş ve mutfak →
  * Sipariş ve onay, Mutfak (Ekran / Fiş), Paket platformları. Cihazlar → Yazıcılar, Sesler, Cihaz bağla. Güvenlik ve yedek →
- * Yedek, Kilit ve güncelleme (also the report code's reset). Uzaktan erişim (0.1.21, the owner only, one page: the phone first,
- * then laptop and tablet, the shortcut, uzaktan yönetim, the paired devices; src/RemoteAccess.tsx) took Güvenlik ve yedek →
- * Telefonum's place. A topic with one part shows no second row.
+ * Yedek, Kilit ve güncelleme (also the report code's reset). Uzaktan erişim (the owner only, one page, 0.1.22: phone code,
+ * e-mail, the Raporlarım address to sign in with, uzaktan yönetim, the paired devices; src/RemoteAccess.tsx) took Güvenlik ve
+ * yedek → Telefonum's place. A topic with one part shows no second row.
  * What left Ayarlar lives in its topic's home, with a setting tab only the owner sees: Kasa ve giderler → Kasa ayarları and
  * Giderler → Otomatik giderler; Personel → Personel ayarları (vardiya, bahşiş, garson ataması); Ajanda ve rezervasyon →
  * Ayarlar; Menü yönetimi → KDV oranları; Satış ve Raporlar → "Raporları gönder" and Kârlılık → "Uyarı sınırları". The
@@ -71,11 +71,11 @@ export const settingsTopics: TopicInfo[] = [
     { id: 'backup', title: 'Yedek', line: 'Yedek durumu, şimdi yedekle, ikinci yer ve kurtarma kodu', icon: DatabaseBackup },
     { id: 'lock', title: 'Kilit ve güncelleme', line: 'Sahip hesabı otomatik kilit, raporlar için telefon kodu ve Mola güncellemeleri', icon: Lock },
   ] },
-  { id: 'remote', title: 'Uzaktan erişim', line: 'Telefonunuz, laptop ve tablet, kısayol, uzaktan yönetim', icon: Globe2, parts: [
-    { id: 'remote', title: 'Uzaktan erişim', line: 'Raporlarınıza ve kafenize her yerden: önce telefonunuz, sonra laptop ve tablet', icon: Globe2 },
+  { id: 'remote', title: 'Uzaktan erişim', line: 'Telefon kodu, e-posta, cihaz girişi, uzaktan yönetim', icon: Globe2, parts: [
+    { id: 'remote', title: 'Uzaktan erişim', line: 'Raporlarınıza ve kafenize her yerden: tek adres, e-posta, şifre ve telefon kodu', icon: Globe2 },
   ] },
 ];
-/** Uzaktan erişim is the owner's own (pairing and its switches answer only the owner's account). */
+/** Uzaktan erişim is the owner's own (its devices and switches answer only the owner's account). */
 const OWNER_TOPICS = new Set<SettingsTopic>(['remote']);
 /** Where an Ayarlar link lands: a topic, a part of it, and for "QR'ları yeniden yazdır" the QR card opened. */
 export type SettingsOpening = { key: number; topic: SettingsTopic; part?: SettingsPart; qr?: boolean };
