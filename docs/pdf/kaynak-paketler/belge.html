@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mola Paketler ve Hizmetler</title>
+<link rel="stylesheet" href="belge.css">
+<style>
+  table.paket th:not(:first-child), table.paket td:not(:first-child) { text-align: center; width: 15%; }
+  table.paket td.var { color: #2f6b3c; font-weight: 700; font-size: 10pt; }
+  table.paket td.yok { color: #b3aca0; }
+  table.paket td.ad b { display: block; }
+  table.paket td.ad span { color: #6b7570; font-size: 7.6pt; }
+  .hizmet { break-inside: avoid; margin: 0 0 9pt; padding: 8pt 10pt; border: 1px solid var(--cizgi); border-radius: 8pt; background: #fbf8f2; }
+  .hizmet h3 { margin: 0 0 3pt; font-size: 10.5pt; }
+  .hizmet .paketler { font-size: 7.6pt; color: #6b7570; margin: 0 0 4pt; }
+  .hizmet ul { margin: 2pt 0 0; }
+  .hizmet p { margin: 2pt 0; }
+  .etiket { display: inline-block; padding: 0 5pt; border-radius: 8pt; background: #efe6d6; font-size: 7.4pt; margin-left: 4pt; }
+</style>
+</head>
+<body>
+
+<section class="kapak">
+  <div class="kapak-ust">
+    <div class="kapak-logo">
+      <svg viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="56" fill="#f3ebdd"/><g transform="translate(41.6 45.2) scale(7.2)" fill="none" stroke="#234c3e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/></g></svg>
+      <span>Mola</span>
+    </div>
+    <div class="kapak-etiket">Paketler ve hizmetler</div>
+    <h1>Hangi pakette ne var?</h1>
+    <p class="alt-baslik">Mola'nın hizmetleri, hazır paketler ve işletmeye göre özel paket. Her hizmetin ne işe yaradığı, sade bir dille.</p>
+    <dl class="kapak-bilgi">
+      <dt>Hazırlayan</dt><dd>Merkut Studios</dd>
+      <dt>Kime</dt><dd>Mola'yı kullanmayı düşünen işletmeler</dd>
+      <dt>Tarih ve sürüm</dt><dd>Ekim 2026 · Mola 0.1.18</dd>
+      <dt>Fiyatlar</dt><dd>Bu belgede yer almaz; size ayrıca bildirilir</dd>
+    </dl>
+    <p class="kapak-not">Paketler esnektir: hazır paketlerden biriyle başlayabilir ya da hizmetleri tek tek seçerek işletmenize özel bir paket oluşturabilirsiniz. İlk 30 gün bütün hizmetler açıktır.</p>
+  </div>
+  <div class="kapak-alt">
+    <img src="../../../brand/merkut-studios/merkut-studios-logo.jpg" alt="Merkut Studios">
+    <div class="imza">Merkut Studios<br>Elazığ<br>molayazilim.com.tr</div>
+  </div>
+</section>
+
+<section class="icindekiler">
+  <h1 data-toc="no" style="break-before:auto">İçindekiler</h1>
+  <ol id="icindekiler-liste"></ol>
+</section>
+
+<main>
+
+<!-- ============================================================ 1 -->
+<h1 id="p1"><span class="no">1</span>Paketler nasıl çalışır?</h1>
+<p class="giris">Mola, birbirinden ayrı açılıp kapanabilen hizmetlerden oluşur. Her işletme yalnız ihtiyacı olan hizmetler için ödeme yapar. Bir çay bahçesiyle büyük bir restoranın ihtiyacı aynı değildir; paket sistemi bu yüzden var.</p>
+<ul>
+  <li><strong>30 gün ücretsiz deneme.</strong> Hesap açıldığında bütün hizmetler 30 gün boyunca açıktır. İşletme her şeyi dener, sonra kullandıklarını seçer.</li>
+  <li><strong>Adisyon çekirdeği her pakette vardır.</strong> Masalar, sipariş, mutfak, kasa, menü ve temel raporlar bu çekirdeğin içindedir; Mola'nın kendisidir.</li>
+  <li><strong>Hazır paketler:</strong> Çay bahçesi, Kafe Standart ve Restoran Pro. Çoğu işletmeye bunlardan biri uyar.</li>
+  <li><strong>Özel paket:</strong> Hizmetler tek tek seçilerek işletmeye özel bir paket oluşturulur. Örneğin "Kafe Standart + Rezervasyon" gibi.</li>
+  <li><strong>Bağlı hizmetler:</strong> Bazı hizmetler başka bir hizmetle birlikte çalışır. <em>QR sipariş</em> için <em>QR menü</em>, <em>Uzaktan yönetim</em> için <em>Uzaktan raporlar</em> da açık olmalıdır.</li>
+  <li><strong>Paket değişince veri kaybolmaz.</strong> Kapatılan bir hizmetin verileri silinmez, yalnız gizlenir. Hizmet yeniden açılınca kaldığı yerden devam eder.</li>
+  <li><strong>Kapalı hizmetler görünür ama kilitlidir.</strong> İşletme, paketinde olmayan bir hizmeti ekranda soluk ve kilitli olarak görür; ne işe yaradığını okuyup isterse ekletebilir.</li>
+</ul>
+
+<!-- ============================================================ 2 -->
+<h1 id="p2"><span class="no">2</span>Tek bakışta karşılaştırma</h1>
+<p class="giris">✓ olan hizmet o pakette açıktır. Özel pakette her hizmet tek tek seçilebilir (adisyon çekirdeği her zaman dahildir).</p>
+<table class="paket">
+  <thead><tr><th>Hizmet</th><th>Çay bahçesi</th><th>Kafe Standart</th><th>Restoran Pro</th><th>Özel paket</th></tr></thead>
+  <tbody>
+    <tr><td colspan="5" class="grup">Sipariş ve servis</td></tr>
+    <tr><td class="ad"><b>Adisyon çekirdeği</b><span>masalar, sipariş, mutfak, kasa, menü</span></td><td class="var">✓</td><td class="var">✓</td><td class="var">✓</td><td class="var">✓</td></tr>
+    <tr><td class="ad"><b>QR menü</b><span>masadaki koddan dijital menü</span></td><td class="var">✓</td><td class="var">✓</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td class="ad"><b>QR sipariş ve garson çağırma</b><span>misafir telefondan sipariş verir</span></td><td class="yok">–</td><td class="var">✓</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td colspan="5" class="grup">Raporlar</td></tr>
+    <tr><td class="ad"><b>Gelişmiş raporlar</b><span>PDF, Excel, KDV dökümü, karşılaştırma</span></td><td class="yok">–</td><td class="yok">–</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td colspan="5" class="grup">Ekler</td></tr>
+    <tr><td class="ad"><b>Stok, reçete ve kârlılık</b></td><td class="yok">–</td><td class="var">✓</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td class="ad"><b>Rezervasyon ve etkinlik</b></td><td class="yok">–</td><td class="yok">–</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td class="ad"><b>Vardiya, bahşiş ve personel raporu</b></td><td class="yok">–</td><td class="yok">–</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td class="ad"><b>Sosyal medya ve QR kartları</b></td><td class="yok">–</td><td class="yok">–</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td colspan="5" class="grup">Uzaktan</td></tr>
+    <tr><td class="ad"><b>Uzaktan raporlar</b><span>sahibin telefonundan</span></td><td class="yok">–</td><td class="var">✓</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td class="ad"><b>Uzaktan yönetim</b></td><td class="yok">–</td><td class="yok">–</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td class="ad"><b>E-posta raporları</b></td><td class="var">✓</td><td class="var">✓</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td colspan="5" class="grup">Cihaz ve güvenlik</td></tr>
+    <tr><td class="ad"><b>İki ekran</b><span>kasa bilgisayarında bölünmüş ekran</span></td><td class="yok">–</td><td class="yok">–</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td class="ad"><b>Bulutta şifreli yedek</b></td><td class="yok">–</td><td class="yok">–</td><td class="var">✓</td><td>seçilebilir</td></tr>
+    <tr><td colspan="5" class="grup">Yakında</td></tr>
+    <tr><td class="ad"><b>Paket servis platformları</b><span>Yemeksepeti, Getir, Trendyol</span></td><td colspan="4" style="text-align:center;color:#6b7570">Hazırlanıyor; platformların izniyle açılacak</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ 3 -->
+<h1 id="p3"><span class="no">3</span>Hizmetler ne işe yarar?</h1>
+
+<h2 id="p3-1">Sipariş ve servis</h2>
+
+<div class="hizmet">
+  <h3>Adisyon çekirdeği <span class="etiket">her pakette</span></h3>
+  <p>Mola'nın kendisi. Kasa bilgisayarında çalışır; tabletler ve telefonlar kafenin Wi-Fi'si üzerinden bağlanır, internet kesilse de çalışmaya devam eder.</p>
+  <ul>
+    <li>Masalar ve masa durumları (boş, dolu, servise hazır, temizlik bekliyor), masa taşıma</li>
+    <li>Kasadan ve tabletten sipariş alma; masasız satış (al götür)</li>
+    <li>Mutfak ekranı ve mutfak fişi; siparişin aşamaları (yeni, hazırlanıyor, hazır)</li>
+    <li>Menü yönetimi: kategoriler, ürün seçenekleri, kilo ile satış, KDV oranları, ürün fotoğrafları; kampanyalar</li>
+    <li>Ödeme alma (nakit, kart, parçalı ödeme), iade, kasa açılışı, giderler ve gün sonu kapanışı</li>
+    <li>Kasa güvenliği önlemleri (kör sayım, kasadan çıkan paranın teslimi gibi; işletme dilediğini açar)</li>
+    <li>Temel raporlar: günlük, haftalık, aylık satış ve en çok satan ürünler</li>
+    <li>Çalışan hesapları ve yetkileri: işletme sahibi, müdür, kasiyer, garson, mutfak</li>
+    <li>Android tablet ve telefon uygulaması; iPhone ve iPad'de ana ekrana ekleme</li>
+    <li>Otomatik yedek: her gece kasa bilgisayarına, istenirse ikinci bir yere (flash bellek, OneDrive gibi); kurtarma kodu</li>
+  </ul>
+</div>
+
+<div class="hizmet">
+  <h3>QR menü</h3>
+  <p class="paketler">Çay bahçesi · Kafe Standart · Restoran Pro</p>
+  <p>Her masada bir QR kod bulunur. Misafir telefonunun kamerasıyla okutur ve işletmenin menüsünü görür: fotoğraflar, fiyatlar, açıklamalar, Türkçe ve İngilizce. Menü mobil veriyle de açılır. Bu hizmette misafir menüyü görür ama sipariş vermez; sipariş için aşağıdaki hizmet gerekir.</p>
+</div>
+
+<div class="hizmet">
+  <h3>QR sipariş ve garson çağırma</h3>
+  <p class="paketler">Kafe Standart · Restoran Pro · QR menü ile birlikte çalışır</p>
+  <ul>
+    <li>Misafir menüden seçip siparişi telefonundan verir; sipariş garsona ya da doğrudan mutfağa düşer.</li>
+    <li>"Garson çağır" ve "Hesabı iste" düğmeleri.</li>
+    <li>Siparişi kimin onaylayacağı işletmeye göre ayarlanır; işletme istediği an QR siparişlerini durdurabilir.</li>
+    <li>Kötüye kullanan bir telefonu engelleme.</li>
+  </ul>
+</div>
+
+<h2 id="p3-2">Raporlar</h2>
+
+<div class="hizmet">
+  <h3>Gelişmiş raporlar</h3>
+  <p class="paketler">Restoran Pro</p>
+  <ul>
+    <li>Raporları yazdırma ve PDF olarak kaydetme</li>
+    <li>Muhasebeci için Excel dökümü ve KDV oranlarına göre döküm</li>
+    <li>Önceki dönemle karşılaştırma, satış kanalları (masa, QR, al götür) ve yıllık tablo</li>
+  </ul>
+</div>
+
+<h2 id="p3-3">Ekler</h2>
+
+<div class="hizmet">
+  <h3>Stok, reçete ve kârlılık</h3>
+  <p class="paketler">Kafe Standart · Restoran Pro</p>
+  <ul>
+    <li>Malzemeler (kahve, süt, şeker…) ve elde kalan miktar; satış oldukça stoktan kendiliğinden düşer.</li>
+    <li>Ürün reçeteleri ve "bu malzemeyle kaç adet daha yapılabilir" bilgisi</li>
+    <li>Alış ve sayım kayıtları, fire</li>
+    <li>Ürün bazında kâr: hangi ürün ne kadar kazandırıyor</li>
+  </ul>
+</div>
+
+<div class="hizmet">
+  <h3>Rezervasyon ve etkinlik</h3>
+  <p class="paketler">Restoran Pro</p>
+  <ul>
+    <li>Masa ayırma ve kapora; saati gelince masada "Rezerve" görünür, misafir gecikirse Mola "Geldi mi?" diye sorar.</li>
+    <li>Maç günü gibi etkinlikler için geçici masalar; etkinliğin satışları ayrı raporlanır.</li>
+  </ul>
+</div>
+
+<div class="hizmet">
+  <h3>Vardiya, bahşiş ve personel raporu</h3>
+  <p class="paketler">Restoran Pro</p>
+  <ul>
+    <li>Vardiya takibi: çalışan işe başlarken ve çıkarken kasadaki tek kullanımlık kodu girer.</li>
+    <li>Bahşişin çalışanlara paylaştırılması</li>
+    <li>Çalışan verimliliği: çalışılan süre, alınan sipariş, saat başına satış</li>
+  </ul>
+</div>
+
+<div class="hizmet">
+  <h3>Sosyal medya ve QR kartları</h3>
+  <p class="paketler">Restoran Pro</p>
+  <p>İşletmenin Instagram, WhatsApp, Google Haritalar gibi bağlantıları menünün altında görünür. Yazdırılabilir, kalıcı QR kartları hazırlanır (örneğin "Bizi Instagram'da takip edin").</p>
+</div>
+
+<h2 id="p3-4">Uzaktan</h2>
+
+<div class="hizmet">
+  <h3>Uzaktan raporlar</h3>
+  <p class="paketler">Kafe Standart · Restoran Pro</p>
+  <p>İşletme sahibi, işletmede değilken telefonundan satışlara ve raporlara bakar. Veriler telefonla kasa bilgisayarı arasında uçtan uca şifreli taşınır; aradaki sunucu bile içeriği göremez.</p>
+</div>
+
+<div class="hizmet">
+  <h3>Uzaktan yönetim</h3>
+  <p class="paketler">Restoran Pro · Uzaktan raporlar ile birlikte çalışır</p>
+  <p>İşletme sahibi eşleştirdiği telefonundan, şifresi ve telefonuna gelen kodla işletmeyi uzaktan yönetir; örneğin menüde ve ayarlarda değişiklik yapar.</p>
+</div>
+
+<div class="hizmet">
+  <h3>E-posta raporları</h3>
+  <p class="paketler">Çay bahçesi · Kafe Standart · Restoran Pro</p>
+  <p>Gün sonu, haftalık, aylık ve yıllık raporlar, PDF ekiyle işletme sahibinin e-postasına kendiliğinden gelir.</p>
+</div>
+
+<h2 id="p3-5">Cihaz ve güvenlik</h2>
+
+<div class="hizmet">
+  <h3>İki ekran</h3>
+  <p class="paketler">Restoran Pro</p>
+  <p>Kasa bilgisayarının ekranı ikiye bölünür; iki hesap yan yana çalışır. Örneğin bir yanda kasa, diğer yanda mutfak ekranı ya da iki kasiyer.</p>
+</div>
+
+<div class="hizmet">
+  <h3>Bulutta şifreli yedek</h3>
+  <p class="paketler">Restoran Pro</p>
+  <p>İşletmenin yedeklerinin şifreli bir kopyası Mola sunucusunda da tutulur. Kasa bilgisayarı bozulur ya da çalınırsa veriler yeni bilgisayara bu kopyadan taşınır. Yedek işletmenin anahtarıyla şifrelenir; Mola ekibi içeriğini göremez.</p>
+</div>
+
+<h2 id="p3-6">Yakında</h2>
+
+<div class="hizmet">
+  <h3>Paket servis platformları <span class="etiket">yakında</span></h3>
+  <p>Yemeksepeti, Getir ve Trendyol gibi platformlardan gelen siparişler doğrudan Mola'nın mutfak ekranına düşecek. Altyapı hazır; platformların bağlantı izni alındıkça açılacak.</p>
+</div>
+
+<!-- ============================================================ 4 -->
+<h1 id="p4"><span class="no">4</span>Hangi işletmeye hangi paket?</h1>
+<table class="dar">
+  <thead><tr><th>Paket</th><th>Kimin için</th><th>Öne çıkanlar</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Çay bahçesi</strong></td><td>Menüsü sade, siparişi garsonla alan, hızlı servis yapan işletmeler</td><td>Adisyon, QR menü, e-postayla gelen raporlar</td></tr>
+    <tr><td><strong>Kafe Standart</strong></td><td>Misafirin telefondan sipariş verdiği, stok takibi isteyen kafeler</td><td>QR sipariş ve garson çağırma, stok ve reçete, sahibin telefonundan raporlar</td></tr>
+    <tr><td><strong>Restoran Pro</strong></td><td>Personeli kalabalık, rezervasyon alan, ayrıntılı rapor ve tam güvenlik isteyen işletmeler</td><td>Bütün hizmetler: rezervasyon, vardiya ve bahşiş, gelişmiş raporlar, uzaktan yönetim, iki ekran, bulutta yedek</td></tr>
+    <tr><td><strong>Özel paket</strong></td><td>Hazır paketlerden birine tam uymayan işletmeler</td><td>Örneğin Çay bahçesi + Rezervasyon ya da Kafe Standart + Bulutta yedek</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ 5 -->
+<h1 id="p5"><span class="no">5</span>Sık sorulanlar</h1>
+<h2 id="p5-1">Paketimi sonra değiştirebilir miyim?</h2>
+<p>Evet. Hizmet eklemek ya da çıkarmak her zaman mümkündür; değişiklik işletmenin bilgisayarına kendiliğinden ulaşır.</p>
+<h2 id="p5-2">Bir hizmeti kapatırsam verilerim ne olur?</h2>
+<p>Silinmez. Örneğin stok hizmeti kapatılırsa malzeme ve reçeteler saklanır; yeniden açıldığında kaldığı yerden devam eder.</p>
+<h2 id="p5-3">Deneme süresi bitince ne olur?</h2>
+<p>İşletme seçtiği paketle devam eder. Paketinde olmayan hizmetler kilitlenir ama verileri saklanır.</p>
+<h2 id="p5-4">İnternet kesilirse Mola çalışır mı?</h2>
+<p>Evet. Adisyon, mutfak ve kasa işletmenin kendi bilgisayarında çalışır; tabletler kafenin Wi-Fi'si üzerinden bağlanmaya devam eder. İnternet gerektiren hizmetler (sahibin uzaktan bakması, mobil veriyle açılan QR menü, bulutta yedek) internet gelince kaldığı yerden devam eder.</p>
+<h2 id="p5-5">Verilerim nerede duruyor?</h2>
+<p>Satışlar, misafir ve çalışan bilgileri işletmenin kendi bilgisayarında, şifreli olarak durur. Mola'nın sunucusu yalnız lisans, destek ve güncelleme içindir; bulutta yedek hizmetinde de yedekler şifreli taşınır.</p>
+
+</main>
+</body>
+</html>

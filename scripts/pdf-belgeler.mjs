@@ -1,7 +1,8 @@
 // npm run pdf:belgeler: builds the two briefing PDFs from HTML sources with Playwright's Chromium (page.pdf).
 //   docs/pdf/kaynak-hukuk/belge.html  -> docs/pdf/Mola-Hukuki-Bilgi-Dosyasi.pdf  (for the owner's lawyer)
 //   docs/pdf/kaynak-teknik/belge.html -> docs/pdf/Mola-Teknik-Anlatim.pdf         (for the owner's teachers)
-// Optional: `npm run pdf:belgeler -- hukuk` or `-- teknik` builds one.
+//   docs/pdf/kaynak-paketler/belge.html -> docs/pdf/Mola-Paketler.pdf       (packages and their services, no prices)
+// Optional: `npm run pdf:belgeler -- hukuk`, `-- teknik` or `-- paketler` builds one.
 //
 // How it works: the page is opened from disk (relative images resolve), appendices are filled from their single sources
 // (docs/hukuk/MOLA_LISANS_SOZLESMESI.md, site/src/pages/{kvkk,gizlilik,cerez}.html + site/config.json), the table of
@@ -19,6 +20,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 const DOCS = {
   hukuk: { src: 'docs/pdf/kaynak-hukuk/belge.html', out: 'docs/pdf/Mola-Hukuki-Bilgi-Dosyasi.pdf' },
   teknik: { src: 'docs/pdf/kaynak-teknik/belge.html', out: 'docs/pdf/Mola-Teknik-Anlatim.pdf' },
+  paketler: { src: 'docs/pdf/kaynak-paketler/belge.html', out: 'docs/pdf/Mola-Paketler.pdf' },
 };
 const wanted = process.argv.slice(2).filter(a => DOCS[a]);
 const EM_DASH = '—';
