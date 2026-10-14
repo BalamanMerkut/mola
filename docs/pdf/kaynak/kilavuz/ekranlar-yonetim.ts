@@ -41,7 +41,8 @@ const dugme = (scope: Page | Locator, ad: string | RegExp) => scope.getByRole('b
 const nav = (p: Page) => p.getByRole('navigation', { name: 'Mola Yönetim bölümleri' });
 async function bolum(p: Page, ad: string) { await dugme(nav(p), ad).click(); await sleep(1200); await p.evaluate(() => scrollTo(0, 0)); }
 async function ayarBolumu(p: Page, ad: string) {
-  // 13 Ekim: Paketler kendi yerinde (sol menü), Hizmet fiyatları onun alt sekmesi.
+  // Yedek ve Güncellemeler sol menüde kendi sayfalarıdır; Paketler de (Hizmet fiyatları onun alt sekmesi).
+  if (ad === 'Yedek' || ad === 'Güncellemeler') return bolum(p, ad);
   const paket = ad === 'Paketler' || ad === 'Hizmet fiyatları';
   await bolum(p, paket ? 'Paketler' : 'Ayarlar');
   await p.getByRole('navigation', { name: paket ? 'Paketler bölümleri' : 'Ayarlar bölümleri' }).getByRole('button', { name: ad, exact: true }).click();

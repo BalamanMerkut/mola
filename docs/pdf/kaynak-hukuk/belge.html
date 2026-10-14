@@ -15,14 +15,14 @@
     </div>
     <div class="kapak-etiket">Avukat için bilgi dosyası</div>
     <h1>Mola Hukuki Bilgi Dosyası</h1>
-    <p class="alt-baslik">Adisyon ve QR menü yazılımının hukuki açıdan önemli işlevleri: hangi kişisel veri nerede durur, kim görür, ne kadar saklanır, neden böyle kurduk ve hangi metinlerin hazırlanması gerekir.</p>
+    <p class="alt-baslik">Adisyon ve QR menü programında hangi kişisel veri nerede durur, kim görür, ne kadar saklanır ve hangi metinlerin hazırlanması gerekir.</p>
     <dl class="kapak-bilgi">
       <dt>Hazırlayan</dt><dd>Merkut Studios (Mola yazılımının sahibi ve satıcısı)</dd>
-      <dt>Kime</dt><dd>Merkut Studios'un avukatı; mali konular (bölüm 10 ve 17.2) için mali müşavir</dd>
-      <dt>Tarih ve sürüm</dt><dd>14 Ekim 2026 · Dosya sürümü 4 · Program sürümü Mola 0.1.10</dd>
+      <dt>Kime</dt><dd>Merkut Studios'un avukatı; mali konular (bölüm 9 ve 14) için mali müşavir</dd>
+      <dt>Tarih ve sürüm</dt><dd>14 Ekim 2026 · Dosya sürümü 5 · Program sürümü Mola 0.1.18</dd>
       <dt>Gizlilik</dt><dd>Yalnız avukat ve mali müşavir için</dd>
     </dl>
-    <p class="kapak-not">Bu dosya hukuki görüş değildir. Programın hukuki sonuç doğuran işlevlerini ve verinin yerini sade bir dille anlatır; değerlendirmeyi ve metinlerin yazılmasını avukata bırakır. Bilgiler programın kaynak koduyla karşılaştırılarak yazıldı; doğrulanamayanlar metinde ayrıca işaretlidir.</p>
+    <p class="kapak-not">Bu dosya hukuki görüş değildir; programın davranışını anlatır, değerlendirmeyi avukata bırakır. Bilgiler kaynak kodla karşılaştırıldı; doğrulanamayanlar işaretlidir.</p>
   </div>
   <div class="kapak-alt">
     <img src="../../../brand/merkut-studios/merkut-studios-logo.jpg" alt="Merkut Studios">
@@ -35,90 +35,74 @@
   <ol id="icindekiler-liste"></ol>
 </section>
 
+
 <main>
 
 <!-- ============================================================ 1 -->
-<h1 id="b1"><span class="no">1</span>Bu dosya hakkında</h1>
-<p class="giris">Mola, Elazığ'daki kafe, restoran, pastane ve çay bahçeleri için yazılmış bir adisyon ve QR menü programıdır. Bu dosyanın tek amacı, programı hukuki açıdan değerlendirebilmeniz için gereken bilgiyi vermektir: hangi işlevin hukuki bir sonucu var, o işlevi neden öyle kurduk ve hangi soruların cevabını sizden bekliyoruz. Kullanım adımları ve hukuki önemi olmayan ekran ayrıntıları bilerek dışarıda bırakıldı.</p>
+<h1 id="b1"><span class="no">1</span>Özet</h1>
+<p class="giris">Mola, Elazığ'daki kafe, restoran, pastane ve çay bahçeleri için bir adisyon ve QR menü programıdır. Bu dosya yalnız hukuki sonucu olan işlevleri anlatır: hangi veri nerede durur, kim görür, ne kadar saklanır ve sizden hangi metinleri bekliyoruz. Bilgiler kaynak kodla karşılaştırıldı.</p>
+<p class="kucuk">Rozetler: <span class="rozet karar">Karar</span> sahibin iş kararı · <span class="rozet karar">Avukata soru</span> cevabınızı bekleyen nokta · <span class="rozet dogrulanmadi">Doğrulanmadı</span> kodda bulunamayan ya da gerçek ortamda denenmemiş bilgi. Terimler Ek C'de.</p>
 
-<h2 id="b1-1">1.1 Okuma notları</h2>
+<h2 id="b1-1" data-toc="no">1.1 Bugünkü durum</h2>
 <ul>
-  <li>Her saklama süresi, şifreleme ve veri alanı programın kaynak kodunda arandı. Kodda bulunamayan ya da gerçek ortamda denenmemiş bilgiler <span class="rozet dogrulanmadi">Doğrulanmadı</span> rozetiyle işaretlidir.</li>
-  <li>Sahibin verdiği iş kararları <span class="rozet karar">Karar</span>, sizin cevabınızı bekleyen noktalar <span class="rozet karar">Avukata soru</span>, henüz avukat onayı almamış metinler <span class="rozet taslak">Taslak</span> rozetiyle gösterilir.</li>
-  <li>Teknik terimlerin kısa açıklaması Ek C'deki sözlüktedir.</li>
+  <li><strong>Satış başlamadı.</strong> Pilot kafeler hazırlanıyor (30 günlük deneme).</li>
+  <li><strong>Satıcı şahıstır.</strong> Merkut Studios bir marka adıdır; satışlar başlayınca şirket kurulacak.</li>
+  <li><strong>Mola Merkez</strong> (satıcının sunucusu) çalışıyor: VDS, sağlayıcı Keyubu/Datacasa, veri merkezi İstanbul.</li>
+  <li>Alan adı <code>molayazilim.com.tr</code> (Metunic); DNS Cloudflare. Sitedeki KVKK, gizlilik ve çerez sayfaları taslaktır (Ek B).</li>
+  <li>Mola Lisans Sözleşmesi taslağı (sürüm 4) programda zorunlu onay olarak kullanılıyor (Ek A); avukat onayı bekliyor.</li>
 </ul>
 
-<h2 id="b1-2">1.2 Bugünkü durum</h2>
-<ul>
-  <li><strong>Satış henüz başlamadı.</strong> Program pilot kafelerde denenmeye hazırlanıyor (önce birkaç kafe, 30 günlük deneme).</li>
-  <li><strong>Satıcı şimdilik şahıstır.</strong> Merkut Studios bir marka adıdır; satışlar başlayınca şirket kurulması planlanıyor (bölüm 16.12).</li>
-  <li><strong>Mola Merkez</strong> (satıcının sunucusu) 12 Ekim 2026'dan beri çalışıyor: sanal sunucu (VDS), sağlayıcı Keyubu/Datacasa, veri merkezi İstanbul. Merkez verisi Türkiye'de durur; sunucu dışındaki kopyalar bölüm 3.4 ve 12'de.</li>
-  <li>Alan adı <code>molayazilim.com.tr</code> (kayıt firması Metunic); DNS hizmeti Cloudflare, yalnız ad çözümlemesi. Sitedeki KVKK, gizlilik ve çerez sayfaları taslaktır (Ek B).</li>
-  <li>Mola Lisans Sözleşmesi'nin taslağı (sürüm 4) programda zorunlu onay olarak kullanılıyor (Ek A). Avukat onayı bekliyor.</li>
-</ul>
-
-<h2 id="b1-3">1.3 Tek sayfada özet</h2>
 <div class="kutu">
-  <span class="kutu-baslik">Temel tasarım kararı ve nedeni</span>
+  <span class="kutu-baslik">Temel tasarım</span>
   <ul>
-    <li>İşletmenin bütün verisi (satış, ödeme, menü, çalışanlar, misafir ve rezervasyon bilgileri) <strong>işletmenin kendi bilgisayarında</strong>, şifreli olarak durur. Satış verisi Merkut Studios'a gelmez. Amaç: misafir ve çalışan verisinin sorumlusu işletme olsun, satıcı bu veriyi hiç taşımasın.</li>
-    <li>Mola Merkez yalnız lisans, etkinleştirme, destek, güncelleme ve bakım bilgisini tutar. Ayrıca menünün herkese açık bir kopyasını ve (hizmet alınmışsa) işletmenin <strong>şifreli yedeğini</strong> saklar. Yedeğin anahtarı Merkez'de yoktur; yedek kurtarma koduyla ya da işletme sahibinin şifresiyle açılır (bölüm 7).</li>
-    <li>Misafir QR menüyü internetten açtığında menü ve sipariş trafiği Mola Merkez'den <strong>geçer</strong>. Merkez bu trafiği açık hâlde görür ama saklamaz ve günlüğe yazmaz.</li>
-    <li>İşletme sahibinin telefonuna giden raporlar ve uzaktan yönetim <strong>uçtan uca şifrelidir</strong>; Merkez yalnız şifreli metni taşır. Mola ekibinin kafeye uzaktan bağlanması yalnız sahibin izniyle ve satış ile kişisel veri ekranları kapalı olarak mümkündür.</li>
-    <li>Kapanan her yılın kayıtları paketlenirken müşterilerin kişisel bilgileri kendiliğinden silinir; rakamlar kalır (bölüm 5).</li>
-    <li>Mola yazar kasa değildir, yasal fiş kesmez, e-Adisyon değildir. Fişleri "BİLGİ FİŞİ" başlığını taşır (bölüm 10).</li>
+    <li>İşletmenin bütün verisi (satış, ödeme, menü, çalışan, misafir, rezervasyon) <strong>işletmenin kendi bilgisayarında</strong>, şifreli durur. Satış verisi satıcıya gelmez. Amaç: misafir ve çalışan verisinin sorumlusu işletme olsun.</li>
+    <li>Mola Merkez yalnız lisans, destek, güncelleme ve bakım bilgisini, menünün herkese açık kopyasını ve (hizmet alınmışsa) işletmenin <strong>şifreli yedeğini</strong> tutar. Yedeğin anahtarı Merkez'de yoktur.</li>
+    <li>İnternetten açılan QR menünün trafiği Merkez'den <strong>geçer</strong>; Merkez onu açık görür ama saklamaz.</li>
+    <li>Sahibin telefonuna giden raporlar ve uzaktan yönetim uçtan uca şifrelidir. Mola ekibi kafeye yalnız sahibin izniyle ve satış ile kişisel veri ekranları kapalı olarak bağlanır.</li>
+    <li>Kapanan her yılın kayıtları paketlenirken müşterilerin kişisel bilgileri kendiliğinden silinir; rakamlar kalır.</li>
+    <li>Mola yazar kasa değildir, yasal fiş kesmez, e-Adisyon değildir.</li>
   </ul>
 </div>
 <div class="kutu soru">
   <span class="kutu-baslik">Sizden istediklerimiz</span>
   <ol>
-    <li>Taraflardan hangisinin hangi veri için veri sorumlusu ya da veri işleyen olduğunun değerlendirilmesi (bölüm 2).</li>
-    <li>Aydınlatma metinleri: misafirler, rezervasyon müşterileri, çalışanlar, web sitesi ziyaretçileri ve form dolduranlar, işletme sahipleri. Gerekiyorsa açık rıza metinleri.</li>
-    <li>Gizlilik politikası ve çerez politikası (site ve program).</li>
-    <li>Mola Lisans Sözleşmesi taslağının gözden geçirilmesi (Ek A; programla uyumu bölüm 16'nın başında).</li>
-    <li>Abonelik ve hizmet sözleşmesi, veri işleme sözleşmesi (satıcı ile işletme arasında), uzaktan destek onay metni, web formu metni, satıcı tarafındaki yetkililer için gizlilik taahhüdü.</li>
-    <li>VERBİS kaydı, "Mola" marka araştırması ve şirket kuruluşunun etkileri hakkında görüş.</li>
+    <li>Rollerin değerlendirmesi: hangi veri için kim veri sorumlusu, kim veri işleyen (bölüm 2).</li>
+    <li>Aydınlatma metinleri: misafir, rezervasyon müşterisi, çalışan, site ziyaretçisi ve form dolduran, işletme sahibi; gerekirse açık rıza metinleri.</li>
+    <li>Gizlilik ve çerez politikası; lisans sözleşmesinin gözden geçirilmesi (Ek A).</li>
+    <li>Abonelik sözleşmesi, veri işleme sözleşmesi, uzaktan destek onay metni, satıcının yetkilileri için gizlilik taahhüdü.</li>
+    <li>VERBİS, marka ve şirket kuruluşu hakkında görüş.</li>
   </ol>
 </div>
 <div class="kutu uyari">
-  <span class="kutu-baslik">Zaman açısından öncelikli</span>
+  <span class="kutu-baslik">Öncelik sırası</span>
   <ul>
-    <li>İlk pilot kafeden önce: işletme ve misafir aydınlatma metinleri, lisans sözleşmesinin son hâli, abonelik sözleşmesi.</li>
-    <li>Web sitesi yayına girmeden önce: site yasal sayfaları (unvan, adres, vergi no yer tutucuları dolmalı; e-posta alanının zorunlu olması metne işlenmeli, bölüm 16).</li>
-    <li>Masa QR kodlarının toplu basımından önce: misafir aydınlatma metninin son hâli (bugün menünün altında "Gizlilik" bağlantısıyla açılan bir <strong>taslak</strong> sayfa var, bölüm 14.3).</li>
+    <li><strong>İlk pilot kafeden önce:</strong> işletme ve misafir aydınlatma metinleri, lisans sözleşmesinin son hâli, abonelik sözleşmesi.</li>
+    <li><strong>Site yayına girmeden önce:</strong> site yasal sayfaları (unvan, adres, vergi no yer tutucuları dolmalı).</li>
+    <li><strong>Masa QR kodları toplu basılmadan önce:</strong> misafir aydınlatma metninin son hâli (bugün menüde taslak bir "Gizlilik" sayfası var).</li>
   </ul>
 </div>
 
 <!-- ============================================================ 2 -->
 <h1 id="b2"><span class="no">2</span>Taraflar ve roller</h1>
-<p>Tablo sistemdeki kişi ve kurumları, sistemin hangi parçasını kullandıklarını ve hangi veriye dokunduklarını gösterir. Son sütun bizim teknik gözlemimizdir; hukuki nitelendirme sizindir.</p>
-<table>
-  <thead><tr><th style="width:17%">Taraf</th><th style="width:26%">Kim</th><th style="width:31%">Sistemdeki yeri ve dokunduğu veri</th><th>Teknik gözlem, sizin değerlendirmeniz için</th></tr></thead>
+<p>Son sütun teknik gözlemimizdir; hukuki nitelendirme sizindir.</p>
+<table class="dar">
+  <thead><tr><th style="width:19%">Taraf</th><th style="width:44%">Sistemdeki yeri ve dokunduğu veri</th><th>Teknik gözlem</th></tr></thead>
   <tbody>
-    <tr><td><strong>Merkut Studios</strong> (satıcı)</td><td>Programın sahibi ve satıcısı. Bugün şahıs (Emirhan İspir, Elazığ). Satışlar başlayınca şirket kurulacak.</td><td>Mola Merkez'i ve Mola Yönetim panelini işletir. İşletme kayıtlarını, fatura bilgilerini, destek taleplerini, web sitesi taleplerini ve kendi işlem kayıtlarını tutar.</td><td>Kendi müşterilerinin (işletme yetkilileri) ve web sitesi taleplerinin verisi için veri sorumlusu gibi görünüyor. Şifreli yedek, internetten menü ve uzaktan destek için işletme adına işleme yapıyor olabilir.</td></tr>
-    <tr><td><strong>Satıcının yetkilileri</strong></td><td>Satıcının Mola Yönetim'e eklediği kişiler (en çok 10). Bugün yalnız satıcının kendisi var.</td><td>Kendi şifreleriyle Mola Yönetim'deki her şeyi yapabilir: işletme kayıtları, fatura bilgileri, destek, uzaktan destek. Yönetemedikleri: kullanıcılar, e-posta ayarı, Merkez kurtarma kodu (bölüm 8.4).</td><td>Satıcının çalışanı ya da yardımcısı. Gizlilik yükümlülüğünün sözleşmeyle bağlanması gerekebilir.</td></tr>
-    <tr><td><strong>İşletme</strong> (kafe, restoran, pastane, çay bahçesi)</td><td>Mola'yı lisansla kullanan tüzel ya da gerçek kişi tacir.</td><td>Programı kendi kasa bilgisayarında çalıştırır. Misafir, rezervasyon müşterisi ve çalışan verisinin tamamı orada durur.</td><td>Misafir ve çalışan verisinin veri sorumlusu gibi görünüyor. Mola'nın mimarisi bu varsayımla kuruldu <span class="rozet karar">Karar</span></td></tr>
-    <tr><td><strong>İşletme sahibi / yetkili</strong></td><td>İşletmeyi temsil eden gerçek kişi.</td><td>Başvuru formunu doldurur (ad soyad, telefon, e-posta, fatura bilgileri). Programda "İşletme sahibi" hesabıdır; şifresinin doğrulama özeti ve doğrulanmış e-postası Merkez'de durur (bölüm 7.3).</td><td>Satıcı açısından ilgili kişi (müşteri yetkilisi); işletme açısından program kullanıcısı.</td></tr>
-    <tr><td><strong>Çalışanlar</strong></td><td>Müdür, kasiyer, garson, mutfak.</td><td>Kendi hesaplarıyla çalışır; adları, vardiyaları, bahşiş payları, kasa sayımları, aldıkları ödemeler ve yaptıkları işlemler kaydedilir. Hepsi işletmenin bilgisayarındadır.</td><td>İşletmenin çalışanı. Satıcıya çalışan verisi gitmez. Kasa kayıtları çalışanı izleme niteliği taşıyabilir (bölüm 9.3).</td></tr>
-    <tr><td><strong>Misafirler</strong></td><td>Masadaki QR kodla menüyü açan, sipariş veren kişiler.</td><td>Hesap açmaz, ad sorulmaz. Tarayıcıya bir kimlik çerezi yazılır; siparişleri ve notları işletmede durur. İnternetten açılan menüde trafik Mola Merkez'den geçer.</td><td>İşletmenin müşterisi. Merkez'in trafiği geçirmesi işletme adına bir işleme olabilir (bölüm 3.3).</td></tr>
-    <tr><td><strong>Rezervasyon müşterileri</strong></td><td>Masa ayırtan kişiler.</td><td>Personel adını, isteğe bağlı telefonunu ve notunu yazar. İşletmede kalır.</td><td>İşletmenin müşterisi.</td></tr>
-    <tr><td><strong>Web sitesi ziyaretçileri</strong></td><td>molayazilim.com.tr'yi açan, iletişim formunu dolduran kişiler.</td><td>Sitede çerez ve analiz aracı yoktur. Form bilgileri Mola Merkez'e kaydedilir.</td><td>Satıcının potansiyel müşterisi.</td></tr>
-    <tr><td><strong>Üçüncü taraf hizmetler</strong></td><td>VDS sağlayıcısı, alan adı firması, DNS, e-posta sağlayıcısı, sertifika kuruluşu, Google Drive.</td><td>Ayrıntı bölüm 12'de.</td><td>VDS sağlayıcısı alt işleyen sayılabilir. Yurt dışı sorusu e-posta, DNS ve Google Drive için doğabilir.</td></tr>
+    <tr><td><strong>Merkut Studios</strong> (satıcı; bugün şahıs, Emirhan İspir, Elazığ)</td><td>Mola Merkez'i ve Mola Yönetim panelini işletir. İşletme kayıtları, fatura bilgileri, destek talepleri, site talepleri, işlem kayıtları.</td><td>Kendi müşterilerinin ve site taleplerinin verisi için veri sorumlusu gibi. Şifreli yedek, internetten menü ve uzaktan destekte işletme adına işleme yapıyor olabilir.</td></tr>
+    <tr><td><strong>Satıcının yetkilileri</strong> (en çok 10; bugün yalnız satıcı)</td><td>Mola Yönetim'de işletme kayıtları, fatura bilgileri, destek ve uzaktan destek. Kullanıcıları, e-posta ayarını ve Merkez kurtarma kodunu yönetemez.</td><td>Gizlilik yükümlülüğü sözleşmeyle bağlanmalı olabilir.</td></tr>
+    <tr><td><strong>İşletme</strong></td><td>Programı kendi bilgisayarında çalıştırır; misafir, rezervasyon ve çalışan verisinin tamamı orada.</td><td>Bu verilerin veri sorumlusu gibi; mimari bu varsayımla kuruldu <span class="rozet karar">Karar</span></td></tr>
+    <tr><td><strong>İşletme sahibi</strong></td><td>Başvuru formunu doldurur (ad, telefon, e-posta, fatura bilgisi). Şifresinin doğrulama özeti ve doğrulanmış e-postası Merkez'de durur (bölüm 6).</td><td>Satıcının müşteri yetkilisi; işletmenin program kullanıcısı.</td></tr>
+    <tr><td><strong>Çalışanlar</strong></td><td>Ad, vardiya, bahşiş, kasa sayımı, aldıkları ödemeler, yaptıkları işlemler. Hepsi işletmede.</td><td>Satıcıya gitmez. Kasa kayıtları izleme niteliği taşıyabilir (bölüm 8).</td></tr>
+    <tr><td><strong>Misafirler</strong></td><td>Hesap açmaz, ad sorulmaz. Tarayıcıya kimlik çerezi yazılır; siparişleri işletmede. İnternetten açılan menüde trafik Merkez'den geçer.</td><td>Merkez'in trafiği geçirmesi işletme adına işleme olabilir.</td></tr>
+    <tr><td><strong>Rezervasyon müşterileri</strong></td><td>Personel ad, isteğe bağlı telefon ve not yazar. İşletmede kalır.</td><td>İşletmenin müşterisi.</td></tr>
+    <tr><td><strong>Site ziyaretçileri</strong></td><td>Sitede çerez ve analiz aracı yok. Form bilgileri Merkez'e kaydedilir.</td><td>Satıcının potansiyel müşterisi.</td></tr>
+    <tr><td><strong>Üçüncü taraflar</strong></td><td>VDS, alan adı, DNS, e-posta, sertifika, Google Drive (bölüm 10).</td><td>VDS sağlayıcısı alt işleyen sayılabilir.</td></tr>
   </tbody>
 </table>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata soru: roller</span>
-  <ol>
-    <li>Satıcı, işletmenin şifreli yedeğini sakladığında (anahtarı olmadığı hâlde) veri işleyen sayılır mı? Merkez'in sahip şifresinin doğrulama özetini de tutması (bölüm 7.3) bu değerlendirmeyi değiştirir mi?</li>
-    <li>İnternetten açılan QR menüde Merkez misafir trafiğini açık hâlde görüp hiç saklamadan aktarıyor. Bu, işletme adına işleme midir; veri işleme sözleşmesi gerekir mi?</li>
-    <li>Uzaktan destek oturumunda Mola ekibi işletmenin menü, masa ve ayar ekranlarını görür (satış ve kişisel veri ekranları kapalıdır). Bu erişim nasıl nitelendirilmeli?</li>
-    <li>Destek taleplerine işletmenin eklediği ekran görüntüleri ve mesajlar kişisel veri içerebilir. Satıcı burada veri sorumlusu mu, veri işleyen mi?</li>
-  </ol>
-</div>
 
 <!-- ============================================================ 3 -->
 <h1 id="b3"><span class="no">3</span>Verinin yeri</h1>
-<p class="giris">Mola iki parçadan oluşur: her işletmenin kendi bilgisayarında çalışan <strong>kafe sunucusu</strong> ve satıcının işlettiği <strong>Mola Merkez</strong>. Bağlantıyı her zaman kafe başlatır; Merkez kafeye kendiliğinden bağlanamaz, yalnız yanıt verir. Bu, satıcının işletme verisine kendi isteğiyle ulaşamaması için seçildi.</p>
+<p class="giris">Mola iki parçadır: işletmenin bilgisayarındaki <strong>kafe sunucusu</strong> ve satıcının <strong>Mola Merkez</strong>'i. Bağlantıyı her zaman kafe başlatır; Merkez kafeye kendiliğinden bağlanamaz. Böylece satıcı işletme verisine kendi isteğiyle ulaşamaz.</p>
 <figure id="sema-genel">
 <svg viewBox="0 0 760 488" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -207,567 +191,314 @@
 <figcaption><b>Şema 1.</b> Verinin yeri. Yeşil alan işletmede kalır; mavi kutudakileri Merkez saklar; turuncu kutudakiler Merkez'den geçer ama saklanmaz. Kesikli çizgiler uçtan uca şifreli ya da yalnız gerektiğinde açılan bağlantılardır. Merkez verisinin satıcının bilgisayarına ve Google Drive'a giden kopyaları bölüm 3.4'te.</figcaption>
 </figure>
 
+
 <h2 id="b3-1">3.1 İşletmenin bilgisayarı</h2>
 <ul>
-  <li>Mola işletmenin kasa bilgisayarına (Windows) kurulur. Tabletler ve telefonlar ona kafenin Wi-Fi'si üzerinden bağlanır.</li>
-  <li>Bütün veri tek bir veritabanı dosyasındadır ve her kayıt ayrı ayrı şifrelenir (AES-256-GCM). Ana anahtar diskte düz durmaz: o bilgisayarın Windows kilidi, sahibe kâğıtta verilen 24 karakterlik kurtarma kodu ve işletme sahibinin şifresi ile ayrı ayrı kilitlenir (bölüm 7). Kurtarma kodu hiçbir yerde saklanmaz; satıcı da bilmez. Disk çalınsa veri okunamaz.</li>
-  <li><strong>Bilinen sınır:</strong> kafe içindeki ağ trafiği (tablet ile kasa bilgisayarı arası) şifresiz HTTP'dir. Bu yüzden kurtarma kodu gibi bilgiler yalnız kasa bilgisayarının kendi ekranında gösterilir. İnternetten geçen her şey HTTPS'tir.</li>
+  <li>Bütün veri tek bir veritabanı dosyasındadır; her kayıt ayrı şifrelenir (AES-256-GCM).</li>
+  <li>Ana anahtar üç ayrı kilitle korunur: o bilgisayarın Windows kilidi, sahibe kâğıtta verilen 24 karakterlik kurtarma kodu, işletme sahibinin şifresi. Kurtarma kodu hiçbir yerde saklanmaz, satıcı da bilmez. Disk çalınsa veri okunamaz.</li>
+  <li><strong>Bilinen sınır:</strong> kafe içi ağ trafiği (tablet ile kasa arası) şifresiz HTTP'dir; kurtarma kodu bu yüzden yalnız kasa bilgisayarının ekranında gösterilir. İnternetten geçen her şey HTTPS'tir.</li>
 </ul>
 
 <h2 id="b3-2">3.2 Mola Merkez'in sakladıkları</h2>
-<p>Kafe, Merkez'e açılışta ve 10 dakikada bir imzalı bir "kalp atışı" gönderir. Merkez bu gönderinin alanlarını katı bir listeyle denetler ve listede olmayanı reddeder. Sipariş, ödeme, tutar, ürün adı, çalışan adı ya da şifresi ve müşteri adı bu listede yoktur; bunu otomatik bir test de denetler. Amaç, satış ve misafir verisinin yanlışlıkla bile satıcıya gitmemesidir.</p>
-<table>
-  <thead><tr><th style="width:23%">Merkez'deki bilgi</th><th style="width:40%">İçerik</th><th style="width:12%">Kişisel veri</th><th>Saklama</th></tr></thead>
+<p>Kafe Merkez'e açılışta ve 10 dakikada bir imzalı bir "kalp atışı" gönderir. Merkez alanları katı bir listeyle denetler; sipariş, ödeme, tutar, ürün adı, çalışan ve müşteri adı listede yoktur. Bunu otomatik bir test de denetler.</p>
+<table class="dar">
+  <thead><tr><th style="width:20%">Bilgi</th><th style="width:46%">İçerik</th><th>Saklama</th></tr></thead>
   <tbody>
-    <tr><td>İşletme kaydı ve lisans</td><td>İşletme adı ve türü, plan, bitiş tarihi, hizmet paketi, askı/dondurma durumu, imzalı lisanslar, lisans sözleşmesi kabulü (sürüm, zaman, yetkili adı).</td><td>Kısmen (ad)</td><td>İşletme kaydı silinene kadar.</td></tr>
-    <tr><td>Başvuru ve fatura bilgileri</td><td>Ticari unvan, vergi dairesi, VKN ya da TCKN, il, ilçe, açık adres, cep telefonu, e-posta, yetkili adı soyadı, aydınlatma onayı. Tekrar başvuruları bulmak için vergi no, telefon ve e-postanın yalnız anahtarlı özetlerinden oluşan ayrı bir dizin.</td><td>Evet</td><td>İşletme kaydı silinene kadar. Reddedilen başvuru karardan <strong>1 yıl</strong> sonra kendiliğinden silinir <span class="rozet karar">Karar</span>. Gönderilmemiş başvuru Merkez'e hiç gelmez. Silinen işletmenin vergi no özeti tekrar başvuruyu fark etmek için kalır.</td></tr>
-    <tr><td>"İşletmem var" bilgileri (bölüm 7.3)</td><td>İşletme sahibinin kafedeki kullanıcı adı ve şifresinin doğrulama özeti (scrypt; şifrenin kendisi değil). İşletme sahibinin kodla doğruladığı e-posta adresi ve doğrulama zamanı.</td><td>Evet</td><td>İşletme kaydıyla. Şifre değişince özet yenisiyle değişir. Satıcı, sahibin isteğiyle doğrulanmış adresi kaldırabilir.</td></tr>
-    <tr><td>Durum özeti (kalp atışı)</td><td>Masa, çalışan ve ürün <em>sayıları</em>, son kullanım zamanı, program sürümü, yedek durumu, bilgisayar kimliğinin tek yönlü özeti (kimliğin kendisi gitmez), güncelleme durumu.</td><td>Hayır</td><td>Son durum tutulur.</td></tr>
-    <tr><td>Hata kayıtları</td><td>Hatanın programdaki yeri, istek yolunun kalıbı, durum kodu, rol. IP adresi, şifre, sipariş içeriği, tutar yok.</td><td>Hayır</td><td>İşletme başına en çok 500 kayıt, 30 gün.</td></tr>
-    <tr><td>Destek talepleri</td><td>İşletme sahibinin yazdığı mesajlar (serbest metin), Mola ekibinin yanıtları, dondurma talebinin gerekçesi.</td><td>Olabilir</td><td>Kapanan görüşme son mesajdan <strong>2 yıl</strong> sonra kendiliğinden silinir (kafedeki kopyası da) <span class="rozet karar">Karar</span>; açık görüşme işletme kaydı silinene kadar.</td></tr>
-    <tr><td>Destek ekleri</td><td>Fotoğraf ve PDF. Fotoğraflar yeniden yazılır; konum ve cihaz bilgisi (EXIF/GPS) dahil hiçbir üst veri kalmaz.</td><td>Olabilir</td><td><strong>14 gün</strong> sonra kendiliğinden silinir. Merkez yedeğine girmez.</td></tr>
-    <tr><td>Duyuru okundu bilgisi</td><td>İşletme başına ilk okuma zamanı ve okuyanın rolü (sahip ya da müdür; kişi adı yok).</td><td>Hayır</td><td>En yeni 200 duyuru.</td></tr>
-    <tr><td>Menünün kopyası</td><td>Misafir menüsünün herkese açık içeriği: işletme adı ve görünümü, ürünler, açıklamalar, fiyatlar, kampanyalar, masa adları, ürün fotoğrafları. Satış, sipariş, misafir, çalışan bilgisi yoktur. Şifreli saklanır. Amaç: kafe bilgisayarı kapalıyken de menü görünsün (sipariş verilemez).</td><td>Hayır (kamuya açık içerik)</td><td>Kafe güncelledikçe yenilenir; işletme kaydı silinince hemen silinir.</td></tr>
-    <tr><td>Sosyal medya bağlantıları</td><td>Misafir menüsünde gösterilen herkese açık bağlantılar ve QR kısa adresi.</td><td>Hayır</td><td>İşletme kaydıyla.</td></tr>
-    <tr><td>Web sitesi talepleri</td><td>İşletme adı, ad soyad, telefon, e-posta (zorunlu; önceki talepler e-postasız olabilir), şehir, masa sayısı (isteğe bağlı), işletme türü, mesaj, KVKK onayının zamanı ve metin sürümü, Mola ekibinin notları. IP adresi kaydedilmez.</td><td>Evet</td><td>Talep kapatıldıktan <strong>2 yıl</strong> sonra kendiliğinden; "Sil" ile hemen.</td></tr>
-    <tr><td>Şifreli sunucu yedekleri (ücretli hizmet)</td><td>İşletme yedeğinin şifreli dosyaları. Merkez yalnız zaman, boyut, özet ve sürümü görür (bölüm 7.2).</td><td>İçerik okunamaz</td><td>Son 3 iş günü + son 2 hafta; kapanmış yılların paketleri işletme silinene kadar; işletme silinince hemen.</td></tr>
-    <tr><td>Program dosyası denetimi</td><td>Değiştirilmiş ya da eksik program dosyalarının <em>adları</em>. İçerik ve veri gönderilmez.</td><td>Hayır</td><td>Son durum.</td></tr>
-    <tr><td>Uzaktan erişim kayıtları</td><td>Uzaktan destek izni ve oturumları (başlangıç, bitiş, yapılan değişiklikler); sahibin uzaktan yönetim oturumlarının başlangıç ve bitişi. Eşleşmiş telefonların kimliği ve erişim anahtarının özeti.</td><td>Sınırlı</td><td>İşlem kayıtlarıyla.</td></tr>
-    <tr><td>İşlem kayıtları (bölüm 9.1)</td><td>Mola Yönetim'deki her işlem ve güvenlik olayı: kim, ne, hangi işletme, eski ve yeni değer. Dışarıdan gelen isteklerde IP adresi (web sitesi formunun ziyaretçisininki hiç yazılmaz). Şifre, kod, anahtar, fatura bilgisi değeri ve satış verisi yazılmaz.</td><td>Evet (IP, işletme adı, yetkili adı)</td><td>Varsayılan <strong>10 yıl</strong> (en az 2 yıl, ayarlanır). <strong>IP adresleri 1 yıl</strong> sonra silinir <span class="rozet karar">Karar</span>. Bir istisna bölüm 9.1'de.</td></tr>
-    <tr><td>Satışlarım (satıcının kendi satışları)</td><td>Hangi işletmeye hangi paketin satıldığı, tahsilat, yöntem, fatura no, KDV.</td><td>İşletme bilgisi</td><td>Silinmez; işletme silinse de kalır (satıcının muhasebe kaydı).</td></tr>
-    <tr><td>Mola Yönetim hesapları (bölüm 8.4)</td><td>Satıcının ve yetkililerinin adı, kullanıcı adı, şifre özeti (scrypt), iki adımlı giriş sırrı ve yedek kodları; satıcının e-posta ve SMTP ayarı.</td><td>Evet (satıcı tarafı)</td><td>Hesap durdukça; silinen yetkilinin adı işlem kayıtlarında kalır.</td></tr>
-    <tr><td>Merkez'in kendi yedeği</td><td>Yukarıdakilerin şifreli gece yedeği (destek ekleri, menü fotoğrafları ve işletmelerin sunucu yedekleri hariç).</td><td>Evet (şifreli)</td><td>Sunucuda en yeni 14; kopyaları bölüm 3.4'te.</td></tr>
+    <tr><td>İşletme kaydı, lisans</td><td>Ad, tür, plan, bitiş, paket, askı/dondurma, imzalı lisanslar, sözleşme kabulü (sürüm, zaman, yetkili adı).</td><td>Kayıt silinene kadar.</td></tr>
+    <tr><td>Başvuru ve fatura bilgisi</td><td>Unvan, vergi dairesi, VKN/TCKN, adres, cep telefonu, e-posta, yetkili adı, aydınlatma onayı. Tekrar başvuruyu bulmak için vergi no, telefon ve e-postanın anahtarlı özetleri.</td><td>Kayıt silinene kadar. Reddedilen başvuru 1 yıl <span class="rozet karar">Karar</span>. Silinen işletmenin vergi no özeti kalır.</td></tr>
+    <tr><td>"İşletmem var" bilgileri</td><td>Sahibin kullanıcı adı, şifresinin doğrulama özeti (scrypt; şifrenin kendisi değil), kodla doğrulanmış e-posta.</td><td>Kayıtla. Şifre değişince özet yenilenir.</td></tr>
+    <tr><td>Durum özeti</td><td>Masa, çalışan, ürün <em>sayıları</em>; sürüm, yedek durumu, bilgisayar kimliğinin tek yönlü özeti.</td><td>Son durum.</td></tr>
+    <tr><td>Hata kayıtları</td><td>Kodun yeri, yol kalıbı, durum kodu, rol. IP, şifre, sipariş yok.</td><td>İşletme başına 500 kayıt, 30 gün.</td></tr>
+    <tr><td>Destek talepleri ve ekleri</td><td>Sahibin mesajları, Mola ekibinin yanıtları, dondurma gerekçesi; fotoğraf ve PDF ekleri (fotoğraflardan konum ve cihaz bilgisi silinir).</td><td>Kapanan görüşme son mesajdan 2 yıl <span class="rozet karar">Karar</span>; ekler 14 gün, Merkez yedeğine girmez.</td></tr>
+    <tr><td>Menünün kopyası</td><td>Misafir menüsünün herkese açık içeriği ve fotoğrafları; şifreli. Satış, misafir, çalışan bilgisi yok. Kafe kapalıyken menü görünsün diye (sipariş verilemez).</td><td>Kafe güncelledikçe değişir; kayıt silinince hemen.</td></tr>
+    <tr><td>Site talepleri</td><td>İşletme adı, ad soyad, telefon, e-posta, şehir, masa sayısı, tür, mesaj, onay zamanı ve metin sürümü, ekibin notları. IP yazılmaz.</td><td>Kapandıktan 2 yıl; "Sil" ile hemen.</td></tr>
+    <tr><td>Şifreli sunucu yedekleri (ücretli)</td><td>İşletme yedeğinin şifreli dosyaları; Merkez yalnız zaman, boyut, özet, sürüm görür. Mola Yönetim'den indirilemez, açılamaz.</td><td>Varsayılan son 3 gün + son 2 hafta (satıcı işletme başına değiştirebilir); yıl paketleri işletme silinene kadar.</td></tr>
+    <tr><td>Uzaktan erişim kayıtları</td><td>Uzaktan destek izni ve oturumları, yapılan değişiklikler; sahibin uzak oturumlarının başı ve sonu; eşleşmiş telefonların kimliği.</td><td>İşlem kayıtlarıyla.</td></tr>
+    <tr><td>İşlem kayıtları</td><td>Mola Yönetim'deki her işlem ve güvenlik olayı (kim, ne, eski ve yeni değer); dışarıdan gelen isteklerde IP. Şifre, kod, fatura değeri, satış verisi yazılmaz.</td><td>10 yıl (en az 2, ayarlanır); <strong>IP 1 yıl</strong> <span class="rozet karar">Karar</span></td></tr>
+    <tr><td>Diğer</td><td>Duyuru okundu bilgisi (rol, kişi adı yok); program dosyası denetiminde değişen dosya <em>adları</em>; sosyal medya bağlantıları; satıcının kendi satışları (paket, tahsilat, fatura no); Mola Yönetim hesapları (ad, şifre özeti, iki adımlı giriş sırrı, e-posta ayarı).</td><td>Satış kayıtları silinmez; diğerleri kayıt ya da hesapla.</td></tr>
   </tbody>
 </table>
 
 <h2 id="b3-3">3.3 Merkez'den geçen ama saklanmayanlar</h2>
-<h3>İnternetten açılan QR menü</h3>
-<p>Masadaki QR kodu menüye ayrılmış bir adres taşır (<code>menu.molayazilim.com.tr</code>; Mola Yönetim'in ve sitenin adreslerinden ayrı). Misafir bunu kendi mobil verisiyle açabilir. İstek Mola Merkez'e gelir; Merkez onu, kafenin kendi açtığı tek bir şifreli bağlantının (tünel) içinden kafeye iletir ve cevabı misafire döner. Böylece kafede modem ayarı ya da port açmak gerekmez ve kafe bilgisayarı internete açılmaz.</p>
-<figure>
-<svg viewBox="0 0 760 196" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="o2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
-  <rect x="10" y="40" width="160" height="110" rx="10" fill="#fbefe3" stroke="#b8661f"/>
-  <text x="90" y="66" text-anchor="middle" font-size="12.5" font-weight="700">Misafirin telefonu</text>
-  <text x="90" y="88" text-anchor="middle" font-size="10.5">QR okutur, menüyü açar,</text>
-  <text x="90" y="104" text-anchor="middle" font-size="10.5">sipariş verir, garson çağırır</text>
-  <text x="90" y="128" text-anchor="middle" font-size="10" fill="#5d6763">çerez: mola_browser (30 gün)</text>
-  <rect x="300" y="20" width="200" height="150" rx="10" fill="#e8eef6" stroke="#1f3b5c"/>
-  <text x="400" y="46" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f3b5c">Mola Merkez</text>
-  <text x="400" y="68" text-anchor="middle" font-size="10.5">HTTPS'i burada açar (TLS sonu)</text>
-  <text x="400" y="86" text-anchor="middle" font-size="10.5">yalnız misafir yollarına izin verir</text>
-  <text x="400" y="104" text-anchor="middle" font-size="10.5">içerik ve IP yazılmaz</text>
-  <text x="400" y="122" text-anchor="middle" font-size="10.5">bellekte yalnız sayaç</text>
-  <text x="400" y="140" text-anchor="middle" font-size="10.5">menünün kopyası (sipariş yok)</text>
-  <rect x="600" y="40" width="150" height="110" rx="10" fill="#e7efe9" stroke="#234c3e"/>
-  <text x="675" y="66" text-anchor="middle" font-size="12.5" font-weight="700" fill="#234c3e">Kafe bilgisayarı</text>
-  <text x="675" y="88" text-anchor="middle" font-size="10.5">siparişi kaydeder,</text>
-  <text x="675" y="104" text-anchor="middle" font-size="10.5">aynı izin listesini</text>
-  <text x="675" y="120" text-anchor="middle" font-size="10.5">bir kez daha denetler</text>
-  <line x1="172" y1="80" x2="298" y2="80" stroke="#3a4642" stroke-width="1.6" marker-end="url(#o2)"/>
-  <line x1="298" y1="112" x2="172" y2="112" stroke="#3a4642" stroke-width="1.6" marker-end="url(#o2)"/>
-  <text x="235" y="72" text-anchor="middle" font-size="10">HTTPS istek</text>
-  <text x="235" y="128" text-anchor="middle" font-size="10">yanıt</text>
-  <line x1="598" y1="80" x2="502" y2="80" stroke="#b8661f" stroke-width="2" marker-end="url(#o2)"/>
-  <line x1="502" y1="112" x2="598" y2="112" stroke="#b8661f" stroke-width="2" marker-end="url(#o2)"/>
-  <text x="550" y="70" text-anchor="middle" font-size="10" fill="#b8661f">tüneli kafe açar</text>
-  <text x="550" y="130" text-anchor="middle" font-size="10" fill="#b8661f">istek imzalı</text>
-  <text x="380" y="190" text-anchor="middle" font-size="10" fill="#5d6763">Kafe kapalıysa misafir menüyü Merkez'deki kopyadan görür; sipariş veremez.</text>
-</svg>
-<figcaption><b>Şema 2.</b> İnternetten açılan QR menüde verinin yolu.</figcaption>
-</figure>
 <ul>
-  <li><strong>Merkez'in gördüğü:</strong> menü, sepet, sipariş, sipariş notu, garson çağrısı, hesap isteği. Merkez şifreli bağlantıyı kendisi açtığı için bu trafiği açık hâlde görür.</li>
-  <li><strong>Merkez'in sakladığı:</strong> hiçbiri. İçerik ve istek yolu veritabanına ya da günlüğe yazılmaz. Yalnız kafe başına istek ve hata sayıları bellekte tutulur (Merkez yeniden başlayınca sıfırlanır). Menünün herkese açık kopyası ayrıca saklanır (bölüm 3.2); misafire ait hiçbir şey içermez.</li>
-  <li><strong>Misafirin IP adresi:</strong> Merkez'de yalnız aşırı istekleri sınırlamak için bellekte sayılır ve kafeye aynı amaçla imzalı olarak iletilir; saklanmaz. Kafede de yalnız bellekte sayılır.</li>
-  <li><strong>Çerez:</strong> <code>mola_browser</code> (30 gün) yalnız menü adresine ve o işletmenin yoluna yazılır: iki işletme aynı çerezi paylaşmaz, Mola Yönetim ve web sitesi bu çerezi görmez.</li>
-  <li><strong>Askıdaki işletme:</strong> lisans bitmiş, askıda, dondurulmuş ya da kafe 14 gündür bağlanmamışsa Merkez kafeye hiç sormadan "Bu işletmenin dijital menüsü şu anda kullanılamıyor." sayfasını gösterir.</li>
-</ul>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata soru</span>
-  <p>Misafir aydınlatma metnine şu cümlenin eklenmesi önerildi: "QR menü internet üzerinden Mola Merkez aracılığıyla sunulur; Mola içeriği saklamaz." Bu cümle yeterli mi ve hangi metinde (işletmenin aydınlatma metni mi, satıcının metni mi) yer almalı?</p>
-</div>
-
-<h3>Şifreli aktarılanlar</h3>
-<ul>
-  <li><strong>Raporlarım ve sahibin uzaktan yönetimi:</strong> kafe bilgisayarı ile sahibin eşleşmiş cihazı arasında uçtan uca şifreli (bölüm 8.3). Merkez anahtarlara sahip değildir.</li>
-  <li><strong>Telefon posta kutusu:</strong> kafe kapalıyken telefonun görebilmesi için kafe, telefonun anahtarıyla şifreli bir rapor özeti bırakır. Merkez açamaz; telefon alınca ya da en geç 7 günde silinir, yedeğe girmez.</li>
+  <li><strong>İnternetten QR menü:</strong> misafir <code>menu.molayazilim.com.tr</code> adresini mobil veriyle açar. İstek Merkez'e gelir, kafenin kendi açtığı tek şifreli bağlantıyla (tünel) kafeye gider. Kafede port açmak gerekmez.</li>
+  <li><strong>Merkez'in gördüğü:</strong> menü, sepet, sipariş, not, garson çağrısı, hesap isteği (HTTPS'i Merkez açtığı için açık hâlde). <strong>Sakladığı:</strong> hiçbiri. İçerik veritabanına ve günlüğe yazılmaz; yalnız kafe başına istek sayıları bellekte tutulur.</li>
+  <li><strong>Misafirin IP adresi:</strong> yalnız aşırı istekleri sınırlamak için bellekte sayılır; saklanmaz.</li>
+  <li><strong>Çerez</strong> <code>mola_browser</code> (30 gün) yalnız menü adresine ve o işletmenin yoluna yazılır; işletmeler arasında paylaşılmaz.</li>
+  <li><strong>Askıdaki işletme</strong> (lisans bitti, askı, dondurma ya da 14 gündür bağlantı yok): Merkez "menü kullanılamıyor" sayfası gösterir.</li>
+  <li><strong>Raporlarım ve uzaktan yönetim:</strong> kafe ile sahibin eşleşmiş cihazı arasında uçtan uca şifreli. Kafe kapalıyken telefona bırakılan şifreli rapor özeti alınınca ya da en geç 7 günde silinir.</li>
 </ul>
 
 <h2 id="b3-4">3.4 Merkez verisinin sunucu dışındaki kopyaları</h2>
-<p>VDS kaybolursa hizmet dönebilsin diye Merkez verisinin kopyaları sunucu dışında da tutulur. Kişisel veri taşıyan okunabilir kopyalar yalnız satıcının kendi bilgisayarında durur; buluta yalnız şifreli Merkez yedekleri gider.</p>
 <table class="dar">
-  <thead><tr><th style="width:24%">Kopya</th><th style="width:44%">İçerik</th><th>Nerede, nasıl korunur</th></tr></thead>
+  <thead><tr><th style="width:24%">Kopya</th><th style="width:42%">İçerik</th><th>Yer ve koruma</th></tr></thead>
   <tbody>
-    <tr><td>Çalışma klasörü (okunabilir)</td><td>Merkez'in işlem kayıtları (IP adresi olmadan), hata kayıtları (yalnız kodun yeri), işletme adlarını içeren durum özeti, <strong>destek talepleri ve süresi dolmamış ekleri</strong> (kişisel veri olabilir).</td><td>Satıcının bilgisayarı (Türkiye). Her gün kendiliğinden güncellenir; sunucuda silinen burada da silinir. Program, destek taleplerini OneDrive, Google Drive gibi bulutla eşitlenen bir klasöre yazmayı reddeder.</td></tr>
-    <tr><td>Merkez gece yedekleri (şifreli)</td><td>Bölüm 3.2'deki Merkez verisi (fatura bilgileri, web talepleri, destek mesajları dahil).</td><td>Satıcının bilgisayarı ve kurulum rehberine göre ayrıca <strong>Google Drive</strong>. Anahtarı Drive'da değildir; Merkez kurtarma koduyla açılır <span class="rozet dogrulanmadi">Doğrulanmadı</span> (Drive'ın gerçekten bağlandığı bu dosyada denetlenmedi).</td></tr>
-    <tr><td>Kafelerin sunucu yedekleri (şifreli)</td><td>Bölüm 7.2'deki şifreli yedek kopyaları; felaket kopyası.</td><td>Yalnız satıcının bilgisayarı; Google Drive'a gitmez. Anahtarı satıcıda yoktur.</td></tr>
+    <tr><td>Çalışma klasörü (okunabilir)</td><td>İşlem kayıtları (IP'siz), hata kayıtları, durum özeti, <strong>destek talepleri ve ekleri</strong>.</td><td>Satıcının bilgisayarı (Türkiye); her gün eşitlenir, sunucuda silinen burada da silinir. Program bulutla eşitlenen klasöre yazmayı reddeder.</td></tr>
+    <tr><td>Merkez gece yedekleri (şifreli)</td><td>Bölüm 3.2'deki Merkez verisi.</td><td>Sunucuda en yeni 14; satıcının bilgisayarı ve <strong>Google Drive</strong>. Anahtar Drive'da değil <span class="rozet dogrulanmadi">Doğrulanmadı</span> (Drive kurulumu bu dosyada denetlenmedi).</td></tr>
+    <tr><td>Kafelerin sunucu yedekleri (şifreli)</td><td>Bölüm 3.2'deki şifreli yedekler; felaket kopyası.</td><td>Yalnız satıcının bilgisayarı. Anahtarı satıcıda yok.</td></tr>
   </tbody>
 </table>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata soru</span>
-  <ol>
-    <li>Satıcının bilgisayarındaki okunabilir destek talebi kopyası için hangi teknik ve idari tedbirler (disk şifrelemesi, erişim, saklama) beklenir? Bilgisayarın disk şifrelemesi bu dosyada doğrulanmadı.</li>
-    <li>Şifreli Merkez yedeklerinin Google Drive'da (yurt dışı sunucular) tutulması yurt dışı aktarım sayılır mı (bölüm 12)?</li>
-  </ol>
-</div>
 
-<h2 id="b3-5">3.5 E-posta ile giden bilgiler</h2>
+<h2 id="b3-5">3.5 E-posta</h2>
 <ul>
-  <li><strong>İşletmenin dönem raporları:</strong> kafe bilgisayarından, işletmenin <em>kendi</em> e-posta hesabıyla (varsayılan ayar Gmail) en çok 5 alıcıya gider; Merkez'e uğramaz. İçerik: satış ve para toplamları, en çok satanlar, kasa kapanışı, KDV dökümü, hafta/ay/yıl raporlarında personel saatleri. Müşteri adı, telefonu, rezervasyon ve not yoktur.</li>
-  <li><strong>Satıcının e-postaları:</strong> Merkez, satıcının kendi SMTP hesabından (varsayılan Gmail) şunları gönderir: satıcıya olay bildirimleri; isteğe bağlı duyuru kopyalarını işletmelerin fatura e-postasına; Mola Yönetim şifre sıfırlama kodunu; "İşletmem var" ve e-posta doğrulama kodlarını (6 hane, 10 dakika) işletme sahibine; işletmenin yeni bir bilgisayarda açıldığını ve e-posta adresinin değiştiğini işletmenin adreslerine. Web sitesi talebi bildiriminde kişisel veri yoktur (yalnız işletme türü ve şehir).</li>
-  <li>Üçüncü taraf bir e-posta servisi (API) kullanılmaz; program doğrudan SMTP ile gönderir. Hangi sağlayıcının seçileceği satıcının ve işletmenin kararıdır (bölüm 12).</li>
+  <li><strong>İşletmenin dönem raporları:</strong> kafe bilgisayarından, işletmenin kendi e-posta hesabıyla (Gmail ya da başka bir SMTP sunucusu) en çok 5 alıcıya gider; Merkez'e uğramaz. İçerik: satış toplamları, en çok satanlar, kasa kapanışı, KDV dökümü, personel saatleri. Müşteri bilgisi yok.</li>
+  <li><strong>Satıcının e-postaları:</strong> Merkez, satıcının ayarladığı herhangi bir SMTP hizmetiyle gönderir: satıcıya olay bildirimleri ve 30 gün e-posta gitmezse "aylık e-posta kontrolü"; işletmelere isteğe bağlı duyuru kopyaları, "İşletmem var" ve doğrulama kodları (6 hane, 10 dakika), "yeni bilgisayarda açıldı" ve "adres değişti" bildirimleri; Mola Yönetim şifre sıfırlama kodu. Site talebi bildiriminde kişisel veri yok.</li>
+  <li><strong>Bugünkü kurulum</strong> (sahibin bildirdiği): gönderim Brevo ile (<code>smtp-relay.brevo.com</code>); <code>destek@molayazilim.com.tr</code>'ye gelen posta Cloudflare Email Routing ile satıcının Gmail kutusuna yönlenir <span class="rozet dogrulanmadi">Doğrulanmadı</span> (ayar kodda değil, Merkez'de durur).</li>
 </ul>
 
 <!-- ============================================================ 4 -->
-<h1 id="b4"><span class="no">4</span>Kişisel veri envanteri</h1>
-<p class="giris">Tablo, ilgili kişi grubuna göre düzenlendi. "Kafe" işletmenin bilgisayarıdır; "Merkez" satıcının sunucusudur. Kafedeki her kayıt şifreli veritabanındadır.</p>
+<h1 id="b4" class="akis"><span class="no">4</span>Kafedeki kişisel veriler</h1>
+<p>Hepsi işletmenin bilgisayarında, şifreli veritabanındadır. Merkez'deki işletme sahibi verisi bölüm 3.2'de.</p>
 <table class="dar">
-  <thead><tr><th style="width:23%">Veri</th><th style="width:12%">Nerede</th><th style="width:17%">Kim görür</th><th style="width:26%">Saklama</th><th>Silme yolu</th></tr></thead>
+  <thead><tr><th style="width:32%">Veri</th><th style="width:25%">Kim görür</th><th>Saklama ve silme</th></tr></thead>
   <tbody>
-    <tr><td colspan="5" class="grup">A. Misafir (QR menüyü kullanan)</td></tr>
-    <tr><td>Tarayıcı kimliği (<code>mola_browser</code> çerezi: rastgele bir sayı)</td><td>Misafirin tarayıcısı; kafede siparişlerde</td><td>Personel görmez; ekranda "Misafir 3" gibi etiket</td><td>Çerez 30 gün. Kafede açık yıl boyunca; yıl paketlenirken tek yönlü etikete çevrilir</td><td>Tarayıcıdan çerez silinebilir; kafede yıl paketlemesi</td></tr>
-    <tr><td>Siparişler, ürün notları (serbest metin), garson çağrısı, hesap isteği ve ödeme tercihi (nakit/kart)</td><td>Kafe</td><td>Personel (rolüne göre)</td><td>Açık yıl boyunca; yıl paketlenirken notlar silinir, tutarlar kalır</td><td>Yıl paketlemesi; tek tek silme ekranı yok</td></tr>
-    <tr><td>Engellenen tarayıcı (sahibin "Bu misafiri engelle" seçimi)</td><td>Kafe</td><td>Sahip, müdür</td><td><strong>90 gün</strong> sonra kendiliğinden kalkar <span class="rozet karar">Karar</span></td><td>Sahip ya da müdür engeli daha önce kaldırabilir</td></tr>
-    <tr><td>IP adresi</td><td>Kafe ve Merkez belleği</td><td>Kimse</td><td>Saklanmaz; yalnız aşırı istek sayacı</td><td>Gerekmez</td></tr>
-    <tr><td>Sepet (gönderilmemiş)</td><td>Misafirin tarayıcısı</td><td>Yalnız misafir</td><td>Sekme kapanınca ya da gönderilince</td><td>Kendiliğinden</td></tr>
-
-    <tr><td colspan="5" class="grup">B. Rezervasyon ve etkinlik müşterisi</td></tr>
-    <tr><td>Ad (zorunlu), telefon (isteğe bağlı), not, kişi sayısı, gün, saat, masa, kapora</td><td>Kafe</td><td>Sahip, müdür, kasiyer ad, telefon ve notu görür; garson telefonu ve notu görmez (sunucu göndermez); mutfak hiçbirini görmez</td><td>Açık yıl boyunca tam; yıl paketlenirken ad "Müşteri" olur, telefon ve not silinir</td><td>Rezervasyon düzenlenebilir ya da iptal edilir; kaydı tek tek silen bir düğme yok <span class="rozet dogrulanmadi">Doğrulanmadı</span></td></tr>
-    <tr><td>Masaya oturan misafirin adı (hesap fişinde de yazar)</td><td>Kafe</td><td>Personel</td><td>Açık yıl; paketlenirken "Müşteri"</td><td>Yıl paketlemesi</td></tr>
-    <tr><td>Etkinlik adı (ör. "Ayşe'nin doğum günü")</td><td>Kafe</td><td>Sahip, müdür, kasiyer</td><td>Yıl paketinde de kalır (işletmenin etiketi sayıldı)</td><td>Yok <span class="rozet karar">Avukata soru</span></td></tr>
-
-    <tr><td colspan="5" class="grup">C. Masasız (tezgâh) sipariş ve paket servis müşterisi</td></tr>
-    <tr><td>Masasız siparişte çağrı adı (telefon numarası yazılamaz)</td><td>Kafe</td><td>Personel</td><td>Yalnız sipariş açıkken; uzun dönem kayda geçmez</td><td>Kendiliğinden</td></tr>
-    <tr><td>Platform siparişinde müşteri adı ve not (entegrasyon henüz kapalı)</td><td>Kafe</td><td>Mutfak, kasiyer, sahip</td><td>Sipariş açıkken; geçmişe taşınırken atılır. Telefon ve adres hiç saklanmaz</td><td>Kendiliğinden</td></tr>
-
-    <tr><td colspan="5" class="grup">D. Çalışanlar</td></tr>
-    <tr><td>Ad, kullanıcı adı, rol, hesap durumu</td><td>Kafe</td><td>Sahip</td><td>Süre sınırı yok. Hesap silinmez, "kapatılır"; geçmiş kayıtlar adı tutar</td><td>Hesabı kapatma <span class="rozet karar">Avukata soru</span></td></tr>
-    <tr><td>Şifre</td><td>Kafe, yalnız özet (scrypt)</td><td>Kimse</td><td>Hesapla</td><td>Sahip yeni şifre verir</td></tr>
-    <tr><td>Oturumlar (cihaz türü ve tarayıcı adı, ör. "Windows · Edge")</td><td>Kafe</td><td>Sahip</td><td>Gece 05:00'te biter</td><td>Sahip kapatabilir</td></tr>
-    <tr><td>Vardiya kayıtları (başlangıç, bitiş, geç kalma, düzeltme geçmişi), günün ilk ve son işlem zamanı</td><td>Kafe</td><td>Sahip; müdür sahibin izniyle</td><td>Süre sınırı yok; yıl paketlerinde de kalır (bordro ve SGK için)</td><td>Yok <span class="rozet karar">Avukata soru</span></td></tr>
-    <tr><td>Kasa kayıtları: açılış ve kapanış sayımları ve farkları (kimin saydığı), aldığı ödemeler, bahşiş payları, iptal ve iade gerekçeleri, ödeme türü düzeltmeleri, "gün sonunu geri al" (kim, ne zaman, neden)</td><td>Kafe</td><td>Sayım sonuçlarını yalnız sahip görür; müdür raporları sahibin izniyle</td><td>Süre sınırı yok; yıl paketlerinde kalır</td><td>Yok (bölüm 9.3)</td></tr>
-    <tr><td>E-posta raporlarındaki personel saatleri</td><td>Alıcıların posta kutusu</td><td>Rapor alıcıları</td><td>Alıcının e-posta hesabına bağlı</td><td>Alıcı siler</td></tr>
-
-    <tr><td colspan="5" class="grup">E. İşletme sahibi ve yetkilisi</td></tr>
-    <tr><td>Kafedeki sahip hesabı (kullanıcı adı, şifre özeti), doğrulama uygulaması sırrı, eşleşmiş cihaz adları, uzaktan yönetim oturumları</td><td>Kafe</td><td>Sahip</td><td>Hesapla; uzak oturum geçmişinde son 50 kayıt</td><td>Sahip</td></tr>
-    <tr><td>Sahibin kullanıcı adı ve şifresinin doğrulama özeti; doğrulanmış e-posta ("İşletmem var")</td><td>Merkez</td><td>Satıcı e-postanın maskeli hâlini görür; özet ekranda gösterilmez</td><td>İşletme kaydıyla</td><td>Kayıt silme; e-posta kaldırılabilir</td></tr>
-    <tr><td>E-posta raporu ayarları: alıcı adresleri, gönderen hesabı ve uygulama şifresi (şifreli, ekrana geri dönmez)</td><td>Kafe</td><td>Sahip</td><td>Ayar durdukça</td><td>Sahip</td></tr>
-    <tr><td>Başvuru ve fatura bilgileri, yetkili adı soyadı, telefon, e-posta</td><td>Merkez</td><td>Satıcı ve yetkilileri</td><td>İşletme kaydı silinene kadar</td><td>Kayıt silme (askı sonrası); fatura bilgisi düzeltilebilir</td></tr>
-    <tr><td>Lisans sözleşmesi kabulü (sürüm, zaman, ad)</td><td>Merkez ve kafe</td><td>Satıcı</td><td>İşletme kaydıyla</td><td>Kayıt silme</td></tr>
-    <tr><td>Destek mesajları, dondurma gerekçesi, ekler</td><td>Merkez; satıcının bilgisayarı (bölüm 3.4); kafede son 300 talep</td><td>Satıcı, sahip</td><td>Kapanan görüşme 2 yıl; ekler 14 gün</td><td>Kayıt silme</td></tr>
-
-    <tr><td colspan="5" class="grup">F. Web sitesi</td></tr>
-    <tr><td>İletişim formu: işletme adı, ad soyad, telefon, e-posta, şehir, masa sayısı, tür, mesaj, onay zamanı ve metin sürümü; Mola ekibinin görüşme notları</td><td>Merkez</td><td>Satıcı ve yetkilileri</td><td>Kapandıktan 2 yıl sonra kendiliğinden</td><td>Mola Yönetim'de "Sil"</td></tr>
-    <tr><td>Ziyaretçinin IP adresi</td><td>Merkez belleği</td><td>Kimse</td><td>Saklanmaz. Web sunucusu erişim kaydı tutmaz (ayarında kayıt yönergesi yok)</td><td>Gerekmez</td></tr>
-
-    <tr><td colspan="5" class="grup">G. Satıcı tarafı</td></tr>
-    <tr><td>Mola Yönetim'e erişen kişinin IP adresi (Merkez'in kendi bilgisayarı dışından)</td><td>Merkez işlem kayıtları</td><td>Satıcı ve yetkilileri</td><td><strong>1 yıl</strong>; sonra yalnız IP silinir, kaydın kendisi 10 yıl kalır</td><td>Kendiliğinden</td></tr>
+    <tr><td colspan="3" class="grup">Misafir (QR menü)</td></tr>
+    <tr><td>Tarayıcı kimliği (<code>mola_browser</code>, rastgele sayı)</td><td>Personel yalnız "Misafir 3" gibi etiket görür</td><td>Çerez 30 gün; kafede açık yıl boyunca, yıl paketinde tek yönlü etikete çevrilir.</td></tr>
+    <tr><td>Siparişler, ürün notları, garson çağrısı, hesap isteği, ödeme tercihi</td><td>Personel (rolüne göre)</td><td>Açık yıl; paketlenirken notlar silinir, tutarlar kalır. Tek tek silme ekranı yok.</td></tr>
+    <tr><td>Engellenen tarayıcı</td><td>Sahip, müdür</td><td>90 gün sonra kendiliğinden kalkar <span class="rozet karar">Karar</span></td></tr>
+    <tr><td>IP adresi · gönderilmemiş sepet</td><td>Kimse · yalnız misafir</td><td>Saklanmaz (bellekte sayaç) · sekme kapanınca.</td></tr>
+    <tr><td colspan="3" class="grup">Rezervasyon ve masasız sipariş müşterisi</td></tr>
+    <tr><td>Ad (zorunlu), telefon (isteğe bağlı), not, kişi sayısı, gün, saat, kapora</td><td>Sahip, müdür, kasiyer; garson telefon ve notu görmez; mutfak hiçbirini</td><td>Açık yıl; paketlenirken ad "Müşteri" olur, telefon ve not silinir. Düzenlenebilir ya da iptal edilir; kaydı silen düğme yok <span class="rozet dogrulanmadi">Doğrulanmadı</span></td></tr>
+    <tr><td>Masaya oturan misafirin adı</td><td>Personel</td><td>Açık yıl; paketlenirken "Müşteri".</td></tr>
+    <tr><td>Etkinlik adı (ör. "Ayşe'nin doğum günü")</td><td>Sahip, müdür, kasiyer</td><td>Yıl paketinde de kalır <span class="rozet karar">Avukata soru</span></td></tr>
+    <tr><td>Masasız siparişte çağrı adı; platform siparişinde müşteri adı ve not (entegrasyon kapalı)</td><td>Personel</td><td>Yalnız sipariş açıkken. Telefon ve adres hiç saklanmaz.</td></tr>
+    <tr><td colspan="3" class="grup">Çalışanlar</td></tr>
+    <tr><td>Ad, kullanıcı adı, rol; şifre yalnız özet (scrypt)</td><td>Sahip</td><td>Süre sınırı yok; hesap silinmez, kapatılır <span class="rozet karar">Avukata soru</span></td></tr>
+    <tr><td>Oturumlar (ör. "Windows · Edge")</td><td>Sahip</td><td>Sonraki 05:00'te biter.</td></tr>
+    <tr><td>Vardiya (başlangıç, bitiş, geç kalma, düzeltmeler), günün ilk ve son işlemi</td><td>Sahip; müdür izinle</td><td>Süre sınırı yok; yıl paketinde kalır (bordro, SGK).</td></tr>
+    <tr><td>Kasa kayıtları: sayımlar ve farklar, aldığı ödemeler, bahşiş payları, iptal ve iade gerekçeleri, ödeme türü düzeltmeleri, gün sonunu geri alma</td><td>Sayım sonuçlarını yalnız sahip</td><td>Süre sınırı yok; yıl paketinde kalır (bölüm 8).</td></tr>
+    <tr><td colspan="3" class="grup">İşletme sahibi (kafe tarafı)</td></tr>
+    <tr><td>Sahip hesabı, doğrulama uygulaması sırrı, eşleşmiş cihaz adları, uzak oturumlar; e-posta raporu ayarları (şifreli, ekrana dönmez)</td><td>Sahip</td><td>Hesapla; uzak oturum geçmişi son 50.</td></tr>
   </tbody>
 </table>
 
 <!-- ============================================================ 5 -->
-<h1 id="b5"><span class="no">5</span>Saklama süreleri</h1>
-<p class="giris">Bunlar programın bugünkü davranışıdır; yasal saklama yükümlülükleriyle (VUK, TTK, iş mevzuatı) karşılaştırılması gerekir (bölüm 17).</p>
+<h1 id="b5" class="akis"><span class="no">5</span>Saklama ve silme</h1>
+<p>Bunlar programın bugünkü davranışıdır; VUK, TTK ve iş mevzuatıyla karşılaştırılmalıdır (bölüm 15).</p>
 <h2 id="b5-1">5.1 Kapanan yıl paketleri</h2>
-<p>Her takvim yılının kayıtları, bir sonraki yılın <strong>1 Şubat</strong>'ından sonra (Ocak ayı Aralık düzeltmeleri için açık kalır) ayrı bir dosyaya taşınır ve bir daha değiştirilemez <span class="rozet karar">Karar</span>. Paketlenirken müşterilerin kişisel bilgileri silinir, rakamlar aynen kalır. Neden: mali kayıtların uzun süre tutulması gerekirken müşterinin kişisel bilgisine bir yıldan sonra ihtiyaç kalmıyor.</p>
-<figure>
-<svg viewBox="0 0 760 196" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="o3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3a4642"/></marker></defs>
-  <line x1="20" y1="44" x2="748" y2="44" stroke="#3a4642" stroke-width="2" marker-end="url(#o3)"/>
-  <rect x="10" y="10" width="300" height="68" rx="8" fill="#e7efe9" stroke="#234c3e"/>
-  <text x="160" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#234c3e">Açık yıl (ör. 2025)</text>
-  <text x="160" y="60" text-anchor="middle" font-size="12">bütün bilgiler, düzeltilebilir</text>
-  <rect x="326" y="10" width="164" height="68" rx="8" fill="#fbefe3" stroke="#b8661f"/>
-  <text x="408" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#b8661f">Ocak 2026</text>
-  <text x="408" y="60" text-anchor="middle" font-size="12">düzeltmeler için açık</text>
-  <rect x="506" y="10" width="236" height="68" rx="8" fill="#e8eef6" stroke="#1f3b5c"/>
-  <text x="624" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#1f3b5c">1 Şubat 2026 sonrası</text>
-  <text x="624" y="60" text-anchor="middle" font-size="12">yil-2025 paketi, değişmez</text>
-  <text x="10" y="108" font-size="12.5" font-weight="700">Paketlenirken silinir:</text>
-  <text x="10" y="128" font-size="12">rezervasyon adı ("Müşteri" olur), telefonu ve notu · masaya oturan misafirin adı · bütün satır notları ·</text>
-  <text x="10" y="146" font-size="12">platform siparişinin müşteri adı ve notu · QR misafirinin tarayıcı kimliği (tek yönlü etikete çevrilir)</text>
-  <text x="10" y="172" font-size="12.5" font-weight="700" fill="#5d6763">Kalır:</text>
-  <text x="56" y="172" font-size="12" fill="#5d6763">tutarlar, ödemeler, KDV, kasa, stok, kişi sayısı, masa, tarih, çalışan adları ve vardiyaları,</text>
-  <text x="56" y="190" font-size="12" fill="#5d6763">etkinlik adı, çalışanların yazdığı gerekçeler</text>
-</svg>
-<figcaption><b>Şema 3.</b> Bir yılın kayıtlarının yaşamı. Çok yıllık deneme verisinde paketlerin bütün satırları tek tek açılıp tarandı: silinmesi gereken kişisel bilgi ve telefon numarası kalmadı.</figcaption>
-</figure>
 <ul>
-  <li>Kapanan yıl yeniden açılmaz. O yılın bir hesabına iade yapılabilir ama iade bugünün kaydı olur.</li>
-  <li>İlk yıl paketinden önce veri klasörünün okunabilir (kişisel bilgileri de taşıyan) bir kopyası alınır; bu kopya <strong>90 gün</strong> sonra, daha yeni doğrulanmış bir yedek varsa kendiliğinden silinir.</li>
-  <li>Yıl paketleri için bir silme süresi yoktur; işletmenin bilgisayarında, yedeklerinde ve (bulut yedek varsa) Merkez'de süresiz durur. Çalışan adları ve vardiyaları da bu yüzden süresiz kalır.</li>
+  <li>Her yılın kayıtları bir sonraki yılın <strong>1 Şubat</strong>'ından sonra ayrı bir dosyaya taşınır ve değiştirilemez <span class="rozet karar">Karar</span>. Ocak, Aralık düzeltmeleri için açık kalır; açık yıl verisi en uzun yaklaşık 13 ay tam durur.</li>
+  <li><strong>Silinir:</strong> rezervasyon adı ("Müşteri" olur), telefonu ve notu; masaya oturan misafirin adı; bütün satır notları; platform müşteri adı ve notu; misafir tarayıcı kimliği (tek yönlü etikete çevrilir).</li>
+  <li><strong>Kalır:</strong> tutarlar, ödemeler, KDV, kasa, stok, tarih, masa, çalışan adları ve vardiyaları, etkinlik adı, çalışanların yazdığı gerekçeler.</li>
+  <li>Yıl paketleri süresiz durur (kafede, yedeklerde, bulut yedek varsa Merkez'de). Kapanan yıl yeniden açılmaz; o yılın hesabına yapılan iade bugünün kaydı olur. Deneme verisinde paketlerin bütün satırları tarandı: silinmesi gereken bilgi kalmadı.</li>
 </ul>
-<h2 id="b5-2">5.2 Bütün süreler</h2>
+<h2 id="b5-2">5.2 Yedek ve kayıt süreleri</h2>
 <table class="dar">
-  <thead><tr><th style="width:36%">Ne</th><th style="width:18%">Nerede</th><th>Süre</th></tr></thead>
+  <thead><tr><th style="width:44%">Ne</th><th>Süre</th></tr></thead>
   <tbody>
-    <tr><td>Açık yıl verisi (bütün kişisel bilgilerle)</td><td>Kafe</td><td>Yıl bitip bir sonraki 1 Şubat'tan sonra paketlenene kadar (en uzun yaklaşık 13 ay)</td></tr>
-    <tr><td>Yıl paketleri (kişisel bilgiler silinmiş)</td><td>Kafe, yedekler, Merkez (bulut yedek)</td><td>Süresiz; Merkez'de işletme silinene kadar</td></tr>
-    <tr><td>Yerel otomatik yedekler (şifreli)</td><td>Kafe bilgisayarı</td><td>Son 7 iş günü + son 4 hafta + son 12 ay (en çok 23 yedek, yaklaşık bir yıl)</td></tr>
-    <tr><td>İkinci yedek yeri (flash bellek ya da işletmenin seçtiği klasör)</td><td>İşletmenin seçtiği yer</td><td>En yeni 3 yedek + yıl paketleri (süresiz)</td></tr>
-    <tr><td>Güncelleme öncesi veri kopyası</td><td>Kafe</td><td>En yeni 2 kopya</td></tr>
-    <tr><td>Geri dönüşte kenara alınan veri</td><td>Kafe</td><td>Silinmez (elle silinir)</td></tr>
-    <tr><td>İlk yıl paketinden önceki okunabilir kopya</td><td>Kafe</td><td>90 gün</td></tr>
-    <tr><td>Bildirimler (sahibin bildirim kutusu)</td><td>Kafe</td><td>90 gün, en çok 300</td></tr>
-    <tr><td>Hata kayıtları</td><td>Kafe / Merkez</td><td>7 gün / 30 gün</td></tr>
-    <tr><td>Personel oturumu · misafir oturumu · <code>mola_browser</code> çerezi</td><td>Kafe, tarayıcı</td><td>Sonraki 05:00 · 6 saat · 30 gün</td></tr>
-    <tr><td>Engellenen misafir tarayıcısı</td><td>Kafe</td><td>90 gün (sahip daha önce kaldırabilir)</td></tr>
-    <tr><td>Sunucu yedeği kopyaları</td><td>Merkez, satıcının bilgisayarı</td><td>Son 3 iş günü + son 2 hafta; işletme silinince hemen</td></tr>
-    <tr><td>Destek ekleri · destek görüşmeleri</td><td>Merkez (kafedeki ve satıcı bilgisayarındaki kopyası da)</td><td>14 gün · kapandıktan (son mesajdan) 2 yıl sonra; açık görüşme işletme kaydı silinene kadar</td></tr>
-    <tr><td>Telefon posta kutusu</td><td>Merkez</td><td>Alınınca ya da 7 gün</td></tr>
-    <tr><td>Web sitesi talepleri</td><td>Merkez</td><td>Kapandıktan 2 yıl sonra</td></tr>
-    <tr><td>Reddedilen başvuru</td><td>Merkez</td><td>Karardan 1 yıl sonra <span class="rozet karar">Karar</span></td></tr>
-    <tr><td>Merkez işlem kayıtları</td><td>Merkez, satıcının bilgisayarı</td><td>Varsayılan 10 yıl, ayarlanabilir, en az 2 yıl</td></tr>
-    <tr><td>İşlem kayıtlarındaki IP adresleri</td><td>Merkez</td><td>1 yıl</td></tr>
-    <tr><td>Menünün kopyası ve fotoğrafları</td><td>Merkez</td><td>Kafe güncelledikçe değişir; işletme kaydı silinince hemen</td></tr>
-    <tr><td>Sahip şifresinin doğrulama özeti, doğrulanmış e-posta</td><td>Merkez</td><td>İşletme kaydıyla</td></tr>
-    <tr><td>Merkez gece yedekleri</td><td>Sunucu, satıcının bilgisayarı, Google Drive</td><td>En yeni 14</td></tr>
-    <tr><td>Satışlarım kayıtları</td><td>Merkez</td><td>Silinmez</td></tr>
+    <tr><td>Kafede otomatik yedekler (şifreli)</td><td>Son 7 iş günü + son 4 hafta + son 12 ay (en çok 23)</td></tr>
+    <tr><td>İkinci yedek yeri (flash bellek ya da işletmenin seçtiği klasör)</td><td>En yeni 3 + yıl paketleri</td></tr>
+    <tr><td>Güncelleme öncesi kopya · geri dönüşte kenara alınan veri</td><td>En yeni 2 · elle silinene kadar</td></tr>
+    <tr><td>İlk yıl paketinden önceki okunabilir kopya</td><td>90 gün (daha yeni doğrulanmış yedek varsa)</td></tr>
+    <tr><td>Bildirimler · kafedeki hata kayıtları</td><td>90 gün, en çok 300 · 7 gün</td></tr>
+    <tr><td>Personel oturumu · misafir oturumu</td><td>Sonraki 05:00 · 6 saat</td></tr>
+    <tr><td>Merkez gece yedekleri</td><td>En yeni 14 (sunucu, satıcının bilgisayarı, Google Drive)</td></tr>
   </tbody>
 </table>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata sorular: saklama</span>
-  <ol>
-    <li>Çalışan adlarının, vardiyalarının ve kasa sayım kayıtlarının yıl paketlerinde süresiz kalması doğru mu, yoksa bordro ve SGK süresinden sonra silinmeli mi?</li>
-    <li>Etkinlik adı (ör. özel bir doğum günü) paketlenirken silinmeli mi?</li>
-    <li>Merkez işlem kayıtları 10 yıl, içlerindeki IP adresleri 1 yıl tutuluyor. Bu süreler ölçülü mü?</li>
-    <li>Kapanan destek görüşmeleri için 2 yıl, reddedilen başvurular için 1 yıl, engellenen misafir tarayıcıları için 90 gün seçildi. Uygun mu?</li>
-  </ol>
-</div>
+<h2 id="b5-3">5.3 Silme ve sözleşmenin bitmesi</h2>
+<ul>
+  <li><strong>Misafir ve rezervasyon müşterisi:</strong> veri yalnız işletmede olduğu için başvuruyu işletme karşılar. Bir kişinin kayıtlarını yıl içinde tek tıkla silen ekran yok.</li>
+  <li><strong>Çalışan:</strong> hesap kapatılır; geçmiş kayıtlar adıyla kalır.</li>
+  <li><strong>Site talebi:</strong> Mola Yönetim'de "Sil".</li>
+  <li><strong>İşletme kaydı (Merkez):</strong> yalnız askıdaki işletme silinebilir. Destek talepleri, yedekler, menü kopyası ve "İşletmem var" bilgileri gider. Kalanlar: küçük bir silinme kaydı, vergi no özeti, satıcının satış kayıtları, işlem kayıtları. Kafedeki program kilitlenir ama <strong>kafedeki veri silinmez</strong>.</li>
+  <li><strong>Abonelik biterse ya da program kaldırılırsa:</strong> veri işletmede kalır. Kaldırıcı veriyi varsayılan olarak korur; silmek ikinci onay ister.</li>
+  <li><strong>Dışa aktarım:</strong> raporlar Excel ve PDF olarak alınır; ham veritabanı yalnız Mola ile açılır.</li>
+</ul>
 
 <!-- ============================================================ 6 -->
-<h1 id="b6" class="akis"><span class="no">6</span>Silme, düzeltme ve sözleşmenin bitmesi</h1>
+<h1 id="b6" class="akis"><span class="no">6</span>Yedekler ve "İşletmem var"</h1>
 <ul>
-  <li><strong>Misafir ve rezervasyon müşterisi:</strong> veri yalnız işletmenin bilgisayarında olduğu için başvuruyu işletme karşılar. Program kişisel bilgileri yıl paketlemesinde kendiliğinden siler. Tek bir kişinin kayıtlarını o yıl içinde tek tıkla silen bir ekran yoktur; rezervasyon düzenlenebilir (telefon ve not silinebilir) <span class="rozet dogrulanmadi">Doğrulanmadı</span> (boş bırakılan alanın kalıcı silindiği ayrıca denenmedi).</li>
-  <li><strong>Çalışan:</strong> hesap kapatılır; geçmiş kayıtlar (vardiya, satış, kasa) adıyla kalır.</li>
-  <li><strong>Web sitesi talebi:</strong> Mola Yönetim'de "Sil"; işlem kayıtlarına kişisel veri olmadan yazılır.</li>
-  <li><strong>İşletme kaydı (Merkez):</strong> yalnız askıdaki işletme silinebilir. Kodlar, destek talepleri, bildirimler, hata kayıtları, sunucu yedekleri, menünün kopyası ve "İşletmem var" bilgileri gider. Kalanlar: küçük bir silinme kaydı (kurulum ve işletme kimliği, silinme zamanı; kafeye kapanışı bildirmek için), vergi no'nun anahtarlı özeti, Satışlarım kayıtları ve işlem kayıtları (işletme adıyla). Kafedeki program kilitlenir ama <strong>kafedeki hiçbir veri silinmez</strong>.</li>
-  <li><strong>Abonelik bitince ya da program kaldırılınca:</strong> veri işletmenin bilgisayarında kalır. Kaldırma programı veriyi varsayılan olarak korur; "Verileri ve yedekleri de sil" ancak ikinci bir onayla siler. İkinci yedek yerine hiçbir durumda dokunmaz.</li>
-  <li><strong>Veriyi işletmeye verme:</strong> veri zaten işletmededir. Raporlar Excel ve PDF olarak alınabilir; ham veritabanı şifrelidir ve yalnız Mola ile (kurtarma kodu ya da sahip şifresiyle) açılır. <span class="rozet karar">Avukata soru</span> Sözleşme sona erince işletmeye okunabilir bir dışa aktarım vermek gerekir mi?</li>
+  <li><strong>Yerel yedek:</strong> her iş günü şifreli yedek alınır ve geri yüklenerek doğrulanır. İsteğe bağlı ikinci yer önerilir; işletme OneDrive gibi bir klasör seçerse şifreli yedek o hizmete gider (işletmenin seçimi).</li>
+  <li><strong>Yedeği açan anahtarlar:</strong> Windows kilidi, kurtarma kodu, sahip şifresi. Kod ve şifre birlikte kaybolursa veri kurtarılamaz; lisans madde 11.3 bunu işletmeye bırakır.</li>
+  <li><strong>Bulutta şifreli yedek (ücretli):</strong> doğrulanmış yedeğin şifreli kopyası Merkez'e gider; felaket kopyası satıcının bilgisayarına çekilir.</li>
+  <li><strong>Yeni bilgisayara taşıma:</strong> Mola ekibinin verdiği tek kullanımlık taşıma kodu ya da "İşletmem var". İki yolda da yedek yeni bilgisayarda kurtarma kodu ya da sahip şifresiyle açılır.</li>
 </ul>
-
-<!-- ============================================================ 7 -->
-<h1 id="b7" class="akis"><span class="no">7</span>Yedekler, bulut yedek ve yeni bilgisayara taşıma</h1>
-<p class="giris">Verinin tek yeri işletmenin bilgisayarı olduğu için yedek, işletmenin verisini kaybetmemesinin tek güvencesidir. Bu bölüm kimin hangi yedeği açabildiğini anlatır; "Mola yedeği açamaz" ifadesinin bugünkü sınırları 7.3'tedir.</p>
-<h2 id="b7-1">7.1 Yerel yedekler ve kurtarma kodu</h2>
+<h3>"İşletmem var" nasıl çalışır</h3>
 <ul>
-  <li>Program her iş günü kendiliğinden şifreli yedek alır ve her yedeği ayrı bir yere geri yükleyerek doğrular. İsteğe bağlı ikinci yer (flash bellek ya da işletmenin seçtiği bir klasör) önerilir. İşletme ikinci yer olarak OneDrive gibi bulutla eşitlenen bir klasör seçerse şifreli yedek o hizmete gider; bu işletmenin seçimidir.</li>
-  <li>Yedeği açan anahtarlar: o bilgisayarın Windows kilidi, sahibe kâğıtta verilen <strong>kurtarma kodu</strong> ve işletme sahibinin şifresi (7.3). Kurtarma kodu satıcıda saklanmaz; kod ve sahip şifresi birlikte kaybolursa veri kurtarılamaz. Lisans sözleşmesi madde 11.3 yedeklemeyi ve kurtarma kodunu işletmenin sorumluluğuna bırakır.</li>
-</ul>
-<h2 id="b7-2">7.2 Bulutta şifreli yedek (ücretli hizmet)</h2>
-<ul>
-  <li>Hizmet alınmışsa kafenin doğrulanmış yedeğinin şifreli kopyası Merkez'e gönderilir. Merkez yalnız zaman, boyut, özet ve sürümü görür. Mola Yönetim'de yalnız bu özet bilgiler listelenir; panelden yedek indirilemez.</li>
-  <li>Felaket kopyası olarak aynı şifreli dosyalar satıcının bilgisayarına da çekilir; Google Drive'a gitmez (bölüm 3.4).</li>
-  <li>Yeni bilgisayara geri yükleme iki yolla açılır: Mola ekibinin verdiği tek kullanımlık taşıma kodu ya da işletme sahibinin "İşletmem var" girişi (7.3). Her iki yolda da yedeğin kendisi yeni bilgisayarda, kurtarma kodu ya da sahip şifresiyle açılır.</li>
-</ul>
-<h2 id="b7-3">7.3 "İşletmem var": sahip şifresiyle taşıma</h2>
-<p>Amaç: kasa bilgisayarı bozulan işletme sahibinin, kurtarma kodunu bulamasa da kendi kullanıcı adı ve şifresiyle verisine dönebilmesi.</p>
-<ul>
-  <li><strong>Şifre kilidi kendiliğinden kurulur.</strong> İşletme sahibi kafede şifresiyle her girişte, program veri anahtarını sahibin şifresinden türetilen bir anahtarla bir kez daha kilitler; bu kilit sonraki yedeklere de girer. Sahibin ayrıca seçmesi gerekmez.</li>
-  <li><strong>Merkez'e giden:</strong> kafe, kalp atışıyla sahibin kullanıcı adını ve şifresinin bir doğrulama özetini (scrypt, ayrı tuzla) gönderir. Bu özet yedeği açmaz; yalnız girilen şifrenin doğru olup olmadığını anlamaya yarar.</li>
-  <li><strong>Kimlik doğrulama:</strong> yeni bilgisayarda sahip işletmenin e-posta adresini, kullanıcı adını ve şifresini yazar. Bu bilgiler HTTPS ile Merkez'e gider; Merkez şifreyi özetle karşılaştırır, saklamaz. Doğruysa işletmenin e-postasına 6 haneli kod gider (10 dakika, 5 deneme). Yanlış bilgide hangi parçanın yanlış olduğu söylenmez; denemeler adres ve işletme başına yavaşlatılır.</li>
-  <li><strong>E-posta:</strong> başvurudaki fatura e-postası ya da sahibin kafede kodla doğruladığı adres. Adresi değiştirmek için sahibin şifresi ve hem eski hem yeni adrese gelen kod gerekir; eski adrese bildirim gider. Adresini kaybeden sahip için satıcı, arayanı kontrol ettikten sonra doğrulanmış adresi kaldırabilir.</li>
-  <li><strong>Bildirimler:</strong> başarılı girişte satıcıya uyarı ve işletmenin bütün adreslerine "işletmeniz yeni bir bilgisayarda açıldı" e-postası gider. Yeni bilgisayar bağlanınca eskisinde yeni sipariş kapanır.</li>
+  <li>Sahip kafede şifresiyle her girişte, program veri anahtarını sahibin şifresinden türetilen bir anahtarla bir kez daha kilitler; sahibe sorulmaz.</li>
+  <li>Kafe, kalp atışıyla sahibin kullanıcı adını ve şifresinin doğrulama özetini (scrypt, ayrı tuz) Merkez'e gönderir. Özet yedeği açmaz.</li>
+  <li>Yeni bilgisayarda sahip e-posta, kullanıcı adı ve şifresini yazar; bunlar HTTPS ile Merkez'e gider, şifre özetle karşılaştırılır ve saklanmaz. Doğruysa işletmenin e-postasına 6 haneli kod gider (10 dakika, 5 deneme). Yanlışta hangi parçanın yanlış olduğu söylenmez; denemeler yavaşlatılır.</li>
+  <li>E-posta: başvurudaki adres ya da sahibin kafede kodla doğruladığı adres. Değiştirmek için sahibin şifresi ve hem eski hem yeni adrese kod gerekir.</li>
+  <li>Başarılı girişte satıcıya uyarı ve işletmenin bütün adreslerine "yeni bilgisayarda açıldı" e-postası gider; eski bilgisayarda yeni sipariş kapanır.</li>
 </ul>
 <div class="kutu uyari">
-  <span class="kutu-baslik">"Mola yedeği açamaz" ifadesinin sınırları</span>
-  <ul>
-    <li>Merkez'de yedeğin anahtarı, kurtarma kodu ya da sahibin şifresi durmaz. Ancak Merkez'de hem şifreli yedek hem de sahip şifresinin doğrulama özeti bulunur. Şifre zayıfsa, bu ikisine erişen biri şifreyi deneme yanılmayla bulup yedeği açabilir. Bu yüzden ifade bugün "sahibin şifresini bilmeden açamaz" anlamında doğrudur.</li>
-    <li>"İşletmem var" girişinde şifre Merkez'e açık hâlde (HTTPS içinde) ulaşır ve bellekte doğrulanır. Giriş ekranı da bunu böyle anlatır: şifre doğrulama için şifreli bağlantıyla Merkez'e gider ve orada saklanmaz.</li>
-    <li>Lisans sözleşmesi (madde 5, 9.2, 9.3, 11.3; sürüm 4) ve site gizlilik sayfası bu sınırı anlatır: yedekler sahibin şifresiyle de açılabilir, Merkez yalnız tek yönlü özet tutar, şifrenin güçlü seçilmesi işletmenin sorumluluğundadır.</li>
-  </ul>
+  <span class="kutu-baslik">"Mola yedeği açamaz" ifadesinin sınırı</span>
+  <p>Merkez'de anahtar, kurtarma kodu ve şifre durmaz. Ama Merkez'de hem şifreli yedek hem şifrenin doğrulama özeti vardır: şifre zayıfsa, ikisine erişen biri şifreyi deneme yanılmayla bulup yedeği açabilir. İfade bugün "sahibin şifresini bilmeden açamaz" anlamında doğrudur. Lisans (madde 5, 9.2, 9.3, 11.3) ve site gizlilik sayfası bunu anlatır; güçlü şifre işletmenin sorumluluğundadır.</p>
 </div>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata soru: İşletmem var</span>
-  <ol>
-    <li>Sahip şifresinin doğrulama özetinin Merkez'de tutulması ve şifre kilidinin sahibe sorulmadan kendiliğinden kurulması için ayrı bir bilgilendirme ya da onay gerekir mi?</li>
-    <li>Lisans 9.2, 9.3 ve 11.3 ile gizlilik sayfasına eklenen ifadeler yeterli mi?</li>
-    <li>Bir e-posta kodu ve şifreyle başka bir bilgisayara veri taşınabilmesi, işletme sahibinin hesabını ele geçiren birinin işletme verisine ulaşması riskini doğurur. Sözleşmede bu riskin ve sahibin şifre ile e-posta güvenliği yükümlülüğünün yazılması gerekir mi?</li>
-  </ol>
-</div>
+
+<!-- ============================================================ 7 -->
+<h1 id="b7" class="akis"><span class="no">7</span>Erişim: kim neyi görebilir</h1>
+<h2 id="b7-1" data-toc="no">7.1 İşletme içi roller</h2>
+<p>Beş rol: sahip, müdür, kasiyer, garson, mutfak. Her işlem sunucuda denetlenir. Garson rezervasyon telefonunu görmez, mutfak rezervasyon bilgisini görmez; çalışan hesaplarını, oturumları ve kasa sayım sonuçlarını yalnız sahip görür; müdürün raporları görmesi sahibin iznine bağlıdır.</p>
+<h2 id="b7-2" data-toc="no">7.2 Uzaktan destek</h2>
+<ul>
+  <li>Varsayılan kapalı. Yalnız sahip, şifresini yeniden yazarak açar; süre sınırı yok, her an kapatılır.</li>
+  <li>Mola ekibi işletmenin ekranlarını kendi tarayıcısında açar; kanal uçtan uca şifreli değildir (taşıma HTTPS).</li>
+  <li><strong>Açık:</strong> menü, kampanyalar, masa ve QR, yazıcı ve ses, para dışı ayarlar, tanılama. <strong>Kapalı:</strong> satış ve raporlar, ödemeler, kasa, giderler, maliyet, çalışan şifreleri, yedek ve kurtarma, entegrasyon anahtarları, rezervasyon ve misafir telefonları. Otomatik testlerle denetlenir.</li>
+  <li>Oturum açıkken bütün ekranlarda "Mola ekibi bağlı" bandı; her değişiklik işletmenin kaydına yazılır, sahibe bildirim gider. 30 dakika işlemsizlikte ya da 8 saatte biter. Bağlanan kişi satıcı ya da yetkilisidir; işlem kayıtlarında adıyla görünür.</li>
+</ul>
+<h2 id="b7-3" data-toc="no">7.3 Sahibin uzaktan erişimi</h2>
+<ul>
+  <li><strong>Eşleştirme:</strong> yalnız kafedeki bilgisayardan, şifreyle; en çok 3 cihaz. Cihazın özel anahtarı cihazdan çıkmaz.</li>
+  <li><strong>Raporlarım:</strong> kasa günü toplamları, en çok satanlar, açık hesaplar, son kasa kapanışı.</li>
+  <li><strong>Kafeyi yönet:</strong> varsayılan kapalı; şifre ve doğrulama koduyla (TOTP) açılır, her girişte yine istenir. Uzaktan yapılamaz: yedekten geri yükleme, kurtarma kodu, cihaz eşleştirme, uzaktan erişim izni açma, güncelleme kurma. Kafede oturum kaydı tutulur (cihaz adı, başlangıç, bitiş; IP yok).</li>
+</ul>
+<h2 id="b7-4" data-toc="no">7.4 Mola Yönetim kullanıcıları (satıcı tarafı)</h2>
+<ul>
+  <li>Sahip ("admin") en çok 10 yetkili ekler; her biri kendi şifresiyle girer, ilk şifreyi değiştirmek zorundadır. Ekleme ve silme yalnız sahipte, sahibin şifresi yeniden sorularak.</li>
+  <li>Yetkili her şeyi yapar, şunlar hariç: kullanıcılar, e-posta ayarı (sahibin şifre sıfırlama kodu oraya gider), Merkez kurtarma kodu, geliştirici erişim anahtarları.</li>
+  <li>İki adımlı giriş her hesapta isteğe bağlıdır; fiyat, paket, ödeme, duyuru ve güncelleme işlemleri ise yalnız iki adımlı kodla açılan 10 dakikalık onayla yapılır. Her işlem yapanın adıyla kaydedilir.</li>
+</ul>
 
 <!-- ============================================================ 8 -->
-<h1 id="b8" class="akis"><span class="no">8</span>Erişim: kim neyi görebilir</h1>
-<h2 id="b8-1">8.1 İşletme içinde roller</h2>
+<h1 id="b8" class="akis"><span class="no">8</span>İşlem kayıtları ve kasa kayıtları</h1>
 <ul>
-  <li>Beş rol vardır: işletme sahibi, müdür, kasiyer, garson, mutfak. Her işlem sunucuda ayrıca denetlenir; ekranda gizlemekle yetinilmez.</li>
-  <li>Kişisel veri sınırları: garson rezervasyon telefonunu ve notunu görmez, mutfak rezervasyon bilgilerini görmez; çalışan hesaplarını, oturumlarını ve kasa sayım sonuçlarını yalnız sahip görür. Müdürün raporları görmesi sahibin iznine bağlıdır.</li>
-  <li>Sahip hesabı belirli bir süre işlemsizlikte kilitlenir; kilidi sahibin şifresi açar.</li>
+  <li><strong>Merkez işlem kayıtları değiştirilemez:</strong> veritabanı değiştirmeyi ve silmeyi reddeder; her kayıt öncekinin özetini taşır (hash zinciri), zincirin başı saatte bir imzalanır; Mola'dan bağımsız bir doğrulama komutu var. Amaç: uyuşmazlıkta satıcının bile kaydı değiştiremediğini göstermek.</li>
+  <li>IP adresi ayrı tabloda durur ve 1 yıl sonra silinir; zincir bozulmaz. "İşletmem var" kod kaydında e-posta maskelidir (ör. "y***@gmail.com").</li>
+  <li><strong>Kafede</strong> iptal, iade, ödeme düzeltmesi, fiyat değişikliği, uzaktan destek değişiklikleri ve gün sonunu geri alma yapanın adıyla şifreli kaydedilir (hash zinciri yok).</li>
+  <li><strong>Kasa kayıtları çalışan verisidir.</strong> Her ödemede alan çalışan kaydedilir. Kasiyer ve müdür gün sonunu kör sayar; sonucu ve farkı yalnız sahip görür. Kapanış sonradan değişmez, düzeltme ayrı kayıttır; gün sonu aynı gün geri alınabilir, kim, ne zaman, neden kayıtta kalır.</li>
+  <li><strong>Kasa güvenliği</strong> (altı isteğe bağlı önlem, varsayılan kapalı, sahip açar <span class="rozet karar">Karar</span>): açılışta kör sayım; kasadan çıkan paranın sahibe sayılarak teslimi; vardiya devrini alanın da sayması; gün sonunu yalnız sahibin geri alması; kartlı ödemede banka POS toplamının zorunlu olması; ödeme türü değişince sahibe, ödemeyi alanın adıyla bildirim.</li>
 </ul>
-<h2 id="b8-2">8.2 Uzaktan destek (işletme sahibinin izniyle)</h2>
-<ul>
-  <li>Varsayılan kapalıdır. Yalnız işletme sahibi, şifresini yeniden yazarak "Mola ekibi bağlanabilsin" iznini açar. Süre sınırı yoktur; sahip her an kapatabilir, kapatınca açık oturum o anda biter.</li>
-  <li>Mola ekibi işletmenin ekranlarını kendi tarayıcısında açar; istekler Merkez üzerinden kafeye gider. Bu kanal uçtan uca şifreli değildir: Mola ekibi açtığı ekranları görür (taşıma HTTPS'tir).</li>
-  <li>"Mola destek" rolünün yapabildikleri sunucuda tek bir izin listesiyle sınırlıdır: menü, kampanyalar, masa ve QR, yazıcı ve ses, para dışı ayarlar, tanılama. Satış ve raporlar, ödeme ve hesaplar, kasa, giderler, stok maliyeti ve kârlılık, çalışan şifreleri ve oturumları, yedek ve kurtarma, entegrasyon anahtarları, rezervasyon ve misafir telefonları kapalıdır. Bunu otomatik testler denetler.</li>
-  <li>Oturum açıkken bütün personel ekranlarında "Mola ekibi bağlı" bandı görünür. Her değişiklik işletmenin kaydına düz Türkçe yazılır (ör. "Mola destek: Ürün değişti: Latte · fiyat ... → ..."); oturum başında ve sonunda sahibe bildirim gider. 30 dakika işlem yoksa ya da 8 saatte oturum biter.</li>
-  <li>Bağlanan kişi, satıcının kendisi ya da Mola Yönetim yetkililerinden biri olabilir (8.4); Merkez işlem kayıtlarında adıyla görünür.</li>
-</ul>
-<h2 id="b8-3">8.3 Sahibin uzaktan yönetimi ve Raporlarım</h2>
-<ul>
-  <li><strong>Telefon eşleştirme:</strong> yalnız kafedeki bilgisayardan, sahibin şifresiyle; en çok 3 cihaz. Telefon kendi şifreleme anahtarını üretir; özel anahtar telefondan çıkmaz.</li>
-  <li><strong>Raporlarım:</strong> sahip telefonundan kasa günü toplamlarını, en çok satanları, açık hesapları ve son kasa kapanışını görür. İçerik kafede üretilir ve yalnız o telefon için şifrelenir.</li>
-  <li><strong>Kafeyi yönet:</strong> varsayılan kapalı; yalnız kafedeki bilgisayardan, şifre ve doğrulama koduyla (TOTP) açılır. Her uzak girişte yine şifre ve kod istenir; sahibe bildirim gider. Uzaktan yapılamayanlar: yedekten geri yükleme, kurtarma kodu, cihaz eşleştirme, uzaktan erişim izinlerini açmak, güncelleme kurmak. Kafede oturum kaydı tutulur: cihaz adı, başlangıç, bitiş, neden (IP tutulmaz).</li>
-</ul>
-<h2 id="b8-4">8.4 Mola Yönetim kullanıcıları (satıcı tarafı)</h2>
-<ul>
-  <li>Mola Yönetim'in sahibi ("admin" hesabı) en çok 10 <strong>yetkili</strong> ekleyebilir. Her yetkilinin kendi kullanıcı adı ve şifresi vardır; sahibin verdiği ilk şifre ilk girişte değiştirilmek zorundadır. Yetkili ekleme, yeni ilk şifre verme ve silme yalnız sahip tarafından ve her adımda sahibin şifresi yeniden sorularak yapılır; silinen yetkilinin açık oturumları hemen kapanır.</li>
-  <li>Yetkili, sahibin yapabildiği her şeyi yapar (işletme kayıtları, fatura bilgileri, destek, uzaktan destek, web talepleri), şunlar hariç: kullanıcılar sayfası, e-posta ayarı (sahibin şifre sıfırlama kodunun gittiği adres; yetkili değiştirse sahibin hesabını ele geçirebilirdi), Merkez kurtarma kodu ve geliştirici erişim anahtarları.</li>
-  <li><strong>İki adımlı giriş:</strong> her hesabın kendi doğrulayıcı uygulaması olur. Girişte zorunlu tutulmaz; açılmışsa her girişte istenir. Fiyat, paket, ödeme, duyuru ve güncelleme işlemleri ise yalnız iki adımlı kodla açılan 10 dakikalık bir onayla yapılabilir.</li>
-  <li>Her işlem Merkez işlem kayıtlarına yapanın adıyla yazılır ("Ayşe Yılmaz (yetkili)").</li>
-</ul>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata soru</span>
-  <p>Yetkililer işletmelerin fatura bilgilerine, destek mesajlarına ve uzaktan destek yoluyla işletme ekranlarına erişebilir. Yetkililerle hangi sözleşme ya da gizlilik taahhüdü imzalanmalı; satıcının veri güvenliği yükümlülüğü açısından iki adımlı girişin zorunlu tutulması gerekir mi?</p>
-</div>
 
 <!-- ============================================================ 9 -->
-<h1 id="b9" class="akis"><span class="no">9</span>İşlem kayıtları ve denetim izi</h1>
-<h2 id="b9-1">9.1 Merkez işlem kayıtları (değiştirilemez)</h2>
+<h1 id="b9" class="akis"><span class="no">9</span>Mali konular</h1>
 <ul>
-  <li>Mola Yönetim'deki her işlem ve güvenlik olayı (giriş, başarısız giriş, lisans, fiyat, ödeme kaydı, silme, uzaktan destek, yetkili ekleme) kim, ne, hangi işletme, eski ve yeni değer bilgisiyle yazılır.</li>
-  <li>Kayıtlar yalnız eklenebilir: veritabanı değiştirmeyi ve silmeyi reddeder; her kayıt bir öncekinin özetini taşır (hash zinciri) ve zincirin başı saatte bir dijital olarak imzalanır. Mola'dan bağımsız bir doğrulama komutu vardır. Amaç: bir uyuşmazlıkta satıcının bile kaydı sonradan değiştiremediğini gösterebilmek.</li>
-  <li>IP adresi kaydın içinde değil, ayrı bir tabloda durur; 1 yıl sonra adres silinir, zincir bozulmaz.</li>
-  <li><strong>"İşletmem var" kod kaydı:</strong> kodun gönderildiği maskeli e-posta adresiyle (ör. "y***@gmail.com") yazılır; isteğin IP adresi kaydın metnine yazılmaz, diğer kayıtlar gibi ayrı tutulur ve 1 yıl sonra silinir.</li>
+  <li><strong>Fişler</strong> "BİLGİ FİŞİ" başlığını taşır; yasal fiş değildir. Ayarlarda "Mola'nın hesap fişi resmi fiş değildir. Her satış için yazar kasadan fiş kesilmesi zorunludur." uyarısı var.</li>
+  <li><strong>Yazar kasa (ÖKC):</strong> Mola bağlanmaz. İsteğe bağlı yardımcı (varsayılan kapalı) her ödemeden sonra yazar kasaya ne girileceğini KDV departmanına göre gösterir; gün sonunda Z raporu toplamı yazılırsa farkı gösterir. Mola Z raporu üretmez.</li>
+  <li><strong>KDV:</strong> her satır satıldığı andaki oranı taşır; raporlardaki KDV dökümü bilgi amaçlıdır.</li>
+  <li><strong>e-Adisyon:</strong> Mola'nın adisyonu e-Adisyon değildir; GİB'e bildirim yapmaz.</li>
+  <li><strong>Platform siparişleri:</strong> çevrimiçi ödenmişse program "kuralı mali müşavirinize sorun" der.</li>
+  <li>Lisans madde 11.4 vergi, yazar kasa ve e-fatura yükümlülüklerini işletmeye bırakır.</li>
 </ul>
-<h2 id="b9-2">9.2 Kafedeki işlem geçmişi</h2>
-<p>Kafede de işletmenin işlemleri (iptal, iade, ödeme türü düzeltmesi, fiyat değişikliği, uzaktan destek değişiklikleri, gün sonunu geri alma gibi) yapanın adıyla şifreli bir tabloya yazılır. Bu kayıtta Merkez'deki gibi bir hash zinciri yoktur.</p>
-<h2 id="b9-3">9.3 Kasa güvenliği ve kasa kayıtları</h2>
-<p>Kasa kayıtları işletmenin kasadaki para farklarını izlemesi için tutulur; çalışanın davranışını kaydettikleri için çalışan verisidir.</p>
-<ul>
-  <li><strong>Her zaman:</strong> her ödemede ödemeyi alan çalışan kaydedilir. Kasiyer ve müdür gün sonu sayımını kör yapar (beklenen tutarı görmez); sayım sonucunu ve farkı yalnız işletme sahibi görür. Kapanış kaydı sonradan değiştirilmez; düzeltme ayrı bir kayıt olarak eklenir. Gün sonu aynı gün geri alınabilir; geri alınan kapanış raporlardan çıkar ama kim, ne zaman ve hangi gerekçeyle geri aldığı kayıtta kalır.</li>
-  <li><strong>Kasa güvenliği (isteğe bağlı altı önlem):</strong> hepsi varsayılan kapalıdır, işletme sahibi tek tek açar <span class="rozet karar">Karar</span>.
-    <ol>
-      <li>Açılışta kör sayım: sabah kasayı açan devreden tutarı görmeden sayar; fark sahibe bildirilir.</li>
-      <li>Kasadan çıkarılan parayı teslim al: gün sonunda çıkarılan para, sahip saydığı tutarı yazana kadar bekler; fark kaydedilir.</li>
-      <li>Vardiya devrini alan da sayar: devirden sonra gelen kişi kör sayar.</li>
-      <li>Sayımı sıkılaştır: gün sonunu yalnız sahip geri alır; sayan kişi yazar kasa bölümünde nakit/kart ayrımını görmez.</li>
-      <li>POS toplamı zorunlu: kartlı ödeme alınan vardiya, banka POS toplamı yazılmadan sayılamaz.</li>
-      <li>Ödeme türü değişince bildir: bir ödemenin nakit/kart türü sonradan değişirse sahibe, ödemeyi kimin aldığıyla birlikte bildirilir.</li>
-    </ol>
-  </li>
-</ul>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata soru</span>
-  <p>Kasa farklarının kişiye bağlı olarak kaydedilmesi ve sahibe bildirilmesi çalışan izleme sayılır mı? Çalışan aydınlatma metninde nasıl anlatılmalı; bu kayıtların bir çalışan aleyhine (ör. kasa açığı nedeniyle) delil olarak kullanılması için programın ayrıca bir şey yapması gerekir mi?</p>
-</div>
 
 <!-- ============================================================ 10 -->
-<h1 id="b10" class="akis"><span class="no">10</span>Mali konular: Mola'nın yaptığı ve yapmadığı</h1>
-<p class="giris">Mola mali bir belge düzenlemez. Bu bölüm, programın mali bir iddiada bulunmaması için nasıl kurulduğunu anlatır.</p>
-<ul>
-  <li><strong>Fişler:</strong> hesap fişi ve ödeme fişi "BİLGİ FİŞİ" başlığını taşır; yasal fiş değildir. Yazıcı ayarlarında ve yazar kasa yardımcısında "Mola'nın hesap fişi resmi fiş değildir. Her satış için yazar kasadan fiş kesilmesi zorunludur." uyarısı vardır. Hesap fişinde KDV bilgisi "KDV dahildir · %10: ..." biçiminde yazar.</li>
-  <li><strong>Yazar kasa (ÖKC):</strong> Mola yazar kasaya bağlanmaz. İsteğe bağlı <strong>yazar kasa yardımcısı</strong> (varsayılan kapalı, sahip açar): her ödemeden sonra kasiyere yazar kasaya ne girileceğini KDV departmanına göre gösterir ("%10 departman → tutar · Ödeme: Nakit"); iadede neyin geri alınacağını söyler. Kasiyer "Girildi" işaretleyebilir; işaretlenmeyenler gün sonunda listelenir.</li>
-  <li><strong>Z raporu:</strong> gün sonunda kasiyer yazar kasanın Z raporu toplamını yazabilir; Mola bunu kendi kayıtlarıyla karşılaştırıp farkı gösterir. Bu bir mutabakat yardımıdır; Mola Z raporu üretmez.</li>
-  <li><strong>KDV:</strong> her satır satıldığı andaki KDV oranını taşır. Raporlardaki KDV dökümü bilgi amaçlıdır ("resmi beyan yazar kasa ve mali müşaviriniz üzerinden yapılır").</li>
-  <li><strong>e-Adisyon:</strong> Mola'nın adisyonu e-Adisyon değildir; GİB'e bildirim yapmaz.</li>
-  <li><strong>Platform siparişleri:</strong> çevrimiçi ödenmiş platform siparişinde program tahmin yapmaz; "fiş/fatura kuralını mali müşavirinize sorun" der.</li>
-  <li><strong>Sözleşme:</strong> lisans sözleşmesi madde 11.4, vergi, yazar kasa ve e-fatura gibi mali yükümlülükleri işletmeye bırakır.</li>
-</ul>
-<p>Mali müşavire sorular bölüm 17.2'dedir.</p>
-
-<!-- ============================================================ 11 -->
-<h1 id="b11" class="akis"><span class="no">11</span>Güvenlik önlemleri</h1>
-<p class="giris">KVKK'nın teknik tedbir yükümlülüğü açısından programda bulunan önlemler. Yöntemler yaygın standartlardır.</p>
+<h1 id="b10" class="akis"><span class="no">10</span>Güvenlik, üçüncü taraflar ve çerezler</h1>
+<h2 id="b10-1">10.1 Güvenlik önlemleri</h2>
 <table class="dar">
   <thead><tr><th style="width:24%">Önlem</th><th>Ne yapar</th></tr></thead>
   <tbody>
-    <tr><td>Kayıt şifrelemesi</td><td>Kafedeki her kayıt AES-256-GCM ile şifrelenir; her işletmenin kendi rastgele anahtarı vardır. Merkez'deki menü kopyası, web talepleri ve satış kayıtları da şifreli saklanır.</td></tr>
-    <tr><td>Anahtar koruması</td><td>Ana anahtar o bilgisayarın Windows kilidi, 24 karakterlik kurtarma kodu ve sahip şifresiyle kilitli. Disk çalınırsa veri okunamaz.</td></tr>
-    <tr><td>Şifreli yedekler</td><td>Her yedek şifrelidir ve geri yüklenerek doğrulanır.</td></tr>
-    <tr><td>İmzalı lisans ve bildirimler</td><td>Lisans, güncelleme ve Merkez bildirimleri dijital olarak imzalanır (Ed25519); değiştirilmiş lisans çalışmaz.</td></tr>
-    <tr><td>İmzalı bağlantı</td><td>Kafe ile Merkez arasındaki her istek kurulumun gizli anahtarıyla imzalı; tekrar oynatma önlenir. Kafe yalnız HTTPS ile bağlanır.</td></tr>
-    <tr><td>Uçtan uca şifreleme</td><td>Raporlarım ve uzaktan yönetim; her oturumun kendi anahtarı.</td></tr>
-    <tr><td>İki adımlı doğrulama</td><td>Mola Yönetim girişi (açılmışsa) ve fiyat, paket, ödeme, duyuru ve güncelleme işlemleri; işletme sahibinin uzaktan yönetimi; "İşletmem var" için e-posta kodu.</td></tr>
-    <tr><td>Şifre saklama</td><td>Bütün şifreler yalnız özet olarak (scrypt) saklanır; düz şifre hiçbir yerde yok. Yanlış şifre denemeleri sınırlı ve yavaşlatılır.</td></tr>
-    <tr><td>Oturumlar</td><td>Çerezler HttpOnly ve SameSite=Strict; diskte oturum anahtarının kendisi değil özeti durur.</td></tr>
-    <tr><td>Rol ve yetki</td><td>Her işlem sunucuda rolüne göre denetlenir (bölüm 8).</td></tr>
-    <tr><td>Program dosyası denetimi</td><td>Program dosyaları satıcının imzaladığı listeyle karşılaştırılır; fark yalnız bildirilir (lisans madde 6).</td></tr>
-    <tr><td>Değiştirilemez işlem kayıtları</td><td>Merkez'de hash zinciri ve imza (bölüm 9.1).</td></tr>
-    <tr><td>Güncellemeler</td><td>Güncelleme imzası doğrulanmadan kurulmaz; her kurulumdan önce doğrulanmış yedek alınır, yeni sürüm sağlıklı açılmazsa program ve veri kendiliğinden eski hâline döner.</td></tr>
-    <tr><td>Web güvenliği</td><td>QR menü, sipariş, giriş ve başvuru gibi işlemlerde istek sınırları; tahmin edilemeyen masa kodları; başka alan adından gelen isteklerin reddi; sıkı içerik güvenliği politikası.</td></tr>
+    <tr><td>Şifreleme</td><td>Kafedeki her kayıt AES-256-GCM, işletme başına rastgele anahtar; anahtar Windows kilidi, kurtarma kodu ve sahip şifresiyle kilitli. Yedekler şifreli ve geri yüklenerek doğrulanır. Merkez'deki menü kopyası, site talepleri ve satış kayıtları da şifreli.</td></tr>
+    <tr><td>İmza ve bağlantı</td><td>Lisans, güncelleme ve Merkez bildirimleri Ed25519 ile imzalı. Kafe ile Merkez arası her istek imzalı ve HTTPS; tekrar oynatma önlenir.</td></tr>
+    <tr><td>Uçtan uca şifreleme</td><td>Raporlarım ve uzaktan yönetim.</td></tr>
+    <tr><td>Kimlik doğrulama</td><td>Şifreler yalnız özet (scrypt); deneme sınırı. İki adımlı kod: Mola Yönetim (açılmışsa ve hassas işlemlerde), sahibin uzaktan yönetimi; "İşletmem var" için e-posta kodu. Çerezler HttpOnly, SameSite=Strict.</td></tr>
+    <tr><td>Yetki ve kayıt</td><td>Her işlem sunucuda role göre denetlenir; Merkez işlem kayıtları hash zinciri ve imzayla korunur.</td></tr>
+    <tr><td>Güncelleme ve dosyalar</td><td>İmzası doğrulanmayan güncelleme kurulmaz; önce yedek alınır, sorun olursa program ve veri eski hâline döner. Program dosyaları imzalı listeyle karşılaştırılır, fark yalnız bildirilir.</td></tr>
+    <tr><td>Web</td><td>İstek sınırları, tahmin edilemeyen masa kodları, başka siteden gelen isteklerin reddi, sıkı içerik güvenliği politikası.</td></tr>
   </tbody>
 </table>
-<p class="kucuk gri">Bilinen sınırlar: kafe içi yerel ağ trafiği şifresiz HTTP'dir (bölüm 3.1). Uzaktan destek kanalı uçtan uca şifreli değildir (bölüm 8.2). Program dosyaları kod imzalama sertifikasıyla imzalı değildir. Bilgisayara yönetici olarak erişen biri programı değiştirebilir; dosya denetimi bunu yalnız bildirir. Merkez'de sahip şifresinin doğrulama özeti durur (bölüm 7.3).</p>
+<p class="kucuk gri">Bilinen sınırlar: kafe içi ağ şifresiz HTTP; uzaktan destek uçtan uca şifreli değil; program dosyaları kod imzalama sertifikasıyla imzalı değil; bilgisayara yönetici olarak erişen biri programı değiştirebilir (denetim yalnız bildirir); Merkez'de sahip şifresinin doğrulama özeti durur (bölüm 6).</p>
+
+<h2 id="b10-2">10.2 Üçüncü taraflar ve yurt dışı</h2>
+<table class="dar">
+  <thead><tr><th style="width:22%">Hizmet</th><th style="width:45%">Ne için, hangi veri</th><th>Yer</th></tr></thead>
+  <tbody>
+    <tr><td>VDS (Keyubu/Datacasa)</td><td>Mola Merkez ve site; bütün Merkez verisi ve menü trafiği.</td><td>İstanbul.</td></tr>
+    <tr><td>Satıcının bilgisayarı</td><td>Çalışma klasörü (destek talepleri okunabilir), şifreli yedekler.</td><td>Türkiye.</td></tr>
+    <tr><td>Google Drive</td><td>Yalnız şifreli Merkez gece yedekleri.</td><td>ABD merkezli; sunucu yeri bilinmiyor <span class="rozet karar">Avukata soru</span></td></tr>
+    <tr><td>E-posta gönderimi (satıcı)</td><td>Bölüm 3.5'teki e-postalar; alıcılar arasında işletme sahiplerinin adresleri ve doğrulama kodları. Bugün Brevo.</td><td>Brevo Fransa merkezli; sunucu yeri bu dosyada doğrulanmadı <span class="rozet karar">Avukata soru</span></td></tr>
+    <tr><td>Gelen e-posta (Cloudflare Email Routing → Gmail)</td><td><code>destek@molayazilim.com.tr</code>'ye yazanların e-postaları.</td><td>ABD merkezli kuruluşlar <span class="rozet karar">Avukata soru</span></td></tr>
+    <tr><td>DNS (Cloudflare)</td><td>Yalnız ad çözümleme; site, menü ve Merkez trafiği Cloudflare'den geçmez.</td><td>ABD merkezli <span class="rozet karar">Avukata soru</span></td></tr>
+    <tr><td>Alan adı (Metunic) · TLS (Let's Encrypt)</td><td>Kayıt · HTTPS sertifikası; kişisel veri yok.</td><td>Türkiye · ABD.</td></tr>
+    <tr><td>E-posta (işletme)</td><td>Dönem raporları, işletmenin kendi hesabından.</td><td>İşletmenin seçimi.</td></tr>
+    <tr><td>Diğer</td><td>Paket servis platformları bağlı değil. Sosyal medya bağlantıları misafirin tarayıcısında açılır. Program analiz, reklam, hata izleme ya da dış yazı tipi servisi kullanmaz.</td><td>Veri gitmez.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="b10-3">10.3 Çerezler ve cihazda saklananlar</h2>
+<p>Site çerez, yerel depolama, analiz, reklam, gömülü video ya da dış yazı tipi kullanmaz; form yalnız sayfa açıkken geçerli, saklanmayan bir anahtar kullanır. Programdakiler (hepsi teknik; izleme ya da reklam yok):</p>
+<table class="dar">
+  <thead><tr><th style="width:26%">Ad</th><th style="width:52%">Amaç</th><th>Süre</th></tr></thead>
+  <tbody>
+    <tr><td><code>mola_browser</code></td><td>Misafirin tarayıcı kimliği: kendi siparişleri, engelleme, istek sınırları.</td><td>30 gün</td></tr>
+    <tr><td><code>mola_staff</code>, <code>mola_staff_p2</code></td><td>Personel oturumu.</td><td>Sonraki 05:00</td></tr>
+    <tr><td><code>mola_merkez</code> · <code>mola_merkez_cihaz</code></td><td>Mola Yönetim oturumu · "bilinen cihaz" işareti.</td><td>4 saat · 90 gün</td></tr>
+    <tr><td><code>mola_destek</code></td><td>Uzaktan destek oturumu.</td><td>8 saat (30 dk işlemsizlikte biter)</td></tr>
+    <tr><td>Sekme deposu, yerel depolama, tarayıcı veritabanı</td><td>Gönderilmemiş sepet; ekran tercihleri; Raporlarım cihaz anahtarı.</td><td>Sekme kapanınca · silinene kadar · cihaz kaldırılana kadar</td></tr>
+  </tbody>
+</table>
+<p class="kucuk">Ayrı bir çerez bildirimi penceresi yoktur; <code>mola_browser</code> misafir menüsündeki taslak "Gizlilik" sayfasında anlatılır.</p>
+
+<!-- ============================================================ 11 -->
+<h1 id="b11" class="akis"><span class="no">11</span>Programdaki onay ve bilgilendirme noktaları</h1>
+<table class="dar">
+  <thead><tr><th style="width:20%">Nokta</th><th style="width:52%">Bugün gösterilen</th><th>Not</th></tr></thead>
+  <tbody>
+    <tr><td>Hesap açma başvurusu</td><td>Zorunlu onay kutusu ve açılır aydınlatma metni: veri sorumlusu Merkut Studios; bilgiler hesap açma, lisans, e-fatura ve iletişim için; e-posta ayrıca "İşletmem var" kodu ve "yeni bilgisayar" bildirimi için; satış ve müşteri verisi bilgisayarda kalır; KVKK hakları.</td><td>Metin programın davranışıyla uyumlu; hukuki yeterliliği sizde.</td></tr>
+    <tr><td>Lisans sözleşmesi</td><td>Etkinleştirmede zorunlu kutu ve tam metin; kabul (sürüm, zaman, yetkili adı) Merkez'e kaydedilir. Bugün <strong>sürüm 4</strong>. Yeni sürüm sahibine girişte sorulur; "Daha sonra" denebilir, iş durmaz.</td><td>Metin Ek A.</td></tr>
+    <tr><td>Misafir menüsü</td><td>Ad, telefon, hesap istenmez. Menünün altında "Gizlilik" bağlantısı (Türkçe ve İngilizce, "TASLAK" yazılı): ne kaydedildiği, IP'nin saklanmadığı, trafiğin Merkez'den geçtiği, yıl paketinde silme, 90 gün engel. İşletme adı otomatik yazılır; köşeli parantezli yerler sizin metninizle dolacak.</td><td>Son metin bekleniyor.</td></tr>
+    <tr><td>Rezervasyon formu</td><td>Personele not: telefon yalnız bu bilgisayarda, yalnız rezervasyon için; yıl paketinde silinir. Müşteriye metin gösterilmez (rezervasyonu personel girer).</td><td>Sözlü ya da asılı bilgilendirme gerekebilir.</td></tr>
+    <tr><td>Uzaktan destek, uzaktan yönetim</td><td>Sahibin şifresi yeniden sorulur; onay metni yok.</td><td>Onay metni eklenecek.</td></tr>
+    <tr><td>"İşletmem var" kilidi</td><td>Şifre kilidinin kurulması ve doğrulama özetinin Merkez'e gitmesi için ayrıca bilgilendirme yok; giriş ekranı şifrenin doğrulama için Merkez'e gittiğini ve saklanmadığını söyler.</td><td>Bölüm 6.</td></tr>
+    <tr><td>Site formu</td><td>Zorunlu KVKK onay kutusu ve metne bağlantı (e-posta zorunlu). Onay zamanı ve metin sürümü (<code>kvkk-aydinlatma-2026-10-14</code>) saklanır; metin değişince sürüm artar.</td><td>Metin Ek B.</td></tr>
+  </tbody>
+</table>
 
 <!-- ============================================================ 12 -->
-<h1 id="b12" class="akis"><span class="no">12</span>Yurt dışı aktarım ve üçüncü taraflar</h1>
-<p class="giris">Hedef, kişisel verinin Türkiye dışına çıkmamasıdır. Aşağıda bu hedefin bugün nerede tam karşılanmadığı da yazıldı.</p>
-<table class="dar">
-  <thead><tr><th style="width:22%">Hizmet</th><th style="width:44%">Ne için, hangi veri</th><th>Yer ve durum</th></tr></thead>
-  <tbody>
-    <tr><td>VDS (sanal sunucu)</td><td>Mola Merkez ve web sitesi; bölüm 3.2'deki bütün Merkez verisi ve internetten menü trafiği.</td><td>Keyubu/Datacasa, veri merkezi İstanbul.</td></tr>
-    <tr><td>Satıcının bilgisayarı</td><td>Çalışma klasörü (destek talepleri dahil, okunabilir), şifreli Merkez ve kafe yedekleri (bölüm 3.4).</td><td>Türkiye.</td></tr>
-    <tr><td>Google Drive</td><td>Yalnız şifreli Merkez gece yedekleri; anahtarı Drive'da değil.</td><td>ABD merkezli kuruluş; sunucuların yeri bilinmiyor. Kurulum rehberine göre <span class="rozet karar">Avukata soru</span></td></tr>
-    <tr><td>Alan adı (Metunic)</td><td>molayazilim.com.tr kaydı. Kişisel veri işlemez.</td><td>Türkiye.</td></tr>
-    <tr><td>DNS (Cloudflare)</td><td>Yalnız alan adını sunucunun IP adresine çözer. Misafir, site ve Merkez trafiği Cloudflare'den <strong>geçmez</strong>; doğrudan İstanbul'daki sunucuya gider.</td><td>ABD merkezli kuruluş. <span class="rozet karar">Avukata soru</span></td></tr>
-    <tr><td>TLS sertifikası (Let's Encrypt)</td><td>HTTPS sertifikası. Yalnız alan adı bilgisi.</td><td>ABD merkezli kuruluş.</td></tr>
-    <tr><td>E-posta (satıcı)</td><td>Olay bildirimleri, duyuru kopyaları, Mola Yönetim şifre sıfırlama kodu, "İşletmem var" ve e-posta doğrulama kodları, "yeni bilgisayar" ve "adres değişti" bildirimleri (alıcı: işletme sahibinin e-posta adresi).</td><td>Programın varsayılan ayarı Gmail. Gmail seçilirse veri yurt dışındaki sunuculardan geçebilir <span class="rozet karar">Karar bekliyor</span></td></tr>
-    <tr><td>E-posta (işletme)</td><td>Dönem raporları (satış rakamları, personel saatleri) işletmenin kendi hesabından.</td><td>İşletmenin seçimi; varsayılan Gmail. İşletmenin aydınlatma metnini ilgilendirir.</td></tr>
-    <tr><td>Paket servis platformları</td><td>Gelecekte sipariş alma. Bugün bağlı değil.</td><td>Platformların onayı bekleniyor.</td></tr>
-    <tr><td>Google, Instagram, WhatsApp vb. bağlantılar</td><td>Misafir menüsündeki sosyal medya ve değerlendirme bağlantıları misafirin kendi tarayıcısında açılır; Mola bu sitelere veri göndermez.</td><td>Misafirin tercihi.</td></tr>
-    <tr><td>Yazılım bileşenleri</td><td>Program çalışırken dışarıya istek yapan analiz, reklam, hata izleme ya da yazı tipi servisi yoktur.</td><td>Kişisel veri yok.</td></tr>
-  </tbody>
-</table>
-<div class="kutu soru">
-  <span class="kutu-baslik">Avukata soru: yurt dışı</span>
-  <ol>
-    <li>Cloudflare yalnız alan adı çözümlemesi yapıyor. Ziyaretçinin cihazının Cloudflare'e adres sorması yurt dışı aktarım sayılır mı; aydınlatma metinlerinde anılmalı mı?</li>
-    <li>Şifreli Merkez yedeklerinin Google Drive'da tutulması yurt dışı aktarım sayılır mı? Site KVKK metni, gizlilik sayfası ve lisans bu kopyaları ve sunucuların yurt dışında olabileceğini yazıyor; bu aktarımın hukuki dayanağı ne olmalı?</li>
-    <li>Satıcının e-postası için Gmail kullanılması (işletme sahiplerinin adresleri ve kodlar bu yoldan gider) yurt dışı aktarım sayılır mı; Türkiye'de bir e-posta sağlayıcısı mı seçilmeli?</li>
-  </ol>
-</div>
+<h1 id="b12" class="akis"><span class="no">12</span>Lisans ve abonelik kuralları</h1>
+<h2 id="b12-1" data-toc="no">12.1 Programın uyguladıkları</h2>
+<ul>
+  <li><strong>İmzalı lisans:</strong> değiştirilmiş lisans çalışmaz.</li>
+  <li><strong>İnternetsizlik:</strong> son lisans en çok 14 gün geçerli (7. günden uyarı). Sonra misafir menüsü ve yeni sipariş kapanır; açık hesaplar kapatılabilir, raporlar görülür, veri silinmez; bağlantı gelince açılır <span class="rozet karar">Karar</span></li>
+  <li><strong>Bir lisans, bir bilgisayar:</strong> kurulum başka bilgisayardan bağlanırsa yenisi etkin olur, eskisi yeni siparişi kapatır. Donanım kimliğinin yalnız anahtarlı özeti gider.</li>
+  <li><strong>Askı, süre bitimi, dondurma:</strong> menü ve yeni sipariş kapanır, veri silinmez, destek açık kalır. Dondurma yalnız yıllıkta, 1 ile 60 gün, 12 ayda bir, gerekçeyle; bitiş tarihi o kadar uzar.</li>
+  <li><strong>Güncellemeler:</strong> imzası doğrulanan sürüm hazır olunca sahibe pencere açılır: şimdi kur, 1 saat sonra hatırlat ya da kapanışta kur; ayrıca açılışta ya da (ayar açıksa) kafe 20 dakika boştayken kurulur. Önce yedek alınır, sorun olursa eski hâline döner.</li>
+  <li><strong>Program dosyası denetimi:</strong> fark varsa yalnız dosya adları bildirilir, hiçbir şey kilitlenmez (lisans madde 6).</li>
+</ul>
+<h2 id="b12-2" data-toc="no">12.2 Lisans taslağının özeti (sürüm 4, Ek A)</h2>
+<p>İşletme ve bilgisayar başına, münhasır olmayan, devredilemeyen kullanım hakkı; tersine mühendislik, lisans denetimini aşma ve başka bilgisayarda çalıştırma yasak; veriler işletmeye ait; Merkez'e gidenlerin listesi ve saklama süreleri; sorumluluk son 12 ayın bedeliyle sınırlı, dolaylı zarar hariç; yedekleme ve kurtarma kodu işletmede; mali yükümlülükler işletmede; 5846 sayılı FSEK atfı; Elazığ mahkemeleri; yeni sürüm kabul edilene kadar iş durmaz (madde 13). Ücret, deneme, paket değişikliği ve dondurma abonelik sözleşmesine bırakıldı (madde 7.1).</p>
+<h2 id="b12-3" data-toc="no">12.3 Abonelik (sözleşmesi henüz yok)</h2>
+<ul>
+  <li>Kendi kendine deneme yok: işletme başvurur, satıcı onaylayınca <strong>30 günlük deneme</strong> başlar, bütün hizmetler açıktır <span class="rozet karar">Karar</span>. Satıcı tek kullanımlık etkinleştirme kodu da verebilir.</li>
+  <li>Aylık, 6 aylık, yıllık plan. Program hizmetler hâlinde satılır; paketten çıkan hizmetin verisi silinmez, gizlenir.</li>
+  <li>Fiyatlar KDV hariç, Mola Yönetim'den değişir, henüz kesin değil. Kurulum ve eğitim ücreti ile TÜFE güncellemesi öneriliyor <span class="rozet karar">Karar bekliyor</span></li>
+  <li>Ödeme satıcı tarafından elle işlenir (nakit, havale/EFT, kart; fatura no); online ödeme yok. Güncelleme ve destek aboneliğe dahil.</li>
+</ul>
 
 <!-- ============================================================ 13 -->
-<h1 id="b13" class="akis"><span class="no">13</span>Çerezler ve cihazda saklanan bilgiler</h1>
-<h2 id="b13-1">13.1 Web sitesi</h2>
-<p>molayazilim.com.tr çerez, yerel depolama, analiz aracı, reklam aracı, gömülü video ya da dış yazı tipi kullanmaz. İletişim formu, otomatik gönderimlere karşı yalnız sayfa açıkken geçerli, saklanmayan kısa ömürlü bir form anahtarı kullanır.</p>
-<h2 id="b13-2">13.2 Mola programı</h2>
+<h1 id="b13" class="akis"><span class="no">13</span>Hazırlanması istenen metinler</h1>
 <table class="dar">
-  <thead><tr><th style="width:24%">Ad</th><th style="width:14%">Tür</th><th style="width:40%">Amaç</th><th>Süre</th></tr></thead>
+  <thead><tr><th style="width:21%">Metin</th><th style="width:22%">Okuyan, yer</th><th>Teknik girdiler</th></tr></thead>
   <tbody>
-    <tr><td><code>mola_browser</code></td><td>Çerez</td><td>Misafirin tarayıcı kimliği: kendi siparişlerini görmesi, kötüye kullanımda engellenebilmesi, istek sınırları. İnternetten menüde yalnız o işletmenin adresine bağlı.</td><td>30 gün</td></tr>
-    <tr><td><code>mola_staff</code>, <code>mola_staff_p2</code></td><td>Çerez</td><td>Personel oturumu.</td><td>Sonraki 05:00</td></tr>
-    <tr><td><code>mola_merkez</code></td><td>Çerez</td><td>Mola Yönetim oturumu (satıcı ve yetkilileri).</td><td>4 saat</td></tr>
-    <tr><td><code>mola_merkez_cihaz</code></td><td>Çerez</td><td>Mola Yönetim'de "bilinen cihaz" işareti: deneme sınırlamasından muaf tutar.</td><td>90 gün</td></tr>
-    <tr><td><code>mola_destek</code></td><td>Çerez</td><td>Uzaktan destek oturumu (Mola ekibinin tarayıcısı).</td><td>8 saat (30 dakika işlemsizlikte biter)</td></tr>
-    <tr><td>Sepetler ve menü kopyası bağlamı</td><td>Sekme deposu</td><td>Gönderilmemiş sipariş; kafe kapalıyken açılan menüden sepeti taşımak.</td><td>Sekme kapanınca</td></tr>
-    <tr><td>Ekran tercihleri</td><td>Yerel depolama</td><td>Cihaza özel görünüm tercihleri. Kişisel veri değildir.</td><td>Silinene kadar</td></tr>
-    <tr><td>Raporlarım anahtarları</td><td>Tarayıcı veritabanı (sahibin cihazı)</td><td>Telefonun dışa aktarılamaz şifreleme anahtarı.</td><td>Cihaz kaldırılana kadar</td></tr>
+    <tr><td>Misafir aydınlatma metni</td><td>Misafir; menüdeki "Gizlilik". Muhtemelen işletme adına şablon</td><td>Çerez 30 gün, siparişler ve notlar, IP yalnız sınır için, Merkez'den geçen trafik ve menü kopyası, yıl paketinde silme, 90 gün engel. Önerilen cümle: "QR menü internet üzerinden Mola Merkez aracılığıyla sunulur; Mola içeriği saklamaz."</td></tr>
+    <tr><td>Rezervasyon bilgilendirmesi</td><td>Telefonla ya da yüz yüze; sözlü ya da asılı</td><td>Ad, telefon, not, kapora; telefonu kimin gördüğü; yıl paketinde silme.</td></tr>
+    <tr><td>Çalışan aydınlatma metni</td><td>İşletmenin çalışanları; şablon</td><td>Hesap, oturum cihaz bilgisi, vardiya ve geç kalma, ilk ve son işlem, ödemeler, bahşiş, kasa sayımları ve kasa güvenliği bildirimleri, gerekçeler, e-posta raporunda saatler, süresiz saklama.</td></tr>
+    <tr><td>İşletme sahibi aydınlatması</td><td>Satıcının; başvuru formu</td><td>Bugünkü metne ek: kalp atışıyla gidenler, destek ve ekler, sözleşme kabulü, şifreli yedek, "İşletmem var", uzaktan erişim, işlem kayıtlarında IP, satıcı bilgisayarı ve Drive kopyaları, e-posta sağlayıcısı, yetkililer, süreler, başvuru yolu.</td></tr>
+    <tr><td>Abonelik sözleşmesi</td><td>İşletme</td><td>Bölüm 12: deneme, planlar, paketler, KDV hariç fiyat, dondurma, askı, elle ödeme, 14 gün kuralı, bir lisans bir bilgisayar, sona ermede veri.</td></tr>
+    <tr><td>Veri işleme sözleşmesi</td><td>Satıcı ile işletme (bölüm 2'deki değerlendirmeye göre)</td><td>Şifreli yedek ve felaket kopyası, "İşletmem var", menü trafiği, uzaktan destek, destek ekleri, telefon posta kutusu, alt işleyen VDS, güvenlik önlemleri, ihlal bildirimi, sona ermede silme.</td></tr>
+    <tr><td>Uzaktan destek onay metni</td><td>Sahip; izin açılırken</td><td>Bölüm 7.2'deki kapsam, geri alınabilir izin, kayıt ve bildirimler, bağlanabilecek kişiler.</td></tr>
+    <tr><td>Site metinleri</td><td>Ziyaretçi; site (Ek B)</td><td>Taslaklar programla uyumlu. Yer tutucular: unvan, adres, vergi no/MERSİS, sunucu sağlayıcısı.</td></tr>
+    <tr><td>Lisans sözleşmesi</td><td>İşletme; etkinleştirme (Ek A)</td><td>Metin değişince sürüm artar, sahibe yeniden sorulur.</td></tr>
+    <tr><td>VERBİS, marka, şirket</td><td>Satıcı</td><td>VERBİS yükümlülüğü (şahıs, az çalışan); TÜRKPATENT araştırması, sınıf 9, 35, 42 ("Mola" yaygın sözcük); merkutstudios.com alınmadı. Şirkete geçişte sözleşme ve lisans devri, e-arşiv, iletişim bilgisi (Mola Yönetim'den tek yerden, imzalı gider).</td></tr>
   </tbody>
 </table>
-<p>İzleme ya da reklam amaçlı hiçbir çerez yoktur; hepsi zorunlu, teknik çerez olarak tasarlandı. <code>mola_browser</code> misafir menüsündeki "Gizlilik" sayfasında (taslak) anlatılıyor; ayrı bir çerez bildirimi penceresi yoktur. <span class="rozet karar">Avukata soru</span> <code>mola_browser</code> çerezi "zorunlu" sayılır mı ve bu bildirim yeterli mi?</p>
 
 <!-- ============================================================ 14 -->
-<h1 id="b14" class="akis"><span class="no">14</span>Programdaki onay ve bilgilendirme noktaları</h1>
-<h2 id="b14-1">14.1 Hesap açma başvurusu</h2>
-<p>Kafe ilk kurulumda "Hesap açma başvurusu" formunu doldurur (ya da satıcının verdiği kodu girer). Formda zorunlu bir onay kutusu ve açılır bir aydınlatma metni vardır. Bugünkü metin (programdan aynen):</p>
-<div class="kutu"><p><em>Onay kutusu:</em> "Bu bilgiler yalnız hesap açma ve faturalama için Mola'ya (Merkut Studios) iletilir; satış ve menü verileriniz bu bilgisayarda kalır."</p>
-<p><em>Aydınlatma metni:</em> "Veri sorumlusu Merkut Studios'tur (Mola). Bu formdaki işletme, fatura ve iletişim bilgileri yalnız hesabınızı açmak, lisansınızı yönetmek, e-fatura / e-arşiv faturanızı düzenleyip size iletmek ve sizinle iletişim kurmak için işlenir; yasal zorunluluklar dışında kimseyle paylaşılmaz. Satış, ödeme, menü, çalışan ve müşteri bilgileriniz bu bilgisayarda kalır, Mola'ya gönderilmez. 6698 sayılı KVKK kapsamındaki haklarınız (bilgi alma, düzeltme, silme) için Mola destek ekibine başvurabilirsiniz."</p></div>
-<p>Not: başvurudaki e-posta artık "İşletmem var" kodları ve "yeni bilgisayar" bildirimleri için de kullanılıyor; bu amaç metinde yazmıyor.</p>
-<h2 id="b14-2">14.2 Lisans sözleşmesi</h2>
-<p>Etkinleştirmede zorunlu kutu "Mola Lisans Sözleşmesi'ni okudum ve kabul ediyorum" ve tam metin penceresi. Kabul (sürüm, zaman, başvurudaki yetkili adı) Merkez'e gider ve kayda geçer. Sözleşmenin yeni sürümü yalnız işletme sahibine girişte sorulur; "Daha sonra" denebilir, iş durmaz. Bugün sürüm 3 gösterilir (Ek A).</p>
-<figure class="genis"><img src="../../ekran/kafe/lisans-sozlesmesi-metin.png" alt="Lisans sözleşmesi penceresi"><figcaption><b>Etkinleştirme:</b> lisans sözleşmesinin tam metin penceresi (görüntü sözleşmenin önceki bir sürümü döneminden; düzen aynıdır).</figcaption></figure>
-<h2 id="b14-3">14.3 Misafir ekranı</h2>
-<p>Misafirden ad, telefon ya da hesap istenmez. Menünün altında küçük bir <strong>"Gizlilik"</strong> bağlantısı vardır; menüyü açmayı geciktirmeden kısa bir sayfa açar (Türkçe ve İngilizce). Sayfada "TASLAK" yazar: ne kaydedildiği (siparişler, notlar, çağrılar, tarayıcı kimliği çerezi 30 gün), IP adresinin saklanmadığı, internetten açılınca trafiğin Mola Merkez'den geçtiği ve menünün yalnız herkese açık kopyasının orada durduğu, yıl paketlemesinde notların ve kimliğin silindiği, engellemenin 90 gün sürdüğü ve başvuru için işletmeye gidileceği anlatılır. Veri sorumlusu olarak işletmenin adı otomatik yazılır; köşeli parantezli yerler (iletişim, başvuru yolu) sizin metninizle doldurulacaktır.</p>
-<figure class="kucuk-ekran"><img src="../../ekran/misafir/gizlilik.png" alt="Misafir gizlilik sayfası"><figcaption><b>Misafir:</b> menüdeki "Gizlilik" bağlantısının açtığı taslak sayfa.</figcaption></figure>
-<h2 id="b14-4">14.4 Rezervasyon formu</h2>
-<p>Telefon alanının yanında personele şu not gösterilir: "Telefon yalnız bu kafenin bilgisayarında saklanır, raporlara ve masalara çıkmaz; yalnız rezervasyon için kullanılır. Yıl paketlenirken ad, telefon ve not silinir (KVKK)." Rezervasyon yapan kişiye program bir metin göstermez (rezervasyonu personel girer).</p>
-<h2 id="b14-5">14.5 Uzaktan destek, uzaktan yönetim ve İşletmem var</h2>
-<ul>
-  <li>Uzaktan destek ve uzaktan yönetim izni açılırken sahibin şifresi yeniden sorulur; ayrıca bir onay metni yoktur. Bölüm 16.8'deki onay metni buraya eklenecek.</li>
-  <li>"Yeni bilgisayar için e-posta" adresi sahibin şifresi ve adrese gelen kodla doğrulanır. Şifre kilidinin kurulması ve doğrulama özetinin Merkez'e gitmesi için sahibe bir bilgilendirme ya da onay gösterilmez (bölüm 7.3).</li>
-</ul>
-<h2 id="b14-6">14.6 Web sitesi formu</h2>
-<p>Zorunlu onay kutusu ("KVKK Aydınlatma Metni'ni okudum; bilgilerimin bu talebe dönüş yapılması için işlenmesini kabul ediyorum.") ve metne bağlantı. Gönderilen her talepte onayın zamanı ve metnin sürümü (<code>kvkk-aydinlatma-2026-10-14</code>) saklanır. Metin esastan değişince sürüm artırılır. E-posta alanı artık zorunludur; aydınlatma metni hâlâ "isteğe bağlı" diyor ve sürümü değişmedi (bölüm 16).</p>
-
-<!-- ============================================================ 15 -->
-<h1 id="b15" class="akis"><span class="no">15</span>Lisans, abonelik ve sorumluluk</h1>
-<p class="giris">Programın sözleşme açısından önemli kuralları. Sözleşme metni bunları anlatmalı; program bunları kendiliğinden uygular.</p>
-<h2 id="b15-1">15.1 Programın uyguladığı kurallar</h2>
-<ul>
-  <li><strong>İmzalı lisans:</strong> lisansı Merkez dijital olarak imzalar; değiştirilmiş lisans çalışmaz.</li>
-  <li><strong>İnternetsizlik:</strong> internet kesilirse son lisans <strong>en çok 14 gün</strong> geçerlidir (7. günden uyarı). 14. günde misafir menüsü ve yeni sipariş kapanır; açık hesaplar kapatılabilir, raporlar görülebilir, veri silinmez. Bağlantı gelince kendiliğinden açılır <span class="rozet karar">Karar</span></li>
-  <li><strong>Bir lisans, bir bilgisayar:</strong> aynı kurulum başka bir bilgisayardan bağlanırsa yeni bilgisayar etkin olur, eskisi yeni siparişi kapatır; satıcıya uyarı gider. Bunun için bilgisayarın donanım kimliği değil, yalnız anahtarlı özeti gönderilir.</li>
-  <li><strong>Askı, süre bitimi, dondurma:</strong> misafir menüsü ve yeni sipariş kapanır; açık hesaplar kapatılabilir, raporlar görülebilir, destek açık kalır, veri silinmez. Satıcı askıya alırken bir neden yazar. Dondurma yalnız yıllık abonelikte, 1 ile 60 gün arası, 12 ayda bir kez, gerekçeyle istenir ve satıcı onaylar; dondurulan gün kadar bitiş tarihi uzar.</li>
-  <li><strong>Kayıt silme:</strong> satıcı yalnız askıdaki bir işletmenin kaydını silebilir; kafedeki program kilitlenir ama veri silinmez (bölüm 6).</li>
-  <li><strong>Güncellemeler:</strong> kafe imzası doğrulanan güncellemeyi işletmenin işini aksatmayacak bir zamanda kendiliğinden kurar; önce yedek alınır, sorun olursa eski hâline döner.</li>
-  <li><strong>Program dosyası denetimi:</strong> fark varsa yalnız dosya adları Merkez'e bildirilir; program hiçbir şeyi kilitlemez (lisans madde 6).</li>
-</ul>
-<h2 id="b15-2">15.2 Mola Lisans Sözleşmesi taslağının özeti</h2>
-<p>Taslak sürüm 4 programda kullanılıyor; tam metin Ek A'da.</p>
-<ul>
-  <li>Taraflar Merkut Studios ve işletme; işletme başına ve bilgisayar başına, münhasır olmayan, devredilemeyen kullanım hakkı; program satılmaz.</li>
-  <li>Yasaklar: tersine mühendislik, lisans denetimini aşma, başka bilgisayarda ya da VDS'te çalıştırma, alt lisans.</li>
-  <li>14 gün bağlantısızlıkta menü ve sipariş kapanır; askı ve süre bitiminde veri silinmez.</li>
-  <li>Veriler işletmeye aittir; Merkez'e gidenlerin listesi; yıl paketinde kişisel bilgilerin silinmesi; saklama süreleri.</li>
-  <li>Sorumluluk son 12 ayın abonelik bedeliyle sınırlı, dolaylı zarar hariç; yedekleme ve kurtarma kodu işletmenin sorumluluğunda; mali yükümlülükler işletmeye ait; 5846 sayılı FSEK atfı; Elazığ mahkemeleri.</li>
-  <li>Yeni sürüm kabul edilene kadar işletmenin çalışması durmaz (madde 13).</li>
-</ul>
-<h2 id="b15-3">15.3 Abonelik ve hizmet koşulları</h2>
-<p>Abonelik sözleşmesi henüz yok. Programın bugünkü kuralları:</p>
-<ul>
-  <li><strong>Başlangıç:</strong> kendi kendine deneme yoktur. İşletme başvurur, satıcı onaylayınca <strong>30 günlük deneme</strong> başlar; denemede bütün hizmetler açıktır <span class="rozet karar">Karar</span>. Satıcı ayrıca tek kullanımlık etkinleştirme kodu verebilir.</li>
-  <li><strong>Planlar ve hizmetler:</strong> aylık, 6 aylık ve yıllık plan. Program modüller (hizmetler) hâlinde satılır; satıcı hizmetlerden paket oluşturur ya da işletmeye özel seçim ve indirim yapar. Paketten çıkan hizmetin verisi silinmez, gizlenir; hizmet geri gelince kaldığı yerden döner. Deneme bitince seçilen paket dışındaki hizmetler kapanır.</li>
-  <li><strong>Fiyatların gösterimi:</strong> fiyatlar KDV hariç yazılır; satıcı fiyatları Mola Yönetim'den belirler ve değiştirir. Fiyatlar henüz kesinleşmedi. Teklif metninde ayrıca tek seferlik kurulum ve eğitim ücreti ile yıllık sözleşmede TÜFE'ye göre güncelleme maddesi öneriliyor <span class="rozet karar">Karar bekliyor</span></li>
-  <li><strong>Ödeme:</strong> satıcı ödemeyi Mola Yönetim'de elle işler (tutar, yöntem: nakit, havale/EFT, kart; fatura no). Online ödeme altyapısı yoktur.</li>
-  <li><strong>Dahil olanlar:</strong> güncellemeler, destek ve uzaktan destek aboneliğe dahildir.</li>
-  <li><strong>Sona erme:</strong> veri işletmede kalır; Merkez'deki şifreli yedekler işletme kaydı silinince hemen silinir.</li>
-</ul>
-
-<!-- ============================================================ 16 -->
-<h1 id="b16" class="akis"><span class="no">16</span>Hazırlanması istenen metinler</h1>
-<p class="giris">Her metin için kimin okuyacağını, nerede gösterileceğini ve bilmeniz gereken teknik girdileri yazdık. Önce, metinlerin programla uyumu.</p>
-<div class="kutu uyari">
-  <span class="kutu-baslik">Program ile metinler</span>
-  <ol>
-    <li>Lisans sözleşmesi (sürüm 4), site KVKK metni (<code>kvkk-aydinlatma-2026-10-14</code>), site gizlilik sayfası ve programdaki başvuru aydınlatma metni programın bugünkü davranışını anlatır: "İşletmem var" (kullanıcı adı, şifrenin tek yönlü özeti, doğrulanmış e-posta; şifre saklanmaz), şifreli yedek kopyalarının satıcının bilgisayarında ve Google Drive'da tutulması, sitede e-postanın zorunlu olması, e-postanın kimlik doğrulama ve güvenlik bildirimi amacı. Bu ifadelerin hukuken yeterliliği sizin kontrolünüzü bekliyor.</li>
-    <li>Ücret, ödeme, deneme, paket değişikliği ve dondurma lisans sözleşmesinde yok; abonelik sözleşmesine bırakıldı (madde 7.1). Uzaktan destek, uzaktan yönetim ve internetten menünün kapsamını anlatan ayrı maddeler sizin önerinize bırakıldı.</li>
-  </ol>
-</div>
-
-<h2 id="b16-1">16.1 Misafir aydınlatma metni (QR menü)</h2>
-<ul>
-  <li><strong>Veri sorumlusu:</strong> büyük olasılıkla işletme. Metin işletme adına bir şablon olabilir; işletmenin adı programdan otomatik doldurulur.</li>
-  <li><strong>Girdiler:</strong> tarayıcı kimliği çerezi (30 gün), siparişler ve notlar, garson çağrısı ve hesap isteği, IP'nin yalnız sınır için kullanılması, internetten menüde trafiğin Mola Merkez'den geçmesi (saklanmadan), Merkez'de menünün herkese açık kopyası, yıl paketlemesinde notların ve kimliğin silinmesi, engelleme (90 gün).</li>
-  <li><strong>Yer:</strong> menünün altındaki "Gizlilik" bağlantısı (bugün taslak, bölüm 14.3).</li>
-</ul>
-<h2 id="b16-2">16.2 Rezervasyon müşterisi aydınlatması</h2>
-<p>Rezervasyon telefonla ya da yüz yüze alınır; personelin okuyacağı kısa bir sözlü bilgilendirme ya da işletmede asılı metin gerekebilir. Girdiler: ad, telefon, not, kapora; telefonun yalnız kasiyer, müdür ve sahipte görünmesi; yıl paketlemesinde silinmesi.</p>
-<h2 id="b16-3">16.3 Çalışan aydınlatma metni</h2>
-<p>İşletmenin çalışanları için şablon. Girdiler: hesap ve şifre, oturum cihaz bilgisi, vardiya ve geç kalma kaydı, günlük ilk ve son işlem zamanı, aldığı ödemeler, bahşiş payları, kasa sayımları ve farkları, kasa güvenliği önlemleri ve sahibe giden bildirimler (bölüm 9.3), iptal ve iade gerekçeleri, e-posta raporlarında personel saatleri, süresiz saklama (bölüm 5).</p>
-<h2 id="b16-4">16.4 İşletme sahibi / yetkili aydınlatma metni (satıcının)</h2>
-<p>Bugünkü kısa metin bölüm 14.1'de. Eklenmesi gerekenler: lisans ve kalp atışıyla giden bilgiler (bölüm 3.2), destek mesajları ve ekler, sözleşme kabulü, duyuru okundu bilgisi, şifreli sunucu yedeği, "İşletmem var" (şifre doğrulama özeti, doğrulanmış e-posta, e-posta kodları ve bildirimleri), uzaktan destek ve uzaktan yönetim, Raporlarım posta kutusu, işlem kayıtlarında IP, satıcının bilgisayarındaki ve Google Drive'daki kopyalar, e-posta sağlayıcısı, satıcının yetkilileri, saklama süreleri, başvuru kanalı.</p>
-<h2 id="b16-5">16.5 Mola Lisans Sözleşmesi</h2>
-<p>Taslak Ek A'da; özeti bölüm 15.2'de, programla uyumu bu bölümün başında. Metin değişince sürüm numarası artırılır ve her işletme sahibine bir sonraki girişte yeniden sorulur.</p>
-<h2 id="b16-6">16.6 Abonelik ve hizmet sözleşmesi</h2>
-<p>Girdiler bölüm 15.1 ve 15.3'te: deneme, planlar, hizmet paketleri, fiyatların KDV hariç gösterimi ve değişebilmesi, dondurma, askı, elle ödeme kaydı, 14 gün internetsizlik ve "bir lisans bir bilgisayar" kuralı, sona ermede verinin durumu.</p>
-<h2 id="b16-7">16.7 Veri işleme sözleşmesi (satıcı ile işletme arasında)</h2>
-<p>Bölüm 2'deki değerlendirmeniz satıcının işletme adına işleme yaptığını gösterirse konular: şifreli sunucu yedeği (saklama süresi, silme, yer, satıcı bilgisayarındaki felaket kopyası), "İşletmem var" doğrulaması, internetten menü trafiğinin aktarımı (saklanmama), uzaktan destek erişimi (izin, kapsam, kayıt, yetkililer), destek ekleri, Raporlarım posta kutusu, alt işleyen olarak VDS sağlayıcısı, güvenlik önlemleri (bölüm 11), ihlal bildirimi, sona ermede silme.</p>
-<h2 id="b16-8">16.8 Uzaktan destek onay metni</h2>
-<p>"Mola ekibi bağlanabilsin" izni açılırken gösterilecek kısa metin. Girdiler: bölüm 8.2'deki kapsam (neyi görebilir, neyi göremez), süresiz ama her an geri alınabilir izin, kayıt ve bildirimler, bağlanabilecek kişiler (satıcı ve yetkilileri) ve gizlilik yükümlülükleri.</p>
-<h2 id="b16-9">16.9 Gizlilik ve çerez politikası</h2>
-<p>Taslaklar Ek B'de. Sitenin erişim kaydı tutmadığı, IP adresinin saklanmadığı, internetten menü ve <code>mola_browser</code> çerezi taslaklarda doğru anlatılıyor. Eksik olanlar bu bölümün başındaki listede (madde 1, 2, 6, 7).</p>
-<h2 id="b16-10">16.10 Web sitesi form metni</h2>
-<p>KVKK aydınlatma metni hazır (Ek B). Yer tutucular: unvan, açık adres, vergi no veya MERSİS, sunucu sağlayıcısının adı. E-postanın zorunlu hâle gelmesi metne işlenmeli ve onay sürümü artırılmalı.</p>
-<h2 id="b16-11">16.11 VERBİS ve marka</h2>
-<ul>
-  <li><strong>VERBİS:</strong> satıcının kayıt yükümlülüğü olup olmadığı (şahıs, düşük çalışan sayısı, ana faaliyet). İşletmelere kendi yükümlülükleri için bir bilgi notu verilip verilmeyeceği.</li>
-  <li><strong>Marka:</strong> "Mola" ve "Merkut Studios" için TÜRKPATENT araştırması ve başvuru; öngördüğümüz sınıflar 9 (yazılım), 35 (iş yönetimi hizmetleri) ve 42 (yazılım hizmeti). "Mola" yaygın bir sözcük olduğu için benzer marka riski. Alan adı molayazilim.com.tr alındı; merkutstudios.com alınmadı.</li>
-</ul>
-<h2 id="b16-12">16.12 Şirket kuruluşu</h2>
-<p>Satışlar başlayınca şirket kurulması planlanıyor. Sorular: şahıs döneminde imzalanan sözleşmelerin ve lisansların şirkete devri; metinlerde "Merkut Studios" adının nasıl yazılacağı (marka mı, unvan mı); vergi ve fatura (e-arşiv) geçişi; satıcının programdaki iletişim bilgilerinin güncellenmesi (Mola Yönetim'den tek yerden, imzalı olarak bütün kafelere gider).</p>
-
-<!-- ============================================================ 17 -->
-<h1 id="b17" class="akis"><span class="no">17</span>Açık sorular</h1>
-<h2 id="b17-1">17.1 Avukat için</h2>
+<h1 id="b14" class="akis"><span class="no">14</span>Açık sorular: avukat</h1>
 <ol>
-  <li>Bölüm 2'deki rol soruları (veri sorumlusu, veri işleyen).</li>
-  <li>Misafire ve rezervasyon müşterisine hangi metinle, nerede bilgi verileceği; işletme adına şablon hazırlanıp hazırlanamayacağı.</li>
-  <li>Saklama süreleri (bölüm 5 sonundaki sorular).</li>
-  <li>"İşletmem var": sahip şifresinin doğrulama özetinin Merkez'de tutulması, kilidin kendiliğinden kurulması ve "Mola yedeği açamaz" ifadesinin yazımı (bölüm 7.3).</li>
-  <li>Satıcının yetkilileriyle gizlilik taahhüdü ve iki adımlı girişin zorunlu tutulması (bölüm 8.4).</li>
-  <li>Kasa kayıtlarının çalışan izleme açısından değerlendirilmesi (bölüm 9.3).</li>
-  <li>Sözleşme sona erince işletmeye okunabilir veri dışa aktarımı verilmesi gerekir mi?</li>
-  <li>Lisans sözleşmesindeki sorumluluk sınırı, Elazığ yetki maddesi, 5846 sayılı Kanun atfı ve program dosyası denetiminin bildirimi (madde 6) yeterli mi?</li>
-  <li>Program dosyası denetimi ve "bir lisans bir bilgisayar" kuralı (bilgisayar kimliğinin anahtarlı özeti) kişisel veri işleme sayılır mı?</li>
-  <li>Kurtarma kodunun satıcıda hiç saklanmaması ve kod ile şifre kaybolunca verinin kurtarılamaması sözleşmede nasıl yazılmalı (madde 11.3)?</li>
-  <li>Uzaktan destek için yazılı ya da elektronik onayın biçimi.</li>
-  <li>Yurt dışı aktarım soruları (bölüm 12): Cloudflare, Google Drive, Gmail.</li>
-  <li>Satıcının bilgisayarındaki okunabilir destek talebi kopyası için gereken tedbirler (bölüm 3.4).</li>
-  <li>Satıcı şahısken bu metinlerin kimin adına yayımlanacağı; şirket kurulunca yeniden onay gerekir mi?</li>
+  <li><strong>Roller:</strong> satıcı, anahtarı olmadığı şifreli yedeği sakladığında veri işleyen sayılır mı; şifre doğrulama özetini de tutması bunu değiştirir mi? İnternetten menü trafiğini saklamadan aktarması, uzaktan destek erişimi ve destek eklerindeki kişisel veriler nasıl nitelendirilmeli; veri işleme sözleşmesi gerekir mi?</li>
+  <li><strong>Misafir ve rezervasyon:</strong> hangi metinle, nerede bilgi verilmeli; işletme adına şablon olur mu; önerilen Merkez cümlesi yeterli mi ve hangi metinde yer almalı?</li>
+  <li><strong>Saklama:</strong> çalışan adları, vardiyalar ve kasa kayıtlarının yıl paketlerinde süresiz kalması; etkinlik adının kalması; işlem kayıtları 10 yıl / IP 1 yıl; destek 2 yıl, reddedilen başvuru 1 yıl, engel 90 gün uygun mu? Çalışan hesabının silinmeyip kapatılması yeterli mi?</li>
+  <li><strong>"İşletmem var":</strong> doğrulama özetinin Merkez'de tutulması ve kilidin sorulmadan kurulması için bilgilendirme ya da onay gerekir mi; lisans 9.2, 9.3, 11.3 yeterli mi; hesap ele geçirme riski ve sahibin şifre ile e-posta güvenliği yükümlülüğü sözleşmeye yazılmalı mı?</li>
+  <li><strong>Yetkililer:</strong> hangi gizlilik taahhüdü imzalanmalı; iki adımlı giriş zorunlu olmalı mı?</li>
+  <li><strong>Kasa kayıtları:</strong> kişiye bağlı fark kaydı ve sahibe bildirim çalışan izleme sayılır mı; aydınlatmada nasıl anlatılmalı; delil olarak kullanılması için program bir şey yapmalı mı?</li>
+  <li><strong>Sözleşme sonu:</strong> işletmeye okunabilir dışa aktarım verilmeli mi?</li>
+  <li><strong>Lisans:</strong> sorumluluk sınırı, Elazığ yetkisi, 5846 atfı, dosya denetimi bildirimi (madde 6) yeterli mi; dosya denetimi ve bilgisayar kimliğinin anahtarlı özeti kişisel veri işleme sayılır mı; kurtarma kodu kaybının sonucu (madde 11.3) nasıl yazılmalı?</li>
+  <li><strong>Uzaktan destek:</strong> onayın biçimi (yazılı, elektronik).</li>
+  <li><strong>Yurt dışı:</strong> Cloudflare DNS ve Email Routing, Google Drive'daki şifreli yedekler, Brevo ile giden e-postalar (işletme sahiplerinin adresleri ve kodlar) ve Gmail kutusu yurt dışı aktarım sayılır mı; dayanağı ne olmalı; metinlerde nasıl anılmalı; Türkiye'de bir sağlayıcı seçilmeli mi?</li>
+  <li><strong>Çerez:</strong> <code>mola_browser</code> "zorunlu" sayılır mı; menüdeki bilgilendirme yeterli mi?</li>
+  <li><strong>Satıcının bilgisayarı:</strong> okunabilir destek kopyası için hangi tedbirler beklenir (disk şifrelemesi bu dosyada doğrulanmadı)?</li>
+  <li><strong>Şahıs ve şirket:</strong> metinler kimin adına yayımlanmalı; şirket kurulunca yeniden onay gerekir mi?</li>
 </ol>
-<h2 id="b17-2">17.2 Mali müşavir için</h2>
+<h2 id="b14-1">Mali müşavir için</h2>
 <ol>
-  <li><strong>e-Adisyon:</strong> 509 Sıra No.lu VUK Genel Tebliği'nin değişikliğiyle (2021) masada servis yapan kafe ve lokantalara GİB bildirimiyle e-Adisyon zorunluluğu getirilebiliyor. Mola'nın adisyonu e-Adisyon değildir. Hangi işletmelerin ne zaman zorunlu olduğu, Mola'nın bir özel entegratörle bağlanması gerekip gerekmediği. <span class="rozet dogrulanmadi">Doğrulanmadı</span> (kaynak ikincil; mevzuatın güncel hâli kontrol edilmeli)</li>
-  <li><strong>Yazar kasa (ÖKC):</strong> Mola yazar kasaya bağlanmaz; isteğe bağlı yardımcı kasiyere yazar kasaya ne gireceğini gösterir, gün sonunda Z raporu toplamı karşılaştırılabilir. Fişler "BİLGİ FİŞİ" başlıklıdır (bölüm 10). Bu başlık ve uygulama yeterli mi? Rakipler ÖKC bağlantısını ayrı ücretle satıyor.</li>
-  <li><strong>KDV dökümü:</strong> raporlardaki KDV bilgi amaçlıdır. Her satır satıldığı andaki oranı taşır. Hesap fişinde "KDV dahildir · %10: ..." yazar. Uygun mu?</li>
-  <li><strong>Satıcının KDV'si:</strong> yazılım hizmeti için %20 varsayıldı (Mola Yönetim'de ayarlanır). Doğru oran ve istisnalar; şahıs dönemi faturalandırması; e-arşiv.</li>
-  <li><strong>Saklama süreleri:</strong> satış kayıtlarının VUK ve TTK'ya göre saklanması gereken süre ile KVKK'nın "gerektiği kadar" ilkesinin uzlaştırılması. Program rakamları süresiz saklar, müşteri kişisel bilgilerini bir yıl sonra siler.</li>
-  <li><strong>Çalışan verisi:</strong> vardiya, bahşiş, kasa sayımları ve çalışma saatlerinin bordro ve SGK açısından saklanma süresi.</li>
-  <li><strong>Platform siparişleri:</strong> çevrimiçi ödenmiş platform siparişinde fiş ve fatura kuralı.</li>
-  <li><strong>Bahşiş ve kapora:</strong> bahşiş satış sayılmaz, kasada ayrı satırdır; rezervasyon kaporası alındığı an kasaya girer, hesaba düşülen kısmı satışın parçası olur, gelmeyen müşterinin kaporası "işletmede kalan" ayrı gelir olarak raporlanır. Muhasebe açısından uygun mu?</li>
+  <li><strong>e-Adisyon:</strong> masada servis yapan işletmeler için GİB bildirimiyle zorunluluk getirilebiliyor (509 Sıra No.lu VUK Genel Tebliği değişikliği, 2021) <span class="rozet dogrulanmadi">Doğrulanmadı</span> Kimler, ne zaman zorunlu; özel entegratör gerekir mi?</li>
+  <li><strong>Yazar kasa:</strong> "BİLGİ FİŞİ" başlığı, yardımcı ve Z raporu karşılaştırması yeterli mi?</li>
+  <li><strong>KDV:</strong> satır başına satış anı oranı ve fişteki "KDV dahildir · %10: ..." gösterimi uygun mu? Satıcının yazılım hizmeti için %20 varsayıldı; doğru oran, şahıs dönemi faturası, e-arşiv?</li>
+  <li><strong>Saklama:</strong> VUK ve TTK süreleri ile KVKK'nın "gerektiği kadar" ilkesi; program rakamları süresiz, müşteri bilgisini bir yıl sonra siler. Çalışan verisinin bordro ve SGK süresi?</li>
+  <li><strong>Platform siparişleri, bahşiş, kapora:</strong> çevrimiçi ödenmiş siparişte fiş kuralı; bahşiş satış sayılmaz; kapora alındığında kasaya girer, gelmeyen müşterininki "işletmede kalan" gelir olarak raporlanır. Uygun mu?</li>
 </ol>
 
+<!-- ============================================================ Ekler -->
 <!-- ============================================================ Ekler -->
 <h1 id="ek-a">Ek A: Mola Lisans Sözleşmesi taslağı (sürüm 4)</h1>
 <p class="kucuk gri">Metin <code>docs/hukuk/MOLA_LISANS_SOZLESMESI.md</code> dosyasından aynen alınmıştır; yalnız başlıktaki uzun tire iki nokta ile gösterilmiştir. Programda etkinleştirmede gösterilen metin budur.</p>
@@ -784,7 +515,6 @@
   <dt>Kafe sunucusu</dt><dd>İşletmenin kasa bilgisayarında çalışan Mola programı. Bütün işletme verisi buradadır.</dd>
   <dt>Mola Merkez</dt><dd>Satıcının sanal sunucudaki (VDS) programı: lisans, destek, güncelleme, şifreli yedek, misafir trafiği aktarımı.</dd>
   <dt>Mola Yönetim</dt><dd>Satıcının ve yetkililerinin Merkez'i yönettiği ekran (panel).</dd>
-  <dt>Yetkili</dt><dd>Satıcının Mola Yönetim'e kendi kullanıcı adı ve şifresiyle eklediği kişi.</dd>
   <dt>Kalp atışı</dt><dd>Kafenin Merkez'e 10 dakikada bir gönderdiği imzalı durum mesajı.</dd>
   <dt>Tünel</dt><dd>Kafenin Merkez'e kendisinin açtığı tek bağlantı; internetten açılan QR menünün istekleri bunun içinden kafeye gider.</dd>
   <dt>Şifreleme (AES-256-GCM)</dt><dd>Veriyi anahtar olmadan okunamaz ve değiştirilemez kılan standart yöntem.</dd>
@@ -798,9 +528,6 @@
   <dt>İşletmem var</dt><dd>İşletme sahibinin yeni bir bilgisayarda kendi şifresi ve e-posta koduyla verisine dönmesi.</dd>
   <dt>Yıl paketi</dt><dd>Kapanan bir yılın kayıtlarının, kişisel bilgileri silinerek taşındığı değiştirilemez dosya.</dd>
   <dt>Hash zinciri</dt><dd>Her kaydın bir önceki kaydın özetini taşıdığı kayıt dizisi; aradan bir kayıt silinir ya da değiştirilirse fark edilir.</dd>
-  <dt>Kör sayım</dt><dd>Kasayı sayan kişinin, beklenen tutarı görmeden saymasıdır.</dd>
-  <dt>ÖKC</dt><dd>Ödeme kaydedici cihaz (yazar kasa).</dd>
-  <dt>Z raporu</dt><dd>Yazar kasanın gün sonu toplam raporu.</dd>
   <dt>e-Adisyon</dt><dd>Adisyonun elektronik olarak GİB'e bildirildiği sistem.</dd>
 </dl>
 
