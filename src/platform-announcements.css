@@ -106,12 +106,16 @@
 .new-message-form .modal-actions .btn { gap:6px; }
 .new-message-why { margin:0 auto 0 0; }
 
-/* ---------- Menu: eight places (Paketler since 13 Ekim) ----------
-   Tablets (600–899 px): eight equal parts of the top strip, icon above the label so no label is cut.
-   Phones (under 600 px): the strip keeps its six parts; Duyurular and Paketler are icons beside the bell. */
+/* ---------- Menu: ten places (Paketler since 13 Ekim, Yedek and Güncellemeler since 14 Ekim) ----------
+   Tablets (600–899 px): eight equal parts of the top strip, icon above the label so no label is cut; Yedek and
+   Güncellemeler are icons beside the bell.
+   Phones (under 600 px): the strip keeps its six parts; Duyurular and Paketler join them beside the bell. */
 .yonetim-topbar-icon { display:none; }
 @media(max-width:899.98px) {
   .platform-page.yonetim .yonetim-nav { grid-template-columns:repeat(8,minmax(0,1fr)); }
+  .platform-page.yonetim .yonetim-nav button:is(.nav-backup, .nav-releases) { display:none; }
+  .yonetim .yonetim-topbar-icon:is(.yonetim-topbar-backup, .yonetim-topbar-releases) { display:inline-grid; place-items:center; width:44px; height:44px; padding:0; border-radius:12px; color:var(--y-muted); }
+  .yonetim .yonetim-topbar-icon.active { background:#efe2c9; color:var(--green); }
 }
 @media(min-width:600px) and (max-width:899.98px) {
   .platform-page.yonetim .yonetim-nav button { flex-direction:column; gap:2px; min-height:54px; padding:6px 2px; font-size:12px; line-height:1.2; }
@@ -130,6 +134,10 @@
 @media(max-width:419.98px) {
   .yonetim .yonetim-topbar-actions .btn { position:relative; width:44px; min-width:44px; height:44px; padding:0; justify-content:center; }
   .yonetim .yonetim-logout-text { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  /* Six icons beside the bell: the cup alone stands for the brand, the icons a little narrower. */
+  .yonetim .yonetim-topbar-brand .ybrand-word { display:none; }
+  .yonetim .yonetim-topbar-actions { gap:4px; }
+  .yonetim .yonetim-topbar-icon, .yonetim .yonetim-topbar-actions .btn { width:40px; min-width:40px; }
 }
 @media(max-width:1099.98px) {
   .yonetim .ann-compose-grid { grid-template-columns:minmax(0,1fr); }

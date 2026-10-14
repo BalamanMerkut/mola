@@ -13,7 +13,7 @@
 .customer-order .order-foot del{color:var(--muted)}
 /* Masanın hesabı: an item the waiter added (or another phone sent) is labelled and read-only; paid orders say so. */
 .customer-order-by,.customer-order-paid{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
-.customer-order-by{background:#eef2ea;color:#46604f}
+.customer-order-by{background:var(--surface-soft,#eef2ea);color:#46604f}
 .customer-order-paid{background:#e2efe3;color:#245a3c}
 .customer-order .order-head{flex-wrap:wrap;gap:6px 8px}
 /* QR siparişleri kapalı / kafeye ulaşılamıyor (8 Ekim): the notice above the menu (the basket waits). */
@@ -25,7 +25,7 @@
 .guest-privacy-main h2{font-size:16px;margin:18px 0 6px}
 .guest-privacy-main ul{padding-left:20px;margin:6px 0}
 .guest-privacy-main li{margin:4px 0}
-.guest-privacy-main code{background:#edf2e7;border-radius:4px;padding:1px 5px;font-size:13px}
+.guest-privacy-main code{background:var(--brand-soft,#edf2e7);border-radius:4px;padding:1px 5px;font-size:13px}
 .guest-privacy-draft{display:inline-block;background:#fff3c4;color:#6b5400;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;margin:12px 0 0}
 .guest-privacy-back{margin-top:16px}
 .customer-due .customer-due-vat{font-variant-numeric:tabular-nums}

@@ -3,28 +3,28 @@
 .payment-ledger h2{margin:0}
 .ledger-heading{display:flex;align-items:center;gap:8px}
 .ledger-controls{display:flex;flex-direction:column;gap:10px}
-.ledger-search{width:100%;min-height:42px;padding:9px 14px;border:1px solid #d9e1d5;border-radius:10px;background:#fff;color:var(--ink)}
+.ledger-search{width:100%;min-height:42px;padding:9px 14px;border:1px solid #d9e1d5;border-radius:10px;background:var(--paper,#fff);color:var(--ink)}
 .ledger-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
 .ledger-pills{display:flex;flex-wrap:wrap;gap:6px}
-.ledger-pills>button{min-height:34px;padding:6px 14px;border-radius:999px;border:1px solid #d9e1d5;background:#fff;color:#4f5e4d;font-size:12px;cursor:pointer}
+.ledger-pills>button{min-height:34px;padding:6px 14px;border-radius:999px;border:1px solid #d9e1d5;background:var(--paper,#fff);color:#4f5e4d;font-size:12px;cursor:pointer}
 .ledger-pills>button.active{background:var(--green);border-color:var(--green);color:#fff}
 .ledger-pills>button:disabled{cursor:default;opacity:.6}
-.ledger-custom{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.ledger-custom{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff)}
 .ledger-custom label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:#6e7b6c}
 .ledger-custom p{flex-basis:100%;margin:0}
 .ledger-summary{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#4f5e4d}
-.ledger-list{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ledger-list{list-style:none;margin:0;padding:0;background:var(--paper,#fff);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .ledger-list[aria-busy="true"]{opacity:.65}
 .ledger-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 12px;padding:6px 12px;border-top:1px solid #f0f2ec}
 .ledger-row:first-child{border-top:0}
-.ledger-row.open{background:#fbfcf9}
+.ledger-row.open{background:var(--paper,#fff)}
 .ledger-main{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"time table amount" ". badges badges";align-items:center;gap:4px 12px;min-width:0;padding:8px 0;border:0;background:none;color:inherit;text-align:left;cursor:pointer}
 .ledger-main time{grid-area:time;display:flex;flex-direction:column;font-variant-numeric:tabular-nums;color:#6e7b6c;font-size:13px;min-width:44px}
 .ledger-main time small{font-size:10px}
 .ledger-table{grid-area:table;font-weight:600;overflow-wrap:anywhere}
 .ledger-amount{grid-area:amount;font-variant-numeric:tabular-nums;white-space:nowrap}
 .ledger-badges{grid-area:badges;display:flex;flex-wrap:wrap;gap:4px}
-.ledger-badge{font-size:11px;line-height:1.5;padding:1px 8px;border-radius:999px;background:#eef2ea;color:#4f5e4d}
+.ledger-badge{font-size:11px;line-height:1.5;padding:1px 8px;border-radius:999px;background:var(--surface-soft,#eef2ea);color:#4f5e4d}
 .ledger-badge.cash{background:#eaf3e2;color:#3b6a2a}
 .ledger-badge.card{background:#e6eef7;color:#2f557c}
 .ledger-badge.fix{background:#fbf0e2;color:#855c25}
@@ -37,7 +37,7 @@
 .ledger-items li>span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
 .ledger-items small{color:#8a9487}
 .ledger-items small.line-note{color:#7a4a0c;margin-top:4px;font-size:12px}
-.ledger-corrections li{display:grid;gap:2px;padding:8px 10px;border-radius:8px;background:#f6f8f3;overflow-wrap:anywhere}
+.ledger-corrections li{display:grid;gap:2px;padding:8px 10px;border-radius:8px;background:var(--surface-soft,#f6f8f3);overflow-wrap:anywhere}
 .ledger-corrections small{color:#6e7b6c}
 .ledger-facts{display:flex;flex-wrap:wrap;gap:8px 20px;margin:0}
 .ledger-facts div{display:flex;flex-direction:column;gap:2px}
@@ -46,8 +46,8 @@
 .ledger-form{margin:4px 0 12px}
 .ledger-form .restock-check{display:flex;align-items:center;gap:10px;min-height:44px;font-weight:600}
 .ledger-form .restock-check input{width:20px;height:20px;flex:none}
-.ledger-form .restock-fields{display:grid;gap:8px;padding:10px 12px;border-radius:12px;background:#f6f8f4}
+.ledger-form .restock-fields{display:grid;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface-soft,#f6f8f4)}
 .ledger-form .restock-fields p{margin:0}
-.ledger-empty{margin:0;padding:18px;text-align:center;color:#6e7b6c;background:#fff;border:1px solid var(--line);border-radius:12px}
+.ledger-empty{margin:0;padding:18px;text-align:center;color:#6e7b6c;background:var(--paper,#fff);border:1px solid var(--line);border-radius:12px}
 .ledger-more{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:#6e7b6c}
 @media (max-width:560px){.ledger-row{padding:6px 10px;gap:4px 8px}.ledger-main{gap:4px 8px}.ledger-fix{padding-inline:10px}}

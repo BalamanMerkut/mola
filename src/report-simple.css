@@ -7,13 +7,13 @@
 .simple-report{display:flex;flex-direction:column;gap:14px;min-width:0}
 .simple-sentence{margin:0;padding:18px 20px;border-radius:12px;background:#eaf2e6;border:1px solid #cbdcc0;color:#1d3a2f;font-size:18px;line-height:1.55;font-weight:500;overflow-wrap:anywhere}
 .simple-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.simple-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.simple-card{background:var(--paper,#fff);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0;display:flex;flex-direction:column;gap:6px}
 .simple-card strong{font-size:26px;line-height:1.2;letter-spacing:-.5px;color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .simple-card small{color:#5f6b62;font-size:12px;line-height:1.5}
 .simple-card small b{color:var(--ink);font-weight:600}
 .simple-label{display:inline-flex;align-items:center;gap:6px;color:#5f6b62;font-size:13px;font-weight:600}
 .simple-label svg{color:var(--green)}
-.simple-kept{background:#f3f8f1;border-color:#cbdcc0}
+.simple-kept{background:var(--surface-soft,#f3f8f1);border-color:#cbdcc0}
 .simple-kept strong{color:var(--green)}
 .simple-formula{font-style:italic}
 .simple-split{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:13px}
@@ -24,7 +24,7 @@
 .simple-top ol{margin:0;padding:0;list-style:none;counter-reset:top;display:flex;flex-direction:column}
 .simple-top li{counter-increment:top;display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
 .simple-top li:first-child{border-top:0}
-.simple-top li::before{content:counter(top);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#eaf2e6;color:var(--green);font-size:12px;font-weight:700}
+.simple-top li::before{content:counter(top);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--brand-soft,#eaf2e6);color:var(--green);font-size:12px;font-weight:700}
 .simple-top-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .simple-top b{font-variant-numeric:tabular-nums}
 .simple-kasa p{margin:0;font-size:16px;line-height:1.5;color:var(--ink)}
@@ -36,7 +36,7 @@
 .simple-tip-card{position:relative;cursor:pointer}
 .simple-tip-card .simple-tip-dot{margin-left:2px}
 .simple-tip-card.tip-open{z-index:5;box-shadow:0 0 0 2px #cbdcc0}
-.simple-tip-pop{position:absolute;left:10px;right:10px;top:calc(100% - 6px);z-index:6;cursor:auto;background:#fff;border:1px solid #cbdcc0;border-radius:12px;box-shadow:0 10px 28px rgba(29,58,47,.18);padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--ink);min-width:220px}
+.simple-tip-pop{position:absolute;left:10px;right:10px;top:calc(100% - 6px);z-index:6;cursor:auto;background:var(--paper,#fff);border:1px solid #cbdcc0;border-radius:12px;box-shadow:0 10px 28px rgba(29,58,47,.18);padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--ink);min-width:220px}
 .simple-tip-rows{margin:0;display:flex;flex-direction:column;gap:5px}
 .simple-tip-rows>div{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
 .simple-tip-rows dt{margin:0;display:flex;flex-direction:column}
@@ -80,8 +80,8 @@
 .accountant-export>p{margin:0;line-height:1.55}
 .export-choices{border:0;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .export-choices legend{font-weight:600;margin:0 0 8px;padding:0}
-.export-choice{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;min-height:44px;min-width:0}
-.export-choice.active{border-color:var(--green);background:#f3f8f1}
+.export-choice{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--paper,#fff);cursor:pointer;min-height:44px;min-width:0}
+.export-choice.active{border-color:var(--green);background:var(--surface-soft,#f3f8f1)}
 .export-choice input{margin-top:3px;accent-color:var(--green)}
 .export-choice span{display:flex;flex-direction:column;gap:2px;min-width:0}
 .export-choice small{color:#5f6b62;overflow-wrap:anywhere}
@@ -110,10 +110,10 @@
 /* 13 Ekim tanıtım: one "Yazdır ve paylaş" menu instead of four buttons in two rows. */
 .report-share{position:relative}
 .report-share-btn{display:inline-flex;align-items:center;gap:8px}
-.report-share-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:min(340px,calc(100vw - 32px));background:#fff;border:1px solid #e1e8dc;border-radius:16px;box-shadow:0 14px 34px rgba(20,40,30,.14);padding:6px;display:grid;gap:2px}
+.report-share-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:min(340px,calc(100vw - 32px));background:var(--paper,#fff);border:1px solid #e1e8dc;border-radius:16px;box-shadow:0 14px 34px rgba(20,40,30,.14);padding:6px;display:grid;gap:2px}
 .report-share-item{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:12px;background:none;font:inherit;color:inherit;cursor:pointer}
-.report-share-item:hover,.report-share-item:focus-visible{background:#f3f6f1}
+.report-share-item:hover,.report-share-item:focus-visible{background:var(--surface-soft,#f3f6f1)}
 .report-share-item strong{display:flex;align-items:center;gap:6px;font-size:14px}
 .report-share-item small{display:block;color:#66746b;font-size:12px;margin-top:2px}
 .report-share-item.locked{opacity:.7}
-.report-share-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#eef3ec;color:#234c3e}
+.report-share-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:var(--surface-soft,#eef3ec);color:#234c3e}

@@ -1,20 +1,20 @@
 /* Key protection: recovery code, second backup place, restore, locked screen. Pastel theme colours only. */
-.recovery-code{display:grid;grid-template-columns:repeat(3,auto);justify-content:center;gap:6px 14px;margin:14px 0;padding:16px 12px;border:1px dashed #b9c6b3;border-radius:12px;background:#f7f5ef;font:700 clamp(17px,4.6vw,23px)/1.4 Consolas,"Courier New",monospace;letter-spacing:2px;color:var(--green);user-select:all}
+.recovery-code{display:grid;grid-template-columns:repeat(3,auto);justify-content:center;gap:6px 14px;margin:14px 0;padding:16px 12px;border:1px dashed #b9c6b3;border-radius:12px;background:var(--surface-soft,#f7f5ef);font:700 clamp(17px,4.6vw,23px)/1.4 Consolas,"Courier New",monospace;letter-spacing:2px;color:var(--green);user-select:all}
 .recovery-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .recovery-actions .btn{display:inline-flex;align-items:center;gap:6px}
 .recovery-saved{display:flex;align-items:center;gap:8px;color:var(--green);font-weight:600;margin:6px 0 12px}
 .recovery-renew{margin-top:10px}
 .recovery-renew label,.restore-code label,.locked-form label{display:flex;flex-direction:column;gap:6px;font-weight:600}
-.recovery-renew input,.restore-code input,.locked-form input,.restore-search input,.second-places>input{min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;min-width:0;width:100%}
+.recovery-renew input,.restore-code input,.locked-form input,.restore-search input,.second-places>input{min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:var(--field,#fff);min-width:0;width:100%}
 .recovery-card>.notice,.second-card>.notice{margin:10px 0}
 /* "Kaydettim": two groups typed back from the paper (or the whole code after a restart). */
 .recovery-check label{display:flex;flex-direction:column;gap:6px;font-weight:600}
-.recovery-check input{min-height:44px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;min-width:0;width:100%;font:700 18px Consolas,"Courier New",monospace;letter-spacing:2px;text-transform:uppercase}
+.recovery-check input{min-height:44px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:var(--field,#fff);min-width:0;width:100%;font:700 18px Consolas,"Courier New",monospace;letter-spacing:2px;text-transform:uppercase}
 .recovery-groups{display:grid;grid-template-columns:repeat(2,minmax(0,160px));gap:12px;margin:12px 0}
 .recovery-later{display:block;margin:2px 0 8px;color:var(--muted)}
 /* Found backups: when, how big, where. */
 .restore-list .restore-meta{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12px;color:var(--muted)}
-.restore-source{display:inline-block;padding:1px 8px;border-radius:999px;background:#eef3ec;color:var(--green);font-weight:600;font-size:11px}
+.restore-source{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--surface-soft,#eef3ec);color:var(--green);font-weight:600;font-size:11px}
 .restore-source.other{background:#f3ece2;color:#7a5a32}
 .restore-unchecked{color:#9a4a2a}
 .second-card .device-check-list,.platform-backup .device-check-list{margin:10px 0}
@@ -24,8 +24,8 @@
 .second-card .backup-ok{color:var(--green)}.second-card .backup-warn{color:#9a4a2a}
 .second-path{overflow-wrap:anywhere;margin:-8px 0 10px}
 .second-places{display:flex;flex-direction:column;gap:8px;margin:10px 0}
-.second-places>label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;min-width:0}
-.second-places>label.active{border-color:#91ab91;background:#f1f6ef}
+.second-places>label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper,#fff);cursor:pointer;min-width:0}
+.second-places>label.active{border-color:#91ab91;background:var(--surface-soft,#f1f6ef)}
 .second-places>label>span{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
 .second-places small{color:var(--muted);font-size:11px}
 .restore-search{display:flex;gap:8px;margin:12px 0}
@@ -33,19 +33,19 @@
 .restore-list{max-height:260px;overflow:auto}
 .restore-code{margin-top:12px}
 /* "Yedekten geri yükle": flash drive / folder or Mola Merkez (sunucu yedeği). */
-.restore-modes{display:flex;gap:6px;padding:4px;border:1px solid var(--line);border-radius:12px;background:#f6f8f4;margin-bottom:12px}
+.restore-modes{display:flex;gap:6px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft,#f6f8f4);margin-bottom:12px}
 .restore-modes button{flex:1;min-height:44px;border:0;border-radius:9px;background:transparent;display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer}
-.restore-modes button.active{background:#fff;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.restore-modes button.active{background:var(--paper,#fff);color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 /* "İşletmem var": three steps (giriş → e-posta kodu → verileri getir). */
 .owner-steps{list-style:none;display:flex;gap:6px;padding:0;margin:0 0 16px}
-.owner-steps li{flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#f6f8f4;color:var(--muted);font-size:13px;font-weight:600}
-.owner-steps li>span{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;background:#fff;border:1.5px solid #c9d2c4;font-size:12px}
-.owner-steps li.active{background:#eef3ec;color:var(--ink)}
+.owner-steps li{flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--surface-soft,#f6f8f4);color:var(--muted);font-size:13px;font-weight:600}
+.owner-steps li>span{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--paper,#fff);border:1.5px solid #c9d2c4;font-size:12px}
+.owner-steps li.active{background:var(--surface-soft,#eef3ec);color:var(--ink)}
 .owner-steps li.active>span{border-color:var(--green);color:var(--green)}
 .owner-steps li.done>span{background:#7f9f86;border-color:#7f9f86;color:#fff}
 .owner-form{display:flex;flex-direction:column;gap:12px}
 .owner-form label{display:flex;flex-direction:column;gap:6px;font-weight:600}
-.owner-form input{min-height:44px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;width:100%;font:inherit}
+.owner-form input{min-height:44px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:var(--field,#fff);width:100%;font:inherit}
 .owner-form input.owner-code{font:600 24px Consolas,"Courier New",monospace;letter-spacing:8px;text-align:center;max-width:240px}
 .owner-form .recovery-actions .btn{display:inline-flex;align-items:center;gap:6px}
 .owner-progress{margin:12px 0}
@@ -57,21 +57,21 @@
 .backup-second{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
 .backup-second h3,.security-dialog h3{display:flex;align-items:center;gap:6px;margin:16px 0 8px;font-size:15px}
 .security-checklist{list-style:none;padding:0;margin:8px 0 4px;display:flex;flex-direction:column;gap:8px}
-.security-checklist li{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.security-checklist li{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper,#fff)}
 .security-checklist .check-mark{width:22px;height:22px;flex:none;border-radius:50%;border:1.5px solid #c9d2c4;display:grid;place-items:center;color:#fff}
 .security-checklist li.done .check-mark{background:#7f9f86;border-color:#7f9f86}
 .security-checklist li.done{color:var(--green)}
 .security-checklist .help-tip{margin-left:auto}
 .security-checklist .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.welcome-dialog .welcome-choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
-.welcome-dialog .welcome-choice:hover{border-color:#91ab91;background:#f4f8f2}
+.welcome-dialog .welcome-choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);color:var(--ink)}
+.welcome-dialog .welcome-choice:hover{border-color:#91ab91;background:var(--surface-soft,#f4f8f2)}
 .welcome-dialog .welcome-choice span{display:flex;flex-direction:column;gap:3px}
 .welcome-dialog .welcome-choice small{color:var(--muted)}
 .desktop-rail button{position:relative}
-.desktop-rail .rail-dot{position:absolute;top:7px;right:14px;width:8px;height:8px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 2px #17342a}
+.desktop-rail .rail-dot{position:absolute;top:7px;right:14px;width:8px;height:8px;border-radius:50%;background:#e0a458;box-shadow:0 0 0 2px var(--rail,#17342a)}
 .link-button{border:0;background:none;padding:0;color:inherit;text-decoration:underline;font-weight:600}
-.locked-screen{position:fixed;inset:0;z-index:300;background:#f6f7f4;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
-.locked-card{width:min(460px,100%);background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 24px;box-shadow:0 20px 60px #0c21150f;text-align:center}
+.locked-screen{position:fixed;inset:0;z-index:300;background:var(--surface-soft,#f6f7f4);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.locked-card{width:min(460px,100%);background:var(--paper,#fff);border:1px solid var(--line);border-radius:16px;padding:28px 24px;box-shadow:0 20px 60px #0c21150f;text-align:center}
 .locked-card h1{font-family:Georgia,serif;font-weight:400;font-size:28px;margin:10px 0 8px;display:flex;align-items:center;justify-content:center}
 .locked-card .brand{justify-content:center}
 .locked-icon{display:inline-grid;place-items:center;width:60px;height:60px;border-radius:50%;background:#f3ebdd;color:#8d6d4e;margin-top:16px}
@@ -82,11 +82,11 @@
 
 /* "İşletme sahibi şifresini unuttum": two ways (recovery code, the Mola team's one-time code), two steps. */
 .owner-reset-ways{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
-.owner-reset-ways button{border:1px solid #d6ddd2;border-radius:999px;background:#fff;padding:6px 14px;font-weight:600;color:var(--muted);cursor:pointer}
-.owner-reset-ways button.active{background:#eef4ea;border-color:#b9c6b3;color:var(--green)}
+.owner-reset-ways button{border:1px solid #d6ddd2;border-radius:999px;background:var(--paper,#fff);padding:6px 14px;font-weight:600;color:var(--muted);cursor:pointer}
+.owner-reset-ways button.active{background:var(--brand-soft,#eef4ea);border-color:#b9c6b3;color:var(--green)}
 .owner-reset-ways button:disabled{opacity:.55;cursor:not-allowed}
 .owner-reset{display:grid;gap:10px}
 .owner-reset label{display:flex;flex-direction:column;gap:6px;font-weight:600}
-.owner-reset input:not([type=radio]){min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:#fff;min-width:0;width:100%}
+.owner-reset input:not([type=radio]){min-height:42px;border:1px solid #d6ddd2;border-radius:9px;padding:8px 12px;background:var(--field,#fff);min-width:0;width:100%}
 .owner-reset-accounts{display:grid;gap:6px}
 .owner-reset-accounts label{flex-direction:row;align-items:center;gap:8px;font-weight:400;overflow-wrap:anywhere}

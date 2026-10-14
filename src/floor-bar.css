@@ -8,35 +8,35 @@
 
 .floor-filters{display:flex;gap:5px;margin:0 0 12px;overflow-x:auto;scrollbar-width:none}
 .floor-filters::-webkit-scrollbar{display:none}
-.floor-filters button{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 9px;border:1px solid #d9e0d4;border-radius:22px;background:#fff;color:#4f5c4c;font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
-.floor-filters button span{min-width:20px;padding:1px 6px;border-radius:10px;background:#eef2ea;font-size:12.5px;text-align:center}
+.floor-filters button{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 9px;border:1px solid #d9e0d4;border-radius:22px;background:var(--paper,#fff);color:#4f5c4c;font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+.floor-filters button span{min-width:20px;padding:1px 6px;border-radius:10px;background:var(--surface-soft,#eef2ea);font-size:12.5px;text-align:center}
 .floor-filters button.selected{background:var(--green);border-color:var(--green);color:#fff}
 .floor-filters button.selected span{background:#ffffff2e;color:#fff}
 .floor-filters button.attention:not(.selected){border-color:#e0b25a;background:#fff6e2;color:#7a4f0c}
 .floor-filters button.attention:not(.selected) span{background:#f3dfb2}
 
 .floor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.floor-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:88px;padding:9px 10px;border:1.5px solid #e1e7da;border-radius:12px;background:#fff;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0}
+.floor-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:88px;padding:9px 10px;border:1.5px solid #e1e7da;border-radius:12px;background:var(--paper,#fff);color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0}
 .floor-tile-top{display:flex;align-items:center;justify-content:space-between;width:100%}
 .floor-tile-top strong{font-size:22px;font-weight:700;line-height:1.1}
 .floor-tile-call{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#b3261e;color:#fff}
 .floor-tile-amount{font-size:14px;font-weight:600;color:#3d4b3a}
 .floor-tile.empty .floor-tile-amount{color:#9aa395;font-weight:500}
 .floor-tile-state{display:inline-flex;align-items:center;gap:3px;margin-top:auto;font-size:12px;font-weight:700;color:#5d6a5a;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.floor-tile.open{background:#f5f8f2;border-color:#cddcc4}
+.floor-tile.open{background:#e6efdf;border-color:#cddcc4}
 .floor-tile.ready{border-color:#d9a03a;background:#fff7e6}
 .floor-tile.ready .floor-tile-state{color:#8a5a12}
 .floor-tile.reserved{border-color:var(--accent,#b96844);background:#fdf3ee}
 .floor-tile.reserved .floor-tile-state,.floor-tile.asking .floor-tile-state{color:#9a4f2c}
 .floor-tile.held-busy{box-shadow:inset 3px 0 0 var(--accent,#b96844)}
 .floor-tile.asking{border-color:var(--accent,#b96844);border-style:dashed;background:#fdf3ee}
-.floor-tile.cleaning{border-color:#c9cfc4;background:#f1f2ee}
+.floor-tile.cleaning{border-color:#c9cfc4;background:#e6e7e1}
 .floor-tile:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .floor-area-title{margin:14px 0 8px;font-size:13px;font-weight:700;color:#6b7768}
 .floor-takeaways{margin-top:14px}
 
 /* The counter head: the day's line, the cash chip and the table actions in one row above the tables. */
-.floor-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 16px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.floor-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 16px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff)}
 .floor-head>.floor-line{flex:1 1 320px}
 .floor-head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .floor-head-actions .btn{min-height:40px;padding:8px 14px}
@@ -50,7 +50,7 @@
 .cash-chip span{overflow:hidden;text-overflow:ellipsis}
 .cash-chip.warn{border-color:#e4c27f;background:#fff5df;color:#7a4f0c}
 .cash-chip[aria-expanded=true]{box-shadow:0 0 0 3px #23574326}
-.cash-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:25;display:grid;gap:6px;min-width:230px;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 14px 34px #1c2e2433}
+.cash-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:25;display:grid;gap:6px;min-width:230px;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--paper,#fff);box-shadow:0 14px 34px #1c2e2433}
 .cash-menu .btn{display:flex;justify-content:flex-start;gap:9px;width:100%;min-height:44px;margin:0}
 
 /* The waiter's phone: the tile grid right under the filters, three columns, area names small. */

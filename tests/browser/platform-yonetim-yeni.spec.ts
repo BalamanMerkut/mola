@@ -25,7 +25,7 @@ test('menu: Paketler with Hizmet fiyatları under it, Destek above Ayarlar; phon
   await page.setViewportSize({ width: 1280, height: 860 });
   await openYonetim(page);
   const nav = page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' });
-  expect(await nav.getByRole('button').evaluateAll(items => items.map(b => b.getAttribute('aria-label')))).toEqual(['Bugün', 'İşletmeler', 'Başvurular', 'Duyurular', 'Satışlarım', 'Paketler', 'Destek', 'Ayarlar']);
+  expect(await nav.getByRole('button').evaluateAll(items => items.map(b => b.getAttribute('aria-label')))).toEqual(['Bugün', 'İşletmeler', 'Başvurular', 'Duyurular', 'Satışlarım', 'Paketler', 'Yedek', 'Güncellemeler', 'Destek', 'Ayarlar']);
   await yonetimGo(page, 'Paketler');
   await expect(page.getByRole('heading', { name: 'Paketler', level: 1 })).toBeVisible();
   const tabs = page.getByRole('navigation', { name: 'Paketler bölümleri' });

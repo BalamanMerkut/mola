@@ -18,15 +18,18 @@ async function shot(page: Page, folder: string, file: string, path: string) {
   mkdirSync(folder, { recursive: true }); await page.screenshot({ path: `${folder}/${file}` });
 }
 /** Own bubbles hug the right edge of the conversation, the other side's the left edge. */
-/** `otherColour`: the other side's bubble colour (white in the café; Mola Yönetim's matte cream, 14 Ekim). */
-async function sides(thread: Locator, otherColour = 'rgb(255, 255, 255)') {
+/** The other side's bubbles: one light paper colour (the palette's in the café, Yönetim's cream; 14 Ekim), never the own side's. */
+async function sides(thread: Locator) {
   const scroller = await rect(thread.locator('.tc-scroll'));
   const mine = await rect(thread.locator('.tc-row.mine .tc-bubble').last()), theirs = await rect(thread.locator('.tc-row.theirs .tc-bubble').last());
   expect(scroller.x + scroller.width - (mine.x + mine.width)).toBeLessThan(30);
   expect(theirs.x - scroller.x).toBeLessThan(30);
   const colours = await thread.evaluate(t => [...t.querySelectorAll('.tc-row.mine .tc-bubble, .tc-row.theirs .tc-bubble')].slice(-40).map(b => `${b.closest('.tc-row')!.classList.contains('mine') ? 'mine' : 'theirs'}:${getComputedStyle(b).backgroundColor}`));
-  expect(colours.filter(c => c.startsWith('theirs:')).every(c => c.endsWith(otherColour))).toBe(true);
-  expect(colours.filter(c => c.startsWith('mine:')).every(c => !c.endsWith(otherColour))).toBe(true);
+  const theirPaper = new Set(colours.filter(c => c.startsWith('theirs:')).map(c => c.slice(7))), ownColours = colours.filter(c => c.startsWith('mine:')).map(c => c.slice(5));
+  expect(theirPaper.size).toBe(1);
+  const [paper] = [...theirPaper], channels = paper.match(/\d+/g)!.slice(0, 3).map(Number);
+  expect(Math.min(...channels)).toBeGreaterThan(200);
+  expect(ownColours.every(c => c !== paper)).toBe(true);
 }
 async function ownerContext(browser: import('@playwright/test').Browser, username: string) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 860 } });
@@ -116,7 +119,7 @@ test('Destek is a chat on both sides: bubbles, day and system lines, retry after
     await reply.press('Enter');
     await expect(thread.locator('.tc-row.mine')).toHaveCount(1);
     await expect(row.locator('.tc-chip')).toHaveText('Açık');
-    await sides(thread, 'rgb(241, 234, 220)');
+    await sides(thread);
     // The vendor's send is answered but the answer is lost: the retry does not save it twice.
     await page.route('**/api/merkez/admin/tickets/reply', async route => { const response = await route.fetch(); expect(response.ok()).toBe(true); await route.abort('failed'); });
     await reply.fill('Bir de yazıcıyı kapatıp açmayı deneyin.'); await reply.press('Enter');

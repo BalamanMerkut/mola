@@ -1,7 +1,7 @@
 /* Yazar kasa yardımcısı (src/FiscalHelper.tsx): the card after a payment, its dock, and the closing's comparison. */
-.fiscal-card{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:0 0 12px;padding:12px 14px;border:1px solid #cfdcc8;border-radius:14px;background:#f4f8f1;color:var(--ink)}
+.fiscal-card{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:0 0 12px;padding:12px 14px;border:1px solid #cfdcc8;border-radius:14px;background:var(--surface-soft,#f4f8f1);color:var(--ink)}
 .fiscal-card.refund{border-color:#e6cdb9;background:#fbf4ee}
-.fiscal-card.marked{border-color:#d7e0d2;background:#fbfcfa}
+.fiscal-card.marked{border-color:#d7e0d2;background:var(--paper,#fff)}
 .fiscal-card header{display:flex;align-items:center;gap:8px;min-width:0}
 .fiscal-card header>svg{flex:none;color:var(--green)}
 .fiscal-card header strong{font-size:15px}
@@ -11,7 +11,7 @@
 .fiscal-rows{display:grid;gap:6px;margin:0;padding:0;list-style:none}
 .fiscal-rows li{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .fiscal-rows li>span{font-size:15px;font-weight:650}
-.fiscal-amount{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:4px 12px;border:1px solid #c5d4bd;border-radius:12px;background:#fff;color:var(--green);cursor:pointer;user-select:all}
+.fiscal-amount{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:4px 12px;border:1px solid #c5d4bd;border-radius:12px;background:var(--paper,#fff);color:var(--green);cursor:pointer;user-select:all}
 .fiscal-amount strong{font-size:26px;line-height:1.1;font-weight:750;font-variant-numeric:tabular-nums}
 .fiscal-amount small{font-size:12px;color:var(--green)}
 .fiscal-amount:hover,.fiscal-amount:focus-visible{border-color:var(--green)}
@@ -21,7 +21,7 @@
 .fiscal-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .fiscal-actions small{flex:1 1 160px;font-size:12.5px;color:var(--muted)}
 .fiscal-tick{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border:1px solid var(--green);border-radius:12px;background:var(--green);color:#fff;font-size:15px;font-weight:700;cursor:pointer}
-.fiscal-tick.small{min-height:36px;padding:0 10px;font-size:13px;border-radius:10px;background:#fff;color:var(--green)}
+.fiscal-tick.small{min-height:36px;padding:0 10px;font-size:13px;border-radius:10px;background:var(--paper,#fff);color:var(--green)}
 .fiscal-tick:disabled{opacity:.55}
 .fiscal-done{display:inline-flex;align-items:center;gap:6px;margin:0;font-size:13.5px;font-weight:650;color:var(--green)}
 .fiscal-card .field-error{margin:0}
@@ -38,14 +38,14 @@
 .fiscal-unfold svg{flex:none;color:var(--green)}
 .fiscal-card.folded .fiscal-close{margin:0;min-width:40px;height:40px}
 /* K-E: more than three cards in the dock: the folded ones are this one line until tapped. */
-.fiscal-group{display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;padding:6px 12px;border:1px solid #cfdcc8;border-radius:14px;background:#f4f8f1;color:var(--ink);font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;box-shadow:0 8px 22px -12px #1c2e2459;pointer-events:auto}
+.fiscal-group{display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;padding:6px 12px;border:1px solid #cfdcc8;border-radius:14px;background:var(--surface-soft,#f4f8f1);color:var(--ink);font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;box-shadow:0 8px 22px -12px #1c2e2459;pointer-events:auto}
 .fiscal-group span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fiscal-group svg{flex:none;color:var(--green)}
 @media(max-width:700px){.fiscal-dock{bottom:calc(84px + env(safe-area-inset-bottom,0px))}.fiscal-amount strong{font-size:22px}}
 @media print{.fiscal-dock{display:none}}
 
 /* Gün sonu: "Yazar kasa karşılaştırması". */
-.fiscal-closing{display:grid;gap:8px;margin:0 0 16px;padding:14px 16px;border:1px solid #edf0e9;border-radius:14px;background:#fbfcfa}
+.fiscal-closing{display:grid;gap:8px;margin:0 0 16px;padding:14px 16px;border:1px solid #edf0e9;border-radius:14px;background:var(--paper,#fff)}
 .fiscal-closing h3{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--ink)}
 .fiscal-closing h3 svg{color:var(--green)}
 .fiscal-should{margin:0;font-size:14px;line-height:1.5}
@@ -56,7 +56,7 @@
 .fiscal-z-fields label{margin:0}
 .fiscal-z-rates summary{min-height:36px;display:flex;align-items:center;cursor:pointer;font-size:13px;color:var(--green);font-weight:600}
 .fiscal-z-rates label{margin:6px 0 0}
-.fiscal-z{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:2px 12px;padding:10px 12px;border-radius:12px;border:1px solid #d7e0d2;background:#fff}
+.fiscal-z{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:2px 12px;padding:10px 12px;border-radius:12px;border:1px solid #d7e0d2;background:var(--paper,#fff)}
 .fiscal-z span{font-size:13px;font-weight:650;color:#5d6a60}
 .fiscal-z strong{font-size:22px;font-variant-numeric:tabular-nums;justify-self:end}
 .fiscal-z small,.fiscal-z p{grid-column:1/-1;margin:0;font-size:13px;color:#5d6a60}
@@ -66,7 +66,7 @@
 .fiscal-z.over strong{color:#8a5a1f}
 .fiscal-open h4{margin:4px 0 6px;font-size:13.5px}
 .fiscal-open ul{display:grid;gap:4px;margin:0;padding:0;list-style:none}
-.fiscal-open li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:4px 10px;min-height:40px;padding:4px 8px;border-radius:10px;background:#fff;font-size:13px}
+.fiscal-open li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:4px 10px;min-height:40px;padding:4px 8px;border-radius:10px;background:var(--paper,#fff);font-size:13px}
 .fiscal-open li strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fiscal-open li>span{font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:520px){.fiscal-open li{grid-template-columns:auto minmax(0,1fr)}.fiscal-open li>span:nth-of-type(2){grid-column:2}}

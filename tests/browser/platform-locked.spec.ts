@@ -57,8 +57,7 @@ test('Mola Yönetim key protection: "Önce kurtarma kodunuzu kaydedin", the key 
     await page.getByLabel('Kullanıcı adı').fill('admin');
     await page.getByLabel('Şifre', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Giriş yap', exact: true }).click();
-    await page.getByRole('button', { name: 'Ayarlar' }).click();
-    await page.getByRole('button', { name: 'Yedek', exact: true }).click();
+    await page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' }).getByRole('button', { name: 'Yedek', exact: true }).click();
     await expect(page.getByTestId('merkez-key-protection')).toContainText('bu Windows kullanıcısına');
     await expect(page.getByRole('dialog', { name: 'Önce kurtarma kodunuzu kaydedin' })).toHaveCount(0);
     await yonetimShot(page, 'anahtar-korumada.png', test.info().outputPath('protected.png'));

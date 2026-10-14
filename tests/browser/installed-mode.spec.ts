@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { ensureSetup } from './helpers';
 
 // The browser-test server runs like an installed café (SERVE_BUILD=1, scripts/test-server.mjs): developer wording and the
@@ -27,7 +28,8 @@ test('an installed café shows no test or developer wording and no demo password
   // Staff without the support button see the plain version label.
   await page.request.post('/api/login', { data: { username: 'garson', password: 'MolaDemo!2026' } });
   await page.reload();
-  await expect(page.getByText('SÜRÜM 0.1.0')).toBeVisible();
+  // The running version (it was written here as 0.1.0 and failed from 0.1.1 on).
+  await expect(page.getByText(`SÜRÜM ${JSON.parse(readFileSync('package.json', 'utf8')).version}`)).toBeVisible();
   const waiter = await page.locator('body').innerText();
   for (const text of DEV_TEXTS) expect(waiter).not.toMatch(text);
 });

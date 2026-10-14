@@ -2,13 +2,13 @@
 .editor-vat{display:flex;flex-direction:column;gap:6px;min-width:0}
 .editor-vat .vat-hint{margin:0;padding:8px 10px;border-radius:8px;background:#fff7ec;border:1px solid #f0d3a8;font-size:13px;line-height:1.5;color:#6b4a14}
 .editor-vat .vat-apply{align-self:flex-start;min-height:44px;padding:0}
-.editor-vat .vat-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#f8faf6;font-size:13px}
+.editor-vat .vat-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-soft,#f8faf6);font-size:13px}
 .editor-vat .vat-confirm span{flex:1 1 200px;min-width:0}
 
 .vat-form{display:flex;flex-direction:column;gap:12px}
 .vat-rates{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.vat-rate{display:grid;grid-template-columns:64px minmax(0,1fr) auto 44px;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;min-height:52px}
-.vat-rate.is-default{border-color:#b5c6ad;background:#f3f8f1}
+.vat-rate{display:grid;grid-template-columns:64px minmax(0,1fr) auto 44px;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--paper,#fff);min-height:52px}
+.vat-rate.is-default{border-color:#b5c6ad;background:var(--surface-soft,#f3f8f1)}
 .vat-rate strong{font-size:18px;color:var(--green);font-variant-numeric:tabular-nums}
 .vat-default{display:inline-flex;align-items:center;gap:7px;min-height:44px;font-size:13px;cursor:pointer}
 .vat-default input{accent-color:var(--green)}

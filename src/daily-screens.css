@@ -51,9 +51,9 @@ input[aria-invalid=true],select[aria-invalid=true]{border-color:#c9694a!importan
 /* "Para nereden çıktı?": Kasadan / Kasa dışından, two plain cards, nothing chosen beforehand. */
 .expense-source{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}
 .expense-source-label{grid-column:1/-1;font-size:13.5px;font-weight:600;color:var(--ink)}
-.expense-source-option{display:grid;gap:3px;text-align:left;padding:10px 12px;border:1.5px solid #d9e1d5;border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;font:inherit}
+.expense-source-option{display:grid;gap:3px;text-align:left;padding:10px 12px;border:1.5px solid #d9e1d5;border-radius:12px;background:var(--paper,#fff);color:var(--ink);cursor:pointer;font:inherit}
 .expense-source-option small{color:#5f6b5c;font-size:12px;line-height:1.35}
-.expense-source-option.selected{border-color:#2f6b3a;background:#eef6ea;box-shadow:0 0 0 1px #2f6b3a inset}
+.expense-source-option.selected{border-color:#2f6b3a;background:var(--brand-soft,#eef6ea);box-shadow:0 0 0 1px #2f6b3a inset}
 .expense-source-option:focus-visible{outline:2px solid #2f6b3a;outline-offset:2px}
 @media (max-width:480px){.expense-source{grid-template-columns:1fr}}
 .expense-delete{margin-top:14px;color:#a3401f}

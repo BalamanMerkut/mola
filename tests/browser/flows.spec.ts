@@ -51,10 +51,10 @@ test('customer order → kitchen preparation → cash change → new table accou
   await expect(page.getByRole('button', { name: 'Hazır olarak işaretle' })).toBeVisible();
   await guest.getByRole('button', { name: /Siparişlerim/ }).click();
   await expect(guest.getByText('Hazırlanıyor', { exact: true })).toBeVisible();
-  await expect(guest.locator('.customer-order')).toHaveCSS('background-color', 'rgb(255, 252, 241)');
+  await expect(guest.locator('.customer-order')).toHaveCSS('background-color', 'rgb(246, 237, 212)');
   await page.getByRole('button', { name: 'Hazır olarak işaretle', exact: true }).click();
   await expect(guest.getByText('Hazır', { exact: true })).toBeVisible();
-  await expect(guest.locator('.customer-order')).toHaveCSS('background-color', 'rgb(241, 248, 242)');
+  await expect(guest.locator('.customer-order')).toHaveCSS('background-color', 'rgb(229, 240, 230)');
   await guest.screenshot({ path: info.outputPath('order-ready-mobile.png'), fullPage: true });
 
   await page.context().addCookies(ownerCookies); await page.reload();

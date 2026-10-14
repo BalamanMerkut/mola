@@ -4,16 +4,16 @@
 dialog.owner-lock{width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;color:inherit;box-sizing:border-box}
 dialog.owner-lock:not([open]){display:none}
 dialog.owner-lock::backdrop{background:var(--paper,#f6f7f4)}
-.owner-lock-card{width:min(400px,100%);display:grid;gap:10px;justify-items:stretch;text-align:center;padding:30px 24px 22px;border-radius:18px;background:#fff;border:1px solid var(--line,#e2e6df);box-shadow:0 10px 30px #183b2f14}
-.owner-lock-icon{justify-self:center;display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:#eef4ec;color:var(--green,#234c3e)}
+.owner-lock-card{width:min(400px,100%);display:grid;gap:10px;justify-items:stretch;text-align:center;padding:30px 24px 22px;border-radius:18px;background:var(--paper,#fff);border:1px solid var(--line,#e2e6df);box-shadow:0 10px 30px #183b2f14}
+.owner-lock-icon{justify-self:center;display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:var(--surface-soft,#eef4ec);color:var(--green,#234c3e)}
 .owner-lock-card h1{margin:4px 0 0;font-size:22px;color:var(--ink,#1d2b23)}
 .owner-lock-card>p{margin:0;color:#4d5c51;line-height:1.5}
 .owner-lock-card label{display:block;min-height:0;padding:0;text-align:left;font-size:13px;font-weight:600;color:var(--ink,#1d2b23);margin:6px 0 -4px}
 .owner-lock-who{font-size:13px;color:var(--muted,#6a756d)!important}
-.owner-lock-card input{min-height:46px;padding:8px 12px;border:1px solid var(--line,#d7ddd4);border-radius:10px;font-size:16px;background:#fff}
+.owner-lock-card input{min-height:46px;padding:8px 12px;border:1px solid var(--line,#d7ddd4);border-radius:10px;font-size:16px;background:var(--field,#fff)}
 .owner-lock-card .btn{min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .owner-lock-note{font-size:12px;color:var(--muted,#6a756d)!important}
 .owner-lock-logout{justify-self:center;display:inline-flex;align-items:center;gap:6px;min-height:40px}
 /* Hesabım: "Kilitle" (owner) beside "Çıkış yap". */
 .account-logout{display:flex;flex-wrap:wrap;gap:10px}
-.owner-lock-settings select{min-height:44px;padding:6px 10px;border:1px solid var(--line,#d7ddd4);border-radius:10px;background:#fff;font-size:15px}
+.owner-lock-settings select{min-height:44px;padding:6px 10px;border:1px solid var(--line,#d7ddd4);border-radius:10px;background:var(--field,#fff);font-size:15px}

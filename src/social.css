@@ -26,7 +26,7 @@
 .bill-closed p{margin:0;font-size:14px;color:var(--muted,#66746b)}
 .bill-closed .btn{margin-top:10px;min-height:44px;padding:0 20px;max-width:100%}
 .review-prompt .review-prompt-title{margin:0;font-size:16px;font-weight:650;color:var(--green)}
-.review-prompt .review-link{margin:0;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:0 18px;border-radius:99px;background:#fff;border:1px solid color-mix(in srgb,var(--green) 22%,transparent);color:var(--ink,#22352c);font-size:14px;font-weight:600;text-decoration:none;max-width:100%}
+.review-prompt .review-link{margin:0;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:0 18px;border-radius:99px;background:var(--paper,#fff);border:1px solid color-mix(in srgb,var(--green) 22%,transparent);color:var(--ink,#22352c);font-size:14px;font-weight:600;text-decoration:none;max-width:100%}
 .review-prompt .review-link svg:first-child{color:#4285f4;flex:none}
 .review-prompt .review-link:hover,.review-prompt .review-link:focus-visible{border-color:var(--green);background:color-mix(in srgb,var(--brand-soft,#edf3ed) 60%,#fff)}
 
@@ -41,7 +41,7 @@
 .social-row-main input[aria-invalid=true]{border-color:#c46a5a}
 .social-row-main .field-error{margin:0}
 .social-preview{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-width:0}
-.social-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;padding:5px 12px 5px 9px;border-radius:99px;background:#eef3ea;color:#2f4b36;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.social-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;padding:5px 12px 5px 9px;border-radius:99px;background:var(--surface-soft,#eef3ea);color:#2f4b36;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .social-chip svg{flex:none;color:var(--green)}
 .social-open{display:inline-flex;align-items:center;gap:4px;min-height:36px;color:var(--green);font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .social-preview .btn{margin:0}
@@ -64,8 +64,8 @@
 .social-pick{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;border:0;min-width:0}
 .social-pick legend{margin-bottom:8px;padding:0}
 .social-pick-item{margin:0}
-.social-pick-item{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px 0 10px;border:1px solid var(--set-field,#d9e1d5);border-radius:99px;background:#fff;color:var(--ink);font-size:13px;cursor:pointer}
-.social-pick-item.on{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);background:#f4f8f1}
+.social-pick-item{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 14px 0 10px;border:1px solid var(--set-field,#d9e1d5);border-radius:99px;background:var(--paper,#fff);color:var(--ink);font-size:13px;cursor:pointer}
+.social-pick-item.on{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);background:var(--surface-soft,#f4f8f1)}
 .social-pick-item input{margin:0;accent-color:var(--green)}
 .social-pick-item svg{color:var(--green)}
 .social-combined .settings-actions{margin-top:2px}
@@ -73,7 +73,7 @@
 /* The card window: the PNG preview fits the window; the buttons wrap under it. */
 .social-qr-dialog{width:560px}
 .social-qr-body{display:grid;gap:14px;padding:18px 20px 20px;min-width:0}
-.social-card-stage{display:grid;place-items:center;min-height:220px;padding:12px;border-radius:14px;background:#f4f7f1}
+.social-card-stage{display:grid;place-items:center;min-height:220px;padding:12px;border-radius:14px;background:var(--surface-soft,#f4f7f1)}
 .social-card-preview{display:block;width:auto;max-width:100%;max-height:min(56dvh,520px);border-radius:10px;box-shadow:0 6px 22px #183b2f1f}
 .social-card-wait{font-size:13px;color:var(--muted)}
 .social-qr-actions .btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none}

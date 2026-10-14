@@ -1,5 +1,5 @@
 /* "Raporlarım" (src/ReportsPhone.tsx): the owner's phone page on Mola Merkez. Standalone: only this file is loaded. */
-:root{--rp-ink:#1f2d26;--rp-muted:#66736b;--rp-green:#234c3e;--rp-line:#e2e7df;--rp-paper:#f4f6f1;--rp-card:#fff;--rp-warn:#a8584a;--rp-amber:#b46d0c;color-scheme:light}
+:root{--rp-ink:#1f2d26;--rp-muted:#66736b;--rp-green:#234c3e;--rp-line:var(--line,#e2e7df);--rp-paper:var(--paper,#f4f6f1);--rp-card:#fff;--rp-warn:#a8584a;--rp-amber:#b46d0c;color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--rp-paper);color:var(--rp-ink);font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
 .rp-page{max-width:560px;margin:0 auto;min-height:100vh;padding:0 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
@@ -15,7 +15,7 @@ html,body{margin:0;background:var(--rp-paper);color:var(--rp-ink);font-family:In
 .rp-warn{border-color:#ecc7bf;background:#fff6f3}
 .rp-muted{color:var(--rp-muted);font-size:14px}
 .rp-pair label{display:grid;gap:6px;font-size:14px;font-weight:600}
-.rp-pair input{font:inherit;font-weight:400;font-size:16px;min-height:48px;padding:10px 12px;border:1px solid #cdd6ca;border-radius:12px;background:#fff;color:var(--rp-ink)}
+.rp-pair input{font:inherit;font-weight:400;font-size:16px;min-height:48px;padding:10px 12px;border:1px solid #cdd6ca;border-radius:12px;background:var(--field,#fff);color:var(--rp-ink)}
 .rp-pair small{font-weight:400;color:var(--rp-muted);font-size:12px}
 .rp-btn{font:inherit;font-weight:700;font-size:16px;min-height:50px;border:0;border-radius:12px;background:var(--rp-green);color:#fff}
 .rp-btn:disabled{opacity:.6}
@@ -25,7 +25,7 @@ html,body{margin:0;background:var(--rp-paper);color:var(--rp-ink);font-family:In
 .rp-status.live{color:var(--rp-green);font-weight:600}
 .rp-status.off{color:var(--rp-amber);font-weight:600}
 .rp-dot{width:8px;height:8px;border-radius:50%;background:#2f8a5f;box-shadow:0 0 0 3px #2f8a5f26}
-.rp-refresh{font:inherit;font-size:14px;font-weight:600;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--rp-line);background:#fff;color:var(--rp-green)}
+.rp-refresh{font:inherit;font-size:14px;font-weight:600;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--rp-line);background:var(--paper,#fff);color:var(--rp-green)}
 .rp-report{display:grid;gap:12px}
 .rp-hero{background:var(--rp-green);border-color:var(--rp-green);color:#fff}
 .rp-hero .rp-label{font-size:13px;opacity:.85}

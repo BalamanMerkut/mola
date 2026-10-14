@@ -8,7 +8,9 @@
   /* The study (14 Ekim): dark walnut sidebar and sign-in panel, brass for what is chosen, coffee for the main buttons.
      The café app keeps Mola's green; states keep their own green / amber / red. */
   --y-walnut:#3a281e; --y-walnut-line:#2a1c14; --y-walnut-hover:#4a3427; --y-walnut-text:#d8c7ad; --y-brass:#c9a368; --y-brass-soft:#5a412e;
-  --green:#4a3222; --focus-accent:#a67c45; --y-text:#22362b; --y-muted:#65706a; --y-faint:#868f87;
+  --green:#4a3222; --focus-accent:#a67c45;
+  /* The café palette's surface names, so shared parts (tabs, chat, windows) take Yönetim's own colours. */
+  --paper:var(--y-card); --field:var(--y-field); --surface-soft:var(--y-soft); --line:var(--y-line); --brand-soft:#efe2c9; --brand-bg:var(--y-bg); --y-text:#22362b; --y-muted:#65706a; --y-faint:#868f87;
   --y-radius:20px; --y-radius-sm:12px; --y-shadow:0 1px 2px #1c2e2408, 0 8px 28px #1c2e240a;
   --ok-bg:#e6f1e3; --ok-fg:#2c6436; --ok-dot:#3f8a4c; --warn-bg:#f8edd5; --warn-fg:#7d520e; --warn-dot:#d39a2c; --bad-bg:#f8e6e0; --bad-fg:#983f28; --bad-dot:#c2553a;
   --idle-bg:#eef0ec; --idle-fg:#5c665f; --idle-dot:#97a097; --info-bg:#e6eef7; --info-fg:#2d5579; --info-dot:#5b86b0;
@@ -581,3 +583,10 @@
 .yonetim .tc-main, .yonetim .tc-list, .yonetim .tc-filter button[aria-pressed="true"] { background:var(--y-card); }
 .yonetim .tc-search, .yonetim .tc-input, .yonetim .tc .tc-new-body input, .yonetim .tc .tc-new-body textarea { background:var(--y-field); }
 .yonetim .tc-row.theirs .tc-bubble { background:var(--y-field); border-color:var(--y-line); }
+/* Tab bars inside Mola Yönetim (Ayarlar, Paketler, Destek…): a walnut pill on a sand bar instead of white on green-grey. */
+.yonetim .pill-tabs { background:#e2d8c5; }
+.yonetim .pill-tabs .pill-tab { color:#6b5d4f; }
+.yonetim .pill-tabs .pill-tab:hover { background:#ece4d480; color:var(--y-text); }
+.yonetim .pill-tabs .pill-tab.active { background:var(--y-walnut); color:#f3e3c3; box-shadow:0 1px 3px #2a1c1433; }
+.yonetim .pill-tab-badge.quiet { background:#d6cbb6; color:#5e5142; }
+.yonetim .pill-tab.active .pill-tab-badge.quiet { background:#5a412e; color:#f3e3c3; }

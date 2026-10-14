@@ -3,13 +3,13 @@
 .service-call{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--green);font-size:13px;font-weight:600;min-height:42px}
 .service-call span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .service-call:not(:disabled):active{transform:scale(.98)}
-.service-call.waiting,.service-call.waiting:disabled{background:#f3f7ef;border-color:#cfe0c7;color:#3f6b4a;opacity:1}
+.service-call.waiting,.service-call.waiting:disabled{background:var(--surface-soft,#f3f7ef);border-color:#cfe0c7;color:#3f6b4a;opacity:1}
 .service-call:disabled:not(.waiting){opacity:.55}
 
 /* Çağrı şeridi (garson / kasiyer) */
 .service-call-bar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
 .service-call-chip{display:flex;align-items:stretch;border:1px solid #ecd9a8;background:#fdf8ea;border-radius:10px;overflow:hidden;min-width:0;max-width:100%}
-.service-call-chip.bill{border-color:#d6e3cf;background:#f2f7ee}
+.service-call-chip.bill{border-color:#d6e3cf;background:var(--surface-soft,#f2f7ee)}
 .service-call-open{display:flex;align-items:center;gap:8px;border:0;background:none;padding:9px 12px;color:var(--ink);font-size:13px;min-width:0;text-align:left}
 .service-call-open span{color:#6c6450;white-space:nowrap}
 .service-call-chip.bill .service-call-open span{color:#4f6b52}
@@ -71,7 +71,7 @@
 
 /* Kasada fiş */
 .payment-balance{position:relative}
-.payment-bill-print{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:5px;border:1px solid #d6e3cf;background:#fff;color:var(--green);border-radius:99px;padding:5px 10px;font-size:11px;font-weight:600}
+.payment-bill-print{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:5px;border:1px solid #d6e3cf;background:var(--paper,#fff);color:var(--green);border-radius:99px;padding:5px 10px;font-size:11px;font-weight:600}
 .payment-bill-print:disabled{opacity:.6}
 .payment-print-after{margin:4px 0 10px;font-size:13px;color:var(--ink)}
 @media (max-width:420px){.payment-bill-print{position:static;margin:12px auto 0}}
@@ -96,7 +96,7 @@
   .customer-hero .hero-coffee svg{width:30px;height:30px}
 }
 /* 2) Ürün penceresi: fotoğraf kare ve büyük kalır, "Sepete ekle" altta hep görünür */
-.modal .product-actions,.modal .browse-only-price{position:sticky;bottom:0;background:#fff;padding-bottom:14px;margin-bottom:-23px;z-index:2}
+.modal .product-actions,.modal .browse-only-price{position:sticky;bottom:0;background:var(--paper,#fff);padding-bottom:14px;margin-bottom:-23px;z-index:2}
 .modal .stepper button{min-width:40px;min-height:40px}
 /* 3) Dil düğmesi parmakla rahat basılsın */
 .language-btn{min-width:42px;min-height:40px;font-size:12px;font-weight:600}
@@ -131,9 +131,9 @@
 .kitchen-cancel-actions .btn{margin:0;justify-content:center;min-height:48px}
 
 /* 10) Ödeme: Tamamı / Bir kısmı / Ürün seç */
-.payment-scope{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px;border-radius:10px;background:#eef3ea;margin:4px 0 14px}
+.payment-scope{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px;border-radius:10px;background:var(--surface-soft,#eef3ea);margin:4px 0 14px}
 .payment-scope button{border:0;background:none;border-radius:7px;padding:10px 6px;font-size:13px;font-weight:600;color:#6f7d68;min-height:42px}
-.payment-scope button.selected{background:#fff;color:var(--green);box-shadow:0 1px 3px #263b2014}
+.payment-scope button.selected{background:var(--paper,#fff);color:var(--green);box-shadow:0 1px 3px #263b2014}
 
 /* 13) Ayarlar kendiliğinden kaydedilir */
 .settings-autosave{display:flex;align-items:center;gap:6px;margin:0;padding:14px 24px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
@@ -142,7 +142,7 @@
 
 /* Desktop app side rail: only in the café computer's own Mola window. */
 body.desktop-shell #root{margin-left:68px}
-.desktop-rail{position:fixed;left:0;top:0;bottom:0;width:68px;z-index:40;background:#17342a;border-right:1px solid #0f251d;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 0 12px}
+.desktop-rail{position:fixed;left:0;top:0;bottom:0;width:68px;z-index:40;background:var(--rail,#17342a);border-right:1px solid #0000002e;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 0 12px}
 .desktop-rail-logo{width:38px;height:38px;border-radius:50%;background:#f3ebdd;color:var(--green);display:grid;place-items:center;margin-bottom:14px}
 .desktop-rail a,.desktop-rail button{width:58px;min-height:54px;border:0;border-radius:10px;background:transparent;color:#d8e2d6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:10px;text-decoration:none;cursor:pointer;padding:6px 2px}
 .desktop-rail a:hover,.desktop-rail button:hover{background:#ffffff14;color:#fff}
@@ -163,7 +163,7 @@ body.desktop-shell #root{margin-left:68px}
 .desktop-qr{display:block;margin:12px auto;border:1px solid var(--line);border-radius:10px}
 .desktop-address{display:flex;flex-direction:column;align-items:center;gap:4px}
 .desktop-address code{font-size:15px;color:var(--green)}
-.desktop-stopped{position:fixed;inset:0;z-index:200;background:#f6f7f4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:var(--ink)}
+.desktop-stopped{position:fixed;inset:0;z-index:200;background:var(--surface-soft,#f6f7f4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:var(--ink)}
 .desktop-stopped h1{font-family:Georgia,serif;font-weight:400;font-size:30px;margin:6px 0 0}
 .desktop-stopped p{color:var(--muted);max-width:380px}
 .customer-footer .made-by{font-size:10px;letter-spacing:.4px;color:#b3baa9}
@@ -178,14 +178,14 @@ body.desktop-shell #root{margin-left:68px}
 .service-call-bar.compact .service-call-open small{font-size:11px}
 .service-call-bar.compact .service-call-done{padding:0 11px;min-width:40px;justify-content:center}
 .service-call-bar.compact .service-call-done-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.approval-compact{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;border:1px solid #d6e3cf;background:#f2f7ee;color:var(--ink);border-radius:10px;padding:6px 12px;margin:0 0 8px;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
+.approval-compact{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;border:1px solid #d6e3cf;background:var(--surface-soft,#f2f7ee);color:var(--ink);border-radius:10px;padding:6px 12px;margin:0 0 8px;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
 .approval-compact-count{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:12px;background:var(--green);color:#fff;font-size:12px;font-weight:700}
 .approval-compact-show{margin-left:auto;display:inline-flex;align-items:center;gap:3px;color:var(--green);font-weight:700}.approval-auto-line{margin:0 0 12px;font-size:13px}
 
 /* Uzun süredir sipariş yok (11 Ekim): garsona yumuşak hatırlatma, "Gittim" ile kapanır. */
 .table-reminders{display:grid;gap:6px;margin:0 0 14px}
 .table-reminders.compact{margin:0 0 8px}
-.table-reminder{display:flex;align-items:center;gap:8px;border:1px solid #d9e2ec;background:#f3f6fa;border-radius:10px;padding:6px 6px 6px 10px;min-width:0}
+.table-reminder{display:flex;align-items:center;gap:8px;border:1px solid #d9e2ec;background:var(--surface-soft,#f3f6fa);border-radius:10px;padding:6px 6px 6px 10px;min-width:0}
 .table-reminder-open{display:flex;align-items:center;gap:8px;flex:1;min-width:0;border:0;background:none;padding:4px 0;color:#3d4f63;font-size:13px;text-align:left;line-height:1.4}
 .table-reminder-open svg{flex:none;color:#5b7088}
 .table-reminder-done.btn{margin:0;flex:none;min-height:40px}

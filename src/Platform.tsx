@@ -5,7 +5,7 @@ import './activation.css';
 import { orderBusinesses, type BusinessOrder } from './businessOrder';
 import { PlatformDiagnostics } from './PlatformDiagnostics';
 import { AlertBell, AlertCenter, useAlertSound } from './PlatformAlerts';
-import { Building2, CalendarDays, Store, KeyRound, Download, FileText, ChevronRight, Sun, Inbox, LifeBuoy, Settings, LogOut, ReceiptText, Megaphone, Package } from 'lucide-react';
+import { Building2, CalendarDays, Store, KeyRound, Download, FileText, ChevronRight, Sun, Inbox, LifeBuoy, Settings, LogOut, ReceiptText, Megaphone, Package, DatabaseBackup, CloudDownload } from 'lucide-react';
 import { TicketChat } from './TicketChat';
 import { BusinessFilters, matchesBusiness, type BusinessFilter } from './PlatformFilters';
 import { PlatformPassword } from './PlatformPassword';
@@ -23,6 +23,8 @@ import { ApplicationList } from './PlatformApplications';
 import { linkLead, SiteLeadList, useSiteLeads, type LeadPrefill } from './PlatformSiteLeads';
 import { PlatformToday, type SettingsSection } from './PlatformToday';
 import { PlatformSettings } from './PlatformSettings';
+import { PlatformBackup } from './PlatformBackup';
+import { PlatformReleases } from './PlatformReleases';
 import { PlatformSales } from './PlatformSales';
 import { PlatformAnnouncements } from './PlatformAnnouncements';
 import { PlatformCatalogPage, type PackagesTab } from './PlatformCatalogPage';
@@ -40,7 +42,7 @@ import { AppVersion } from './AppVersion';
 import { serverVersion, useServerVersion } from './versionReload';
 // Local-only hints (prefilled admin name, first-login file) must not appear on the public domain.
 const localDev = /^(localhost|127\.|\[::1\]|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
-type Page = 'today' | 'businesses' | 'applications' | 'support' | 'announcements' | 'sales' | 'packages' | 'settings' | 'alerts';
+type Page = 'today' | 'businesses' | 'applications' | 'support' | 'announcements' | 'sales' | 'packages' | 'backup' | 'releases' | 'settings' | 'alerts';
 /** Tiles per page; with the "İşletme ekle" tile 24 fill whole rows of 2, 3 or 4. */
 const PAGE = 23;
 type Snapshot = { businesses: Business[]; tickets: Ticket[]; audit: AuditEntry[]; alerts: AlertView[]; unread: number; version?: string; catalog?: CatalogView };
@@ -222,16 +224,17 @@ export function Platform() {
   const showList = (f: BusinessFilter) => { go('businesses'); setQuery(''); setFilter(f); setListPage(1); };
   const open = (id: string, tab: DetailTab = 'summary') => { setError(''); setNotice(''); setSelectedBusiness(id); setDetailTab(tab); window.scrollTo?.(0, 0); };
   const openTicket = (id: string, tenantId?: string) => { setSupportBusinessId(tenantId ?? ''); setTicketId(id); go('support'); };
-  const openSettings = (section: SettingsSection) => { setSettingsSection(section); go('settings'); };  const invoiceProblems = !withInvoice ? [] : [!validTaxNumber(invoice.taxType, invoice.taxNumber.replace(/\D/g, '')) && 'Vergi / T.C. kimlik numarası geçersiz.', !normalPhone(invoice.phone) && 'Cep telefonu geçersiz.', !validEmail(invoice.email) && 'E-posta geçersiz.'].filter(Boolean) as string[];
+  // Yedek and Güncellemeler left Ayarlar for the menu (14 Ekim, used every day); old links to them land there.
+  const openSettings = (section: SettingsSection) => { if (section === 'backup') return go('backup'); if (section === 'updates') return go('releases'); setSettingsSection(section); go('settings'); };  const invoiceProblems = !withInvoice ? [] : [!validTaxNumber(invoice.taxType, invoice.taxNumber.replace(/\D/g, '')) && 'Vergi / T.C. kimlik numarası geçersiz.', !normalPhone(invoice.phone) && 'Cep telefonu geçersiz.', !validEmail(invoice.email) && 'E-posta geçersiz.'].filter(Boolean) as string[];
   const invoiceInput = (label: string, field: keyof Invoice, props: { maxLength: number; minLength?: number }) => <label>{label}<input required disabled={disabled} value={invoice[field]} onChange={e => setInvoice({ ...invoice, [field]: e.target.value })} {...props} /></label>;
   const current: Page = selected ? 'businesses' : page;
   // 13 Ekim: Paketler is a place of its own (Hizmet fiyatları its sub-tab); Destek sits at the bottom, right above Ayarlar.
-  const nav: [Page, string, ReactNode, number][] = [['today', 'Bugün', <Sun size={18} key="i" />, 0], ['businesses', 'İşletmeler', <Building2 size={18} key="i" />, 0], ['applications', 'Başvurular', <Inbox size={18} key="i" />, waiting.length + (siteLeads.counts?.new ?? 0)], ['announcements', 'Duyurular', <Megaphone size={18} key="i" />, 0], ['sales', 'Satışlarım', <ReceiptText size={18} key="i" />, 0], ['packages', 'Paketler', <Package size={18} key="i" />, 0]];
+  const nav: [Page, string, ReactNode, number][] = [['today', 'Bugün', <Sun size={18} key="i" />, 0], ['businesses', 'İşletmeler', <Building2 size={18} key="i" />, 0], ['applications', 'Başvurular', <Inbox size={18} key="i" />, waiting.length + (siteLeads.counts?.new ?? 0)], ['announcements', 'Duyurular', <Megaphone size={18} key="i" />, 0], ['sales', 'Satışlarım', <ReceiptText size={18} key="i" />, 0], ['packages', 'Paketler', <Package size={18} key="i" />, 0], ['backup', 'Yedek', <DatabaseBackup size={18} key="i" />, 0], ['releases', 'Güncellemeler', <CloudDownload size={18} key="i" />, 0]];
   const pinned: [Page, string, ReactNode, number][] = [['support', 'Destek', <LifeBuoy size={18} key="i" />, openTickets], ['settings', 'Ayarlar', <Settings size={18} key="i" />, 0]];
   // İşletme ekle: the package to start with (Kafe Standart unless chosen; a trial has everything open anyway).
   const packageChoices = data.catalog ? offeredPackages(data.catalog) : [], startPackage = packageChoices.some(p => p.id === packageId) ? packageId : (packageChoices.find(p => p.id === 'kafe-standart') ?? packageChoices[0])?.id ?? '';
   // Phones (under 600 px): six places fit the top strip; Duyurular and Paketler move next to the bell (`yonetim-topbar-icon`).
-  const navButton = ([id, title, icon, badge]: [Page, string, ReactNode, number]) => <button type="button" key={id} aria-label={title} title={badge > 0 ? `${title}: ${badge} bekliyor` : undefined} aria-current={current === id ? 'page' : undefined} className={`${current === id ? 'active' : ''}${id === 'announcements' ? ' nav-announcements' : id === 'packages' ? ' nav-packages' : ''}`} disabled={busy} onClick={() => go(id)}>{icon}<span>{title}</span>{badge > 0 && <span className="nav-badge" aria-hidden="true">{badge > 99 ? '99+' : badge}</span>}</button>;
+  const navButton = ([id, title, icon, badge]: [Page, string, ReactNode, number]) => <button type="button" key={id} aria-label={title} title={badge > 0 ? `${title}: ${badge} bekliyor` : undefined} aria-current={current === id ? 'page' : undefined} className={`${current === id ? 'active' : ''}${id === 'announcements' ? ' nav-announcements' : id === 'packages' ? ' nav-packages' : id === 'backup' ? ' nav-backup' : id === 'releases' ? ' nav-releases' : ''}`} disabled={busy} onClick={() => go(id)}>{icon}<span>{title}</span>{badge > 0 && <span className="nav-badge" aria-hidden="true">{badge > 99 ? '99+' : badge}</span>}</button>;
   const topIcon = (id: Page, title: string, icon: ReactNode, extra: string) => <button type="button" className={`icon-btn yonetim-topbar-icon ${extra}${current === id ? ' active' : ''}`} aria-label={title} title={title} aria-current={current === id ? 'page' : undefined} disabled={busy} onClick={() => go(id)}>{icon}</button>;
   return <main className="platform-page platform-v2 yonetim">
     <aside className="yonetim-sidebar">
@@ -240,7 +243,7 @@ export function Platform() {
       {devBadge && <span className="platform-local-note" title="Mola Merkez proje klasöründen (npm run merkez) çalışıyor. Kurulu Mola Yönetim’de bu etiket görünmez.">Yerel test ortamı</span>}
     </aside>
     <div className="yonetim-main" ref={top}><div className="yonetim-column">
-      <header className="yonetim-topbar"><span className="yonetim-topbar-brand" aria-hidden="true"><YonetimBrand /></span><div className="yonetim-topbar-actions">{topIcon('packages', 'Paketler', <Package size={20} aria-hidden="true" />, 'yonetim-topbar-packages')}{topIcon('announcements', 'Duyurular', <Megaphone size={20} aria-hidden="true" />, 'yonetim-topbar-announce')}<AlertBell unread={data.unread} onOpen={() => go('alerts')} /><button type="button" className="btn secondary small-btn" disabled={busy || uncertain} onClick={() => void logout()}><LogOut size={15} aria-hidden="true" /><span className="yonetim-logout-text">Çıkış yap</span></button></div></header>
+      <header className="yonetim-topbar"><span className="yonetim-topbar-brand" aria-hidden="true"><YonetimBrand /></span><div className="yonetim-topbar-actions">{topIcon('backup', 'Yedek', <DatabaseBackup size={20} aria-hidden="true" />, 'yonetim-topbar-backup')}{topIcon('releases', 'Güncellemeler', <CloudDownload size={20} aria-hidden="true" />, 'yonetim-topbar-releases')}{topIcon('packages', 'Paketler', <Package size={20} aria-hidden="true" />, 'yonetim-topbar-packages')}{topIcon('announcements', 'Duyurular', <Megaphone size={20} aria-hidden="true" />, 'yonetim-topbar-announce')}<AlertBell unread={data.unread} onOpen={() => go('alerts')} /><button type="button" className="btn secondary small-btn" disabled={busy || uncertain} onClick={() => void logout()}><LogOut size={15} aria-hidden="true" /><span className="yonetim-logout-text">Çıkış yap</span></button></div></header>
       <section className="platform-content" aria-label="Seçili bölüm">
         {((error && !creating) || notice || (uncertain && !creating)) && <div className="yonetim-flash">
           {error && !creating && <Notice tone="error">{error}</Notice>}{uncertain && !creating && <button className="btn primary retry-btn" disabled={busy} onClick={() => void mutate()}>İşlemi yeniden kontrol et</button>}
@@ -277,6 +280,14 @@ export function Platform() {
         </>
         : page === 'announcements' ? <PlatformAnnouncements businesses={data.businesses} catalog={data.catalog} disabled={disabled} />
         : page === 'sales' ? <PlatformSales disabled={disabled} />
+        : page === 'backup' ? <div className="platform-settings platform-own-page">
+          <header className="page-head"><div><h1>Yedek</h1><p className="page-lead">Mola Merkez’in kendi yedeği, kurtarma kodu ve kafelerin bulut yedekleri.</p></div></header>
+          <PlatformBackup onOpenBusiness={id => { setPageName('businesses'); open(id); }} />
+        </div>
+        : page === 'releases' ? <div className="platform-settings platform-own-page">
+          <header className="page-head"><div><h1>Güncellemeler</h1><p className="page-lead">Yeni sürümü yükleyin, önce pilot işletmelere sonra herkese yayınlayın.</p></div></header>
+          <PlatformReleases onSecurity={() => openSecurity('Güncelleme yayını')} />
+        </div>
         : page === 'packages' ? <PlatformCatalogPage tab={packagesTab} onTab={setPackagesTab} onChanged={() => void load()} />
         : page === 'settings' ? <PlatformSettings section={settingsSection} onSection={setSettingsSection} disabled={disabled} onSessionEnd={endSession} onOpenBusiness={id => { setPageName('businesses'); open(id); }}
             security={{ pending: settingsSection === 'security' ? securityPending || undefined : undefined, onBack: securityPending ? backToPending : undefined, onEnabled: () => { if (returnTo.current) returnTo.current.armed = true; }, onAsk: openSecurity }} />

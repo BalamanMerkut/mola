@@ -19,7 +19,7 @@
 .qr-pick legend{padding:0 4px}
 .qr-pick-list{display:flex;flex-wrap:wrap;gap:6px;max-height:220px;overflow:auto}
 .qr-pick-list label{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin:0;padding:4px 11px;border:1px solid #dfe5dc;border-radius:99px;font-size:13px;cursor:pointer;max-width:100%;overflow-wrap:anywhere}
-.qr-pick-list label.selected{background:#eef3ea;border-color:#b9cbb8}
+.qr-pick-list label.selected{background:var(--surface-soft,#eef3ea);border-color:#b9cbb8}
 .qr-pick-list input{width:auto;margin:0}
 .qr-pick-actions{display:flex;gap:14px;margin-top:6px}
 .qr-stand-help{display:flex;align-items:flex-start;gap:8px;margin:12px 0 0}

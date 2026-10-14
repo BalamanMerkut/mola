@@ -3,7 +3,7 @@
 .email-reports-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;min-width:0}
 .email-reports-fields .wide{grid-column:1/-1}
 .email-reports-fields input,.email-reports-fields select{width:100%;box-sizing:border-box;min-height:44px}
-.email-reports-status{display:grid;gap:6px;margin-top:14px;padding:12px 14px;border-radius:12px;background:#f3f6f1;font-size:13px;line-height:1.55}
+.email-reports-status{display:grid;gap:6px;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--surface-soft,#f3f6f1);font-size:13px;line-height:1.55}
 .email-reports-status p{margin:0}
 .email-reports-status .btn{justify-self:start;margin-top:4px}
 .email-reports-error{color:#8a2c2c}

@@ -5,7 +5,7 @@
 .first-steps ul{list-style:none;padding:0;margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
 /* Each step wraps instead of squeezing: the title keeps its width (it never runs under the hint), a long hint ("Kasa
    bilgisayarındaki Mola penceresinden: …") takes its own line under the title, a short button stays beside it when it fits. */
-.first-steps li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.first-steps li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper,#fff)}
 .first-steps li .grow{flex:1 1 auto;min-width:min(100%,9rem);overflow-wrap:anywhere}
 .first-steps li .text-btn{display:inline-flex;align-items:center;gap:2px;white-space:nowrap;margin-left:auto}
 .first-steps li small{flex:1 1 100%;padding-left:32px;font-size:.78rem;line-height:1.35;text-align:left;overflow-wrap:anywhere}
@@ -21,7 +21,7 @@
 .first-steps.folded.open{padding:10px 14px 14px 10px}
 .first-steps.folded .first-steps-head{align-items:center;margin:0}
 .first-steps-toggle{display:inline-flex;align-items:center;gap:9px;min-height:40px;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
-.first-steps-toggle:hover{background:#f1f5ee}
-.first-steps-count{padding:1px 8px;border-radius:10px;background:#eef3ea;color:var(--green);font-size:12.5px;font-weight:700}
+.first-steps-toggle:hover{background:var(--surface-soft,#f1f5ee)}
+.first-steps-count{padding:1px 8px;border-radius:10px;background:var(--surface-soft,#eef3ea);color:var(--green);font-size:12.5px;font-weight:700}
 .first-steps-toggle svg{transition:transform .15s}
 .first-steps-toggle[aria-expanded=true] svg{transform:rotate(180deg)}

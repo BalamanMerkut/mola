@@ -4,7 +4,7 @@
  * equal columns), layout-scroll (one row sliding inside itself; phones). Tabs are never shorter than 44 px.
  */
 .pill-tabs-wrap{display:flex;justify-content:center;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
-.pill-tabs{position:relative;display:flex;flex-wrap:nowrap;justify-content:center;gap:4px;width:fit-content;max-width:100%;min-width:0;box-sizing:border-box;margin:0;padding:4px;background:#e8ece5;border-radius:999px}
+.pill-tabs{position:relative;display:flex;flex-wrap:nowrap;justify-content:center;gap:4px;width:fit-content;max-width:100%;min-width:0;box-sizing:border-box;margin:0;padding:4px;background:var(--surface-soft,#e8ece5);border-radius:999px}
 .pill-tabs.layout-two{display:grid;justify-content:center;border-radius:26px}
 .pill-tabs.layout-scroll{justify-content:flex-start;width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;border-radius:26px}
 .pill-tabs.layout-scroll::-webkit-scrollbar{display:none}
@@ -17,7 +17,7 @@
 .pill-tabs .pill-tab.active{background:var(--paper);color:var(--green);font-weight:600;box-shadow:0 1px 3px #1c2e2420}
 .pill-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;font-size:10.5px;line-height:1.5;padding:1px 7px;border-radius:99px;white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums;box-sizing:border-box}
 .pill-tab-badge.quiet{background:#dfe5da;color:#5b6a58}
-.pill-tab.active .pill-tab-badge.quiet{background:#edf2e9;color:var(--green)}
+.pill-tab.active .pill-tab-badge.quiet{background:var(--surface-soft,#edf2e9);color:var(--green)}
 .pill-tab-badge.warn{background:#fff1da;color:#8a5a12}
 /* Narrow bars: a little tighter, still 44 px tall. */
 @container pilltabs (max-width:760px){

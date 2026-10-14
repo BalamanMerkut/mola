@@ -1,8 +1,8 @@
 /* A new notification while Mola is open (src/NotificationToasts.tsx, 10 Ekim): small cards in the top corner, under the bell. */
 .note-toasts{position:fixed;top:84px;right:20px;z-index:60;display:grid;gap:10px;width:min(370px,calc(100vw - 32px));pointer-events:none}
 .note-toasts:empty{display:none}
-.note-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:10px;padding:11px 8px 11px 12px;background:#fff;border:1px solid #f0d6cf;border-left:4px solid #e48b78;border-radius:12px;box-shadow:0 12px 32px #183b2f26;animation:note-toast-in .22s ease-out}
-.note-toast.important{border-left-color:#c8553f;background:#fffaf8}
+.note-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:10px;padding:11px 8px 11px 12px;background:var(--paper,#fff);border:1px solid #f0d6cf;border-left:4px solid #e48b78;border-radius:12px;box-shadow:0 12px 32px #183b2f26;animation:note-toast-in .22s ease-out}
+.note-toast.important{border-left-color:#c8553f;background:var(--paper,#fff)}
 .note-toast-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#fdeceb;color:#b4412f;flex:none}
 .note-toast-text{flex:1;min-width:0;display:grid;gap:2px;padding-top:1px}
 .note-toast-text strong{font-size:13px;line-height:1.35;color:var(--ink);overflow-wrap:anywhere}

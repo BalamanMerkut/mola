@@ -7,7 +7,7 @@ import { LoginFactor } from './LoginFactor';
 import { AppVersion } from './AppVersion';
 import { APP_VERSION } from './version';
 import { DeferredPanel } from './DeferredPanel';
-import { businessTheme } from './BusinessTheme';
+import { businessTheme, themeOnRoot } from './BusinessTheme';
 import { TableAreaPicker, areaName } from './TableAreaPicker';
 import { Plug } from 'lucide-react';
 // The homes of the 10 Ekim düzeni (Kasa ve giderler, Personel, Menü yönetimi with Kampanyalar and KDV): src/Homes.tsx.
@@ -158,6 +158,8 @@ function Login({ onLogin, notice }: { onLogin: () => void; notice?: string }) {
 
 export function Workspace() {
   const [data, setData] = useState<StaffSnapshot | null>(null); const [auth, setAuth] = useState<'loading' | 'in' | 'out'>('loading');
+  // The palette colours the whole window (14 Ekim): its windows, the desktop rail and the page behind them too.
+  useEffect(() => data?.theme ? themeOnRoot(data.theme) : undefined, [data?.theme]);
   const [view, setView] = useState('tables'); const [error, setError] = useState(''); const [toast, setToast] = useState(''); const [connected, setConnected] = useState(true);
   const [expenseForm, setExpenseForm] = useState(false); const [cashierAddTable, setCashierAddTable] = useState<TableView | null>(null);
   const [menuPreview, setMenuPreview] = useState(false); const [takeawayOpen, setTakeawayOpen] = useState(false);

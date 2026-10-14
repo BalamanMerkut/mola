@@ -14,10 +14,10 @@
 .stage-preparing .takeaway-stage{color:#9a6a12}
 .stage-new .takeaway-stage{color:#3f6a8a}
 .takeaway-open small{font-size:11px;color:var(--muted)}
-.takeaway-serve{display:flex;align-items:center;justify-content:center;gap:5px;border:0;border-top:1px solid var(--line);background:#fff;color:var(--green);font-weight:600;font-size:12px;padding:8px}
+.takeaway-serve{display:flex;align-items:center;justify-content:center;gap:5px;border:0;border-top:1px solid var(--line);background:var(--paper,#fff);color:var(--green);font-weight:600;font-size:12px;padding:8px}
 .takeaway-serve.takeaway-ready{color:#9a6a12}
 /* Paid but the kitchen is still on it: the cashier decides (5 Oct). */
-.takeaway-note{display:block;border-top:1px solid var(--line);padding:5px 10px 0;background:#fff;font-size:11px;color:#9a6a12;text-align:center}
+.takeaway-note{display:block;border-top:1px solid var(--line);padding:5px 10px 0;background:var(--paper,#fff);font-size:11px;color:#9a6a12;text-align:center}
 .takeaway-note + .takeaway-serve{border-top:0}
 .takeaway-detail-note{display:block;margin-top:8px;color:#9a6a12}
 .takeaway-empty{margin:4px 0 0}
@@ -26,12 +26,12 @@
 @media(max-width:600px){.takeaway-card{flex-basis:150px}}
 
 /* Sipariş al: masasız sipariş seçeneği, masa listesinin üstünde kesik çizgili kart */
-.no-table-choice{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 14px;padding:16px 20px;border:1.5px dashed color-mix(in srgb,var(--green) 55%,var(--line));border-radius:10px;background:#fbfcf9;color:var(--ink);text-align:left;cursor:pointer}
+.no-table-choice{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 14px;padding:16px 20px;border:1.5px dashed color-mix(in srgb,var(--green) 55%,var(--line));border-radius:10px;background:var(--paper,#fff);color:var(--ink);text-align:left;cursor:pointer}
 .no-table-choice svg{flex:none;color:var(--green)}
 .no-table-choice span{display:flex;flex-direction:column;gap:3px;min-width:0}
 .no-table-choice strong{font-size:15px}
 .no-table-choice small{font-size:12px;color:var(--muted);line-height:1.45}
-.no-table-choice:hover{border-color:var(--green);background:#f6f9f3}
+.no-table-choice:hover{border-color:var(--green);background:var(--surface-soft,#f6f9f3)}
 .no-table-choice:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 
 /* Mutfak kartında masasız sipariş */
@@ -40,11 +40,11 @@
 
 /* Kurulum: işletme türü kartları */
 .sector-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 14px}
-.sector-card{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;background:#fff}
+.sector-card{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;background:var(--paper,#fff)}
 .sector-card input{position:absolute;opacity:0;pointer-events:none}
 .sector-card svg{color:var(--green)}
 .sector-card strong{font-size:15px}
 .sector-card small{font-size:12px;color:var(--muted);line-height:1.5;font-weight:400}
-.sector-card.selected{border-color:var(--green);box-shadow:0 0 0 2px color-mix(in srgb,var(--green) 22%,transparent);background:#f6f9f3}
+.sector-card.selected{border-color:var(--green);box-shadow:0 0 0 2px color-mix(in srgb,var(--green) 22%,transparent);background:var(--surface-soft,#f6f9f3)}
 .sector-card:has(input:focus-visible){outline:2px solid var(--green);outline-offset:2px}
 @media(max-width:600px){.sector-choices{grid-template-columns:1fr}}

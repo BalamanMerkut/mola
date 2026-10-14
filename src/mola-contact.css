@@ -1,5 +1,5 @@
 /* "Mola ekibine ulaşın": the vendor's contact on the café's screens (activation, Destek, locked screens, Şifremi unuttum). */
-.mola-contact{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0;background:#fbfcfa;text-align:left}
+.mola-contact{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0;background:var(--paper,#fff);text-align:left}
 .mola-contact h3{font-size:14px;margin:0 0 6px}
 .mola-contact p{margin:0 0 6px}
 .mola-contact ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px}

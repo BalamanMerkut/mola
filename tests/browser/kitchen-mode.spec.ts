@@ -131,7 +131,10 @@ test('landscape: full screen with the slim bar, larger type, whole late cards co
     const background = (o: { number: number }) => card(o).evaluate(el => getComputedStyle(el).backgroundColor);
     expect(await background(late)).toBe('rgb(255, 244, 220)');
     expect(await background(veryLate)).toBe('rgb(253, 229, 223)');
-    expect(await background(fresh)).toBe('rgb(255, 255, 255)');
+    // A fresh card is the palette's paper (14 Ekim: no white), light and unlike the late ones.
+    const paper = await background(fresh);
+    expect(Math.min(...paper.match(/\d+/g)!.slice(0, 3).map(Number))).toBeGreaterThan(220);
+    expect([await background(late), await background(veryLate)]).not.toContain(paper);
     expect(await kitchen.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await shot(kitchen, 'mutfak-modu.png', info.outputPath('mutfak-modu.png'));
 

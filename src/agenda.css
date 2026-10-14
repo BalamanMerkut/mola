@@ -1,6 +1,6 @@
 /* Ajanda: a calm month card like the Windows clock flyout, and the chosen day's notes beside it (below it on narrow screens). */
-.agenda{--agenda-green:var(--green,#234c3e);--agenda-soft:#eaf2e6;--agenda-amber:#c27a12;--agenda-amber-soft:#fdf1dc;display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:24px;align-items:start;min-width:0}
-.agenda-calendar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 20px 16px;min-width:0;box-sizing:border-box}
+.agenda{--agenda-green:var(--green,#234c3e);--agenda-soft:var(--brand-soft,#eaf2e6);--agenda-amber:#c27a12;--agenda-amber-soft:#fdf1dc;display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:24px;align-items:start;min-width:0}
+.agenda-calendar{background:var(--paper,#fff);border:1px solid var(--line);border-radius:14px;padding:20px 20px 16px;min-width:0;box-sizing:border-box}
 .agenda-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--line)}
 .agenda-head strong{font-size:16px;color:var(--ink);font-weight:600}
 .agenda-today-btn{min-height:44px;padding:8px 16px}
@@ -15,7 +15,7 @@
 .agenda-grid{grid-template-rows:repeat(6,50px)}
 .agenda-cell{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;min-height:44px;border:0;padding:0;background:none;cursor:pointer;font:inherit;color:var(--ink);-webkit-tap-highlight-color:transparent}
 .agenda-num{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;font-size:14px;transition:background .12s,box-shadow .12s}
-.agenda-cell:hover .agenda-num{background:#f1f4ef}
+.agenda-cell:hover .agenda-num{background:var(--surface-soft,#f1f4ef)}
 .agenda-cell:focus-visible{outline:none}
 .agenda-cell:focus-visible .agenda-num{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--agenda-green)}
 .agenda-cell.outside{color:#b3b9b1}
@@ -41,21 +41,21 @@
 .agenda-day-head h2{margin:0 0 3px;font-size:17px;color:var(--ink)}
 .agenda-empty{margin:0;padding:22px 18px;border:1px dashed #d6ded2;border-radius:12px;color:var(--muted);line-height:1.6;font-size:13px}
 .agenda-notes{list-style:none;margin:0;padding:0;display:grid;gap:12px}
-.agenda-note{display:flex;gap:10px;align-items:flex-start;padding:14px 12px 14px 16px;border:1px solid var(--line);border-radius:12px;background:#fbfcfa;min-width:0}
-.agenda-note.sales{background:#f6f9f3}
-.agenda-note.editing{display:block;background:#fff}
+.agenda-note{display:flex;gap:10px;align-items:flex-start;padding:14px 12px 14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);min-width:0}
+.agenda-note.sales{background:var(--surface-soft,#f6f9f3)}
+.agenda-note.editing{display:block;background:var(--paper,#fff)}
 .agenda-note-body{flex:1;min-width:0}
 .agenda-note-body strong{display:block;font-size:14px;color:var(--ink);overflow-wrap:anywhere}
 .agenda-note-body p{margin:4px 0 0;color:#4d5c51;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
 .agenda-note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .agenda-note-tags:empty{display:none}
-.agenda-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:#eef2ec;color:#46604f}
+.agenda-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--surface-soft,#eef2ec);color:#46604f}
 .agenda-tag.sales{background:#e2efe3;color:#245a3c}
 .agenda-tag.reminder{background:var(--agenda-amber-soft);color:#8a5408}
 .agenda-note-actions{display:flex;gap:2px;flex-shrink:0}
 .agenda-note-actions .icon-btn{width:44px;height:44px;color:#5c6b60}
-.agenda-note-actions .icon-btn:hover{background:#eef2ec}
-.agenda-form{display:grid;gap:12px;margin:0 0 16px;padding:16px;border:1px solid #dce5d7;border-radius:12px;background:#fff;min-width:0}
+.agenda-note-actions .icon-btn:hover{background:var(--surface-soft,#eef2ec)}
+.agenda-form{display:grid;gap:12px;margin:0 0 16px;padding:16px;border:1px solid #dce5d7;border-radius:12px;background:var(--paper,#fff);min-width:0}
 .agenda-note.editing .agenda-form{margin:0;padding:0;border:0}
 .agenda-form label{display:grid;gap:6px;margin:0;font-size:12px;min-width:0}
 .agenda-form label small{color:var(--muted);font-weight:400}

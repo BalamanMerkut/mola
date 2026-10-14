@@ -1,7 +1,7 @@
 /* Destek: "Talepler" and "Bildirimler" sub-tabs, the notification inbox, the red dots and the owner's banner. */
-.support-tabs{display:flex;gap:4px;width:fit-content;max-width:100%;padding:4px;margin:0 0 18px;border-radius:12px;background:#eaf0e7}
+.support-tabs{display:flex;gap:4px;width:fit-content;max-width:100%;padding:4px;margin:0 0 18px;border-radius:12px;background:var(--surface-soft,#eaf0e7)}
 .support-tabs button{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 20px;border:0;border-radius:9px;background:transparent;color:#5c6b60;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
-.support-tabs button[aria-selected="true"]{background:#fff;color:var(--green);box-shadow:0 1px 3px #183b2f1a}
+.support-tabs button[aria-selected="true"]{background:var(--paper,#fff);color:var(--green);box-shadow:0 1px 3px #183b2f1a}
 .support-tabs button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .red-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#d93b2b;box-shadow:0 0 0 2px #fff;flex-shrink:0}
 /* On a nav button the dot sits at the icon's corner, so the label never moves. */
@@ -18,11 +18,11 @@
 .notification-empty{display:grid;justify-items:center;gap:6px;padding:36px 16px;text-align:center;color:#6a756d;border:1px dashed #d6ded2;border-radius:12px}
 .notification-empty p{margin:0;font-weight:600;color:var(--ink)}
 .notification-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.notification-item{border:1px solid var(--line);border-radius:12px;background:#fff;min-width:0}
-.notification-item.unread{border-color:#c9d9c4;background:#f5f9f2}
+.notification-item{border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);min-width:0}
+.notification-item.unread{border-color:#c9d9c4;background:var(--surface-soft,#f5f9f2)}
 .notification-open{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:44px;padding:14px 16px;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;border-radius:12px}
 .notification-open:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
-.notification-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#eef2ec;color:#46604f;flex-shrink:0}
+.notification-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--surface-soft,#eef2ec);color:#46604f;flex-shrink:0}
 .notification-item.reminder .notification-icon{background:#fdf1dc;color:#8a5408}
 .notification-item.license .notification-icon,.notification-item.merkez .notification-icon{background:#fbe9e5;color:#9a3f2e}
 .notification-text{display:grid;gap:3px;flex:1;min-width:0}
@@ -34,7 +34,7 @@
 .notification-link{display:block;margin:-6px 0 8px 64px;min-height:36px}
 
 /* "Yeni bir bildiriminiz var": floats over the page (it never pushes content mid-tap), above the phone's Destek button. */
-.notification-banner{position:fixed;right:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:45;width:min(400px,calc(100vw - 48px));box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:14px 12px 14px 16px;background:#fff;border:1px solid #e9c9c2;border-left:4px solid #d93b2b;border-radius:12px;box-shadow:0 12px 32px #183b2f26;animation:notification-in .2s ease-out}
+.notification-banner{position:fixed;right:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:45;width:min(400px,calc(100vw - 48px));box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:14px 12px 14px 16px;background:var(--paper,#fff);border:1px solid #e9c9c2;border-left:4px solid #d93b2b;border-radius:12px;box-shadow:0 12px 32px #183b2f26;animation:notification-in .2s ease-out}
 .notification-banner p{margin:0;flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--ink)}
 .notification-banner .btn{min-height:44px;padding:8px 14px;white-space:nowrap}
 .notification-banner .icon-btn{width:44px;height:44px;flex-shrink:0;color:#6a756d;order:3}

@@ -2,7 +2,7 @@
 .place-link{display:inline-flex;align-items:center;gap:4px;min-height:32px}
 .home-links{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:-4px 0 12px}
 /* The bell on the top bar (Bildirimler, owner). */
-.topbar-bell{position:relative;display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;flex:none}
+.topbar-bell{position:relative;display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);color:var(--ink);cursor:pointer;flex:none}
 .topbar-bell:hover,.topbar-bell.active{background:var(--brand-soft,#e3eedd);color:var(--green)}
 /* 10 Ekim: unread ones turn the bell a soft coral with the ringing bell and the count ("9+" above nine); plain once all are read. */
 .topbar-bell.has-unread{background:#fdeceb;border-color:#f3c9c1;color:#b4412f}

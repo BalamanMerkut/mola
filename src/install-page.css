@@ -6,7 +6,7 @@
 .install-page h1{font-family:Georgia,serif;font-weight:400;font-size:30px;line-height:1.2;margin:0 0 10px;overflow-wrap:anywhere}
 .install-lead{font-size:15px;line-height:1.6;color:#4c5d50;margin:0 0 20px}
 .install-page>.notice{margin-bottom:18px}
-.install-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;min-width:0}
+.install-card{background:var(--paper,#fff);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;min-width:0}
 .install-card-head{display:flex;align-items:center;gap:10px;color:var(--green);margin-bottom:14px}
 .install-card-head h2{margin:0;font-size:18px;font-weight:600;color:var(--ink)}
 .install-card-note{margin:0 0 14px;line-height:1.6}

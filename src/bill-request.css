@@ -1,6 +1,6 @@
 /* "Hesabı iste" → "Nasıl ödeyeceksiniz? Nakit / Kart" on the guest menu (src/ServiceCallButtons.tsx). */
-.service-call.asking{background:#f3f7ef;border-color:#9fbf8c}
-.bill-pay-choice{display:grid;gap:8px;margin-top:8px;padding:12px;border:1px solid #cfe0c7;border-radius:16px;background:#fbfdf9}
+.service-call.asking{background:var(--surface-soft,#f3f7ef);border-color:#9fbf8c}
+.bill-pay-choice{display:grid;gap:8px;margin-top:8px;padding:12px;border:1px solid #cfe0c7;border-radius:16px;background:var(--paper,#fff)}
 .bill-pay-choice p{margin:0;font-size:14px;font-weight:600;color:var(--ink);text-align:center}
 .bill-pay-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .bill-pay-options button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--green);font-size:15px;font-weight:650}

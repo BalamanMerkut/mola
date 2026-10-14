@@ -1,7 +1,7 @@
 /* Category campaigns on the photo menu (src/CampaignOffers.tsx). Colours match the quantity-offer badge (style.css). */
 .category-offer-badge { display:inline-block; max-width:100%; color:#285447; background:#edf3e8; border-radius:6px; padding:4px 7px; font-size:11px; font-weight:600; line-height:1.35; margin-bottom:8px; overflow-wrap:anywhere; }
 .category-offer-strip { list-style:none; display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; padding:0; min-width:0; }
-.category-offer-strip li { display:inline-flex; align-items:center; gap:7px; max-width:100%; min-height:36px; padding:7px 12px; border-radius:999px; background:#e6eee8; color:#234c3e; font-size:13px; font-weight:600; }
+.category-offer-strip li { display:inline-flex; align-items:center; gap:7px; max-width:100%; min-height:36px; padding:7px 12px; border-radius:999px; background:var(--surface-soft,#e6eee8); color:#234c3e; font-size:13px; font-weight:600; }
 .category-offer-strip li svg { flex-shrink:0; }
 .category-offer-strip li span { min-width:0; overflow-wrap:anywhere; }
 .category-offer-strip li small { font-weight:400; color:#4d6b5d; white-space:nowrap; }

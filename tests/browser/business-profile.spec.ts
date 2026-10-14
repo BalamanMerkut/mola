@@ -68,7 +68,7 @@ test('the owner sets name, logo and theme in Ayarlar; they reach the guest; Mola
   expect(decoded.data[3]).toBe(0);
   expect(decoded.data[(128 * decoded.info.width + 128) * 4 + 3]).toBe(255);
   await page.reload();
-  await expect(page.locator('.workspace')).toHaveCSS('background-color', 'rgb(250, 247, 242)');
+  await expect(page.locator('.workspace')).toHaveCSS('background-color', 'rgb(232, 225, 213)');
 
   const guestContext = await browser.newContext();
   try {
@@ -78,7 +78,7 @@ test('the owner sets name, logo and theme in Ayarlar; they reach the guest; Mola
     const circle = await art.locator('.art-circle').boundingBox(), symbol = await art.locator('svg').boundingBox();
     expect(Math.abs(circle!.x + circle!.width / 2 - symbol!.x - symbol!.width / 2)).toBeLessThan(1);
     expect(Math.abs(circle!.y + circle!.height / 2 - symbol!.y - symbol!.height / 2)).toBeLessThan(1);
-    await expect(guest.locator('.customer')).toHaveCSS('background-color', 'rgb(250, 247, 242)');
+    await expect(guest.locator('.customer')).toHaveCSS('background-color', 'rgb(232, 225, 213)');
     await guest.screenshot({ path: info.outputPath('coffee-theme.png'), fullPage: true });
     await expect(guest.locator('.customer-header img')).toBeVisible();
     await expect(guest.locator('.customer-header')).toContainText('Logo Test Kafe');

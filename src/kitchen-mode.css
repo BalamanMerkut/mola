@@ -4,15 +4,15 @@
  * one stage at a time with tabs (portrait, ≤ 900 px). Type is about one and a half times the normal board's, for reading
  * from a few steps away; buttons are at least 56 px tall. Late orders colour the whole card.
  */
-.kitchen-mode{--km-line:#e1e7d8;--km-soft:#eef1e9;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;background:#f4f6f1;color:var(--ink);box-sizing:border-box}
+.kitchen-mode{--km-line:var(--line,#e1e7d8);--km-soft:var(--surface-soft,#eef1e9);display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;background:var(--surface-soft,#f4f6f1);color:var(--ink);box-sizing:border-box}
 .kitchen-mode.on-board{height:100vh;height:100dvh;overflow:hidden}
 .workspace.kitchen-mode-root{display:block}
 .kitchen-mode-root>.kitchen-mode{width:100%}
 
 /* The bar: place and clock · counts · tools. Wraps to two rows on a narrow screen, never wider than the screen. */
-.kitchen-bar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;min-height:64px;padding:8px calc(18px + env(safe-area-inset-right,0px)) 8px calc(18px + env(safe-area-inset-left,0px));padding-top:calc(8px + env(safe-area-inset-top,0px));background:#fff;border-bottom:1px solid var(--km-line);box-sizing:border-box;position:relative;z-index:5}
+.kitchen-bar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;min-height:64px;padding:8px calc(18px + env(safe-area-inset-right,0px)) 8px calc(18px + env(safe-area-inset-left,0px));padding-top:calc(8px + env(safe-area-inset-top,0px));background:var(--paper,#fff);border-bottom:1px solid var(--km-line);box-sizing:border-box;position:relative;z-index:5}
 .kitchen-bar-place{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 220px}
-.kitchen-bar-avatar{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#e6efe2;color:var(--green);overflow:hidden}
+.kitchen-bar-avatar{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--brand-soft,#e6efe2);color:var(--green);overflow:hidden}
 .kitchen-bar-avatar img{width:40px;height:40px;object-fit:contain}
 .kitchen-bar-place>div{display:flex;flex-direction:column;min-width:0}
 .kitchen-bar-place strong{font-size:17px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -29,8 +29,8 @@
 .kitchen-bar-tools .kitchen-awake-note{max-width:220px;font-size:12px}
 .kitchen-bar-online{display:inline-flex;color:#5c8a5c}
 .kitchen-bar-tools .connection{font-size:13px}
-.kitchen-bar-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 15px;border:1px solid #d6dfd2;border-radius:12px;background:#fff;color:var(--green);font:inherit;font-size:14.5px;font-weight:600;white-space:nowrap;cursor:pointer}
-.kitchen-bar-btn:hover{background:#f1f5ee}
+.kitchen-bar-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 15px;border:1px solid #d6dfd2;border-radius:12px;background:var(--paper,#fff);color:var(--green);font:inherit;font-size:14.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.kitchen-bar-btn:hover{background:var(--surface-soft,#f1f5ee)}
 .kitchen-bar-btn.primary{background:var(--green);border-color:var(--green);color:#fff}
 .kitchen-bar-btn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .kitchen-bar-btn:disabled{opacity:.55;cursor:default}
@@ -67,7 +67,7 @@
 .kitchen-mode .order-meta>span:first-child{margin-right:auto}
 .kitchen-mode .waiting-time{font-size:19px;font-weight:700;color:#2f4a3c}
 .kitchen-mode .waiting-time svg{width:18px;height:18px}
-.kitchen-mode .waiting-time.late{padding:3px 11px;background:#fff;color:#8a3a12}
+.kitchen-mode .waiting-time.late{padding:3px 11px;background:var(--paper,#fff);color:#8a3a12}
 .kitchen-mode .late-label{padding:3px 11px;border-radius:99px;font-size:15px;font-weight:800;letter-spacing:.3px;background:#a85c12;color:#fff}
 .kitchen-mode .order-lines{gap:14px;margin:16px 0}
 .kitchen-mode .order-line{gap:12px}

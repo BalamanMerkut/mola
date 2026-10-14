@@ -1,16 +1,16 @@
 /* Satış ve Raporlar by year (src/ReportYears.tsx): the "Yıl ▾" chip of the period bar and the "Tümü" table of years. */
 .reports-v2 .period-year{position:relative}
-.reports-v2 .period-year>button{min-height:34px;padding:6px 12px 6px 14px;border-radius:999px;border:1px solid #d9e1d5;background:#fff;color:#4f5e4d;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.reports-v2 .period-year>button{min-height:34px;padding:6px 12px 6px 14px;border-radius:999px;border:1px solid #d9e1d5;background:var(--paper,#fff);color:#4f5e4d;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
 .reports-v2 .period-year>button.active{background:var(--green);border-color:var(--green);color:#fff}
 .reports-v2 .period-year>button[aria-expanded="true"] .period-year-chevron{transform:rotate(180deg)}
 .reports-v2 .period-year-chevron{transition:transform .15s ease;opacity:.8}
-.reports-v2 .period-year-menu{position:absolute;z-index:25;top:40px;left:0;min-width:210px;max-height:min(60vh,340px);overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 10px 30px #183b2f1a;display:flex;flex-direction:column;gap:2px}
+.reports-v2 .period-year-menu{position:absolute;z-index:25;top:40px;left:0;min-width:210px;max-height:min(60vh,340px);overflow-y:auto;background:var(--paper,#fff);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 10px 30px #183b2f1a;display:flex;flex-direction:column;gap:2px}
 .reports-v2 .period-year-menu.end{left:auto;right:0}
 .reports-v2 .period-year-menu>button{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;min-height:44px;padding:8px 12px;border:0;border-radius:9px;background:none;color:#26332b;font-size:14px;font-weight:600;text-align:left;cursor:pointer;font-variant-numeric:tabular-nums}
 .reports-v2 .period-year-menu>button small{font-size:11px;font-weight:400;color:#6e7b6c}
 .reports-v2 .period-year-menu>button svg{color:var(--green)}
-.reports-v2 .period-year-menu>button:hover,.reports-v2 .period-year-menu>button:focus-visible{background:#f1f5ef}
-.reports-v2 .period-year-menu>button.active{background:#e8f1ea}
+.reports-v2 .period-year-menu>button:hover,.reports-v2 .period-year-menu>button:focus-visible{background:var(--surface-soft,#f1f5ef)}
+.reports-v2 .period-year-menu>button.active{background:var(--surface-soft,#e8f1ea)}
 /* The table of years ("Tümü"). */
 .year-table-card{display:flex;flex-direction:column;gap:8px}
 .year-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
@@ -20,7 +20,7 @@
 .year-table tbody th{font-weight:600}
 .year-table tfoot th,.year-table tfoot td{font-weight:700;border-bottom:0;border-top:2px solid var(--green)}
 .year-table .year-open{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 8px;margin:-4px -8px;border:0;border-radius:8px;background:none;color:var(--green);font:inherit;font-weight:700;cursor:pointer}
-.year-table .year-open:hover,.year-table .year-open:focus-visible{background:#eef4f0}
+.year-table .year-open:hover,.year-table .year-open:focus-visible{background:var(--surface-soft,#eef4f0)}
 .year-table .year-negative{color:#a8452f}
 .year-table .year-more-line{display:none;font-size:11px;font-weight:400;color:#6e7b6c;white-space:normal;margin-top:2px}
 .year-note{margin:0}

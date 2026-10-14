@@ -279,9 +279,9 @@ test('phones: the bottom bar and "Daha fazla" hold every page, Destek is a menu 
   await openView(page, 'Satış ve Raporlar');
   await expect(page.locator('.kpi').first()).toContainText('dünün aynı saatine göre');
   for (const pill of ['Bugün', '7 gün', '30 gün', 'Yıl', 'Tümü']) await expect(page.getByRole('group', { name: 'Dönem' }).getByRole('button', { name: pill, exact: true })).toBeVisible();
-  // The four report groups fit one row on the phone (nothing to slide), each a finger-sized target.
+  // The three report groups (Satış, Personel, Rezervasyon; the money group left in 0.1.8) fit one row on the phone, each a finger-sized target.
   const groups = await reportGroups(page).evaluate(row => ({ slides: row.scrollWidth > row.clientWidth + 1, heights: [...row.querySelectorAll('button')].map(b => b.getBoundingClientRect().height) }));
-  expect(groups.slides).toBe(false); expect(groups.heights).toHaveLength(4);
+  expect(groups.slides).toBe(false); expect(groups.heights).toHaveLength(3);
   for (const h of groups.heights) expect(h).toBeGreaterThanOrEqual(44);
   await expect(reportTabs(page).getByRole('button', { name: 'Özet', exact: true })).toHaveAttribute('aria-current', 'page');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

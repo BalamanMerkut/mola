@@ -4,7 +4,7 @@
 .owner-compact .page-heading .eyebrow{display:none}
 .owner-compact .page-heading h1{margin:0 0 7px;font-size:29px}
 .owner-compact .page-heading p{color:#71806e}
-.menu-workspace{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.menu-workspace{background:var(--paper,#fff);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .menu-workspace .menu-toolbar{display:flex;gap:8px;align-items:center;padding:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .menu-workspace .menu-toolbar>.btn{padding:10px 13px;font-size:12px;min-height:42px}
 .menu-workspace .menu-search{display:flex;align-items:center;gap:8px;flex:1;min-width:180px;max-width:320px;margin:0 0 0 auto;padding:0 10px;border:1px solid var(--line);border-radius:8px;color:#7c8877}
@@ -15,12 +15,12 @@
 .menu-workspace .menu-filterbar>.pill-tabs-wrap{justify-content:flex-start}
 .menu-workspace .menu-filterbar select{width:100%;min-height:44px;padding:8px 10px;margin:0;font-size:13px;border-radius:10px}
 .menu-workspace .menu-table-heading,.menu-workspace .menu-row{display:grid;grid-template-columns:minmax(180px,1fr) 86px 120px 185px;gap:16px;align-items:center;padding:12px 18px}
-.menu-workspace .menu-table-heading{background:#f7f9f5;border-block:1px solid var(--line);font-size:11px;color:#77846f;padding-block:10px}
+.menu-workspace .menu-table-heading{background:var(--surface-soft,#f7f9f5);border-block:1px solid var(--line);font-size:11px;color:#77846f;padding-block:10px}
 .menu-workspace .menu-table-heading>span:nth-child(2){text-align:right}
 .menu-workspace .menu-table-heading>span:last-child{text-align:right}
 .menu-workspace .menu-list{border:0;border-radius:0}
 .menu-workspace .menu-row{min-height:80px}
-.menu-workspace .menu-row:hover{background:#fcfdfa}
+.menu-workspace .menu-row:hover{background:var(--paper,#fff)}
 .menu-workspace .menu-product-info{display:flex;align-items:center;gap:13px;min-width:0}
 .menu-workspace .menu-product-info>.product-art{width:48px;height:48px;flex:none;border-radius:8px}
 .menu-workspace .menu-product-info>.product-art svg{width:28px;height:28px}
@@ -36,7 +36,7 @@
 .menu-workspace .menu-row-actions .btn{min-height:38px;padding:8px 10px;gap:6px;font-size:12px}
 .menu-workspace .discard-draft p{display:block}
 .menu-workspace .discard-draft>.text-btn{padding:4px 0;font-size:11px}
-.menu-workspace .menu-list-note{margin:0;padding:13px 18px;background:#fafbf8;border-top:1px solid var(--line);font-size:11px;color:#788570;line-height:1.65}
+.menu-workspace .menu-list-note{margin:0;padding:13px 18px;background:var(--paper,#fff);border-top:1px solid var(--line);font-size:11px;color:#788570;line-height:1.65}
 .menu-workspace .menu-empty{text-align:center;padding:36px 20px;color:#708168}
 .menu-workspace .menu-empty h3{margin:12px 0 6px}
 .menu-workspace .menu-empty p{font-size:12px}
@@ -65,12 +65,12 @@
 .product-editor-dialog .editor-photo .crop-controls label{margin-bottom:6px}
 .product-editor-dialog .editor-photo .option-presets{gap:6px}
 .product-editor-dialog .editor-photo .btn{font-size:11px;padding:8px 10px;min-height:36px}
-.product-editor-dialog .editor-disclosure{background:white;border:0;border-top:1px solid var(--line);border-radius:0;margin:0;padding:14px 0}
+.product-editor-dialog .editor-disclosure{background:var(--paper,#fff);border:0;border-top:1px solid var(--line);border-radius:0;margin:0;padding:14px 0}
 .product-editor-dialog .editor-disclosure:last-child{padding-bottom:0}
 .product-editor-dialog .editor-disclosure summary{font-size:13px}
 .product-editor-dialog .editor-disclosure summary small{display:inline;margin-left:9px;font-size:11px}
 .product-editor-dialog .editor-disclosure .editor-section{margin:12px 0 0;padding:0;border:0}
-.product-editor-dialog .product-editor .editor-save-area{flex:none;margin:0;padding:14px 24px 16px;border-top:1px solid var(--line);background:#fcfdfb;z-index:4}
+.product-editor-dialog .product-editor .editor-save-area{flex:none;margin:0;padding:14px 24px 16px;border-top:1px solid var(--line);background:var(--paper,#fff);z-index:4}
 .product-editor-dialog .editor-save-area .modal-actions{margin:0;display:flex;align-items:center;gap:8px}
 .product-editor-dialog .editor-save-area .modal-actions>.btn:first-child{margin-right:auto}
 .product-editor-dialog .editor-save-area .btn{font-size:12px;min-height:40px;padding:10px 12px}
@@ -132,5 +132,5 @@
 
 
 /* English section of the product editor: one compact box per option group, two columns on wide screens. */
-.product-editor .english-group{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0;background:#fafbf8;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px 14px}
+.product-editor .english-group{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0;background:var(--paper,#fff);min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px 14px}
 .product-editor .english-group legend{padding:0 8px;color:var(--green);font-weight:600}

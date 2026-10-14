@@ -80,18 +80,22 @@ export async function openYonetim(page: Page, password = merkezPassword()) {
 export const yonetimState = async (request: APIRequestContext) => (await request.get(`${ADMIN_API}/state`)).json();
 /** Mola Yönetim's sidebar (a compact top bar on a phone). */
 export const yonetimNav = (page: Page) => page.getByRole('navigation', { name: 'Mola Yönetim bölümleri' });
-export async function yonetimGo(page: Page, name: 'Bugün' | 'İşletmeler' | 'Başvurular' | 'Destek' | 'Duyurular' | 'Satışlarım' | 'Paketler' | 'Ayarlar') {
+export async function yonetimGo(page: Page, name: 'Bugün' | 'İşletmeler' | 'Başvurular' | 'Destek' | 'Duyurular' | 'Satışlarım' | 'Paketler' | 'Yedek' | 'Güncellemeler' | 'Ayarlar') {
   const item = yonetimNav(page).getByRole('button', { name, exact: true });
-  // Phones (under 600 px): Duyurular (megaphone) and Paketler are icons beside the bell, not in the top strip.
-  if ((name === 'Duyurular' || name === 'Paketler') && !await item.isVisible()) return page.locator('.yonetim-topbar').getByRole('button', { name, exact: true }).click();
+  // Phones (under 600 px): Duyurular (megaphone) and Paketler are icons beside the bell, not in the top strip; under 900 px
+  // Yedek and Güncellemeler too.
+  // Whichever of the two is shown (waits for the page instead of deciding before it is drawn).
+  if (['Duyurular', 'Paketler', 'Yedek', 'Güncellemeler'].includes(name)) return item.or(page.locator('.yonetim-topbar').getByRole('button', { name, exact: true })).filter({ visible: true }).first().click();
   await item.click();
 }
 /**
- * Ayarlar → one section (Hesap güvenliği, Yedek, Güncellemeler, E-posta bildirimleri, İletişim bilgileri, İşlem kayıtları,
- * Çalışma klasörü, Geliştirici erişimi). The old name "İşlem geçmişi" opens İşlem kayıtları (same lines, now tamper-evident).
+ * Ayarlar → one section (Hesap güvenliği, Kullanıcılar, E-posta bildirimleri, İletişim bilgileri, İşlem kayıtları, Çalışma
+ * klasörü, Geliştirici erişimi). Yedek and Güncellemeler are places of their own in the menu since 14 Ekim: asked for here,
+ * they open there. The old name "İşlem geçmişi" opens İşlem kayıtları (same lines, now tamper-evident).
  * Paketler and Hizmet fiyatları have their own page since 13 Ekim: `yonetimPackages`.
  */
 export async function yonetimSettings(page: Page, section: 'Hesap güvenliği' | 'Kullanıcılar' | 'Yedek' | 'Güncellemeler' | 'E-posta bildirimleri' | 'İletişim bilgileri' | 'İşlem geçmişi' | 'İşlem kayıtları' | 'Çalışma klasörü' | 'Geliştirici erişimi') {
+  if (section === 'Yedek' || section === 'Güncellemeler') return yonetimGo(page, section);
   await yonetimGo(page, 'Ayarlar');
   await page.getByRole('navigation', { name: 'Ayarlar bölümleri' }).getByRole('button', { name: section === 'İşlem geçmişi' ? 'İşlem kayıtları' : section, exact: true }).click();
 }

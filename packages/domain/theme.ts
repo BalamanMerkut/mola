@@ -22,3 +22,20 @@ export const themes: Record<ThemeId, { name: string; primary: string; hover: str
 export const heroIcons = ['coffee', 'tea', 'food', 'dessert'] as const;
 export type MenuHero = { title: string; description: string; titleEn: string; descriptionEn: string; icon: typeof heroIcons[number] };
 export const defaultMenuHero: MenuHero = { title: 'Kendinize güzel bir mola verin.', description: 'İyi kahve, taze lezzetler. Siz favorinizi seçin, biz masanıza getirelim.', titleEn: 'Your little coffee break.', descriptionEn: 'Good coffee, fresh flavours. Pick your favourites; we’ll bring them to your table.', icon: 'coffee' };
+
+/*
+ * Each palette's own matte surfaces (14 Ekim: "the white hurts the eyes"; the palette now colours the whole page, not just its
+ * buttons). A warm paper base with a little of the palette's colour mixed in: page < field < card in darkness, so cards
+ * stand off the page and fields sit into the cards. Kept faint on purpose: table states, warnings and the kitchen's stage
+ * colours read the same on every palette. Computed here (not with CSS color-mix) so older tablets get them too.
+ */
+export type Surfaces = { page: string; card: string; field: string; soft: string; line: string; selected: string; rail: string };
+const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const mix = (a: string, b: string, t: number) => '#' + hex(a).map((v, i) => Math.round(v * t + hex(b)[i] * (1 - t)).toString(16).padStart(2, '0')).join('');
+export function surfaces(theme: ThemeId): Surfaces {
+  const p = (themes[theme] ?? themes.sage).primary;
+  return {
+    page: mix(p, '#efe9de', 0.05), card: mix(p, '#f8f5ef', 0.025), field: mix(p, '#f1ece3', 0.035), soft: mix(p, '#ebe5da', 0.06),
+    line: mix(p, '#e6e0d4', 0.05), selected: mix(p, '#f4f0e8', 0.14), rail: mix(p, '#141414', 0.7),
+  };
+}

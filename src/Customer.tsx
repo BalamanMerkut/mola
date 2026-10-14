@@ -13,7 +13,7 @@ import './daily-screens.css';
 import './guest.css';
 import { BusinessBrand, Brand, Composer, Empty, Notice, OrderLines, SectorIcon, Status } from './components';
 import { sectorSlogan } from '../packages/domain/sector';
-import { businessTheme } from './BusinessTheme';
+import { businessTheme, themeOnRoot } from './BusinessTheme';
 import { MenuHero } from './MenuHero';
 import { OrderEditor, EditOrderButton } from './OrderEditor';
 import { OrderEditRecovery } from './OrderEditRecovery';
@@ -90,6 +90,8 @@ export function Customer({ token }: { token: string }) {
   const [session, setSession] = useState<{ session: string; tableId: string; guestContext: string; mirror?: boolean } | null>(null);
   // "Gizlilik" page instead of the menu; renew: the menu copy's session gives way to a real one (SESSION_RENEW).
   const [privacy, setPrivacy] = useState(false), [renew, setRenew] = useState(0); const [data, setData] = useState<GuestSnapshot | null>(null); const [error, setError] = useState(''); const [connected, setConnected] = useState(true); const [tab, setTab] = useState<'menu' | 'orders'>('menu');
+  // The palette's paper behind the menu too (the page edges and windows over it), not white (14 Ekim).
+  useEffect(() => data?.theme ? themeOnRoot(data.theme) : undefined, [data?.theme]);
   // An old, renewed or wrong QR link: retrying the same link never helps, so the screen says what does.
   const [badLink, setBadLink] = useState(false);
   // A demo QR renewed by a reset before 5 Oct 2026 (resets keep the QRs now) ends on "Bu tanıtım yenilendi" (no retry button).
