@@ -1,4 +1,7 @@
+import type { Express } from 'express';
+import { z } from 'zod';
 import { DomainError } from '../packages/domain/engine.js';
+import { directLoopback, type HttpSecurity } from './http-security.js';
 import type { MerkezLink } from './kafe-link.js';
 import { RELAY, type RelayKind, type RelayReply, type RelayRequest, type TenantState } from './relay-protocol.js';
 
@@ -14,7 +17,7 @@ export type RelayHandler = (request: RelayRequest) => Promise<RelayReply>;
 const BACKOFF = [1000, 2000, 5000, 10_000, 30_000, 60_000];
 export class RelayClient {
   private handlers: Partial<Record<RelayKind, RelayHandler>> = {};
-  private running?: Promise<void>; private stopped = false; private failures = 0; private wake?: () => void;
+  private running?: Promise<void>; private stopped = false; private failures = 0; private wake?: () => void; private paused = false;
   /** Requests in hand (so a stop waits for nothing and tests can wait for quiet). */
   private busy = 0;
   lastPollAt = 0; lastError: string | null = null;
@@ -32,7 +35,7 @@ export class RelayClient {
     }
     return [...merged.values()];
   }
-  needed() { try { return !this.stopped && this.link.relayReady() && (this.tenants().some(t => t.support || t.phones.length > 0) || this.holds.some(h => h())); } catch { return false; } }
+  needed() { try { return !this.stopped && !this.paused && this.link.relayReady() && (this.tenants().some(t => t.support || t.phones.length > 0) || this.holds.some(h => h())); } catch { return false; } }
   /** Connected: a poll answered within the hold time (shown to the owner as "Mola Merkez'e bağlı"). */
   connected() { return !!this.running && Date.now() - this.lastPollAt < RELAY.HOLD_MS + 20_000; }
   /** Starts the loop when something needs it (call after any change). */
@@ -45,6 +48,8 @@ export class RelayClient {
   /** A signed call for the modules (pairing announcement, postbox). */
   post<T>(path: string, body: unknown, timeout = 15_000) { return this.link.relayPost<T>(path, body, timeout); }
   stop() { this.stopped = true; this.wake?.(); }
+  /** Browser tests only (relayTestRoute): as if this computer were off for Mola Merkez, and back. */
+  pause(off: boolean) { this.paused = off; this.wake?.(); if (!off) this.refresh(); }
   private sleep(ms: number) { return new Promise<void>(done => { const t = setTimeout(() => { this.wake = undefined; done(); }, ms); t.unref?.(); this.wake = () => { clearTimeout(t); this.wake = undefined; done(); }; }); }
   private async loop() {
     while (this.needed()) {
@@ -78,4 +83,14 @@ export class RelayClient {
   }
   /** Tests: until every handed request was answered. */
   async idle() { while (this.busy > 0) await new Promise(r => setTimeout(r, 10)); }
+}
+/** Browser tests (scripts/test-server.mjs, MOLA_TEST_TUNNEL=1; never in a release build): POST /api/test/relay { on } from this computer. */
+export function relayTestRoute(app: Express, relay: RelayClient, security: HttpSecurity) {
+  if (process.env.MOLA_TEST_TUNNEL !== '1' || process.env.MOLA_RELEASE_BUILD === '1') return;
+  app.post('/api/test/relay', (req, res) => {
+    if (!directLoopback(req, security)) throw new DomainError('NOT_FOUND', 'İşlem bulunamadı.', 404);
+    const { on } = z.object({ on: z.boolean() }).strict().parse(req.body);
+    relay.pause(!on);
+    res.json({ on });
+  });
 }

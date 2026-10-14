@@ -1,73 +1,104 @@
-/* "Raporlarım" (src/ReportsPhone.tsx): the owner's phone page on Mola Merkez. Standalone: only this file is loaded. */
-:root{--rp-ink:#1f2d26;--rp-muted:#66736b;--rp-green:#234c3e;--rp-line:var(--line,#e2e7df);--rp-paper:var(--paper,#f4f6f1);--rp-card:#fff;--rp-warn:#a8584a;--rp-amber:#b46d0c;color-scheme:light}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--rp-paper);color:var(--rp-ink);font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
-.rp-page{max-width:560px;margin:0 auto;min-height:100vh;padding:0 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
-.rp-page main{flex:1;display:grid;gap:12px;align-content:start}
-.rp-head{display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 0 12px}
-.rp-head strong{display:block;font-size:18px}
-.rp-head span:not(.rp-logo){display:block;font-size:13px;color:var(--rp-muted);overflow-wrap:anywhere}
-.rp-logo{width:38px;height:38px;border-radius:12px;background:var(--rp-green);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;flex-shrink:0}
-.rp-foot{margin-top:18px;font-size:12px;line-height:1.5;color:var(--rp-muted);text-align:center}
-.rp-card{background:var(--rp-card);border:1px solid var(--rp-line);border-radius:16px;padding:16px;display:grid;gap:10px}
-.rp-card h2{margin:0;font-size:16px}
+/*
+ * "Kafemi yönet" (src/ReportsPhone.tsx, /yonet on Mola Merkez): the sign-in, the report and its banners. Loaded beside the
+ * café app's own style sheets (index.html), so everything is scoped to .rp-shell. The business's palette comes in as the
+ * app's theme tokens (src/BusinessTheme.tsx businessTheme on .rp-shell: --green, --paper, --brand-bg, --line …), matte like
+ * the café screens; Mola's own palette until a report has told it. Dark when the device is dark.
+ */
+.rp-shell{--rp-page:var(--brand-bg,#ece7dc);--rp-card:var(--paper,#f8f5ef);--rp-field:var(--field,#f1ece3);--rp-line:var(--line,#e2ddd2);--rp-brand:var(--green,#234c3e);--rp-brand-ink:var(--green,#234c3e);--rp-soft:var(--brand-soft,#e4ebe4);--rp-ink:var(--ink,#24382e);--rp-muted:#66726b;--rp-warn:#a3483a;--rp-amber:#8f5a0c;--rp-amber-bg:#f8ecd6;--rp-ok-bg:#e1eee5;
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--rp-page);color:var(--rp-ink);font:16px/1.45 Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%;color-scheme:light}
+.rp-shell *,.rp-shell *::before,.rp-shell *::after{box-sizing:border-box}
+@media (prefers-color-scheme:dark){.rp-shell{--rp-page:#121815;--rp-card:#1b231f;--rp-field:#141b18;--rp-line:#2c3832;--rp-brand-ink:#9fd0b8;--rp-soft:#22302a;--rp-ink:#e5ece7;--rp-muted:#9eada5;--rp-warn:#f0a497;--rp-amber:#f0c27a;--rp-amber-bg:#33291a;--rp-ok-bg:#1e3328;color-scheme:dark}}
+/* Slim header: the Mola mark, "Kafemi yönet", the business; Çıkış at its end. */
+.rp-header{position:sticky;top:0;z-index:5;background:var(--rp-card);border-bottom:1px solid var(--rp-line);padding-top:env(safe-area-inset-top)}
+.rp-header-in{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:60px}
+.rp-logo{width:36px;height:36px;border-radius:11px;background:var(--rp-brand);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px;flex-shrink:0}
+.rp-title{min-width:0;display:grid}
+.rp-title strong{font-size:16px;line-height:1.2}
+.rp-title span{font-size:13px;color:var(--rp-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-logout{margin-left:auto;font:inherit;font-size:14px;font-weight:600;min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--rp-line);background:transparent;color:var(--rp-muted);cursor:pointer}
+.rp-page{flex:1;width:100%;max-width:560px;margin:0 auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:grid;gap:12px;align-content:start}
+.rp-foot{max-width:560px;margin:0 auto;padding:4px 16px calc(18px + env(safe-area-inset-bottom));font-size:12px;line-height:1.5;color:var(--rp-muted);text-align:center}
+.rp-center{text-align:center;padding:40px 0}
+/* Cards, the café's own way: matte card on a matte page, a soft line, roomy. */
+.rp-card{background:var(--rp-card);border:1px solid var(--rp-line);border-radius:18px;padding:18px;display:grid;gap:10px;min-width:0}
+.rp-card h2{margin:0;font-size:18px;line-height:1.3}
 .rp-card p{margin:0;line-height:1.5}
-.rp-warn{border-color:#ecc7bf;background:#fff6f3}
+.rp-warn{border-color:#e3b9b0}
 .rp-muted{color:var(--rp-muted);font-size:14px}
-.rp-login label{font-size:14px;font-weight:600;margin-bottom:-4px}
-.rp-login input{font:inherit;font-weight:400;font-size:16px;min-height:48px;padding:10px 12px;border:1px solid #cdd6ca;border-radius:12px;background:var(--field,#fff);color:var(--rp-ink);width:100%;min-width:0}
-.rp-login small{font-weight:400;color:var(--rp-muted);font-size:12px;margin-top:-4px}
-.rp-btn{font:inherit;font-weight:700;font-size:16px;min-height:50px;border:0;border-radius:12px;background:var(--rp-green);color:#fff}
-.rp-btn:disabled{opacity:.6}
-.rp-error{color:var(--rp-warn);font-size:14px}
-.rp-bar{display:flex;align-items:center;gap:10px;justify-content:space-between}
-.rp-status{margin:0;font-size:13px;color:var(--rp-muted);display:flex;align-items:center;gap:8px}
-.rp-status.live{color:var(--rp-green);font-weight:600}
-.rp-status.off{color:var(--rp-amber);font-weight:600}
-.rp-dot{width:8px;height:8px;border-radius:50%;background:#2f8a5f;box-shadow:0 0 0 3px #2f8a5f26}
-.rp-refresh{font:inherit;font-size:14px;font-weight:600;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--rp-line);background:var(--paper,#fff);color:var(--rp-green)}
+.rp-small{font-size:12px}
+.rp-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Sign-in: one column, large fields and buttons; the two steps as two small dots. */
+.rp-login{max-width:440px;width:100%;margin:8px auto 0;padding:22px 20px;gap:12px}
+.rp-login label{font-size:14px;font-weight:600;margin:4px 0 -8px}
+.rp-login input{font:inherit;font-size:16px;min-height:50px;padding:10px 14px;border:1px solid var(--rp-line);border-radius:12px;background:var(--rp-field);color:var(--rp-ink);width:100%;min-width:0}
+.rp-login input:focus{outline:2px solid var(--rp-brand);outline-offset:1px;border-color:transparent}
+.rp-login .rp-code{font-size:28px;font-weight:700;letter-spacing:.35em;text-align:center;font-variant-numeric:tabular-nums;min-height:62px}
+.rp-steps{display:flex;gap:6px;margin:0}
+.rp-steps span{width:22px;height:5px;border-radius:3px;background:var(--rp-line)}
+.rp-steps .on{background:var(--rp-brand)}.rp-steps .done{background:var(--rp-brand);opacity:.45}
+.rp-btn{font:inherit;font-weight:700;font-size:16px;min-height:52px;padding:0 18px;border:0;border-radius:14px;background:var(--rp-brand);color:#fff;cursor:pointer}
+.rp-btn:disabled{opacity:.55;cursor:default}
+.rp-btn.small{min-height:42px;font-size:14px;padding:0 14px;border-radius:12px}
+.rp-btn.danger{background:var(--rp-warn)}
+.rp-ghost{font:inherit;font-size:15px;font-weight:600;min-height:46px;padding:0 16px;border-radius:14px;border:1px solid var(--rp-line);background:transparent;color:var(--rp-brand-ink);cursor:pointer}
+.rp-ghost.small{min-height:40px;font-size:14px;border-radius:12px}
+.rp-ghost:disabled{opacity:.55}
+.rp-error{margin:0;color:var(--rp-warn);font-size:14px;font-weight:600}
+.rp-note{margin:0;padding:10px 12px;border-radius:12px;background:var(--rp-amber-bg);color:var(--rp-amber);font-size:14px;font-weight:600}
+.rp-replace{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rp-choice{font:inherit;width:100%;text-align:left;display:grid;gap:2px;padding:12px 14px;min-height:60px;border:1px solid var(--rp-line);border-radius:14px;background:var(--rp-field);color:var(--rp-ink);cursor:pointer}
+.rp-choice small{color:var(--rp-muted);font-size:13px}
+.rp-choice:disabled{opacity:.6}
+.rp-confirm{border-color:var(--rp-warn)}
+.rp-actions{display:flex;flex-wrap:wrap;gap:8px}
+.rp-actions>*{flex:1 1 150px}
+/* The report's status line, its banners and the "Kafeyi yönet" way in. */
+.rp-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;min-height:40px}
+.rp-status{margin:0;font-size:14px;color:var(--rp-muted);display:flex;align-items:center;gap:8px;min-width:0}
+.rp-status.live{color:var(--rp-brand-ink);font-weight:600}
+.rp-status.off{color:var(--rp-amber);font-weight:700;background:var(--rp-amber-bg);padding:8px 12px;border-radius:12px}
+.rp-dot{width:9px;height:9px;border-radius:50%;background:#2f8a5f;box-shadow:0 0 0 4px #2f8a5f26;flex-shrink:0}
+.rp-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:16px;font-size:15px}
+.rp-banner.back{background:var(--rp-ok-bg);color:var(--rp-brand-ink)}
+.rp-paired{margin:0;padding:12px 14px;border-radius:14px;background:var(--rp-ok-bg);color:var(--rp-brand-ink);font-weight:700;font-size:15px}
+.rp-manage{display:flex;align-items:center;justify-content:center;text-align:center;width:100%}
+.rp-quiet{margin:0;font-size:13px;color:var(--rp-muted);text-align:center}
+.rp-cafe{display:block;max-width:560px;margin:0 auto;padding:10px;text-align:center;font-size:13px;color:var(--rp-muted)}
+/* The report: the day in the palette's colour, the numbers in small cards (like Satış ve Raporlar). */
 .rp-report{display:grid;gap:12px}
-.rp-hero{background:var(--rp-green);border-color:var(--rp-green);color:#fff}
+.rp-hero{background:var(--rp-brand);border-color:var(--rp-brand);color:#fff;gap:8px}
 .rp-hero .rp-label{font-size:13px;opacity:.85}
-.rp-big{font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums}
+.rp-big{font-size:36px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .rp-change{font-size:13px;opacity:.9}
 .rp-split{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-.rp-split div{background:#ffffff1a;border-radius:12px;padding:8px 10px;display:grid;gap:2px;min-width:0}
+.rp-split div{background:#ffffff1f;border-radius:12px;padding:9px 10px;display:grid;gap:2px;min-width:0}
 .rp-split span{font-size:12px;opacity:.85}
 .rp-split strong{font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .rp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.rp-fact{background:var(--rp-card);border:1px solid var(--rp-line);border-radius:14px;padding:12px;display:grid;gap:2px;min-width:0}
+.rp-fact{background:var(--rp-card);border:1px solid var(--rp-line);border-radius:16px;padding:12px 14px;display:grid;gap:2px;min-width:0}
 .rp-fact span{font-size:12px;color:var(--rp-muted)}
-.rp-fact strong{font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rp-fact strong{font-size:21px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .rp-fact small{font-size:12px;color:var(--rp-muted)}
 .rp-top,.rp-rows{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.rp-top{counter-reset:top}
-.rp-top li,.rp-rows li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid #eef1ec;font-size:14px}
+.rp-top li,.rp-rows li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--rp-line);font-size:14px}
 .rp-top li:last-child,.rp-rows li:last-child{border-bottom:0}
 .rp-top li span,.rp-rows li span{overflow-wrap:anywhere}
 .rp-top small,.rp-rows small{color:var(--rp-muted);font-size:12px}
 .rp-top strong,.rp-rows strong{font-variant-numeric:tabular-nums}
-.rp-rows li{grid-template-columns:1fr auto auto}
 .rp-diff strong{color:var(--rp-warn)}
 .rp-month{display:grid;gap:2px}
 .rp-month strong{font-size:22px;font-variant-numeric:tabular-nums}
 .rp-month span{font-size:13px;color:var(--rp-muted)}
-.rp-chart{height:90px;display:flex;align-items:flex-end;gap:2px}
-.rp-chart span{flex:1;background:#7fa894;border-radius:3px 3px 0 0;min-width:2px}
-.rp-chart span:last-child{background:var(--rp-green)}
+.rp-chart{height:96px;display:flex;align-items:flex-end;gap:2px}
+.rp-chart span{flex:1;background:var(--rp-brand);opacity:.45;border-radius:3px 3px 0 0;min-width:2px}
+.rp-chart span:last-child{opacity:1}
 @media(max-width:360px){.rp-split{grid-template-columns:1fr}.rp-grid{grid-template-columns:1fr}}
-.rp-manage{display:flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700}
-/* "Eşleşti ✓ · <işletme>" right after pairing; "Kafedeyim, kasayı aç" quiet under the page (0.1.21). */
-.rp-paired{margin:0 0 12px;padding:12px 14px;border-radius:12px;background:#e3f1e8;color:var(--rp-green);font-weight:700;font-size:15px}
-.rp-cafe{display:block;margin-top:14px;padding:10px;text-align:center;font-size:13px;color:var(--rp-muted)}
-/* 0.1.22: the sign-in (calm, like the report cards), "Hangisinin yerine?", "Çıkış" in the header. */
-.rp-note{margin:0;padding:10px 12px;border-radius:12px;background:#fff6e8;color:var(--rp-amber);font-size:14px;font-weight:600}
-.rp-small{font-size:12px}
-.rp-replace{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.rp-choice{font:inherit;width:100%;text-align:left;display:grid;gap:2px;padding:12px 14px;min-height:56px;border:1px solid var(--rp-line);border-radius:12px;background:var(--rp-card);color:var(--rp-ink)}
-.rp-choice small{color:var(--rp-muted);font-size:12px}
-.rp-choice:disabled{opacity:.6}
-.rp-logout{margin-left:auto;font:inherit;font-size:14px;font-weight:600;min-height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--rp-line);background:var(--rp-card);color:var(--rp-muted)}
-.rp-confirm p{margin:0}
-.rp-actions{display:flex;flex-wrap:wrap;gap:8px}
-.rp-actions .rp-btn{flex:1 1 160px;padding:0 14px}
+/* A laptop: a wider page, the numbers in three columns and the lists side by side. */
+@media(min-width:900px){
+  .rp-page,.rp-foot,.rp-cafe{max-width:960px}
+  .rp-page{padding-top:24px}
+  .rp-report{grid-template-columns:1fr 1fr}
+  .rp-hero,.rp-grid,.rp-wide{grid-column:1/-1}
+  .rp-grid{grid-template-columns:repeat(6,1fr)}
+  .rp-manage{max-width:440px;justify-self:start}
+}

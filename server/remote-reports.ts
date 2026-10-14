@@ -19,37 +19,45 @@ import { featureRefusal } from './feature-guard.js';
 
 /*
  * Uzaktan raporlar ("Raporlarım"), end to end encrypted (packages/domain/remote-crypto.ts).
- *   Giriş    0.1.22 (the owner's decision: one website sign-in, no QR, no shortcut): on <Merkez>/raporlarim an unpaired device
- *            types the business's verified owner e-mail, the owner's password and 6-digit phone code (Raporlar için telefon
- *            kodu) and a name for itself. Mola Merkez only finds the business by the e-mail and hands out this business's
- *            public key (sent with the heartbeat, `loginReport`); the device seals {password, code, its own public key, name,
- *            kind} to that key and the köprü brings it here (relay kind `login`). This computer checks both: wrong ones count
- *            per business (5 free, then 1, 2, 4 … at most 15 minutes; 50 in a day close it until tomorrow), and the code's own
- *            counters (server/report-security.ts) count too. Then the device is added and the owner hears it ("Yeni cihaz
- *            bağlandı"). At most 3 devices: a right password and code on a full list get the list and a one-time ticket
- *            ("Hangisinin yerine?"). The same name and kind of the same owner signing in again (Safari forgot the site after
- *            7 days unused) replaces that entry instead of adding one. The phone first: while no phone is paired, a tablet
- *            or a computer is refused ("Önce telefonunuzdan giriş yapın."); devices paired before 0.1.21 have no kind and do
- *            not count as the phone. This computer must be on to let a new device in; paired devices read the postbox while
- *            it is off. "Kaldır" in Ayarlar → Uzaktan erişim (the password again) and "Çıkış" on the device drop one at once
- *            (here, and Merkez forgets its token and postbox).
+ *   Giriş    0.1.23 (the owner's decision: one website sign-in on <Merkez>/yonet, no QR, no shortcut, any device first): an
+ *            unpaired device types the business's verified owner e-mail and the owner's password ("Devam"), then the 6-digit
+ *            phone code (Raporlar için telefon kodu). Mola Merkez only finds the business by the e-mail and hands out this
+ *            business's public key (sent with the heartbeat, `loginReport`); each step is sealed to that key and the köprü
+ *            brings it here (relay kind `login`). Step 1: this computer checks the password and answers NEED_CODE with a
+ *            one-time ticket (5 minutes, bound to the device's key); step 2 brings the ticket and the code. Wrong passwords
+ *            and wrong codes count per business (5 free, then 1, 2, 4 … at most 15 minutes; 50 in a day close it until
+ *            tomorrow), and the code's own counters (server/report-security.ts) count too. Then the device is added and the
+ *            owner hears it ("Yeni cihaz bağlandı"). At most 3 devices: a right code on a full list gets the list and a
+ *            one-time ticket ("Hangisinin yerine?"). The device names itself ("iPhone · 15 Ekim") and sends its own random id
+ *            (kept in its localStorage and IndexedDB): the same id of the same owner signing in again replaces that entry;
+ *            a browser that forgot everything is a new entry and the limit screen handles it. The kind is only the icon.
+ *            The answer carries a one-time 2-minute `grant`: "Kafeyi yönet" opens with it right after the sign-in without
+ *            asking the password and code again (server/remote-admin.ts). This computer must be on to let a new device in;
+ *            paired devices read the postbox while it is off. "Kaldır" in Ayarlar → Uzaktan erişim (the password again) and
+ *            "Çıkış" on the device drop one at once (here, and Merkez forgets its token and postbox).
  *   Live     The device asks through Merkez (relay kind `phone`): HMAC-signed, fresh (±5 min) and one-time (nonce); the answer
  *            is the report sealed for that device, bound to the question.
  *   Postbox  Every RELAY postbox period while this computer runs (MOLA_POSTBOX_MS, 5 minutes), after a gün sonu and when Mola
  *            closes, the very same report is sealed for each device and left at Merkez (one box per device, deleted on fetch
- *            or after 7 days), so the device shows it as "Kafe bilgisayarı kapalı · Son durum 23:40" while this computer is off.
+ *            or after 7 days), so the device shows it as "Kasa bilgisayarı kapalı · Son durum 23:40" while this computer is off.
  * Only an active owner's devices are answered: a device paired by an owner whose account was closed gets nothing.
  */
-type Phone = { id: string; name: string; pub: string; ownerId: string; ownerName: string; pairedAt: string; lastSeenAt?: string; kind?: DeviceKind };
+type Phone = { id: string; name: string; pub: string; ownerId: string; ownerName: string; pairedAt: string; lastSeenAt?: string; kind?: DeviceKind; device?: string };
 type Record_ = { v: 1; key?: { privateKey: string; publicKey: string }; phones: Phone[]; log: { at: string; text: string }[] };
-type Ticket = { tenant: string; ownerId: string; phonePub: string; until: number };
+/** `code`: the password was right, the phone code comes next; `replace`: the code was right too and the list is full. */
+type Ticket = { tenant: string; ownerId: string; phonePub: string; until: number; stage: 'code' | 'replace'; tries: number };
+/** "Kafeyi yönet" right after a sign-in (server/remote-admin.ts takes it once). */
+type Grant = { tenant: string; phoneId: string; ownerId: string; until: number };
+const GRANT_MS = 2 * 60_000;
 const POSTBOX_MS = () => Number(process.env.MOLA_POSTBOX_MS) || 5 * 60_000;
 const FRESH_MS = 5 * 60_000;
 /** How often a device's "son rapor" time is written (a phone asks every minute while open). */
 const SEEN_MS = 60_000;
-/** The same words for an unknown e-mail (Mola Merkez), a wrong password and a wrong code: nobody learns which part was wrong. */
-export const LOGIN_WRONG = 'E-posta, şifre ya da kod hatalı.';
-const KIND_NAME: Record<DeviceKind, string> = { phone: 'Telefon', tablet: 'Tablet', computer: 'Laptop' };
+/** The same words for an unknown e-mail (Mola Merkez) and a wrong password: nobody learns which part was wrong. */
+export const LOGIN_WRONG = 'E-posta ya da şifre hatalı.';
+/** Step 2: the password was right a moment ago, so the code may be named. */
+export const CODE_WRONG = 'Telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.';
+const KIND_NAME: Record<DeviceKind, string> = { phone: 'Telefon', tablet: 'Tablet', computer: 'Bilgisayar' };
 /** A device's name as the owner typed it: no control or direction characters, at most 40 letters. */
 export const deviceName = (v: string) => v.replace(/[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
 /** Checks the signed-in user's own password in this request (server/app.ts; wrong attempts count on the login limiter). */
@@ -59,6 +67,7 @@ export type OwnerCode = (actor: Actor, code: string) => void;
 
 export class RemoteReports {
   private tickets = new Map<string, Ticket>();
+  private grants = new Map<string, Grant>();
   private fails = new Map<string, { count: number; until: number; waitUntil: number }>();
   private nonces = new Map<string, number>();
   private timer?: NodeJS.Timeout; private lastPush = 0; private pushing?: Promise<number>; private making?: Promise<void>;
@@ -136,7 +145,7 @@ export class RemoteReports {
     f.count++; if (f.count >= 5) f.waitUntil = t + Math.min(15 * 60_000, 60_000 * 2 ** (f.count - 5));
     this.fails.set(tenant, f);
     // The owner hears it once a day: someone may be guessing.
-    if (f.count === 5) try { this.notifications?.()?.add(tenant, `remote:login-fails:${businessDay(t)}`, { kind: 'merkez', title: 'Raporlarım: hatalı girişler', text: 'Raporlarım’a 5 kez yanlış şifre ya da kodla girilmeye çalışıldı. Siz değilseniz şifrenizi değiştirin.' }); } catch { /* the counter has it */ }
+    if (f.count === 5) try { this.notifications?.()?.add(tenant, `remote:login-fails:${businessDay(t)}`, { kind: 'merkez', title: 'Kafemi yönet: hatalı girişler', text: 'Kafemi yönet’e 5 kez yanlış şifre ya da kodla girilmeye çalışıldı. Siz değilseniz şifrenizi değiştirin.' }); } catch { /* the counter has it */ }
   }
   private async login(r: Extract<RelayRequest, { kind: 'login' }>): Promise<RelayReply> {
     const tenant = r.tenantId, q = r.request as LoginRequest, t = this.now().getTime();
@@ -146,53 +155,81 @@ export class RemoteReports {
     if (!opened) throw new DomainError('REQUEST_INVALID', 'Giriş doğrulanamadı. Sayfayı yenileyip yeniden deneyin.', 403);
     if (this.seen(q.phonePub, q.nonce, t)) throw new DomainError('REPLAY', 'Bu istek daha önce kullanıldı.', 403);
     for (const [k, v] of this.tickets) if (v.until <= t) this.tickets.delete(k);
+    for (const [k, v] of this.grants) if (v.until <= t) this.grants.delete(k);
     const answer = async (a: LoginAnswer, plain: Record<string, unknown> = {}): Promise<RelayReply> => ({ status: 200, json: { ok: a.ok, ...plain, box: await sealLoginAnswer(opened.key, q.nonce, a) } });
     const fail = (code: string, message: string, more: Pick<Extract<LoginAnswer, { ok: false }>, 'devices' | 'ticket'> = {}) => answer({ ok: false, code, message, ...more });
     const inner = opened.inner, owners = this.owners(tenant);
+    const ticketFor = (u: StaffUser, stage: Ticket['stage']) => { const ticket = randomB64u(16); this.tickets.set(ticket, { tenant, ownerId: u.id, phonePub: q.phonePub, until: t + RELAY.LOGIN_TICKET_MS, stage, tries: 0 }); return ticket; };
+    const wrong = (u: StaffUser | undefined) => {
+      this.loginFailed(tenant, t);
+      try { this.store.mutate(tenant, x => { x.audit.push({ action: 'remote.login_failed', actor: u?.id ?? 'unknown', target: tenant, at: new Date(t).toISOString() }); }); } catch { /* the counter has it */ }
+    };
+    const expired = () => fail('LOGIN_EXPIRED', 'Süre doldu. E-posta ve şifrenizi yeniden yazın.');
     // Said before the password is checked: no answer here tells whether a password was right without the code.
     if (!owners.some(u => u.mfa)) return fail('CODE_MISSING', 'Önce kasada Ayarlar → Uzaktan erişim’de telefon kodunu kurun.');
     let owner: StaffUser | undefined;
-    if (inner.ticket) {
-      const k = this.tickets.get(inner.ticket); this.tickets.delete(inner.ticket);
-      owner = k && k.tenant === tenant && k.phonePub === q.phonePub && k.until > t ? owners.find(u => u.id === k.ownerId) : undefined;
-      if (!owner) return fail('LOGIN_EXPIRED', 'Süre doldu. Bilgilerinizi yeniden yazıp giriş yapın.');
+    const held = inner.ticket ? this.tickets.get(inner.ticket) : undefined;
+    const valid = (stage: Ticket['stage']) => !!held && held.stage === stage && held.tenant === tenant && held.phonePub === q.phonePub && held.until > t;
+    if (inner.ticket && inner.replace !== undefined) {
+      // "Hangisinin yerine?": the password and the code were right a moment ago; the ticket stands for them, once.
+      this.tickets.delete(inner.ticket);
+      owner = valid('replace') ? owners.find(u => u.id === held!.ownerId) : undefined;
+      if (!owner) return expired();
     } else {
       const wait = this.loginWait(tenant, t);
       if (wait) return fail('RATE_LIMIT', wait);
-      for (const u of owners) if (u.mfa && await passwordMatches(inner.password ?? '', u)) { owner = u; break; }
+      if (inner.ticket) {
+        // Step 2: the code for the password given a moment ago (a wrong code keeps the ticket for a few more tries).
+        owner = valid('code') ? owners.find(u => u.id === held!.ownerId && !!u.mfa) : undefined;
+        if (!owner) { this.tickets.delete(inner.ticket); return expired(); }
+      } else {
+        for (const u of owners) if (u.mfa && await passwordMatches(inner.password ?? '', u)) { owner = u; break; }
+        if (!owner) { wrong(undefined); return fail('LOGIN_FAILED', LOGIN_WRONG); }
+        // Step 1 (0.1.23): the code comes on the next screen. A page from before sends both at once: checked together.
+        if (inner.code === undefined) return fail('NEED_CODE', 'Telefon kodunu yazın.', { ticket: ticketFor(owner, 'code') });
+      }
       // The code is spent only after the right password (a wrong password does not burn the owner's current code).
       let coded = false;
-      if (owner && this.ownerCode) try { this.ownerCode({ tenantId: tenant, id: owner.id, role: 'owner' }, (inner.code ?? '').replace(/\D/g, '')); coded = true; }
+      if (this.ownerCode) try { this.ownerCode({ tenantId: tenant, id: owner.id, role: 'owner' }, (inner.code ?? '').replace(/\D/g, '')); coded = true; }
       catch (e) { if (e instanceof DomainError && e.code === 'RATE_LIMIT') return fail('RATE_LIMIT', e.message); }
-      if (!owner || !coded) {
-        this.loginFailed(tenant, t);
-        try { this.store.mutate(tenant, x => { x.audit.push({ action: 'remote.login_failed', actor: owner?.id ?? 'unknown', target: tenant, at: new Date(t).toISOString() }); }); } catch { /* the counter has it */ }
-        return fail('LOGIN_FAILED', LOGIN_WRONG);
+      if (!coded) {
+        wrong(owner);
+        if (!inner.ticket) return fail('LOGIN_FAILED', LOGIN_WRONG);
+        if (++held!.tries >= 5) { this.tickets.delete(inner.ticket); return fail('CODE_WRONG', `${CODE_WRONG} Sonra e-posta ve şifrenizi yeniden yazın.`); }
+        return fail('CODE_WRONG', CODE_WRONG, { ticket: inner.ticket });
       }
+      if (inner.ticket) this.tickets.delete(inner.ticket);
       this.fails.delete(tenant);
     }
-    const who = owner, kind = inner.kind, name = deviceName(inner.name) || KIND_NAME[kind], fold = (v: string) => v.toLocaleLowerCase('tr');
-    // Signing in again with the same name and kind (Safari forgot the site): that entry goes, no second line.
-    const before = this.read(tenant).phones, going = before.filter(p => (p.ownerId === who.id && p.kind === kind && fold(p.name) === fold(name)) || (!!inner.replace && p.id === inner.replace));
+    const who = owner, kind = inner.kind, name = deviceName(inner.name) || KIND_NAME[kind], device = /^[A-Za-z0-9_-]{16,64}$/.test(inner.device ?? '') ? inner.device : undefined;
+    // The same device signing in again (its own random id; Safari forgot the keys): that entry goes, no second line.
+    const before = this.read(tenant).phones, going = before.filter(p => (!!device && p.ownerId === who.id && p.device === device) || (!!inner.replace && p.id === inner.replace));
     const staying = before.filter(p => !going.includes(p));
-    if (kind !== 'phone' && !staying.some(p => p.kind === 'phone')) return fail('PHONE_FIRST', 'Önce telefonunuzdan giriş yapın. Sonra bu cihazla girebilirsiniz.');
-    if (staying.length >= RELAY.MAX_PHONES) {
-      const ticket = randomB64u(16); this.tickets.set(ticket, { tenant, ownerId: who.id, phonePub: q.phonePub, until: t + RELAY.LOGIN_TICKET_MS });
-      return fail('DEVICE_LIMIT', `En fazla ${RELAY.MAX_PHONES} cihaz. Hangisinin yerine?`, { ticket, devices: staying.map(p => ({ id: p.id, name: p.name, kind: p.kind ?? null, lastSeenAt: p.lastSeenAt ?? null })) });
-    }
+    if (staying.length >= RELAY.MAX_PHONES)
+      return fail('DEVICE_LIMIT', `En fazla ${RELAY.MAX_PHONES} cihaz. Hangisinin yerine?`, { ticket: ticketFor(who, 'replace'), devices: staying.map(p => ({ id: p.id, name: p.name, kind: p.kind ?? null, lastSeenAt: p.lastSeenAt ?? null })) });
     const id = randomB64u(16), at = new Date(t).toISOString(), gone = new Set(going.map(p => p.id));
     this.write(tenant, x => {
       for (const p of x.phones) if (gone.has(p.id)) x.log.push({ at, text: `Cihazın yerine yenisi geldi: ${p.name}.` });
       x.phones = x.phones.filter(p => !gone.has(p.id));
-      x.phones.push({ id, name, pub: q.phonePub, ownerId: who.id, ownerName: who.name, pairedAt: at, kind });
+      x.phones.push({ id, name, pub: q.phonePub, ownerId: who.id, ownerName: who.name, pairedAt: at, kind, ...(device ? { device } : {}) });
       x.log.push({ at, text: `Cihaz bağlandı: ${name} (${who.name}).` });
     });
     this.store.mutate(tenant, x => { x.audit.push({ action: 'remote.phone_paired', actor: who.id, target: id, at }); });
     try { this.notifications?.()?.add(tenant, `phone:paired:${id}`, { kind: 'merkez', title: 'Yeni cihaz bağlandı', text: `Yeni cihaz bağlandı: ${name}. Siz değilseniz Ayarlar → Uzaktan erişim’den kaldırın.` }); } catch { /* the log has it */ }
     this.relay.refresh(); void this.relay.announce();
-    // The first postbox box at once, so the device has something even if this computer goes off right after.
-    setTimeout(() => void this.push('paired', true).catch(() => {}), 50).unref?.();
-    return answer({ ok: true, phoneId: id, business: this.store.read(tenant).name, name }, { phoneId: id, removed: [...gone] });
+    // The first postbox box at once, so the device has the full report even if this computer goes off a minute later.
+    // Merkez adds the device when this answer reaches it; a box that got there first is not kept, so it goes once more.
+    const first = (again: boolean) => void this.push('paired', true).then(kept => { if (again && kept < this.tenantPhones(tenant)) setTimeout(() => first(false), 3000).unref?.(); }, () => { if (again) setTimeout(() => first(false), 3000).unref?.(); });
+    setTimeout(() => first(true), 300).unref?.();
+    const grant = randomB64u(16); this.grants.set(grant, { tenant, phoneId: id, ownerId: who.id, until: t + GRANT_MS });
+    return answer({ ok: true, phoneId: id, business: this.store.read(tenant).name, name, grant }, { phoneId: id, removed: [...gone] });
+  }
+  /** Every paired device of every business here (what one postbox round should leave at Merkez). */
+  private tenantPhones(tenant: string) { try { return this.tenants().reduce((n, x) => n + x.phones.length, 0) || this.read(tenant).phones.length; } catch { return 0; } }
+  /** "Kafeyi yönet" right after the sign-in: the grant this device was just given, once and in time (server/remote-admin.ts). */
+  takeGrant(tenant: string, phoneId: string, grant: string) {
+    const g = this.grants.get(grant); this.grants.delete(grant);
+    return g && g.tenant === tenant && g.phoneId === phoneId && g.until > this.now().getTime() ? g : undefined;
   }
   removePhone(tenant: string, phoneId: string, byName: string) {
     const removed = this.write(tenant, x => { const p = x.phones.find(v => v.id === phoneId); if (!p) return undefined; x.phones = x.phones.filter(v => v.id !== phoneId); x.log.push({ at: this.now().toISOString(), text: `Cihaz kaldırıldı: ${p.name} (${byName}).` }); return p; });
@@ -239,7 +276,7 @@ export class RemoteReports {
     const m = overviewFrom({ from: first, to: today, start: month.start, end: month.end, today, days: this.store.history.reportDays(tenant, s, month.start, month.end), previous: null, openBalance: 0 });
     const closing = this.cash?.latest<CashClosing>(tenant, ['closing']);
     return {
-      v: 1, business: s.name, at: now.toISOString(), day: today, reason,
+      v: 1, business: s.name, at: now.toISOString(), day: today, reason, ...(s.theme ? { theme: s.theme } : {}),
       today: { sales: o.sales, cash: o.cash, card: o.card, platform: o.platform, orders: o.orders, closedAccounts: o.closedAccounts, averageAccount: o.averageAccount, expenses: o.expenses, refunds: o.refunds, kept: o.kept, cancelled: o.cancelled,
         channels: o.channels.filter(c => c.orders || c.amount).map(c => ({ name: c.name, orders: c.orders, amount: c.amount })), previous: o.previous ? { sales: o.previous.sales, ...(o.previous.partial ? { partial: true } : {}) } : null },
       topProducts: o.topProducts.map(p => ({ name: p.name, qty: p.qty, amount: p.amount, ...(p.unit ? { unit: p.unit } : {}), ...(p.grams ? { grams: p.grams } : {}) })),
@@ -251,9 +288,11 @@ export class RemoteReports {
     };
   }
   // ---------- Postbox ----------
-  /** Seals the summary for every paired phone and leaves it at Merkez. At most every 30 s unless `force` (closing, shutdown). */
+  /** Seals the summary for every paired phone and leaves it at Merkez (returns how many Merkez kept). At most every 30 s unless `force` (closing, shutdown, a new device). */
   push(reason: PhoneReportReason, force = false): Promise<number> {
-    if (this.pushing) return this.pushing;
+    // One at a time; a forced one (closing, a new device) waits for the running one and sends its own after it (that one
+    // may have been sealed before the new device was listed).
+    if (this.pushing) return force ? this.pushing.catch(() => 0).then(() => this.push(reason, true)) : this.pushing;
     if (!force && Date.now() - this.lastPush < 30_000) return Promise.resolve(0);
     this.pushing = (async () => {
       const items: { tenantId: string; phoneId: string; box: ReportBox }[] = [];
@@ -264,16 +303,16 @@ export class RemoteReports {
         for (const p of r.phones) if (owners.has(p.ownerId)) items.push({ tenantId, phoneId: p.id, box: await sealReport(priv, p.pub, { kind: 'snapshot', phone: p.id, at: report.at }, report) });
       }
       if (!items.length || !this.link.relayReady()) return 0;
-      await this.relay.post('/relay/postbox', { items }, 15_000);
+      const sent = await this.relay.post<{ kept?: number }>('/relay/postbox', { items }, 15_000);
       this.lastPush = Date.now();
-      return items.length;
+      return typeof sent?.kept === 'number' ? sent.kept : items.length;
     })().finally(() => { this.pushing = undefined; });
     return this.pushing;
   }
-  /** Where devices sign in: Raporlarım on Mola Merkez's public address (null before activation). */
+  /** Where devices sign in: "Kafemi yönet" (/yonet, 0.1.23: the reports and the full screens on one page) on Mola Merkez's public address (null before activation). */
   address() {
     const r = this.link.read(); if (!r) return null;
-    try { return new URL('/raporlarim', `${(r.lanLink?.base ?? this.link.url).replace(/\/+$/, '')}/`).toString(); } catch { return null; }
+    try { return new URL('/yonet', `${(r.lanLink?.base ?? this.link.url).replace(/\/+$/, '')}/`).toString(); } catch { return null; }
   }
   view(tenant: string) {
     const r = this.read(tenant);
@@ -285,7 +324,7 @@ export class RemoteReports {
 /**
  * Owner only (the owner's own account; Müdür, other staff and Mola destek get 403): GET /api/staff/remote-reports (the
  * devices, the Raporlarım address `address`, whether the owner has a phone code `code`), POST /api/staff/remote-reports/
- * phones/remove { id, password }. Devices sign in on the Raporlarım page (0.1.22; no pairing here any more). A remote session
+ * phones/remove { id, password }. Devices sign in on the Kafemi yönet page (/yonet; no pairing here since 0.1.22). A remote session
  * ("Kafeyi yönet") cannot remove (server/remote-admin.ts REMOTE_FORBIDDEN). "Gün sonu" (a final closing) sends the postbox
  * at once; setting the phone code up or resetting it tells Mola Merkez at once (the sign-in depends on it).
  */

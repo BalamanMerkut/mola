@@ -88,7 +88,7 @@
 .remote-key code{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper,#fff);overflow-wrap:anywhere;font-size:13px}
 .remote-code-qr{width:200px;height:200px;border-radius:10px;background:#fff;padding:6px;border:1px solid var(--line)}
 .remote-step .settings-actions .btn{min-height:44px;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-/* 3 · Cihazlarınızı bağlayın: the Raporlarım address in big letters, Kopyala, a small QR of the same address. */
+/* 3 · Cihaz eşleştirme: the Kafemi yönet address (/yonet) in big letters, Kopyala, a small QR of the same address. */
 .remote-connect{display:grid;gap:10px}
 .remote-address{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border:1px solid #d7e4d3;border-radius:14px;background:var(--surface-soft,#f7faf5)}
 .remote-address-text{font-size:20px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;min-width:0;flex:1 1 220px}

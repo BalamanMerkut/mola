@@ -426,7 +426,7 @@ public final class MainActivity extends Activity {
         sutun.addView(yeniden, aralik(4));
 
         sutun.addView(yazi("Adresi elle yazın", 18, true, MUREKKEP), aralik(28));
-        sutun.addView(yazi("Kafe bilgisayarında Mola penceresi → Cihaz bağla'da yazan adres. Örnek: 192.168.1.20:3000", 14, false, SOLUK), aralik(4));
+        sutun.addView(yazi("Kafe bilgisayarında Mola penceresi → Kafe içi cihazlar'da yazan adres. Örnek: 192.168.1.20:3000", 14, false, SOLUK), aralik(4));
         EditText alan = new EditText(this);
         alan.setSingleLine(true);
         alan.setHint("192.168.1.20:3000");

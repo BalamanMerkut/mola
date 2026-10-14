@@ -125,7 +125,7 @@ export type DesktopLanLink = { url: string } | { problem: 'inactive' | 'old' | '
 export function desktopRoutes(app: Express, desktop: Desktop | undefined, network: { lan: boolean; port: number }, backups?: BackupScheduler, security?: () => DesktopSecurity, activity?: () => DesktopActivity, profile?: NetworkProfile, lanLink?: () => DesktopLanLink) {
   const allow = desktopGuard(desktop);
   let asking = false;
-  // Cihaz bağla: is the connection phones use on Windows' "Genel" profile while Mola's firewall rule is still the old private-only
+  // Kafe içi cihazlar: is the connection phones use on Windows' "Genel" profile while Mola's firewall rule is still the old private-only
   // one? Read only; Mola never changes the profile (server/network-profile.ts).
   app.get('/api/desktop/network-profile', async (req, res) => {
     allow(req);
@@ -135,7 +135,7 @@ export function desktopRoutes(app: Express, desktop: Desktop | undefined, networ
     allow(req);
     res.json(activity?.() ?? { openAccounts: 0, pendingOrders: 0 });
   });
-  // Cihaz bağla > "İzni düzelt": the firewall rule for the tablets. GET only reads; POST runs the helper, which asks Windows
+  // Kafe içi cihazlar > "İzni düzelt": the firewall rule for the tablets. GET only reads; POST runs the helper, which asks Windows
   // once for administrator approval (UAC) and returns 3 when the owner says no.
   app.get('/api/desktop/firewall', async (req, res) => {
     allow(req);

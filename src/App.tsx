@@ -10,15 +10,15 @@ const Workspace = lazy(() => import('./Workspace').then(module => ({ default: mo
 const MenuPreviewPage = lazy(() => import('./MenuPreview').then(module => ({ default: module.MenuPreviewPage })));
 // /uygulama: installing Mola on phones and tablets; needs no data and no sign-in.
 const InstallPage = lazy(() => import('./InstallPage').then(module => ({ default: module.InstallPage })));
-// /yonet (served only by Mola Merkez): the owner's paired device runs these screens through the sealed tunnel.
-const RemoteShell = lazy(() => import('./RemoteAdmin').then(module => ({ default: module.RemoteShell })));
+// /yonet (served only by Mola Merkez): "Kafemi yönet", the owner's sign-in, reports and these screens through the sealed tunnel.
+const OwnerPage = lazy(() => import('./ReportsPhone').then(module => ({ default: module.OwnerPage })));
 export function App() {
   const locked = useLocked();
   // After a café update the window, tablets and phones reload themselves at a quiet moment (src/versionReload.ts). Never the
   // guests' menu (a cart in progress) or the owner's tunnelled screens (/yonet, their own server).
   useServerVersion(() => /^\/(m|yonet)(\/|$)/.test(location.pathname) ? Promise.resolve(undefined) : fetch('/api/health', { cache: 'no-store' }).then(r => r.json()).then((h: { version?: string }) => h.version));
   if (/^\/uygulama\/?$/.test(location.pathname)) return <DeferredPanel><InstallPage /></DeferredPanel>;
-  if (/^\/yonet\/?$/.test(location.pathname)) return <DeferredPanel><RemoteShell /></DeferredPanel>;
+  if (/^\/(yonet|raporlarim)\/?$/.test(location.pathname)) { if (location.pathname !== '/yonet') history.replaceState(null, '', `/yonet${location.search}${location.hash}`); return <DeferredPanel><OwnerPage /></DeferredPanel>; }
   if (locked) return <LockedScreen guest={location.pathname.startsWith('/m/')} />;
   if (location.pathname.startsWith('/m/')) { guestPageHead(); return <Customer token={location.pathname.slice(3)} />; }
   const page = <DeferredPanel>{location.pathname === '/menu-preview' ? <MenuPreviewPage /> : <Workspace />}</DeferredPanel>;

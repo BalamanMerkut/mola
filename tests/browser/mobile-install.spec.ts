@@ -137,13 +137,13 @@ test('Ayarlar → Cihazlar shows one QR to /uygulama; the Android app keeps the 
   await expect(card.getByRole('img', { name: 'Mola uygulaması kurulum sayfasının QR kodu' })).toBeVisible();
   await expect(card.getByTestId('network-profile-warning')).toHaveCount(0);
   // Windows has this connection on the "Genel" profile and Mola's firewall rule is the old one (server/network-profile.ts):
-  // the owner is sent to Cihaz bağla → "İzni düzelt".
+  // the owner is sent to Kafe içi cihazlar → "İzni düzelt".
   await page.route('**/api/staff/network-profile', route => route.fulfill({ json: { checked: true, public: ['Wi-Fi'] } }));
   await page.reload();
   await openSettings(page, 'Cihazlar');
   const warning = page.locator('.connect-tablet').getByTestId('network-profile-warning');
   await expect(warning).toContainText('Telefonlar ve tabletler bu bilgisayara bağlanamıyor: ağ “Genel” olarak ayarlı, Mola\'nın güvenlik duvarı izni eski.');
-  await expect(warning).toContainText('sol şeritten Cihaz bağla → İzni düzelt\'e basın');
+  await expect(warning).toContainText('sol şeritten Kafe içi cihazlar → İzni düzelt\'e basın');
   await expect(warning).toContainText('Ya da Windows Ayarları → Ağ ve İnternet → Wi-Fi → Ağ profili: Özel.');
 
   const { context, page: kitchen } = await phone(browser, `${ANDROID} MolaApp/0.1.0`, 820);
@@ -157,7 +157,7 @@ test('Ayarlar → Cihazlar shows one QR to /uygulama; the Android app keeps the 
   await context.close();
 });
 
-test('Cihaz bağla in the café computer\'s window: "Genel" with the old firewall rule is said, with "İzni düzelt" as the fix (read only)', async ({ page }) => {
+test('Kafe içi cihazlar in the café computer\'s window: "Genel" with the old firewall rule is said, with "İzni düzelt" as the fix (read only)', async ({ page }) => {
   const key = readFileSync(join(e2eRun(), 'masaustu.anahtar'), 'utf8').trim();
   await page.addInitScript(() => { sessionStorage.setItem('mola-welcome', '1'); sessionStorage.setItem('mola-recovery-later', '1'); });
   // As on a café computer whose Ethernet Windows calls "Genel" (this test server listens on 127.0.0.1 only).
@@ -165,8 +165,8 @@ test('Cihaz bağla in the café computer\'s window: "Genel" with the old firewal
   await page.route('**/api/desktop/network-profile', route => route.fulfill({ json: { checked: true, public: ['Ethernet'] } }));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`/#masaustu=${key}`);
-  await page.getByRole('navigation', { name: 'Mola bilgisayar araçları' }).getByRole('button', { name: /Cihaz bağla/ }).click();
-  const dialog = page.getByRole('dialog', { name: 'Cihaz bağla' });
+  await page.getByRole('navigation', { name: 'Mola bilgisayar araçları' }).getByRole('button', { name: /Kafe içi cihazlar/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Kafe içi cihazlar' });
   const warning = dialog.getByTestId('network-profile-warning');
   await expect(warning).toContainText('Telefonlar ve tabletler bu bilgisayara bağlanamıyor: ağ “Genel” olarak ayarlı, Mola\'nın güvenlik duvarı izni eski.');
   await expect(warning).toContainText('Aşağıdaki İzni düzelt\'e basın; Windows bir kez “Evet” diye sorar. Ağ ayarınız değişmez.');

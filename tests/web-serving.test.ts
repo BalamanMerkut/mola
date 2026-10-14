@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import express from 'express';
 import { scrubRequests } from '../server/merkez/app.js';
 import { startMerkez } from '../server/merkez/runtime.js';
+import { ownerPage } from '../server/merkez/remote-admin.js';
 import { startLocalServer } from '../server/runtime.js';
 import { codeLocationOnly, type FailureReport } from '../server/sync-protocol.js';
 import { devAllowList, pageHeaders } from '../server/web-serving.js';
@@ -57,20 +58,35 @@ test('built screens carry the security headers on both servers; Mola Yönetim an
   const yonetim = await raw(merkezPort, '/');
   assert.equal(yonetim.status, 200); assert.match(yonetim.body, /Mola Yönetim/);
   assert.match(String(yonetim.headers['content-security-policy']), /frame-ancestors 'none'/); assert.equal(yonetim.headers['x-frame-options'], 'DENY');
-  // Only "/" is Mola Yönetim (0.1.21): any other address nobody answers is a plain 404 page, never its sign-in; the owner's
-  // own pages (Raporlarım, Kafeyi yönet) stay what they are.
+  // Only "/" is Mola Yönetim (0.1.21): any other address nobody answers is a plain 404 page, never its sign-in; it offers the
+  // owner's own page (0.1.23: "Kafemi yönet’e git", plain, no Mola Yönetim link).
   for (const path of ['/yonetim', '/raporlar', '/k', '/x/y/z', '/merkez']) {
     const r = await raw(merkezPort, path);
     assert.equal(r.status, 404, path); assert.match(r.body, /Bu sayfa bulunamadı/, path); assert.doesNotMatch(r.body, /Mola Yönetim|merkez-main/, path);
+    assert.match(r.body, /<a class="go" href="\/yonet">Kafemi yönet’e git<\/a>/, path);
   }
-  const reports = await raw(merkezPort, '/raporlarim'), manage = await raw(merkezPort, '/yonet');
-  assert.equal(reports.status, 200); assert.match(reports.body, /<title>Raporlarım · Mola<\/title>/);
-  assert.equal(manage.status, 200); assert.doesNotMatch(manage.body, /Mola Yönetim/);
+  // Kafemi yönet (0.1.23): the café's screens page under its own name, no café manifest (its start "/" is Mola Yönetim here).
+  const manage = await raw(merkezPort, '/yonet');
+  assert.equal(manage.status, 200); assert.match(manage.body, /<title>Kafemi yönet · Mola<\/title>/); assert.doesNotMatch(manage.body, /Mola Yönetim|rel="manifest"/);
+  assert.match(manage.body, /<meta name="robots" content="noindex" \/>/);
+  // The old address and every way an owner may type either one: 301 to /yonet, the query kept (GET and HEAD only).
+  for (const [path, to] of [['/raporlarim', '/yonet'], ['/raporlar%C4%B1m', '/yonet'], ['/Raporlarim', '/yonet'], ['/RAPORLARIM', '/yonet'], ['/RAPORLARIM/', '/yonet'], ['/Raporlar%C4%B1m', '/yonet'],
+    ['/raporlarim/?k=1', '/yonet?k=1'], ['/Y%C3%B6net', '/yonet'], ['/YONET', '/yonet'], ['/yonet/', '/yonet'], ['/y%C3%B6net/', '/yonet']]) {
+    const r = await raw(merkezPort, path);
+    assert.equal(r.status, 301, path); assert.equal(r.headers.location, to, path);
+  }
   // Another device of the network (this computer's name in Host, as a LAN address would be): no panel, no admin API.
   const name = hostname().toLowerCase();
   for (const path of ['/', '/api/merkez/admin/state']) { const r = await raw(merkezPort, path, { Host: `${name}:${merkezPort}` }); assert.equal(r.status, 403, path); assert.match(r.body, /yalnız Mola Merkez’in çalıştığı bilgisayardan/); }
   assert.equal((await raw(merkezPort, '/api/merkez/v1/health', { Host: `${name}:${merkezPort}` })).status, 200, 'cafés reach /api/merkez/v1');
   assert.equal((await raw(merkezPort, '/api/merkez/admin/state', { 'X-Forwarded-For': '192.168.1.30' })).status, 403, 'through a proxy without HTTPS');
+});
+
+test('Kafemi yönet addresses as typed: Turkish letters folded, capitals and a trailing slash ignored; nothing else matches', () => {
+  for (const path of ['/raporlarim', '/raporlar%C4%B1m', '/RAPORLARIM', '/Raporlar%C4%B0m', '/raporlarim/', '/raporlarim//', '/Yonet', '/YÖNET', '/y%C3%B6net', '/yonet/'])
+    assert.equal(ownerPage(path), '/yonet', path);
+  for (const path of ['/yonet', '/yonetim', '/raporlar', '/raporlarimx', '/r/aporlarim', '/%E0%A4%A', '/', '/k/raporlarim'])
+    assert.equal(ownerPage(path), undefined, path);
 });
 
 test('nothing secret is kept for replays: codes and install secrets are rebuilt, not stored; status after activation gives no secret; failure records are code locations only', async t => {

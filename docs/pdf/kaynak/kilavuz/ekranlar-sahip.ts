@@ -558,7 +558,7 @@ const sahipAyarlar: Grup = async (browser, { sahip }) => {
   if (await uz.count()) { await uz.scrollIntoViewIfNeeded(); await sleep(400); await dene('s-uzaktan-yonetim', () => cek(s, 's-uzaktan-yonetim', { kirp: uz, pay: 10 })); }
   await s.evaluate(() => scrollTo(0, document.body.scrollHeight)); await sleep(400);
   await sahip.post('/api/staff/lock/settings', { data: { minutes: 0 } });
-  await ayar(s, 'Cihazlar', 'Cihaz bağla');
+  await ayar(s, 'Cihazlar', 'Kafe içi cihazlar');
   await dene('s-cihazlar', async () => cek(s, 's-cihazlar', { kirp: await ayarAlani(s) }));
   await ayar(s, 'Sipariş ve mutfak', 'Paket platformları');
   await s.context().close();
@@ -579,7 +579,8 @@ const sahipDestek: Grup = async browser => {
   await git(s, 'Destek');
   await s.getByRole('tab', { name: /Uzaktan erişim/ }).click(); await sleep(900);
   await dene('s-uzaktan-erisim', () => cek(s, 's-uzaktan-erisim'));
-  // Raporlarım (0.1.22): kasada telefon kodu ve e-posta (Ayarlar → Uzaktan erişim), sonra telefon tek adresten girer. Kod
+  // Kafemi yönet (0.1.23, /yonet): kasada telefon kodu ve e-posta (Ayarlar → Uzaktan erişim), sonra telefon tek adresten iki
+  // adımda girer (e-posta + şifre, sonra kod). Kod
   // API'den kurulur; e-posta Mola Merkez'in sahte SMTP'ye gönderdiği kodla doğrulanır (çekimden sonra Merkez'in e-postası
   // yeniden kapatılır); çekimden sonra telefon kodu kurtarma koduyla kapatılır (sonraki çekimlerde raporlar kod sormaz).
   const kurulum = await (await s.request.post(`${KAFE}/api/staff/report-security/setup`, { data: { password: 'MolaDemo!2026' } })).json() as { secret: string };
@@ -602,14 +603,15 @@ const sahipDestek: Grup = async browser => {
   await tel.context().route(`${KAFE}/**`, r => r.abort());
   // Mola Merkez lets a new device in once the café's heartbeat brought its key (a few seconds).
   for (let i = 0; i < 20; i++) { if ((await fetch(`${MERKEZ}/api/merkez/v1/phone/login/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: EPOSTA }) })).status === 200) break; await sleep(2000); }
-  await tel.goto(`${MERKEZ}/raporlarim`);
+  await tel.goto(`${MERKEZ}/yonet`);
   const giris = tel.getByRole('form', { name: 'Giriş yap' });
   await giris.getByLabel('E-posta').fill(EPOSTA);
   await giris.getByLabel('Şifre', { exact: true }).fill('MolaDemo!2026');
-  await giris.getByLabel('Telefon kodu').fill(totp(kurulum.secret, Date.now()));
-  await giris.getByLabel('Bu cihazın adı').fill('Serkan’ın telefonu');
   await dene('t-raporlarim-giris', () => cek(tel, 't-raporlarim-giris', { isaretler: [{ n: 1, loc: giris.getByLabel('E-posta'), yon: 'alt' }] }));
-  await dugme(giris, 'Giriş yap').click();
+  await dugme(giris, 'Devam').click();
+  const kod = tel.getByRole('form', { name: 'Telefon kodu' });
+  await kod.getByLabel('Telefon kodu').fill(totp(kurulum.secret, Date.now()));
+  await dugme(kod, 'Giriş yap').click();
   await tel.getByRole('region', { name: 'Bugünün satışı' }).waitFor({ timeout: 30000 });
   await sleep(800);
   await dene('t-raporlarim', () => cek(tel, 't-raporlarim', { isaretler: [{ n: 1, loc: tel.getByRole('region', { name: 'Bugünün satışı' }), yon: 'alt' }] }));

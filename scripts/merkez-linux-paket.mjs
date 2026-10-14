@@ -386,7 +386,7 @@ await bundle('scripts/merkez-sifre-sifirla.ts', 'merkez-sifre-sifirla.mjs');
 await bundle('scripts/merkez-kurtarma-kodu.ts', 'merkez-kurtarma-kodu.mjs');
 
 const app = join(stage, 'app');
-// The whole built screens: merkez.html (Mola Yönetim), and index.html / raporlarim.html that the Köprü pages name.
+// The whole built screens: merkez.html (Mola Yönetim), and index.html that the Köprü pages name (/yonet, /destek/<id>).
 (function copy(source, target) { if (statSync(source).isDirectory()) { mkdirSync(target, { recursive: true }); for (const n of readdirSync(source)) copy(join(source, n), join(target, n)); } else { mkdirSync(dirname(target), { recursive: true }); copyFileSync(source, target); } })('dist', join(app, 'dist'));
 copyFileSync(join(stage, 'merkez.mjs'), join(app, 'merkez.mjs'));
 copyFileSync(join(stage, 'merkez-sifre-sifirla.mjs'), join(app, 'merkez-sifre-sifirla.mjs'));

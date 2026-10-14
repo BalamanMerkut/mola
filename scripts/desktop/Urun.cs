@@ -52,7 +52,7 @@ static class P {
   public const string FirewallRule = "Mola";
   public static readonly bool FirewallOnlyWithLan = false;
   public const string FirewallPurpose = "tabletler ve telefonlar bu bilgisayara yalnız aynı yerel ağdan (kafenin Wi-Fi'ı) bağlanır.";
-  public const string FirewallHint = "Tabletler bağlanamazsa Mola penceresinde Cihaz bağla > \"İzni düzelt\"e basın.";
+  public const string FirewallHint = "Tabletler bağlanamazsa Mola penceresinde Kafe içi cihazlar > \"İzni düzelt\"e basın.";
   public const int Port = 3000;
   public const string PortEnv = "PORT", Health = "/api/health";
   public const string SetupSentence = "Mola bu bilgisayara kurulur. İnternet gerekmez. Windows yalnız tabletlerin bağlanabilmesi (güvenlik duvarı izni) için bir kez yönetici onayı sorar. Önceki verileriniz ve yedekleriniz korunur.";

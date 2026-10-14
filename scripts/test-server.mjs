@@ -25,7 +25,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { stop(sign
 // Misafir menüsünün kendi adresi (server/merkez/menu-host.ts): as on the VDS (menu.molayazilim.com.tr), the guest menu has its
 // own name, here menu.localhost (the browser and Node resolve *.localhost to this computer); Mola Yönetim stays on 127.0.0.1.
 // MOLA_TEST_TUNNEL lets that plain-http loopback name through (never in a release build).
-const merkezChild = spawn(process.execPath, ['--import', 'tsx', 'server/merkez/index.ts'], { stdio: 'inherit', env: { ...quiet, MERKEZ_PORT, MERKEZ_DATA_DIR: merkez, SERVE_BUILD: '1', MOLA_TEST_TUNNEL: '1', MERKEZ_MENU_ORIGIN: `http://menu.localhost:${MERKEZ_PORT}` } });
+const merkezChild = spawn(process.execPath, ['--import', 'tsx', 'server/merkez/index.ts'], { stdio: 'inherit', env: { ...quiet, MERKEZ_PORT, MERKEZ_DATA_DIR: merkez, SERVE_BUILD: '1', MOLA_TEST_TUNNEL: '1', MOLA_RELAY_HOLD_MS: '5000', MERKEZ_MENU_ORIGIN: `http://menu.localhost:${MERKEZ_PORT}` } });
 children.push(merkezChild);
 merkezChild.on('exit', code => { stop('SIGTERM'); process.exit(code ?? 1); });
 for (let i = 0; ; i++) {
@@ -54,6 +54,9 @@ const kafeChild = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts']
     // İnternetten menü (server/guest-tunnel.ts): the guest tunnel comes back within half a second, and tests/browser/guest-internet.spec.ts
     // may switch it off and on from this computer (POST /api/test/tunnel) as if the café computer were off.
     MOLA_TEST_TUNNEL: '1', MOLA_TUNNEL_RETRY_MS: '500',
+    // Kafemi yönet (tests/browser/remote-admin.spec.ts, remote-reports.spec.ts): POST /api/test/relay { on } stops the köprü as
+    // if the café computer were off; Mola Merkez calls it off once no poll came for MOLA_RELAY_HOLD_MS + 10 s.
+    MOLA_RELAY_HOLD_MS: '5000',
     // QR siparişleri (server/qr-ordering.ts): the suites order as guests without a staff screen open, so "a staff screen is
     // connected" starts off here; tests/browser/qr-ordering.spec.ts turns it on (POST /api/test/qr-staff). The menu copy goes fast.
     MOLA_QR_STAFF_CHECK: '0', MOLA_MIRROR_DELAY_MS: '500',

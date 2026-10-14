@@ -6,7 +6,7 @@ import { DEMO_PASSWORD } from '../server/app.js';
 import { signedHeaders } from '../server/install-auth.js';
 import { totp, base32 } from '../server/totp.js';
 import { MERKEZ_API } from '../server/sync-protocol.js';
-import { newCafeKeys, cafePrivateKey, deviceKindOf, deviceNameOf, loginRequest, newPhoneKeys, openLoginAnswer, openReport, readLogin, sealLoginAnswer, sealReport, signLive, liveSigned, type DeviceKind, type ReportBox } from '../packages/domain/remote-crypto.js';
+import { newCafeKeys, cafePrivateKey, deviceKindOf, deviceLabel, deviceNameOf, loginRequest, newPhoneKeys, openLoginAnswer, openReport, readLogin, sealLoginAnswer, sealReport, signLive, liveSigned, type DeviceKind, type ReportBox } from '../packages/domain/remote-crypto.js';
 import { deviceLogin } from '../packages/domain/remote-login.js';
 import type { PhoneReport } from '../packages/domain/remote-report.js';
 import type { RelayClient } from '../server/relay.js';
@@ -16,15 +16,16 @@ import { remoteRefusal } from '../server/remote-admin.js';
 import { merkezPair, OWNER_EMAIL, phonePost, remoteLoginReady } from './merkez-fixture.js';
 
 /*
- * Raporlarım (server/remote-reports.ts, 0.1.22): a device signs in on the Raporlarım page with the business's verified owner
- * e-mail, the owner's password and phone code; the café computer checks them, Mola Merkez only routes by the e-mail and
- * carries ciphertext. Then live reports, the postbox while the café is off, "Kaldır" and "Çıkış".
+ * Raporlarım (server/remote-reports.ts; the page is "Kafemi yönet" on /yonet since 0.1.23): a device signs in with the
+ * business's verified owner e-mail and the owner's password (step 1), then the phone code (step 2); the café computer checks
+ * them, Mola Merkez only routes by the e-mail and carries ciphertext. Then live reports, the postbox while the café is off,
+ * "Kaldır" and "Çıkış".
  */
 const rid = () => randomUUID().replace(/-/g, '');
 const wait = async (check: () => boolean | Promise<boolean>, ms = 8000) => { const end = Date.now() + ms; while (!(await check())) { if (Date.now() > end) throw new Error('Beklenen durum gelmedi.'); await new Promise(r => setTimeout(r, 25)); } };
 /** The owner's "Raporlar için telefon kodu". */
 const SECRET = base32(Buffer.from('12345678901234567890'));
-const WRONG = 'E-posta, şifre ya da kod hatalı.';
+const WRONG = 'E-posta ya da şifre hatalı.', CODE_WRONG = 'Telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.';
 /** A start time at least an hour clear of 05:00 (the clock moves a minute per sign-in; the owner's sign-in ends at 05:00). */
 const awayFrom5 = (ms: number) => { const h = new Date(ms).getHours(); return h >= 3 && h < 5 ? ms + 3 * 3600_000 : ms; };
 type Keys = { privateKey: CryptoKey; publicKey: string };
@@ -68,8 +69,13 @@ test('crypto: a box opens only on its phone, from its café, unedited and for it
   const answer = await sealLoginAnswer(opened.key, request.nonce, { ok: true, phoneId: 'p'.repeat(22), business: 'Mola Kafe', name: 'iPhone' });
   assert.deepEqual(await openLoginAnswer(key, request.nonce, answer), { ok: true, phoneId: 'p'.repeat(22), business: 'Mola Kafe', name: 'iPhone' });
   await assert.rejects(openLoginAnswer(key, 'x'.repeat(22), answer), 'another request');
-  // The name the sign-in suggests, from the user agent.
-  assert.deepEqual([deviceNameOf('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)'), deviceNameOf('Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile'), deviceNameOf('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5), deviceNameOf('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')], ['iPhone', 'Android telefon', 'iPad', 'Laptop']);
+  // The device names itself (0.1.23, no "Bu cihazın adı"): its family from the user agent and the day it signed in.
+  assert.deepEqual([deviceNameOf('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)'), deviceNameOf('Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile'), deviceNameOf('Mozilla/5.0 (Linux; Android 14; SM-X710)'), deviceNameOf('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5), deviceNameOf('Mozilla/5.0 (Windows NT 10.0; Win64; x64)'), deviceNameOf('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'), deviceNameOf('Mozilla/5.0 (X11; Linux x86_64)')],
+    ['iPhone', 'Android telefon', 'Android tablet', 'iPad', 'Windows laptop', 'Mac', 'Bilgisayar']);
+  const oct15 = Date.parse('2026-10-15T09:00:00Z');
+  assert.equal(deviceLabel('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', 0, oct15), 'iPhone · 15 Ekim');
+  assert.equal(deviceLabel('Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 0, oct15), 'Windows laptop · 15 Ekim');
+  assert.equal(deviceLabel('Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile', 0, Date.parse('2026-10-15T22:30:00Z')), 'Android telefon · 16 Ekim', 'Istanbul’s day');
 });
 
 async function setup(name: string, options: { mail?: { to: string; text: string }[] } = {}) {
@@ -89,13 +95,21 @@ async function setup(name: string, options: { mail?: { to: string; text: string 
   const install = pair.link.read()!.installId, phone = phonePost(pair.merkezBase, wire);
   /** The owner's current phone code (the clock moves on a minute before every sign-in: a new code, the per-minute limits clear). */
   const code = () => totp(SECRET, time);
-  /** "Giriş yap" on a device: by default an iPhone with the owner's right password and code. */
-  const login = async (o: { name?: string; kind?: DeviceKind; password?: string; code?: string; email?: string; keys?: Keys; ticket?: string; replace?: string; cafePublic?: string; stay?: boolean } = {}) => {
+  /**
+   * "Giriş yap" on a device (0.1.23, two steps): the e-mail and the password, then the ticket and the phone code; by default an
+   * iPhone with the owner's right password and code. `only: 'password'` stops after step 1; `ticket` sends one step with it
+   * (the code, or "Hangisinin yerine?" with `replace`); `both` sends the password and the code at once (a page from before).
+   */
+  const login = async (o: { name?: string; kind?: DeviceKind; device?: string; password?: string; code?: string; email?: string; keys?: Keys; ticket?: string; replace?: string; cafePublic?: string; stay?: boolean; only?: 'password'; both?: boolean } = {}) => {
     if (!o.stay) clock.add(61_000);
     await wait(() => hub.online(install));
-    const keys = o.keys ?? await newPhoneKeys(), device = { name: o.name ?? 'iPhone', kind: o.kind ?? 'phone' as DeviceKind };
-    const inner = o.ticket ? { ticket: o.ticket, ...(o.replace ? { replace: o.replace } : {}), ...device } : { password: o.password ?? DEMO_PASSWORD, code: o.code ?? code(), ...device };
-    return { keys, result: await deviceLogin(phone, keys, o.email ?? OWNER_EMAIL, inner, { at: time, ...(o.cafePublic ? { cafePublic: o.cafePublic } : {}) }) };
+    const keys = o.keys ?? await newPhoneKeys(), device = { name: o.name ?? 'iPhone · 15 Ekim', kind: o.kind ?? 'phone' as DeviceKind, ...(o.device ? { device: o.device } : {}) };
+    const email = o.email ?? OWNER_EMAIL, step = (inner: Parameters<typeof deviceLogin>[3], cafePublic?: string) => deviceLogin(phone, keys, email, inner, { at: time, ...(cafePublic ? { cafePublic } : {}) });
+    if (o.ticket) return { keys, result: await step({ ticket: o.ticket, ...(o.replace ? { replace: o.replace } : { code: o.code ?? code() }), ...device }, o.cafePublic) };
+    if (o.both) return { keys, result: await step({ password: o.password ?? DEMO_PASSWORD, code: o.code ?? code(), ...device }) };
+    const first = await step({ password: o.password ?? DEMO_PASSWORD, ...device });
+    if (first.kind !== 'code' || o.only) return { keys, result: first };
+    return { keys, result: await step({ ticket: first.ticket, code: o.code ?? code(), ...device }, first.cafePublic) };
   };
   const paired = (r: Awaited<ReturnType<typeof login>>) => { assert.equal(r.result.kind, 'paired', JSON.stringify(r.result)); return { ...r.result as Extract<typeof r.result, { kind: 'paired' }>, keys: r.keys }; };
   const devices = async () => (await owner('/staff/remote-reports')).data.phones as { id: string; name: string; kind: DeviceKind | null; lastSeenAt: string | null }[];
@@ -117,8 +131,8 @@ test('sign-in → live report → postbox → "Çıkış", end to end; Merkez ne
   const { pair, owner, tenant, relay, remote, hub, wire, phone, login, paired, devices, clock, mfa } = await setup('remote-reports');
   t.after(() => pair.close());
   await sell(owner, pair.kafe());
-  const { phoneId, token, business, cafePublic, keys } = paired(await login({ name: 'Ahmet’in telefonu' }));
-  assert.equal(business, pair.store.read(tenant).name);
+  const { phoneId, token, business, cafePublic, keys, grant } = paired(await login({ name: 'Ahmet’in telefonu' }));
+  assert.equal(business, pair.store.read(tenant).name); assert.match(grant ?? '', /^[A-Za-z0-9_-]{22}$/, 'the one-time grant for "Kafeyi yönet"');
   // The café computer lists it as typed, as a phone; the owner is told.
   assert.deepEqual((await devices()).map(p => [p.id, p.name, p.kind]), [[phoneId, 'Ahmet’in telefonu', 'phone']]);
   const inbox = (await owner('/staff/notifications')).data.items as { title: string; text: string }[];
@@ -160,33 +174,61 @@ test('sign-in → live report → postbox → "Çıkış", end to end; Merkez ne
   await wait(() => !relay.needed());
 });
 
-test('wrong password or code: the same words, counted per business, then a wait; an unknown e-mail reads the same; a wrong password does not burn the code', async t => {
+test('two steps: the password at once (a ticket for the code), then the code; wrong ones counted per business, then a wait; an unknown e-mail reads like a wrong password', async t => {
   const { pair, owner, tenant, phone, login, paired, devices, clock } = await setup('remote-login-wrong');
   t.after(() => pair.close());
   // An unknown e-mail: Merkez answers with the very words a wrong password gets.
   const unknown = await phone('login/start', { email: 'baskasi@ornek.com' });
   assert.equal(unknown.status, 403); assert.equal(unknown.data.message, WRONG);
-  // A wrong password and a wrong code read the same; Merkez only sees a sealed box (no reason in plain text).
-  const wrongPassword = await login({ password: 'yanlis-sifre-1' });
-  assert.deepEqual(wrongPassword.result, { kind: 'error', code: 'LOGIN_FAILED', message: WRONG });
-  const wrongCode = await login({ code: String((Number(totp(SECRET, clock.now() + 61_000)) + 1) % 1_000_000).padStart(6, '0') });
-  assert.deepEqual(wrongCode.result, { kind: 'error', code: 'LOGIN_FAILED', message: WRONG });
-  // A wrong password leaves the code unspent: the same code with the right password still works, once.
-  const c = totp(SECRET, clock.now() + 61_000);
-  assert.equal((await login({ password: 'yanlis-sifre-2', code: c })).result.kind, 'error');
-  paired(await login({ code: c, name: 'Telefonum', stay: true }));
-  assert.deepEqual((await login({ code: c, name: 'Başka', stay: true })).result, { kind: 'error', code: 'LOGIN_FAILED', message: WRONG }, 'a code is good once');
+  // Step 1: a wrong password is said on the first screen; the right one gets the code screen (a ticket, nothing paired yet).
+  assert.deepEqual((await login({ password: 'yanlis-sifre-1' })).result, { kind: 'error', code: 'LOGIN_FAILED', message: WRONG });
+  const first = await login({ only: 'password' });
+  assert.equal(first.result.kind, 'code', JSON.stringify(first.result)); assert.deepEqual(await devices(), []);
+  const ticket = (first.result as Extract<typeof first.result, { kind: 'code' }>).ticket, cafePublic = (first.result as { cafePublic: string }).cafePublic;
+  // The ticket is for that device's key only.
+  assert.equal(((await login({ keys: await newPhoneKeys(), ticket, cafePublic, stay: true })).result as { code: string }).code, 'LOGIN_EXPIRED');
+  const again = await login({ only: 'password', stay: true }), held = again.result as Extract<typeof again.result, { kind: 'code' }>;
+  // Step 2: a wrong code stays on the code screen with the same ticket and the plain words; the right one pairs.
+  const wrongCode = String((Number(totp(SECRET, clock.now())) + 1) % 1_000_000).padStart(6, '0');
+  const wrong = await login({ keys: again.keys, ticket: held.ticket, cafePublic: held.cafePublic, code: wrongCode, stay: true });
+  assert.deepEqual(wrong.result, { kind: 'code', ticket: held.ticket, cafePublic: held.cafePublic, message: CODE_WRONG });
+  const c = totp(SECRET, clock.now());
+  paired(await login({ keys: again.keys, ticket: held.ticket, cafePublic: held.cafePublic, code: c, name: 'Telefonum', stay: true }));
+  assert.equal(((await login({ keys: again.keys, ticket: held.ticket, cafePublic: held.cafePublic, code: c, stay: true })).result as { code: string }).code, 'LOGIN_EXPIRED', 'a ticket is good once');
+  // A code is good once (step 2 of another sign-in in the same minute).
+  assert.deepEqual((await login({ code: c, name: 'Başka', stay: true })).result.kind, 'code', 'the used code: back on the code screen');
+  // A page from before 0.1.23 sends both at once: still checked together.
+  paired(await login({ both: true, name: 'Eski sayfa' }));
   // Five wrong in a row (the count started again after the right one): the next waits even with everything right; the
   // owner hears it once.
-  for (let i = 0; i < 4; i++) assert.equal((await login({ password: `yanlis-${i}` })).result.kind, 'error');
+  for (let i = 0; i < 5; i++) assert.equal((await login({ password: `yanlis-${i}` })).result.kind, 'error');
   const waiting = await login({ name: 'Bekleyen', stay: true });
   assert.equal(waiting.result.kind, 'error'); assert.match((waiting.result as { message: string }).message, /^Çok fazla hatalı deneme\. \d+ dakika sonra yeniden deneyin\.$/);
-  assert.ok(((await owner('/staff/notifications')).data.items as { title: string }[]).some(n => n.title === 'Raporlarım: hatalı girişler'));
+  assert.ok(((await owner('/staff/notifications')).data.items as { title: string }[]).some(n => n.title === 'Kafemi yönet: hatalı girişler'));
   assert.ok(pair.store.auditLog(tenant, 50).some(a => a.action === 'remote.login_failed'));
   // After the wait the right one goes in (and the wrong count starts over).
   clock.add(15 * 60_000);
   paired(await login({ name: 'Sonunda' }));
-  assert.deepEqual((await devices()).map(p => p.name), ['Telefonum', 'Sonunda']);
+  assert.deepEqual((await devices()).map(p => p.name), ['Telefonum', 'Eski sayfa', 'Sonunda']);
+});
+
+test('the real order (0.1.23, the owner: "kasa açıkken Raporlarım çalışmıyor"): sign in, then the live report at once and after the köprü moved on; the first postbox box is there right away', async t => {
+  const { pair, owner, hub, phone, login, paired, clock, remote } = await setup('remote-live-order');
+  t.after(() => pair.close());
+  await sell(owner, pair.kafe());
+  const d = paired(await login({ name: 'iPhone · 15 Ekim' }));
+  // Right after the sign-in, as the page does: no waiting for anything.
+  const ask = async () => { const q = await signLive(d.keys.privateKey, d.cafePublic, d.phoneId, clock.now()); const r = await phone('live', { phoneId: d.phoneId, token: d.token, request: q }); assert.equal(r.status, 200, JSON.stringify(r.data)); assert.ok(r.data.box, JSON.stringify(r.data)); return openReport<PhoneReport>(d.keys.privateKey, d.cafePublic, r.data.box, { phone: d.phoneId, ref: q.nonce, kind: 'live' }); };
+  assert.equal((await ask()).today.sales, 49500);
+  // The café's postbox box for the new device came by itself (0.1.23: "son durum" even if the café goes off a minute later).
+  await wait(() => hub.hasBox(d.phoneId));
+  // Several köprü polls later (the one in flight at the sign-in carried the list from before it): still answered live.
+  await new Promise(r => setTimeout(r, 1500));
+  for (let i = 0; i < 3; i++) { clock.add(1000); assert.equal((await ask()).today.sales, 49500); }
+  // The report carries the business's palette for the page.
+  pair.store.mutate(pair.store.findUser('isletme')!.tenantId, s => { s.theme = 'navy'; });
+  assert.equal((await ask()).theme, 'navy');
+  void remote;
 });
 
 test('what is missing is said plainly: no package, the e-mail not verified (the application’s address verified as it is), no phone code, café off', async t => {
@@ -228,7 +270,7 @@ test('what is missing is said plainly: no package, the e-mail not verified (the 
   assert.equal(off.status, 503); assert.equal(off.data.message, 'Kasa bilgisayarı şu an kapalı. Yeni cihaz, kasa açıkken bağlanır.');
 });
 
-test('at most 3 devices: "Hangisinin yerine?" with a one-time ticket; the same name and kind again replaces its own line; the phone first', async t => {
+test('any device first; at most 3 devices: "Hangisinin yerine?" with a one-time ticket; the same device id again replaces its own line', async t => {
   const { pair, owner, tenant, remote, hub, phone, login, paired, devices, clock } = await setup('remote-login-devices');
   t.after(() => pair.close());
   // What the Raporlarım page says it is, from its own user agent (iPad asking for the desktop site: a Mac with touch).
@@ -238,37 +280,38 @@ test('at most 3 devices: "Hangisinin yerine?" with a one-time ticket; the same n
     ipad: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
     windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0' };
   assert.deepEqual([deviceKindOf(UA.iphone), deviceKindOf(UA.android), deviceKindOf(UA.androidTablet), deviceKindOf(UA.ipad, 5), deviceKindOf(UA.ipad, 0), deviceKindOf(UA.windows)], ['phone', 'phone', 'tablet', 'tablet', 'computer', 'computer']);
-  // No phone yet: a laptop is refused with a plain line, nothing is listed and Merkez adds no token.
-  const early = await login({ name: 'Laptop', kind: 'computer' });
-  assert.equal(early.result.kind, 'error'); assert.equal((early.result as { code: string }).code, 'PHONE_FIRST');
-  assert.match((early.result as { message: string }).message, /^Önce telefonunuzdan giriş yapın\./);
-  assert.deepEqual(await devices(), []); assert.equal(hub.phones(tenant), 0);
-  // The phone, then the same phone again (Safari forgot the site): its own line is replaced, the old token is gone.
-  const iphone = paired(await login({ name: 'iPhone' })), again1 = paired(await login({ name: 'iphone' }));
-  assert.equal((await phone('postbox', { phoneId: iphone.phoneId, token: iphone.token })).status, 403, 'the second sign-in of the same iPhone replaced the first');
-  assert.deepEqual((await devices()).map(p => [p.id, p.name, p.kind]), [[again1.phoneId, 'iphone', 'phone']]);
+  // 0.1.23: no phone-first rule; a laptop goes in first. The kind is only the list's icon.
+  const IPHONE = 'i'.repeat(22), LAPTOP = 'l'.repeat(22);
+  const first = paired(await login({ name: 'Windows laptop · 15 Ekim', kind: 'computer', device: LAPTOP }));
+  // The same laptop again (its browser dropped the keys, its own id stayed): its own line is replaced, the old token is gone.
+  const laptop = paired(await login({ name: 'Windows laptop · 22 Ekim', kind: 'computer', device: LAPTOP }));
+  assert.equal((await phone('postbox', { phoneId: first.phoneId, token: first.token })).status, 403, 'the second sign-in of the same laptop replaced the first');
+  assert.deepEqual((await devices()).map(p => [p.id, p.name, p.kind]), [[laptop.phoneId, 'Windows laptop · 22 Ekim', 'computer']]);
   assert.equal(hub.phones(tenant), 1);
-  // A laptop and a tablet now; the report says "Kafeyi yönet" is in the package (not turned on yet).
-  const laptop = paired(await login({ name: 'Laptop', kind: 'computer' }));
+  // The report says "Kafeyi yönet" is in the package (not turned on yet).
   const q = await signLive(laptop.keys.privateKey, laptop.cafePublic, laptop.phoneId, clock.now()), asked = await phone('live', { phoneId: laptop.phoneId, token: laptop.token, request: q });
   assert.equal((await openReport<PhoneReport>(laptop.keys.privateKey, laptop.cafePublic, asked.data.box, { phone: laptop.phoneId, ref: q.nonce, kind: 'live' })).admin, 'off');
-  paired(await login({ name: 'iPad', kind: 'tablet' }));
-  assert.deepEqual((await devices()).map(p => p.name), ['iphone', 'Laptop', 'iPad']);
+  // The phone, and a tablet whose browser forgot everything (no id): new lines.
+  paired(await login({ name: 'iPhone · 22 Ekim', device: IPHONE }));
+  paired(await login({ name: 'iPad · 22 Ekim', kind: 'tablet' }));
+  assert.deepEqual((await devices()).map(p => p.name), ['Windows laptop · 22 Ekim', 'iPhone · 22 Ekim', 'iPad · 22 Ekim']);
   // A fourth: the right password and code get the list and a ticket; nothing is added yet.
-  const fourth = await login({ name: 'Ev laptopu', kind: 'computer' });
+  const fourth = await login({ name: 'Mac · 22 Ekim', kind: 'computer' });
   assert.equal(fourth.result.kind, 'full', JSON.stringify(fourth.result));
   const full = fourth.result as Extract<typeof fourth.result, { kind: 'full' }>;
   assert.equal(full.message, 'En fazla 3 cihaz. Hangisinin yerine?');
-  assert.deepEqual(full.devices.map(d => [d.name, d.kind]), [['iphone', 'phone'], ['Laptop', 'computer'], ['iPad', 'tablet']]);
+  assert.deepEqual(full.devices.map(d => [d.name, d.kind]), [['Windows laptop · 22 Ekim', 'computer'], ['iPhone · 22 Ekim', 'phone'], ['iPad · 22 Ekim', 'tablet']]);
   assert.equal(hub.phones(tenant), 3);
   // The ticket is for this device's key only, and once.
-  const stolen = await login({ keys: await newPhoneKeys(), ticket: full.ticket, replace: full.devices[1].id, name: 'Ev laptopu', kind: 'computer', cafePublic: full.cafePublic });
+  const stolen = await login({ keys: await newPhoneKeys(), ticket: full.ticket, replace: full.devices[1].id, name: 'Mac · 22 Ekim', kind: 'computer', cafePublic: full.cafePublic });
   assert.equal((stolen.result as { code: string }).code, 'LOGIN_EXPIRED');
-  const again = await login({ name: 'Ev laptopu', kind: 'computer' }), ticket = (again.result as typeof full);
-  const replaced = paired(await login({ keys: again.keys, ticket: ticket.ticket, replace: ticket.devices.find(d => d.name === 'Laptop')!.id, name: 'Ev laptopu', kind: 'computer', cafePublic: ticket.cafePublic }));
-  assert.deepEqual((await devices()).map(p => p.name), ['iphone', 'iPad', 'Ev laptopu']);
+  const again = await login({ name: 'Mac · 22 Ekim', kind: 'computer' }), ticket = (again.result as typeof full);
+  // A code ticket is no replace ticket.
+  assert.equal(ticket.kind, 'full');
+  const replaced = paired(await login({ keys: again.keys, ticket: ticket.ticket, replace: ticket.devices.find(d => d.name === 'Windows laptop · 22 Ekim')!.id, name: 'Mac · 22 Ekim', kind: 'computer', cafePublic: ticket.cafePublic }));
+  assert.deepEqual((await devices()).map(p => p.name), ['iPhone · 22 Ekim', 'iPad · 22 Ekim', 'Mac · 22 Ekim']);
   assert.equal((await phone('postbox', { phoneId: laptop.phoneId, token: laptop.token })).status, 403, 'the replaced laptop is gone at Merkez too');
-  assert.equal((await login({ keys: again.keys, ticket: ticket.ticket, replace: ticket.devices[0].id, name: 'Ev laptopu', kind: 'computer', cafePublic: ticket.cafePublic })).result.kind, 'error', 'a ticket is good once');
+  assert.equal((await login({ keys: again.keys, ticket: ticket.ticket, replace: ticket.devices[0].id, name: 'Mac · 22 Ekim', kind: 'computer', cafePublic: ticket.cafePublic })).result.kind, 'error', 'a ticket is good once');
   void replaced;
   // Merkez keeps a device added a moment ago against a poll's list from before it (the poll can arrive after the sign-in's
   // reply); a removal announced by the café (/relay/state) is not held back.
@@ -278,13 +321,13 @@ test('at most 3 devices: "Hangisinin yerine?" with a one-time ticket; the same n
   pair.merkezStore.db.prepare('UPDATE relay_phones SET created=? WHERE phone=?').run(new Date(Date.now() - 3 * 60_000).toISOString(), replaced.phoneId);
   hub.tenants(install, [], pair.merkezStore.read(), true);
   assert.throws(() => hub.phone(replaced.phoneId, replaced.token), /bağlı değil/);
-  // The phone removed on the café computer: a new laptop waits for a phone again; devices paired before 0.1.21 (no kind)
-  // do not stand in for it.
+  // The phone removed on the café computer: a laptop still goes in (no phone needed); devices paired before 0.1.21 (no
+  // kind) are listed as "Cihaz".
   const phoneId = (await devices()).find(p => p.kind === 'phone')!.id;
   assert.equal((await owner('/staff/remote-reports/phones/remove', { id: phoneId, password: DEMO_PASSWORD })).status, 200);
   (remote as unknown as { write: (t: string, fn: (r: { phones: { kind?: string }[] }) => void) => void }).write(tenant, r => { for (const p of r.phones) delete p.kind; });
   assert.deepEqual((await devices()).map(p => p.kind), [null, null]);
-  assert.equal(((await login({ name: 'Mutfak laptopu', kind: 'computer' })).result as { code: string }).code, 'PHONE_FIRST');
+  paired(await login({ name: 'Windows laptop · 23 Ekim', kind: 'computer' }));
 });
 
 test('the owner’s own list: Müdür and staff 403, "Kaldır" asks the password (not the code), no pairing routes left; a device keeps working without the code; "Son rapor"', async t => {
@@ -303,7 +346,7 @@ test('the owner’s own list: Müdür and staff 403, "Kaldır" asks the password
   for (const path of ['/staff/remote-reports/pair', '/staff/remote-reports/pair/cancel']) assert.equal((await owner(path, { name: 'X', password: DEMO_PASSWORD, code: '123456' })).status, 404, path);
   // The view tells the Raporlarım address and whether the owner has the code.
   const view = (await owner('/staff/remote-reports')).data;
-  assert.equal(view.address, `${pair.merkezBase}/raporlarim`); assert.equal(view.code, true);
+  assert.equal(view.address, `${pair.merkezBase}/yonet`); assert.equal(view.code, true);
   const ahmet = paired(await login({ name: 'Ahmet’in telefonu' })), laptop = await login({ name: 'Ev laptopu', kind: 'computer' }), lp = paired(laptop);
   // "Son rapor": when each device last fetched a live report.
   const live = await phone('live', { phoneId: lp.phoneId, token: lp.token, request: await signLive(laptop.keys.privateKey, lp.cafePublic, lp.phoneId, clock.now()) });
@@ -344,4 +387,28 @@ test('postbox: only the café’s own phones, size limit, deleted after 7 days',
   clock.add(8 * 86400_000); hub.sweep();
   assert.equal(hub.hasBox(phoneId), false);
   assert.equal((await phone('postbox', { phoneId, token })).data.box, null);
+});
+
+test('a heartbeat that brings new `accepts` is followed by one more within seconds, once (after an update the sign-in key reaches Merkez at once, not in 10–20 minutes)', async t => {
+  const sent: string[] = [];
+  const recording: typeof fetch = async (input, init) => { if (String(input).endsWith('/sync') && typeof init?.body === 'string') sent.push(init.body); return fetch(input, init); };
+  const pair = await merkezPair('accepts-nudge', { demo: true, fetch: recording });
+  t.after(() => pair.close());
+  await pair.importDemo();
+  const remote = pair.kafeApp.locals.remote as RemoteReports;
+  // The business key made beforehand (its own heartbeat is not part of this).
+  await wait(() => remote.loginReport().length > 0);
+  // The café knew a Merkez without 'remote.login' (before Merkez was updated); its automatic heartbeats run.
+  const link = pair.link as unknown as { auto: boolean; write: (fn: (r: { accepts?: string[] }) => void) => void };
+  link.write(r => { r.accepts = (r.accepts ?? []).filter(x => x !== 'remote.login'); });
+  link.auto = true; t.after(() => pair.link.stop());
+  sent.length = 0;
+  await pair.link.sync();
+  assert.equal(sent.length, 1); assert.equal(JSON.parse(sent[0]).remote, undefined, 'the first one did not know yet');
+  // The answer said 'remote.login': the next heartbeat goes in a few seconds and carries the business's sign-in key.
+  await wait(() => sent.length >= 2, 8000);
+  assert.ok(Array.isArray(JSON.parse(sent[1]).remote), sent[1].slice(0, 200));
+  // Once: nothing new in that answer, so no third one.
+  await new Promise(r => setTimeout(r, 4000));
+  assert.equal(sent.length, 2);
 });

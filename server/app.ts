@@ -80,7 +80,7 @@ import { emailReportRoutes } from './email-reports.js';
 import { reportExportRoutes } from './report-export.js';
 import { DEMO_RENEWED, DemoResets, demoResetRoutes } from './demo-reset.js';
 // Köprü through Mola Merkez: uzaktan destek ("Mola destek") and uzaktan raporlar (the owner's phone, end to end encrypted).
-import { RelayClient } from './relay.js';
+import { RelayClient, relayTestRoute } from './relay.js';
 import { SupportDesk, supportRoutes } from './support-session.js';
 import { RemoteReports, remoteReportRoutes, type OwnerCode } from './remote-reports.js';
 import { ownerLock } from './owner-lock.js';
@@ -220,7 +220,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   // İnternetten menü: guest requests Mola Merkez passed on through the café's own tunnel are replayed here, marked; their gate
   // (before every route too) lets only the guest's paths through and counts limits by the guest's own address.
   const guestTunnel = new GuestTunnel(link, httpSecurity); guestTunnel.attach(app); app.use(guestTunnel.gate()); app.locals.guestTunnel = guestTunnel;
-  tunnelTestRoute(app, guestTunnel, httpSecurity); qrTestRoute(app, qrOrdering, httpSecurity);
+  tunnelTestRoute(app, guestTunnel, httpSecurity); qrTestRoute(app, qrOrdering, httpSecurity); relayTestRoute(app, relay, httpSecurity);
   // QR siparişleri açık mı: told to Mola Merkez over the tunnel at once on every change (Mola Yönetim → işletme → Özet).
   guestTunnel.statusSource = () => qrOrdering.report(); qrOrdering.onChange.push(() => guestTunnel.pushStatus());
   // Menünün Mola Merkez'deki kopyası: a few seconds after a change, on every reconnect and every 10 minutes (server/menu-mirror.ts).

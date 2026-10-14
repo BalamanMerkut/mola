@@ -29,7 +29,7 @@ test('Kalıcı bağlantı: code given once and kept; same network → 302 to the
   const code = biz().lanCode!;
   assert.match(code, /^[A-Za-z0-9]{10}$/);
   assert.deepEqual(install().lan?.origins, [ORIGIN]); assert.equal(install().lan?.client, '127.0.0.1');
-  // The café keeps it and shows it: the desktop window's Cihaz bağla and the owner's Ayarlar (not a waiter).
+  // The café keeps it and shows it: the desktop window's Kafe içi cihazlar and the owner's Ayarlar (not a waiter).
   const url = `${pair.merkezBase}/k/${code}`;
   assert.deepEqual(pair.link.lanAddress('mola-demo'), { url });
   const status = await (await fetch(`${pair.kafeBase}/api/desktop/status`, { headers: { 'X-Mola-Desktop': DESKTOP_KEY } })).json();
@@ -53,7 +53,7 @@ test('Kalıcı bağlantı: code given once and kept; same network → 302 to the
   services(['remote-reports']);
   pair.merkezStore.mutate(d => { d.installs.find(i => i.id === biz().installId)!.lan!.client = '203.0.113.7'; });
   p = await page(url);
-  assert.equal(p.status, 302); assert.equal(p.location, `/raporlarim#k=${code}`); assert.match(p.cache ?? '', /no-store/);
+  assert.equal(p.status, 302); assert.equal(p.location, `/yonet#k=${code}`); assert.match(p.cache ?? '', /no-store/);
   // "Kafedeyim, kasayı aç" (?kafe=1): the café computer's address, whatever the visitor's public address.
   assert.equal((await page(`${url}?kafe=1`)).location, 'http://192.168.1.120:3000/');
   // Without the service: a small page that says so, how to reach the Mola team, and the café's own address; nothing leads to "/".
@@ -65,14 +65,14 @@ test('Kalıcı bağlantı: code given once and kept; same network → 302 to the
   assert.match(p.text, new RegExp(`href="/k/${code}\\?kafe=1">Kafedeyim, kasayı aç`));
   assert.match(p.text, /href="https:\/\/mola\.example\.com\/iletisim\/">Mola ekibine ulaşın/);
   assert.match(p.text, /href="tel:05321112233">0532 111 22 33/); assert.match(p.text, /href="mailto:destek@example\.com"/);
-  assert.equal(/href="\/"|Yönetim|\/raporlarim/.test(p.text), false, 'nothing leads to Mola Yönetim or Raporlarım');
+  assert.equal(/href="\/"|Yönetim|\/raporlarim|\/yonet/.test(p.text), false, 'nothing leads to Mola Yönetim or Kafemi yönet');
   assert.ok(p.text.includes(biz().name.replace(/'/g, '&#39;')), 'the business name is the title');
   // Stale (no heartbeat for 30 minutes), back on the café's address: not sent to the café computer; Raporlarım with the service.
   pair.merkezStore.mutate(d => { const lan = d.installs.find(i => i.id === biz().installId)!.lan!; lan.client = '127.0.0.1'; lan.at = new Date(Date.now() - 31 * 60_000).toISOString(); });
   p = await page(url);
   assert.equal(p.status, 200); assert.match(p.text, /paketinizde yok/);
   services(['remote-reports']);
-  assert.equal((await page(url)).location, `/raporlarim#k=${code}`);
+  assert.equal((await page(url)).location, `/yonet#k=${code}`);
   assert.equal((await page(`${url}?kafe=1`)).location, 'http://192.168.1.120:3000/');
   // "Mola'yı bu cihaza ekle": the page (its one script allowed by hash), the web app manifest (start address inside the scope,
   // the café's Mola icons) and a service worker that keeps nothing and answers nothing.
@@ -102,7 +102,7 @@ test('Kalıcı bağlantı: code given once and kept; same network → 302 to the
   assert.equal((await pair.link.sync()).ok, true);
   assert.equal(install().lan, undefined); assert.equal(biz().lanCode, code);
   assert.deepEqual(pair.link.lanAddress('mola-demo'), { problem: 'off' });
-  assert.equal((await page(`${url}?kafe=1`)).location, `/raporlarim#k=${code}`, 'no address known: ?kafe=1 goes on as usual');
+  assert.equal((await page(`${url}?kafe=1`)).location, `/yonet#k=${code}`, 'no address known: ?kafe=1 goes on as usual');
   services(['qr-menu']);
   p = await page(url);
   assert.match(p.text, /paketinizde yok/); assert.equal(p.text.includes('Kafedeyim'), false);

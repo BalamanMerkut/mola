@@ -57,7 +57,7 @@ test('Uygulamayı indir: every platform says "Yakında" until downloads.enabled;
   for (const card of await cards.all()) await expect(card.locator('.dl-soon')).toHaveText('Yakında');
   await expect(page.locator('a[download]')).toHaveCount(0);
   await expect(page.locator('.dl-notes')).toContainText('Android telefon ve tablet');
-  await expect(page.locator('.dl-notes')).toContainText('“Cihaz bağla” düğmesine');
+  await expect(page.locator('.dl-notes')).toContainText('“Kafe içi cihazlar” düğmesine');
   await expect(page.locator('.dl-notes')).toContainText('“Ana Ekrana Ekle”');
   await expect(page.locator('.dl-warn')).toContainText('“Ek bilgi”');
   await expect(page.locator('.dl-warn')).toContainText('“Yine de çalıştır”');

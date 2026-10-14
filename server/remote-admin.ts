@@ -25,8 +25,9 @@ import { FEATURE_NOT_IN_PACKAGE, notInPackage } from '../packages/domain/feature
  *   Açık mı   Ayarlar → Uzaktan erişim → "Uzaktan yönetim" (0.1.21), default off. Turning it on: only on a computer of the café (never
  *             remotely), with the owner's password and the 6-digit code (Raporlar için telefon kodu, which must be set up first).
  *             Turning it off works from anywhere and ends every remote session at once.
- *   Giriş     Every remote session: password + code, sealed by the paired device to this computer (only that device and
- *             this computer can make the key: packages/domain/remote-admin-crypto.ts). Wrong answers are counted per device
+ *   Giriş     Every remote session: password + code (or, within 2 minutes of the device's own sign-in, the one-time `grant`
+ *             that sign-in gave it: server/remote-reports.ts takeGrant), sealed by the paired device to this computer (only
+ *             that device and this computer can make the key: packages/domain/remote-admin-crypto.ts). Wrong answers are counted per device
  *             (5 free, then 1 min, 2 min, 4 min … at most 15 min) and per business (20 in 15 min stops every device for 15 min).
  *             The owner gets a notification for each login; the list shows device, start and end (no address).
  *   Oturum    A real owner staff session (server/sessions.ts, `remote` = the remote session id): the same 05:00 end, the same
@@ -173,7 +174,7 @@ export class RemoteAdmin {
   private phone(tenant: string, phoneId: string) {
     const p = this.reports().read(tenant).phones.find(x => x.id === phoneId);
     const owner = p && this.store.read(tenant).staffUsers?.find(u => u.id === p.ownerId && u.role === 'owner' && u.active);
-    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın bağlantısı kaldırıldı. Raporlarım’a yeniden giriş yapın.', 403);
+    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın bağlantısı kaldırıldı. Kafemi yönet’e yeniden giriş yapın.', 403);
     return { p, owner };
   }
   private cafeKey(tenant: string) {
@@ -215,11 +216,12 @@ export class RemoteAdmin {
     if (!this.link.has(tenant, 'remote-admin')) return fail(FEATURE_NOT_IN_PACKAGE, notInPackage('remote-admin'));
     if (!this.read(tenant).on) return fail('REMOTE_OFF', 'Uzaktan yönetim kapalı. Kafedeyken Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açabilirsiniz.');
     if (!owner.mfa) return fail('REMOTE_NEEDS_CODE', 'Önce kafede Ayarlar → Uzaktan erişim’den telefon kodunu kurun. Uzaktan yönetim şifre ve telefon koduyla açılır.');
-    const code = opened.credentials.code.replace(/\D/g, '');
-    let ok = await passwordMatches(opened.credentials.password, owner);
+    const code = opened.credentials.code.replace(/\D/g, ''), grant = opened.credentials.grant;
+    // Right after the sign-in (0.1.23): its one-time grant stands for the password and the code just given on this device.
+    let ok = grant ? this.reports().takeGrant(tenant, p.id, grant)?.ownerId === owner.id : await passwordMatches(opened.credentials.password, owner);
     // The code is spent only after the right password (a wrong password does not burn the owner's current code).
-    if (ok) ok = this.store.mutate(tenant, s => { const u = s.staffUsers!.find(x => x.id === owner.id); const step = u?.mfa ? verifyTotp(u.mfa.secret, code, t, u.mfa.lastStep) : null; if (step === null) return false; u!.mfa!.lastStep = step; return true; });
-    if (!ok) { this.failed(tenant, p.id, t); this.audit(tenant, 'remote_admin.login_failed', owner.id, p.id); return fail('INVALID_LOGIN', 'Şifre ya da telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.'); }
+    if (ok && !grant) ok = this.store.mutate(tenant, s => { const u = s.staffUsers!.find(x => x.id === owner.id); const step = u?.mfa ? verifyTotp(u.mfa.secret, code, t, u.mfa.lastStep) : null; if (step === null) return false; u!.mfa!.lastStep = step; return true; });
+    if (!ok) { this.failed(tenant, p.id, t); this.audit(tenant, 'remote_admin.login_failed', owner.id, p.id); return fail(grant ? 'GRANT_EXPIRED' : 'INVALID_LOGIN', grant ? 'Giriş süresi doldu. Şifrenizi ve telefon kodunu yazın.' : 'Şifre ya da telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.'); }
     this.fails.delete(`${tenant}:${p.id}`);
     const fresh = this.store.read(tenant), user = fresh.staffUsers!.find(x => x.id === owner.id)!;
     const sid = randomUUID(), session = await cafeSession(opened.k1, q.eph, sid), device = p.name;

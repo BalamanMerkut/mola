@@ -38,6 +38,9 @@ try {
     void runtime.close().then(() => process.exit(APPLY_UPDATE), () => { console.error('Sunucu kapanışı tamamlanamadı; güncelleme bir sonraki açılışa kaldı.'); process.exit(1); });
   };
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
+  // Windows closing the console (logging off, shutting down) gives a few seconds: enough for the clean close and the
+  // devices' last postbox box (server/remote-reports.ts), like "Kapat".
+  for (const signal of ['SIGHUP', 'SIGBREAK'] as const) try { process.on(signal, stop); } catch { /* not on this platform */ }
 } catch (error) {
   console.error(error instanceof Error ? error.message : 'Sunucu başlatılamadı.');
   process.exitCode = 1;

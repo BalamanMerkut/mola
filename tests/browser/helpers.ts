@@ -88,14 +88,24 @@ export async function remoteLoginOpen(email = OWNER_EMAIL) {
   try { await expect.poll(async () => (await api.post(`${MERKEZ}/api/merkez/v1/phone/login/start`, { data: { email } })).status(), { timeout: 30_000, intervals: [500, 1000, 2000] }).toBe(200); }
   finally { await api.dispose(); }
 }
-/** Raporlarım's "Giriş yap" (src/ReportsPhone.tsx) on this page: e-mail, password, phone code, and the device's name when given. */
-export async function raporlarimLogin(page: Page, o: { code: string; email?: string; password?: string; name?: string }) {
+/** Kafemi yönet's first screen (src/ReportsPhone.tsx, 0.1.23): the e-mail and the password, "Devam". */
+export async function raporlarimPassword(page: Page, o: { email?: string; password?: string } = {}) {
   const form = page.getByRole('form', { name: 'Giriş yap' });
   await form.getByLabel('E-posta').fill(o.email ?? OWNER_EMAIL);
   await form.getByLabel('Şifre', { exact: true }).fill(o.password ?? 'MolaDemo!2026');
-  await form.getByLabel('Telefon kodu').fill(o.code);
-  if (o.name) await form.getByLabel('Bu cihazın adı').fill(o.name);
+  await form.getByRole('button', { name: 'Devam' }).click();
+}
+/** The second screen: the phone code, "Giriş yap" (`code` may be asked for only once that screen is there: codes are good once). */
+export async function raporlarimCode(page: Page, code: string | (() => Promise<string>)) {
+  const form = page.getByRole('form', { name: 'Telefon kodu' });
+  await expect(form.getByLabel('Telefon kodu')).toBeFocused({ timeout: 30_000 });
+  await form.getByLabel('Telefon kodu').fill(typeof code === 'string' ? code : await code());
   await form.getByRole('button', { name: 'Giriş yap' }).click();
+}
+/** Kafemi yönet's whole sign-in on this page: the e-mail and the password, then the phone code (the device names itself). */
+export async function raporlarimLogin(page: Page, o: { code: string | (() => Promise<string>); email?: string; password?: string }) {
+  await raporlarimPassword(page, o);
+  await raporlarimCode(page, o.code);
 }
 /** The browser tests' Mola Merkez (scripts/test-server.mjs); the café is the default baseURL (port 3100). */
 export const MERKEZ = `http://127.0.0.1:${process.env.E2E_MERKEZ_PORT ?? '3190'}`;
@@ -212,23 +222,23 @@ export async function yonetimShot(page: Page, file: string, path: string, fullPa
  * in a second row ("<topic> bölümleri"). A test opens a page by its name: "İşletme" is İşletme → Görünüm, "Masalar ve QR"
  * is Masalar ve QR → Masalar ve QR (tables, the QR address, renewing one code); printing is "QR kodlarını yazdır".
  * Names of the earlier Ayarlar still work: "Paketiniz" is Paket ve lisans, "Entegrasyonlar" Paket platformları, "Cihazlar"
- * and "Tablet ve telefonlar" Cihaz bağla, "Güvenlik ve yedek" Yedek, "Telefonum" Uzaktan erişim (0.1.21: a topic of the
+ * and "Tablet ve telefonlar" Kafe içi cihazlar, "Güvenlik ve yedek" Yedek, "Telefonum" Uzaktan erişim (0.1.21: a topic of the
  * owner's with one page, no second row). Places that left Ayarlar open their new home (`movedSettings`).
  */
 export type SettingsTopic = 'İşletme' | 'Masalar ve QR' | 'Sipariş ve mutfak' | 'Cihazlar' | 'Güvenlik ve yedek' | 'Uzaktan erişim';
 /** The owner's topics (a Müdür sees all but Uzaktan erişim). */
 export const settingsTopicNames: SettingsTopic[] = ['İşletme', 'Masalar ve QR', 'Sipariş ve mutfak', 'Cihazlar', 'Güvenlik ve yedek', 'Uzaktan erişim'];
 /** Every page of Ayarlar: a part of a topic. */
-export type SettingsPage = 'İşletme' | 'Sosyal medya' | 'Paket ve lisans' | 'Masalar ve QR' | 'QR kodlarını yazdır' | 'Engellenen telefonlar' | 'Sipariş ve onay' | 'Mutfak' | 'Paket platformları' | 'Yazıcılar' | 'Sesler' | 'Cihaz bağla' | 'Yedek' | 'Kilit ve güncelleme' | 'Uzaktan erişim';
+export type SettingsPage = 'İşletme' | 'Sosyal medya' | 'Paket ve lisans' | 'Masalar ve QR' | 'QR kodlarını yazdır' | 'Engellenen telefonlar' | 'Sipariş ve onay' | 'Mutfak' | 'Paket platformları' | 'Yazıcılar' | 'Sesler' | 'Kafe içi cihazlar' | 'Yedek' | 'Kilit ve güncelleme' | 'Uzaktan erişim';
 export const settingsPlaces: Record<SettingsPage, [SettingsTopic, string]> = {
   'İşletme': ['İşletme', 'Görünüm'], 'Sosyal medya': ['İşletme', 'Sosyal medya'], 'Paket ve lisans': ['İşletme', 'Paket ve lisans'],
   'Masalar ve QR': ['Masalar ve QR', 'Masalar ve QR'], 'QR kodlarını yazdır': ['Masalar ve QR', 'QR kodlarını yazdır'], 'Engellenen telefonlar': ['Masalar ve QR', 'Engellenen telefonlar'],
   'Sipariş ve onay': ['Sipariş ve mutfak', 'Sipariş ve onay'], 'Mutfak': ['Sipariş ve mutfak', 'Mutfak'], 'Paket platformları': ['Sipariş ve mutfak', 'Paket platformları'],
-  'Yazıcılar': ['Cihazlar', 'Yazıcılar'], 'Sesler': ['Cihazlar', 'Sesler'], 'Cihaz bağla': ['Cihazlar', 'Cihaz bağla'],
+  'Yazıcılar': ['Cihazlar', 'Yazıcılar'], 'Sesler': ['Cihazlar', 'Sesler'], 'Kafe içi cihazlar': ['Cihazlar', 'Kafe içi cihazlar'],
   'Yedek': ['Güvenlik ve yedek', 'Yedek'], 'Kilit ve güncelleme': ['Güvenlik ve yedek', 'Kilit ve güncelleme'], 'Uzaktan erişim': ['Uzaktan erişim', ''],
 };
 /** Earlier names of Ayarlar pages that are still Ayarlar pages. */
-const settingsAliases: Record<string, SettingsPage> = { 'Paketiniz': 'Paket ve lisans', 'Entegrasyonlar': 'Paket platformları', 'Cihazlar': 'Cihaz bağla', 'Tablet ve telefonlar': 'Cihaz bağla', 'Telefonum': 'Uzaktan erişim', 'Güvenlik ve yedek': 'Yedek' };
+const settingsAliases: Record<string, SettingsPage> = { 'Paketiniz': 'Paket ve lisans', 'Entegrasyonlar': 'Paket platformları', 'Cihazlar': 'Kafe içi cihazlar', 'Tablet ve telefonlar': 'Kafe içi cihazlar', 'Telefonum': 'Uzaktan erişim', 'Güvenlik ve yedek': 'Yedek' };
 /** Earlier Ayarlar pages that moved to a home (10 Ekim): the home's tab and sub-tab. */
 const movedSettings: Record<string, () => [(page: Page, tab: string, part?: string) => Promise<void>, string, string?]> = {
   'Kasa ve ödeme': () => [openCash, 'Kasa ayarları'], 'Kasa ayarları': () => [openCash, 'Kasa ayarları'],

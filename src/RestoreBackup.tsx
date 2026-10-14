@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArchiveRestore, Check, CloudDownload, HardDrive, Mail, Search, ShieldCheck } from 'lucide-react';
 import { Modal, Notice } from './components';
 import { desktopCall } from './desktop-call';
+import { homePath } from './remoteTransport';
 import './security.css';
 
 type Found = { path: string; createdAt: string; installId: string; verified: boolean; place: string; source?: 'local' | 'second' | 'other'; bytes?: number };
@@ -46,7 +47,7 @@ function MerkezRestore({ token, busy, setBusy, onClose }: { token: string; busy:
   }
   async function restore() {
     setBusy(true); setError('');
-    try { await desktopCall(token, '/api/desktop/restore/merkez', { copy: picked, code }, 60 * 60000); setDone(true); setCode(''); setTimeout(() => location.assign('/'), 1500); }
+    try { await desktopCall(token, '/api/desktop/restore/merkez', { copy: picked, code }, 60 * 60000); setDone(true); setCode(''); setTimeout(() => location.assign(homePath()), 1500); }
     catch (e) { setError((e as Error).message); setBusy(false); setProgress(null); }
   }
   if (done) return <Notice tone="success">Veriler geri yüklendi ve doğrulandı. Mola yeniden açılıyor…</Notice>;
@@ -145,7 +146,7 @@ function CloudPick({ token, copies, busy, setBusy, onClose, secret }: { token: s
   }, [busy, token]);
   async function restore() {
     setBusy(true); setError('');
-    try { await desktopCall(token, '/api/desktop/restore/merkez', { copy: picked, ...secret }, 60 * 60000); setDone(true); setTimeout(() => location.assign('/'), 1500); }
+    try { await desktopCall(token, '/api/desktop/restore/merkez', { copy: picked, ...secret }, 60 * 60000); setDone(true); setTimeout(() => location.assign(homePath()), 1500); }
     catch (e) { setError((e as Error).message); setBusy(false); setProgress(null); }
   }
   if (done) return <Notice tone="success">Veriler geri yüklendi ve doğrulandı. Mola yeniden açılıyor…</Notice>;
@@ -180,7 +181,7 @@ function FolderRestore({ token, busy, setBusy, onClose, secret }: { token: strin
     try {
       await desktopCall(token, '/api/desktop/restore', { backup: picked, ...(secret ?? { code }) }, 15 * 60000);
       setDone(true); setCode('');
-      setTimeout(() => location.assign('/'), 1500);
+      setTimeout(() => location.assign(homePath()), 1500);
     } catch (e) { setError((e as Error).message); setBusy(false); }
   }
   return <>

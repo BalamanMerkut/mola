@@ -5,22 +5,22 @@ import { merkezPair } from '../merkez-fixture';
 import { codesOf, e2eRun, ensureSetup, openSettings } from './helpers';
 
 // Kalıcı bağlantı (src/PermanentLink.tsx): the business's permanent Merkez link to the café computer, in the desktop window's
-// Cihaz bağla and in Ayarlar → Cihazlar → Cihaz bağla, with "Bu cihaza kısayol ekle" off the café computer (Mola Merkez's
-// /k/<kod>/kur, server/merkez/lan-link.ts). It is for the café only (0.1.22): Ayarlar → Uzaktan erişim gives the Raporlarım
+// Kafe içi cihazlar and in Ayarlar → Cihazlar → Kafe içi cihazlar, with "Bu cihaza kısayol ekle" off the café computer (Mola Merkez's
+// /k/<kod>/kur, server/merkez/lan-link.ts). It is for the café only (0.1.22): Ayarlar → Uzaktan erişim gives the Kafemi yönet
 // address to sign in with instead. The test café has no Merkez link of its own, so the answers are given here; the last
 // test asks a Mola Merkez of its own for the real page.
 const URL = 'https://merkez.example.com/k/Ab3dEf7hJk';
 const LINE = 'Laptop ve telefonlar için: modem adresi değiştirse de çalışır. İşletmenin Wi-Fi\'sinde kasa bilgisayarını açar.';
 const PASSWORD = 'MolaDemo!2026';
 
-test('Cihaz bağla (desktop window): the permanent link with Kopyala under the QR, no shortcut on the café computer; "birkaç dakika içinde" while it is on its way', async ({ page }) => {
+test('Kafe içi cihazlar (desktop window): the permanent link with Kopyala under the QR, no shortcut on the café computer; "birkaç dakika içinde" while it is on its way', async ({ page }) => {
   const key = readFileSync(join(e2eRun(), 'masaustu.anahtar'), 'utf8').trim();
   await page.addInitScript(() => { sessionStorage.setItem('mola-welcome', '1'); sessionStorage.setItem('mola-recovery-later', '1'); });
   let link: unknown = { url: URL };
   await page.route('**/api/desktop/status', route => route.fulfill({ json: { ok: true, lan: true, addresses: [{ name: 'Ethernet', origin: 'http://192.168.1.20:3000' }], backup: { enabled: false }, link } }));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`/#masaustu=${key}`);
-  const open = async () => { await page.getByRole('navigation', { name: 'Mola bilgisayar araçları' }).getByRole('button', { name: /Cihaz bağla/ }).click(); return page.getByRole('dialog', { name: 'Cihaz bağla' }); };
+  const open = async () => { await page.getByRole('navigation', { name: 'Mola bilgisayar araçları' }).getByRole('button', { name: /Kafe içi cihazlar/ }).click(); return page.getByRole('dialog', { name: 'Kafe içi cihazlar' }); };
   let dialog = await open();
   const block = dialog.getByTestId('permanent-link');
   await expect(block).toContainText('Kalıcı bağlantı');
@@ -41,25 +41,26 @@ test('Cihaz bağla (desktop window): the permanent link with Kopyala under the Q
   await expect(dialog.getByRole('button', { name: 'Kopyala' })).toHaveCount(0);
 });
 
-test('Ayarlar → Cihazlar → Cihaz bağla: the permanent link with Kopyala and the way to Uzaktan erişim; nothing when Mola is closed to the network', async ({ page }) => {
+test('Ayarlar → Cihazlar → Kafe içi cihazlar: the permanent link with Kopyala and the way to Uzaktan erişim; nothing when Mola is closed to the network', async ({ page }) => {
   await page.request.post('/api/login', { data: { username: 'isletme', password: PASSWORD } });
   await ensureSetup(page.request);
   let body: Record<string, unknown> = { lan: true, addresses: [{ name: 'Wi-Fi', origin: 'http://192.168.1.20:3000' }], link: { url: URL } };
   await page.route('**/api/staff/network', route => route.fulfill({ json: body }));
   await page.goto('/');
-  await openSettings(page, 'Cihaz bağla');
+  await openSettings(page, 'Kafe içi cihazlar');
   const card = page.locator('.connect-tablet'), block = card.getByTestId('permanent-link');
-  await expect(card.getByRole('heading', { name: 'Cihaz bağla', exact: true })).toBeVisible();
+  await expect(card.getByRole('heading', { name: 'Kafe içi cihazlar', exact: true })).toBeVisible();
   await expect(block.locator('code')).toHaveText(URL);
   await expect(block).toContainText(LINE);
   await block.getByRole('button', { name: 'Kopyala' }).click();
   await expect(block.getByRole('button', { name: 'Kopyalandı' })).toBeVisible();
   await expect(card.locator('.connect-tablet-address code')).toHaveText('192.168.1.20:3000/uygulama');
-  await card.getByRole('button', { name: /Ayarlar → Uzaktan erişim/ }).click();
+  await expect(card).toContainText("Garson tabletleri, mutfak ekranı ve kafedeki laptoplar kafe Wi-Fi'sinden buradan bağlanır. Sahibin uzaktan erişimi: Uzaktan erişim.");
+  await card.getByRole('button', { name: 'Uzaktan erişim', exact: true }).click();
   await expect(page.getByRole('heading', { name: '1 · Telefon kodu' })).toBeVisible();
   body = { lan: false, addresses: [], link: { problem: 'off' } };
   await page.reload();
-  await openSettings(page, 'Cihaz bağla');
+  await openSettings(page, 'Kafe içi cihazlar');
   await expect(page.locator('.connect-tablet')).toContainText('Mola şu anda yalnız bu bilgisayara açık');
   await expect(page.getByTestId('permanent-link')).toHaveCount(0);
 });
@@ -85,25 +86,26 @@ test('a laptop on the permanent link: "Bu cihaza kısayol ekle" opens Mola Merke
   let downloads = 0; page.on('download', () => downloads++);
   try {
     await page.route('**/api/staff/network', route => route.fulfill({ json: { lan: true, addresses: [{ name: 'Wi-Fi', origin: 'http://192.168.1.20:3000' }], link: { url: URL } } }));
-    await openSettings(page, 'Cihaz bağla');
+    await openSettings(page, 'Kafe içi cihazlar');
     const block = page.locator('.connect-tablet').getByTestId('permanent-link');
     const add = block.getByRole('link', { name: 'Bu cihaza kısayol ekle' });
     await expect(add).toHaveAttribute('href', `${URL}/kur`); await expect(add).toHaveAttribute('target', '_blank');
     await block.screenshot({ path: info.outputPath('laptop-kisayol.png') });
-    // Uzaktan erişim has no shortcut any more (0.1.22): away from the café the owner signs in to Raporlarım.
+    // Uzaktan erişim has no shortcut any more (0.1.22): away from the café the owner signs in to Kafemi yönet.
     await openSettings(page, 'Uzaktan erişim');
-    await expect(page.getByRole('heading', { name: '3 · Cihazlarınızı bağlayın' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '3 · Cihaz eşleştirme' })).toBeVisible();
     await expect(page.locator('.remote-access').getByRole('link', { name: 'Bu cihaza kısayol ekle' })).toHaveCount(0);
     expect(downloads).toBe(0);
   } finally { await page.context().close(); }
   // The café computer itself (127.0.0.1) has no shortcut button: Mola is already on its desktop.
   await cafe.route('**/api/staff/network', route => route.fulfill({ json: { lan: true, addresses: [{ name: 'Wi-Fi', origin: 'http://192.168.1.20:3000' }], link: { url: URL } } }));
   await cafe.goto('/');
-  await openSettings(cafe, 'Cihaz bağla');
+  await openSettings(cafe, 'Kafe içi cihazlar');
   await expect(cafe.getByTestId('permanent-link').locator('code')).toHaveText(URL);
   await expect(cafe.getByRole('link', { name: 'Bu cihaza kısayol ekle' })).toHaveCount(0);
   await openSettings(cafe, 'Uzaktan erişim');
-  await expect(cafe.locator('.remote-access')).toContainText('Telefonunuzda ve laptopunuzda bu adresi açın');
+  await expect(cafe.getByRole('heading', { name: '3 · Cihaz eşleştirme' })).toBeVisible();
+  await expect(cafe.locator('.remote-access').getByRole('link', { name: 'Bu cihaza kısayol ekle' })).toHaveCount(0);
 });
 
 test('Uzaktan erişim on the café Wi-Fi: on a phone the phone code opens the authenticator app (and its key); on a laptop its QR; nothing to pair', async ({ browser, page: cafe }, info) => {
@@ -136,9 +138,9 @@ test('Uzaktan erişim on the café Wi-Fi: on a phone the phone code opens the au
     await step1.getByRole('button', { name: 'Kodu onayla' }).click();
     recovery = (await step1.getByRole('textbox', { name: 'Kurtarma kodları' }).inputValue()).split('\n')[0];
     await step1.getByRole('button', { name: 'Kodları sakladım' }).click();
-    await expect(step1).toContainText('Telefon kodu kurulu.');
-    // Then the address to sign in with (no pairing button anywhere on this page).
-    await expect(phone.locator('section.settings-card', { has: phone.getByRole('heading', { name: '3 · Cihazlarınızı bağlayın' }) }).locator('.remote-address-text')).toHaveText(/\/raporlarim$/);
+    await expect(step1).toContainText('Kurulu ✓');
+    // Then the address to sign in with once the e-mail is verified too (no pairing button anywhere on this page).
+    await expect(phone.locator('section.settings-card', { has: phone.getByRole('heading', { name: '3 · Cihaz eşleştirme' }) })).toContainText(/\/yonet|Önce 1 ve 2'yi tamamlayın\./);
     await expect(phone.getByRole('button', { name: /eşleştir/i })).toHaveCount(0);
     expect(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await phone.screenshot({ path: info.outputPath('telefon-uzaktan-erisim.png'), fullPage: true });

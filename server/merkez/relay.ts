@@ -21,9 +21,10 @@ import { liveRequestSchema, loginRequestSchema, phoneId, postboxBody, RELAY, REL
  *   kutu.sqlite       the postbox, beside the data folder (`<data>-kutu/`, never in a backup): one encrypted box per phone,
  *                     deleted when the phone fetches it or after RELAY.POSTBOX_DAYS. Merkez cannot open a box: it never sees a
  *                     private key, the owner's password or phone code (packages/domain/remote-crypto.ts).
- * Raporlarım giriş (0.1.22): a new device types the business's verified owner e-mail; Merkez finds the business, hands out
- * the public key its café sent with the heartbeat (MerkezBusiness.remoteLogin) and passes the sealed sign-in to the café,
- * which checks the password and the phone code. Merkez only learns whether a device was added (it gives it a token).
+ * Kafemi yönet giriş (/yonet; 0.1.22, two steps since 0.1.23): a new device types the business's verified owner e-mail;
+ * Merkez finds the business, hands out the public key its café sent with the heartbeat (MerkezBusiness.remoteLogin) and
+ * passes the sealed steps to the café, which checks the password, then the phone code. Merkez only learns whether a device
+ * was added (it gives it a token).
  * Uzaktan destek: "Kafeye bağlan" (Mola Yönetim, admin session) starts a session at the café and sets the browser's
  * `mola_destek` cookie; with it the café's own screens (index.html from this Merkez's build) talk to /api/staff/* here, which
  * is passed to the café as it is. The café decides what support may see (server/support-session.ts); Merkez adds limits,
@@ -305,11 +306,12 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
    * Raporlarım giriş (0.1.22). Merkez only routes: e-mail → business → its café; the password and the phone code are sealed
    * to the café, which alone checks them. What a caller can learn here is whether an e-mail is a Mola business's owner
    * e-mail (the plain answers: not in the package, no phone code, café off, "önce doğrulayın" for an application e-mail);
-   * an unknown e-mail reads like a wrong password. Slowed per address (30 in 15 minutes, both steps) and per business.
+   * an unknown e-mail reads like a wrong password. Slowed per address (60 calls in 15 minutes: a sign-in is three) and per
+   * business (60 steps in 15 minutes; the café counts wrong answers itself).
    */
   const loginTarget = (email: string) => {
     const found = businessByOwnerEmail(deps().store, email), b = found.business;
-    if (!b?.installId) throw found.unverified ? new DomainError('EMAIL_UNVERIFIED', 'Önce kasada Ayarlar → Uzaktan erişim’de e-postanızı doğrulayın.', 409) : new DomainError('LOGIN_FAILED', 'E-posta, şifre ya da kod hatalı.', 403);
+    if (!b?.installId) throw found.unverified ? new DomainError('EMAIL_UNVERIFIED', 'Önce kasada Ayarlar → Uzaktan erişim’de e-postanızı doğrulayın.', 409) : new DomainError('LOGIN_FAILED', 'E-posta ya da şifre hatalı.', 403);
     if (!licenseFeatures(b).includes('remote-reports')) throw new DomainError('NO_PACKAGE', 'Bu işletmenin paketinde uzaktan raporlar yok. Mola ekibine ulaşın.', 403);
     if (b.remoteLogin && !b.remoteLogin.code) throw new DomainError('CODE_MISSING', 'Önce kasada Ayarlar → Uzaktan erişim’de telefon kodunu kurun.', 409);
     if (!hub.online(b.installId)) throw new DomainError('CAFE_OFFLINE', CAFE_OFF, 503);
@@ -318,13 +320,13 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
   };
   const loginBody = z.object({ email: z.string().trim().min(3).max(120) });
   app.post(`${MERKEZ_API}/phone/login/start`, (req, res) => {
-    deps().limitAddress(req, 'phone-login', 30, 15 * 60_000);
+    deps().limitAddress(req, 'phone-login', 60, 15 * 60_000);
     res.json({ cafePublic: loginTarget(loginBody.strict().parse(req.body).email).pub });
   });
   app.post(`${MERKEZ_API}/phone/login`, async (req, res) => {
-    deps().limitAddress(req, 'phone-login', 30, 15 * 60_000);
+    deps().limitAddress(req, 'phone-login', 60, 15 * 60_000);
     const b = loginBody.extend({ request: loginRequestSchema }).strict().parse(req.body), t = loginTarget(b.email);
-    hub.take(`login:${t.tenant}`, 30, 15 * 60_000);
+    hub.take(`login:${t.tenant}`, 60, 15 * 60_000);
     const reply = await hub.send(t.install, { kind: 'login', tenantId: t.tenant, request: b.request }, 15_000).catch((e: DomainError) => ({ status: e.status, json: { code: e.code, message: e.status === 503 || e.status === 504 ? CAFE_OFF : e.message } }) as RelayReply);
     const j = (reply.json ?? {}) as { ok?: boolean; phoneId?: string; removed?: unknown; box?: { iv?: unknown; ct?: unknown }; code?: string; message?: string };
     if (reply.status !== 200) { res.status(reply.status).json({ code: j.code ?? 'LOGIN_FAILED', message: j.message ?? 'Giriş tamamlanamadı.' }); return; }
@@ -353,9 +355,20 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
     const b = phoneBody.extend({ request: liveRequestSchema }).strict().parse(req.body), p = hub.phone(b.phoneId, b.token);
     hub.take(`live:${b.phoneId}`, 30, 60_000);
     if (!hub.online(p.install)) { res.json({ offline: true, seenAt: hub.seenAt(p.install), waiting: hub.hasBox(b.phoneId) }); return; }
-    const reply = await hub.send(p.install, { kind: 'phone', tenantId: p.tenant, phoneId: b.phoneId, request: b.request }, 12_000).catch((e: DomainError) => ({ status: e.status, json: { code: e.code, message: e.message } }) as RelayReply);
-    if (reply.status === 504 || reply.status === 503) { res.json({ offline: true, seenAt: hub.seenAt(p.install), waiting: hub.hasBox(b.phoneId) }); return; }
+    // The same wait as the café's screens get (0.1.23; 12 s before): a busy café computer building the 30-day report is not
+    // "off". A café still polling but slow is said so (the page shows the last report with that line), never "kapalı".
+    const reply = await hub.send(p.install, { kind: 'phone', tenantId: p.tenant, phoneId: b.phoneId, request: b.request }, RELAY.REQUEST_TIMEOUT_MS).catch((e: DomainError) => ({ status: e.status, json: { code: e.code, message: e.message } }) as RelayReply);
+    if (reply.status === 503 || (reply.status === 504 && !hub.online(p.install))) { res.json({ offline: true, seenAt: hub.seenAt(p.install), waiting: hub.hasBox(b.phoneId) }); return; }
+    if (reply.status === 504) { res.status(504).json({ code: 'CAFE_TIMEOUT', message: 'Kasa bilgisayarı yanıt vermedi.' }); return; }
     res.status(reply.status).json(reply.json ?? {});
+  });
+  // Kafemi yönet (0.1.23): is the café computer on? Asked before the full screens open and while they wait for it; the box
+  // stays where it is.
+  app.post(`${MERKEZ_API}/phone/status`, (req, res) => {
+    phoneLimits(req, 'status', 120);
+    const b = phoneBody.strict().parse(req.body), p = hub.phone(b.phoneId, b.token);
+    hub.take(`status:${b.phoneId}`, 30, 60_000);
+    res.json({ online: hub.online(p.install), seenAt: hub.seenAt(p.install), waiting: hub.hasBox(b.phoneId) });
   });
   app.post(`${MERKEZ_API}/phone/postbox`, (req, res) => {
     phoneLimits(req, 'postbox', 120);
@@ -390,8 +403,7 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
     res.clearCookie(SUPPORT_COOKIE, sessionCookie(req));
     res.json({ ok: true });
   });
-  // "Raporlarım": the owner's phone page (raporlarim.html; on a VDS only over HTTPS, the WebCrypto keys need a secure page).
-  app.get(/^\/raporlarim\/?$/, (_req, res, next) => { res.locals.molaPage = 'raporlarim.html'; next(); });
+
   // The café's screens for this session (index.html of this Merkez's build; runtime.ts serves the page named in res.locals).
   app.get(/^\/destek\/[0-9a-f-]{36}\/?$/, (req, res, next) => {
     const s = hub.sessionFor(cookieOf(req, SUPPORT_COOKIE));

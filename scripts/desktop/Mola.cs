@@ -7,7 +7,7 @@
 //   Mola.exe                              window
 //   Mola.exe --arkaplan                   only the server (Windows start-up, the installer after an update)
 //   Mola.exe --guvenlik-duvari            firewall rule for runtime\node.exe, local network only (asks Windows once, UAC);
-//                                         started by the window's Cihaz bağla > "İzni düzelt" (server/desktop.ts). Exit code
+//                                         started by the window's Kafe içi cihazlar > "İzni düzelt" (server/desktop.ts). Exit code
 //                                         0 done / nothing to do, 1 failed, 3 the owner said no.
 //            --guvenlik-duvari --durum    read only: one JSON line, exit code 0 = as Mola wants it, 4 = needs fixing
 //            --guvenlik-duvari --dene     dry run: prints the rules found and the netsh commands it would run

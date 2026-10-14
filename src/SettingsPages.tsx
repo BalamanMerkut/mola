@@ -217,9 +217,9 @@ export function PrintersPage({ data, onCount }: { data: StaffSnapshot; onCount: 
 export function SoundsPage() { return <SoundSettings />; }
 
 /**
- * Cihaz bağla (0.1.21, once "Tablet ve telefonlar"): the staff's tablets and phones by one QR to /uygulama (install the
- * Android app, or add to the iPhone/iPad home screen), and the permanent link for laptops and phones with "Bu cihaza kısayol
- * ekle". The owner's remote reports and remote management live in Ayarlar → Uzaktan erişim (a line points there).
+ * Kafe içi cihazlar (0.1.23; "Cihaz bağla" until then, once "Tablet ve telefonlar"): the staff's tablets and phones by one QR
+ * to /uygulama (install the Android app, or add to the iPhone/iPad home screen), and the permanent link for laptops and phones
+ * with "Bu cihaza kısayol ekle". The owner's own access from outside lives in Ayarlar → Uzaktan erişim (the intro points there).
  */
 function ConnectTablet() {
   const [network] = useNetwork(), [image, setImage] = useState('');
@@ -229,15 +229,16 @@ function ConnectTablet() {
   // private-only one. A phone or tablet showing this page is already connected, so it is not told.
   const here = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   const profile = useNetworkProfile(() => api<NetworkProfileView>('/api/staff/network-profile'), here && !!network?.lan), pk = usePackage();
-  return <Card icon={<TabletSmartphone size={18} aria-hidden="true" />} title="Cihaz bağla" className="connect-tablet">
+  return <Card icon={<TabletSmartphone size={18} aria-hidden="true" />} title="Kafe içi cihazlar" className="connect-tablet"
+    lead={<>Garson tabletleri, mutfak ekranı ve kafedeki laptoplar kafe Wi-Fi'sinden buradan bağlanır. Sahibin uzaktan erişimi: {pk.owner ? <PlaceLink to={{ view: 'settings', topic: 'remote' }}>Uzaktan erişim</PlaceLink> : 'Uzaktan erişim'}.</>}>
     <NetworkProfileNotice view={profile} />
     {!network ?<p className="settings-card-note" aria-busy="true">Ağ adresi okunuyor…</p> : reachable ? <div className="connect-tablet-body">
       <div className="connect-tablet-qr">{image ? <img src={image} width={160} height={160} alt="Mola uygulaması kurulum sayfasının QR kodu" /> : <span />}</div>
       <div><p className="settings-card-note"><strong>Telefon ya da tabletin kamerasıyla okutun.</strong> Açılan sayfa Mola'yı Android'e uygulama olarak, iPhone ve iPad'e ana ekrana kurmayı anlatır. Cihaz bu bilgisayarla aynı Wi-Fi ağında olmalı.</p><p className="connect-tablet-address"><code>{base.replace(/^https?:\/\//, '')}/uygulama</code></p><p className="muted small">Garsona ve mutfağa kendi hesaplarını Personel → Çalışanlar'dan açın.</p></div>
-    </div> : <p className="settings-card-note">Mola şu anda yalnız bu bilgisayara açık; tabletler bağlanamaz. Kasa bilgisayarındaki Mola penceresinde sol şerit → <strong>Cihaz bağla</strong>'ya bakın.</p>}
+    </div> : <p className="settings-card-note">Mola şu anda yalnız bu bilgisayara açık; tabletler bağlanamaz. Kasa bilgisayarındaki Mola penceresinde sol şerit → <strong>Kafe içi cihazlar</strong>'a bakın.</p>}
     {/* Kalıcı bağlantı: the owner's (and Müdür's) link for laptops and phones, whatever address the modem gives this computer. */}
     <PermanentLink link={network?.link} />
-    {pk.owner && <p className="muted small connect-remote-line">Raporlarınızı ve kafenizi dışarıdan açmak için: <PlaceLink to={{ view: 'settings', topic: 'remote' }}>Ayarlar → Uzaktan erişim</PlaceLink></p>}
+
   </Card>;
 }
 export function DevicesPage() {

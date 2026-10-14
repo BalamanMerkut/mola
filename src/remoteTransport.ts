@@ -4,15 +4,25 @@ import type { Paired } from './phoneVault';
 
 /*
  * Sahibin uzaktan yönetimi, the browser's side (server/remote-admin.ts, packages/domain/remote-admin-crypto.ts). On Mola
- * Merkez's /yonet page (src/RemoteAdmin.tsx) the café's own screens run as usual, but every /api and /media request goes
- * through this tunnel: sealed with the session key (AES-256-GCM, a sequence number per tab, bound to its answer), posted to
- * Mola Merkez, which hands it to the café as ciphertext. The answer comes back sealed and becomes an ordinary Response, so the
+ * Merkez's /yonet page ("Kafemi yönet": src/ReportsPhone.tsx, src/RemoteAdmin.tsx) the café's own screens run as usual, but
+ * every /api and /media request goes through this tunnel: sealed with the session key (AES-256-GCM, a sequence number per
+ * tab, bound to its answer), posted to Mola Merkez, which hands it to the café as ciphertext. The answer comes back sealed and becomes an ordinary Response, so the
  * screens (src/api.ts `transport()`, and the few direct fetch() calls such as downloads) need no change. Large answers (Excel,
  * PDF) come in parts. Product photos (<img src="/media/…">) are fetched through the tunnel and shown from blob: addresses.
  * The session key is a non-extractable CryptoKey kept in this origin's IndexedDB until the session ends (a reload keeps it).
  */
 const API = '/api/merkez/v1/phone/admin';
 export const REMOTE_ENDED_EVENT = 'mola:remote-ended';
+/**
+ * The café computer went off (Mola Merkez: CAFE_OFFLINE, or twice no answer) while the session itself stays (0.1.23: Kafemi
+ * yönet shows the last report meanwhile and "Kasa açıldı · Kafeyi yönet" once it answers again). Once per outage.
+ */
+export const REMOTE_OFFLINE_EVENT = 'mola:remote-offline';
+let silent = 0, away = false;
+function reach(on: boolean, code?: string) {
+  if (on) { silent = 0; away = false; return; }
+  if ((code === 'CAFE_OFFLINE' || (code === 'CAFE_TIMEOUT' && ++silent >= 2)) && !away) { away = true; window.dispatchEvent(new Event(REMOTE_OFFLINE_EVENT)); }
+}
 export class RemoteError extends Error { constructor(message: string, public status: number, public code: string) { super(message); } }
 export type RemoteSession = { v: 1; sid: string; phoneId: string; key: CryptoKey; business: string; device: string; expiresAt: string; startedAt: string };
 type Active = { session: RemoteSession; paired: Paired; tab: string; seq: number };
@@ -23,6 +33,8 @@ const realFetch: typeof fetch = (input, init) => (saved ?? globalThis.fetch)(inp
 
 /** True while this page runs the café's screens through the tunnel. */
 export const remoteMode = () => !!active;
+/** Where "back to the start" goes: on Mola Merkez's /yonet never "/" (that is Mola Yönetim there). */
+export const homePath = () => active || location.pathname === '/yonet' ? '/yonet' : '/';
 /** src/api.ts: the fetch to use (the tunnel only in remote mode). */
 export const transport = (): typeof fetch => active ? remoteFetch : realFetch;
 
@@ -49,9 +61,12 @@ async function post(body: unknown, signal?: AbortSignal | null) {
   let data: Record<string, any> = {}; try { data = await r.json(); } catch { /* not JSON */ }
   return { status: r.status, data };
 }
-/** Password + the 6-digit code, sealed for the café by this paired device; then the session key. */
-export async function openRemote(paired: Paired, password: string, code: string) {
-  const { request, k1, ephPrivate } = await adminOpen(paired.privateKey, paired.cafePublic, paired.phoneId, { password, code: code.replace(/\D/g, '') });
+/**
+ * Password + the 6-digit code, sealed for the café by this paired device; then the session key. `grant` (0.1.23): right after
+ * the sign-in on this device, its one-time proof instead (the owner is not asked twice).
+ */
+export async function openRemote(paired: Paired, password: string, code: string, grant?: string) {
+  const { request, k1, ephPrivate } = await adminOpen(paired.privateKey, paired.cafePublic, paired.phoneId, { password, code: code.replace(/\D/g, ''), ...(grant ? { grant } : {}) });
   const r = await post({ phoneId: paired.phoneId, token: paired.token, request }, AbortSignal.timeout(30_000));
   if (r.status !== 200 || typeof r.data.iv !== 'string') throw new RemoteError(r.data.message ?? 'Kafe bilgisayarına ulaşılamadı. Biraz sonra yeniden deneyin.', r.status, r.data.code ?? 'REMOTE_FAILED');
   // Only the café could seal this answer (k1 needs its private key): Mola Merkez cannot fake a session.
@@ -59,6 +74,7 @@ export async function openRemote(paired: Paired, password: string, code: string)
   if (!answer.ok) throw new RemoteError(answer.message, 403, answer.code);
   const session: RemoteSession = { v: 1, sid: answer.sid, phoneId: paired.phoneId, key: await deviceSession(k1, ephPrivate, request.eph, answer.eph, answer.sid), business: answer.business, device: answer.device, expiresAt: answer.expiresAt, startedAt: new Date().toISOString() };
   try { await run('readwrite', s => s.put(session, KEY)); } catch { /* this tab still works */ }
+  away = false; silent = 0;
   activate(session, paired);
   return session;
 }
@@ -102,8 +118,10 @@ async function tunnel(request: TunnelRequest, signal?: AbortSignal | null): Prom
   const r = await post({ phoneId: a.paired.phoneId, token: a.paired.token, request: await sealCall(a.session.key, head, request) }, signal);
   if (r.status !== 200 || typeof r.data.iv !== 'string') {
     if (['REMOTE_ENDED', 'PHONE_UNKNOWN', 'PHONE_REVOKED'].includes(r.data.code)) ended(r.data.message ?? 'Uzak oturum kapandı.');
+    else reach(false, r.data.code);
     return json(r.status === 200 ? 502 : r.status, { code: r.data.code ?? 'REMOTE_FAILED', message: r.data.message ?? 'Kafe bilgisayarına ulaşılamadı.' });
   }
+  reach(true);
   const answer = r.data as AdminAnswer;
   let ct = answer.ct;
   if (answer.parts && answer.parts > 1 && answer.ref) for (let index = 1; index < answer.parts; index++) {

@@ -28,6 +28,21 @@ async function run<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRe
     });
   } finally { db.close(); }
 }
+/*
+ * This browser's own random id (0.1.23), sent inside the sealed sign-in: the café replaces the entry of the same id when the
+ * owner signs in again (Safari dropped the keys but kept one of the two). Kept in localStorage and in IndexedDB; a browser
+ * that forgot both is simply a new device (the limit screen "Hangisinin yerine?" handles it). Never a secret.
+ */
+const ID_KEY = 'mola-cihaz-id', ID_FORM = /^[A-Za-z0-9_-]{22}$/;
+export async function deviceId() {
+  let id: string | undefined;
+  try { const v = localStorage.getItem(ID_KEY); if (v && ID_FORM.test(v)) id = v; } catch { /* storage blocked */ }
+  if (!id) try { const v = await run<unknown>('readonly', s => s.get('cihaz')); if (typeof v === 'string' && ID_FORM.test(v)) id = v; } catch { /* none */ }
+  id ??= btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  try { localStorage.setItem(ID_KEY, id); } catch { /* the other copy */ }
+  try { await run('readwrite', s => s.put(id, 'cihaz')); } catch { /* the other copy */ }
+  return id;
+}
 export const readPaired = () => run<Paired | undefined>('readonly', s => s.get(KEY) as IDBRequest<Paired | undefined>);
 export const savePaired = (p: Paired) => run('readwrite', s => s.put(p, KEY));
 export const forgetPaired = () => run('readwrite', s => s.delete(KEY));

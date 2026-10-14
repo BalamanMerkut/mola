@@ -103,7 +103,7 @@ export async function liveSigned(cafePrivate: CryptoKey, phonePublic: string, r:
 }
 
 // ---------- Giriş (0.1.22): a new device signs in on the Raporlarım page ----------
-/** What the device is, as its own browser tells (the phone must come first). */
+/** What the device is, as its own browser tells (only its icon in the list; 0.1.23: any device may sign in first). */
 export type DeviceKind = 'phone' | 'tablet' | 'computer';
 export const DEVICE_KINDS: readonly DeviceKind[] = ['phone', 'tablet', 'computer'];
 /** From the user agent: iPad (also when it asks for the desktop site with a Mac user agent and a touch screen) and an Android without "Mobile" are tablets. */
@@ -112,26 +112,33 @@ export function deviceKindOf(ua: string, touchPoints = 0): DeviceKind {
   if (/iPhone|iPod/.test(ua) || (/Android/.test(ua) && /Mobile/.test(ua))) return 'phone';
   return /Android/.test(ua) ? 'tablet' : 'computer';
 }
-/** The name the sign-in suggests for this device ("Bu cihazın adı"); the owner may change it. */
+/** The device's family from its user agent: iPhone, iPad, Android telefon, Android tablet, Windows laptop, Mac, Bilgisayar. */
 export function deviceNameOf(ua: string, touchPoints = 0) {
   if (/iPhone|iPod/.test(ua)) return 'iPhone';
   if (/iPad/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1)) return 'iPad';
-  if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'Android telefon' : 'Tablet';
-  return /Macintosh/.test(ua) ? 'Mac' : 'Laptop';
+  if (/Android/.test(ua)) return /Mobile/.test(ua) ? 'Android telefon' : 'Android tablet';
+  if (/Windows/.test(ua)) return 'Windows laptop';
+  return /Macintosh/.test(ua) ? 'Mac' : 'Bilgisayar';
+}
+/** 0.1.23: no "Bu cihazın adı" field; the device names itself "iPhone · 15 Ekim" (the day it signed in, Istanbul time). */
+export function deviceLabel(ua: string, touchPoints = 0, at = Date.now()) {
+  return `${deviceNameOf(ua, touchPoints)} · ${new Date(at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long' })}`;
 }
 /*
  * The device makes its own key pair P (non-extractable) and a fresh ephemeral pair E. k = HKDF(DH(E, C) ‖ DH(P, C)) where C
  * is the business's static key, handed out by Mola Merkez for the typed e-mail (trust on first use: a Merkez that lied about
  * C could read what follows; docs/GELISTIRICI_REHBERI.md). Only the holder of C opens the request, and it learns that the
- * sender holds P. Inside, AES-256-GCM under k: the owner's password and phone code (or, after "En fazla 3 cihaz", the café's
- * one-time ticket and the device to replace), the device's name and kind. The café answers under the same k: only it could
- * make k, so Mola Merkez cannot fake "giriş tamam".
+ * sender holds P. Inside, AES-256-GCM under k (0.1.23, two steps): the owner's password (the café answers NEED_CODE with a
+ * one-time ticket bound to P), then the ticket and the phone code (or, after "En fazla 3 cihaz", the replace ticket and the
+ * device to replace); always the device's name, kind and its own random id (`device`, kept in this browser). The café
+ * answers under the same k: only it could make k, so Mola Merkez cannot fake "giriş tamam".
  */
-export type LoginInner = { password?: string; code?: string; ticket?: string; replace?: string; name: string; kind: DeviceKind };
+export type LoginInner = { password?: string; code?: string; ticket?: string; replace?: string; device?: string; name: string; kind: DeviceKind };
 export type LoginRequest = { v: 1; phonePub: string; at: number; nonce: string; eph: string; iv: string; ct: string };
 /** A paired device as the sign-in lists it when the limit is reached ("Hangisinin yerine?"). */
 export type LoginDevice = { id: string; name: string; kind: DeviceKind | null; lastSeenAt: string | null };
-export type LoginAnswer = { ok: true; phoneId: string; business: string; name: string } | { ok: false; code: string; message: string; devices?: LoginDevice[]; ticket?: string };
+/** `grant`: a one-time, 2-minute proof that this device just gave the password and the code ("Kafeyi yönet" opens without asking them again). */
+export type LoginAnswer = { ok: true; phoneId: string; business: string; name: string; grant?: string } | { ok: false; code: string; message: string; devices?: LoginDevice[]; ticket?: string };
 const LOGIN_SALT = utf8('mola-giris-v1');
 const loginInfo = (r: Pick<LoginRequest, 'phonePub' | 'at' | 'nonce' | 'eph'>) => `giris|${r.phonePub}|${r.at}|${r.nonce}|${r.eph}`;
 /** The device: its sealed request and the key that opens the café's answer. */
@@ -149,7 +156,7 @@ export async function readLogin(cafePrivate: CryptoKey, r: LoginRequest): Promis
     const info = loginInfo(r), key = await hkdf(concat(await dh(cafePrivate, r.eph), await dh(cafePrivate, r.phonePub)), LOGIN_SALT, info);
     const plain = await subtle().decrypt({ name: 'AES-GCM', iv: bytes(fromB64u(r.iv)), additionalData: utf8(info) }, await aes(key, 'decrypt'), bytes(fromB64u(r.ct)));
     const x = JSON.parse(td.decode(plain)) as LoginInner, text = (v: unknown) => v === undefined || (typeof v === 'string' && v.length <= 200);
-    return typeof x?.name === 'string' && x.name.length <= 200 && DEVICE_KINDS.includes(x.kind) && text(x.password) && text(x.code) && text(x.ticket) && text(x.replace) ? { inner: x, key } : null;
+    return typeof x?.name === 'string' && x.name.length <= 200 && DEVICE_KINDS.includes(x.kind) && text(x.password) && text(x.code) && text(x.ticket) && text(x.replace) && text(x.device) ? { inner: x, key } : null;
   } catch { return null; }
 }
 const answerInfo = (nonce: string) => `giris-cevap|${nonce}`;

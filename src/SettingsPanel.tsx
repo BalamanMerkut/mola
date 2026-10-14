@@ -33,7 +33,7 @@ const WIDE_PARTS = new Set<SettingsPart>(['package', 'tableSetup', 'printers', '
  * İşletme → Görünüm (the business profile), Sosyal medya (src/SocialSettings.tsx), Paket ve lisans (src/PackageCard.tsx,
  * src/LicenseCard.tsx). Masalar ve QR → Masalar ve QR (tables with Masa ekle / çıkar, cleaning, the QR address and
  * Wi-Fi/internet state, renewing one code), QR kodlarını yazdır (A4 and A6), Engellenen telefonlar. Sipariş ve mutfak →
- * Sipariş ve onay, Mutfak (Ekran / Fiş), Paket platformları. Cihazlar → Yazıcılar, Sesler, Cihaz bağla. Güvenlik ve yedek →
+ * Sipariş ve onay, Mutfak (Ekran / Fiş), Paket platformları. Cihazlar → Yazıcılar, Sesler, Kafe içi cihazlar. Güvenlik ve yedek →
  * Yedek, Kilit ve güncelleme (also the report code's reset). Uzaktan erişim (the owner only, one page, 0.1.22: phone code,
  * e-mail, the Raporlarım address to sign in with, uzaktan yönetim, the paired devices; src/RemoteAccess.tsx) took Güvenlik ve
  * yedek → Telefonum's place. A topic with one part shows no second row.
@@ -62,10 +62,10 @@ export const settingsTopics: TopicInfo[] = [
     { id: 'kitchen', title: 'Mutfak', line: 'Mutfak nasıl çalışıyor: ekran ya da fiş', icon: ChefHat },
     { id: 'integrations', title: 'Paket platformları', line: 'Yemeksepeti, Getir gibi dış sipariş platformları', icon: Plug },
   ] },
-  { id: 'devices', title: 'Cihazlar', line: 'Fiş yazıcıları, bildirim sesleri, cihaz bağlama', icon: TabletSmartphone, parts: [
+  { id: 'devices', title: 'Cihazlar', line: 'Fiş yazıcıları, bildirim sesleri, kafe içi cihazlar', icon: TabletSmartphone, parts: [
     { id: 'printers', title: 'Yazıcılar', line: 'Mutfak ve kasa fiş yazıcıları', icon: Printer },
     { id: 'sounds', title: 'Sesler', line: 'Her bildirimin sesi ve bu cihazın ses düzeyi', icon: Volume2 },
-    { id: 'devices', title: 'Cihaz bağla', line: 'Personel tabletleri, laptop ve telefonlar, bağlantı kontrolü, fotoğraf alanı', icon: TabletSmartphone },
+    { id: 'devices', title: 'Kafe içi cihazlar', line: 'Personel tabletleri, laptop ve telefonlar, bağlantı kontrolü, fotoğraf alanı', icon: TabletSmartphone },
   ] },
   { id: 'security', title: 'Güvenlik ve yedek', line: 'Yedek, kilit, telefon kodu ve güncelleme', icon: ShieldCheck, parts: [
     { id: 'backup', title: 'Yedek', line: 'Yedek durumu, şimdi yedekle, ikinci yer ve kurtarma kodu', icon: DatabaseBackup },
@@ -91,7 +91,7 @@ const OLD_TOPICS: Record<string, [SettingsTopic, SettingsPart?]> = {
 };
 /**
  * The part an earlier topic remembered (the six topics of 8 Ekim kept a part per topic): "Yazıcı ve ses → Sesler" lands on
- * Cihazlar → Sesler, "Güvenlik ve diğer → Cihazlar" on Cihazlar → Cihaz bağla (10 Ekim son kullanıcı testi: both
+ * Cihazlar → Sesler, "Güvenlik ve diğer → Cihazlar" on Cihazlar → Kafe içi cihazlar (10 Ekim son kullanıcı testi: both
  * opened the topic's first part).
  */
 const OLD_PARTS: Record<string, Record<string, [SettingsTopic, SettingsPart]>> = {

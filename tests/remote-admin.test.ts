@@ -32,17 +32,20 @@ async function setup(name: string) {
   const owner = pair.kafe(); assert.equal((await owner('/login', { username: 'isletme', password: DEMO_PASSWORD })).status, 200);
   const tenant = pair.store.findUser('isletme')!.tenantId;
   const hub = pair.merkezApp.locals.relayHub as RelayHub, admin = pair.kafeApp.locals.remoteAdmin as RemoteAdmin;
-  // A device signs in to Raporlarım the usual way (0.1.22: e-mail, password and phone code on the device). The code goes off
-  // again right after: the device keeps working, and the tests below turn the code on when they need it.
+  // A device signs in the usual way (0.1.23: the e-mail and the password, then the phone code). The code goes off again
+  // right after: the device keeps working, and the tests below turn the code on when they need it.
   const mfa = (on: boolean) => pair.store.mutate(tenant, s => { const u = s.staffUsers!.find(u => u.username === 'isletme')!; if (on) u.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; else delete u.mfa; });
   mfa(true);
   await remoteLoginReady(pair, tenant);
   // The heartbeats above say counts ("products": 12) and are no part of this: the wire is checked from the sign-in on.
   wire.length = 0;
   const merkez = phonePost(pair.merkezBase, wire), keys = await newPhoneKeys();
-  const paired = await deviceLogin(merkez, keys, OWNER_EMAIL, { password: DEMO_PASSWORD, code: totp(SECRET, time), name: 'Ahmet’in telefonu', kind: 'phone' }, { at: time });
+  const step1 = await deviceLogin(merkez, keys, OWNER_EMAIL, { password: DEMO_PASSWORD, name: 'Ahmet’in telefonu', kind: 'phone' }, { at: time });
+  assert.equal(step1.kind, 'code', JSON.stringify(step1));
+  const { ticket, cafePublic: first } = step1 as Extract<typeof step1, { kind: 'code' }>;
+  const paired = await deviceLogin(merkez, keys, OWNER_EMAIL, { ticket, code: totp(SECRET, time), name: 'Ahmet’in telefonu', kind: 'phone' }, { at: time, cafePublic: first });
   assert.equal(paired.kind, 'paired', JSON.stringify(paired));
-  const { phoneId, token, cafePublic } = paired as Extract<typeof paired, { kind: 'paired' }>, link = { cafePublic };
+  const { phoneId, token, cafePublic, grant } = paired as Extract<typeof paired, { kind: 'paired' }>, link = { cafePublic };
   mfa(false);
   /** The owner's code on: the TOTP secret, as "Telefon kodunu kur" would leave it. */
   const codeOn = () => pair.store.mutate(tenant, s => { s.staffUsers!.find(u => u.username === 'isletme')!.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; });
@@ -55,8 +58,8 @@ async function setup(name: string) {
     const raw = (request: unknown) => merkez('admin', { phoneId, token, request });
     return {
       raw, get sid() { return s?.sid; },
-      async open(password: string, c: string) {
-        const o = await adminOpen(keys.privateKey, link.cafePublic, phoneId, { password, code: c }, time);
+      async open(password: string, c: string, grant?: string) {
+        const o = await adminOpen(keys.privateKey, link.cafePublic, phoneId, { password, code: c, ...(grant ? { grant } : {}) }, time);
         const r = await raw(o.request);
         if (r.status !== 200) return { ok: false as const, code: r.data.code as string, status: r.status, request: o.request };
         const answer = await readOpenAnswer(o.k1, o.request.nonce, r.data as { iv: string; ct: string });
@@ -80,8 +83,34 @@ async function setup(name: string) {
       async call(m: 'GET' | 'POST', p: string, body?: unknown) { return this.send(await this.seal(m, p, body)); },
     };
   };
-  return { pair, owner, tenant, hub, admin, wire, phoneId, token, keys, link, codeOn, code, device, clock, merkez };
+  return { pair, owner, tenant, hub, admin, wire, phoneId, token, keys, link, codeOn, code, device, clock, merkez, grant };
 }
+
+test('right after the sign-in its one-time grant opens "Kafeyi yönet" without the password and the code; once, within 2 minutes', async t => {
+  const { pair, owner, codeOn, code, device, grant, clock } = await setup('remote-admin-grant');
+  t.after(() => pair.close());
+  assert.match(grant ?? '', /^[A-Za-z0-9_-]{22}$/);
+  codeOn(); assert.equal((await owner('/staff/remote-admin', { on: true, password: DEMO_PASSWORD, code: code() })).status, 200);
+  // A made-up grant is a wrong answer (counted like a wrong password).
+  const made = await device().open('', '', 'x'.repeat(22));
+  assert.equal(made.ok, false); assert.equal(made.code, 'GRANT_EXPIRED');
+  const d = device(), opened = await d.open('', '', grant);
+  assert.equal(opened.ok, true, JSON.stringify(opened));
+  assert.equal((await d.call('GET', '/api/staff/me')).data.role, 'owner');
+  // Once only.
+  assert.equal((await device().open('', '', grant)).code, 'GRANT_EXPIRED');
+  void clock;
+});
+
+test('a grant older than 2 minutes asks the password and the code', async t => {
+  const { pair, owner, codeOn, code, device, grant, clock } = await setup('remote-admin-grant-late');
+  t.after(() => pair.close());
+  codeOn(); assert.equal((await owner('/staff/remote-admin', { on: true, password: DEMO_PASSWORD, code: code() })).status, 200);
+  clock.add(2 * 60_000);
+  const late = await device().open('', '', grant);
+  assert.equal(late.ok, false); assert.equal(late.code, 'GRANT_EXPIRED'); assert.equal(late.message, 'Giriş süresi doldu. Şifrenizi ve telefon kodunu yazın.');
+  assert.equal((await device().open(DEMO_PASSWORD, code())).ok, true);
+});
 
 test('off by default; turning it on needs the phone code, the password and the code, and only at the café', async t => {
   const { pair, owner, codeOn, code, device } = await setup('remote-admin-switch');

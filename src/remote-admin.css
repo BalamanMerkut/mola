@@ -1,23 +1,20 @@
-/* "Kafeyi yönet" (src/RemoteAdmin.tsx, src/RemoteAdminSettings.tsx): sign-in page on Mola Merkez and the settings card. */
-.remote-page{min-height:100vh;display:flex;flex-direction:column;background:#f4f1ea;color:#1d2b25;font-family:inherit}
-.remote-head{display:flex;align-items:center;gap:12px;padding:16px;background:#234c3e;color:#fff}
-.remote-head div{display:flex;flex-direction:column}.remote-head span{font-size:14px;opacity:.85}
-.remote-logo{width:36px;height:36px;border-radius:10px;background:var(--paper,#fff);color:#234c3e;display:grid;place-items:center;font-weight:800}
-.remote-page main{flex:1;width:100%;max-width:460px;margin:0 auto;padding:16px;box-sizing:border-box}
-.remote-card{background:var(--paper,#fff);border:1px solid #e2ddd2;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
-.remote-card h1{font-size:20px;margin:0}.remote-card p{margin:0;line-height:1.45}
-.remote-login label{font-weight:600;font-size:14px;margin-top:4px}
-.remote-login input{font:inherit;font-size:16px;min-height:48px;padding:0 12px;border:1px solid #cfc8ba;border-radius:12px;box-sizing:border-box;width:100%}
-.remote-btn{font:inherit;font-weight:700;font-size:16px;min-height:50px;border:0;border-radius:12px;background:#234c3e;color:#fff;margin-top:6px}
-.remote-btn:disabled{opacity:.6}
-.remote-error{color:#9b2c1f;font-weight:600}
-.remote-note{background:#fff6dc;border-radius:10px;padding:10px 12px}
-.remote-muted{color:#5f6b65;font-size:14px}
-.remote-link{color:#234c3e;font-weight:600;font-size:14px}
-.remote-foot{padding:16px;text-align:center;font-size:13px;color:#5f6b65}
-.remote-pill{position:fixed;top:4px;left:50%;transform:translateX(-50%);z-index:60;pointer-events:none;font-size:11px;font-weight:700;letter-spacing:.02em;padding:2px 10px;border-radius:999px;background:rgba(35,76,62,.9);color:#fff}
+/* "Kafeyi yönet" (src/RemoteAdmin.tsx: the bar over the café's screens on /yonet) and its settings card (src/RemoteAdminSettings.tsx). */
+.remote-bar{position:fixed;top:0;left:0;right:0;z-index:20;height:44px;display:flex;align-items:center;gap:8px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));background:var(--rail,#1f3b31);color:#fff;font:14px/1.2 Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;box-shadow:0 4px 14px -10px #0008}
+.remote-bar-mark{width:26px;height:26px;border-radius:8px;background:#ffffff26;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0}
+.remote-bar-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.remote-bar-tag{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:#ffffff26;flex-shrink:0}
+.remote-bar-state{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.85;white-space:nowrap}
+.remote-bar-dot{width:8px;height:8px;border-radius:50%;background:#6fd39d;box-shadow:0 0 0 3px #6fd39d33}
+.remote-bar-gap{flex:1}
+.remote-bar-btn{font:inherit;font-size:13px;font-weight:600;min-height:32px;padding:0 12px;border-radius:9px;border:1px solid #ffffff40;background:transparent;color:#fff;cursor:pointer;flex-shrink:0}
+.remote-bar-btn:disabled{opacity:.6}
+@media(max-width:520px){.remote-bar-state{display:none}.remote-bar{gap:6px}.remote-bar-btn{padding:0 10px}}
+/* The café's own layout moves down by the bar (its sidebar is fixed to the top, on phones sticky). */
+html.remote-on body{padding-top:44px}
+html.remote-on .sidebar{top:44px}
+html.remote-on .workspace{min-height:calc(100vh - 44px)}
+/* Settings card. */
 .remote-admin-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .remote-admin-list li{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--line,#e2ddd2);border-radius:10px}
 .remote-admin-list li span{font-size:13px;color:var(--muted,#5f6b65)}
 .remote-admin-form{display:flex;flex-direction:column;gap:8px;max-width:360px}
-@media (prefers-color-scheme: dark){.remote-page{background:#14201b;color:#e8efe9}.remote-card{background:#1c2a24;border-color:#2c3d35}.remote-login input{background:#14201b;color:#e8efe9;border-color:#3a4c43}.remote-link{color:#9fd3bd}.remote-muted,.remote-foot{color:#a9b8b0}}

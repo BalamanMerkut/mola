@@ -96,7 +96,7 @@ test('web app manifests, iOS tags and icons: Mola, standalone, staff entry, 16/3
   // Every PNG the manifests and pages name is generated (scripts/mola-icons.mjs), with its real size.
   const html = readFileSync('index.html', 'utf8'), merkez = readFileSync('merkez.html', 'utf8');
   const named = [...icons, ...yonetimIcons].filter(i => i.type === 'image/png').map(i => i.src);
-  for (const page of [html, merkez, readFileSync('raporlarim.html', 'utf8')]) named.push(...[...page.matchAll(/href="(\/[^"]+\.png)"/g)].map(m => m[1]));
+  for (const page of [html, merkez]) named.push(...[...page.matchAll(/href="(\/[^"]+\.png)"/g)].map(m => m[1]));
   for (const src of named) assert.ok(Object.hasOwn(WEB_ICONS, src.slice(1)), `${src} is generated`);
   for (const [name, [, size]] of Object.entries(WEB_ICONS)) {
     const meta = await sharp(await webIcon(name)!).metadata();

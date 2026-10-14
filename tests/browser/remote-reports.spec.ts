@@ -1,46 +1,47 @@
-import { test, expect, devices } from '@playwright/test';
-import { codesOf, ensureSetup, MERKEZ, merkezMail, openSettings, OWNER_EMAIL, raporlarimLogin, remoteLoginOpen } from './helpers';
+import { test, expect, devices, type Page } from '@playwright/test';
+import { codesOf, ensureSetup, MERKEZ, merkezMail, openSettings, OWNER_EMAIL, raporlarimCode, raporlarimPassword, remoteLoginOpen } from './helpers';
 
 /*
- * Raporlarım (0.1.22, src/ReportsPhone.tsx, server/remote-reports.ts): one website sign-in. The café computer's Ayarlar →
- * Uzaktan erişim (src/RemoteAccess.tsx) has five short steps: the phone code and the e-mail set up on screen, then the
- * Raporlarım address. A device that is not signed in opens that address and sees "Giriş yap" (e-mail, password, phone code,
- * its name): the laptop is told to wait for the phone, the phone goes in and shows the live report (decrypted on the phone),
- * then the laptop. The last encrypted snapshot while the café computer is off ("Kafe bilgisayarı kapalı · Son durum …"),
- * still signed in after a reload, "Çıkış" on the laptop, and the owner's "Kaldır" sends the phone back to the sign-in.
+ * Kafemi yönet (0.1.23, /yonet on Mola Merkez; src/ReportsPhone.tsx, server/remote-reports.ts): one website sign-in. The café
+ * computer's Ayarlar → Uzaktan erişim (src/RemoteAccess.tsx) has exactly five plain cards: the phone code and the e-mail set up
+ * on screen, then the address. A device that is not signed in opens that address (typed with Turkish letters too) and sees
+ * "Giriş yap": the e-mail and the password ("Devam", checked by the café computer at once), then the phone code. Any device
+ * may be first (no phone-first rule); it names itself ("Windows laptop · 15 Ekim"). Then the live report; the café computer
+ * off (the köprü stopped, POST /api/test/relay) shows the last encrypted report with "Kasa bilgisayarı kapalı · Son durum …",
+ * also after a reload; back on, live again. "Çıkış" on the laptop, the owner's "Kaldır" sends the phone back to the sign-in.
  */
 const PASSWORD = 'MolaDemo!2026';
+const today = () => new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long' });
+const wide = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 
-test('Uzaktan erişim → five steps; Raporlarım sign-in: phone first, live report, offline snapshot, "Çıkış", removal', async ({ browser }, info) => {
-  test.setTimeout(300_000);
+test('Uzaktan erişim → five plain cards; Kafemi yönet: any device first, two-step sign-in, live report, café off → last report, "Çıkış", removal', async ({ browser }, info) => {
+  test.setTimeout(360_000);
   const cafe = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const phoneContext = await browser.newContext({ ...devices['iPhone 13'] });
   const laptopContext = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const mail = await merkezMail();
   let recovery = '';
+  const relay = (on: boolean) => cafe.request.post('/api/test/relay', { data: { on } });
   try {
     expect((await cafe.request.post('/api/login', { data: { username: 'isletme', password: PASSWORD } })).ok()).toBe(true);
     await ensureSetup(cafe.request);
     const state = await (await cafe.request.get('/api/staff/state')).json();
+    // Right after the servers start the café has not heard Merkez's `accepts` yet (its first heartbeat brings them).
+    await expect.poll(async () => (await (await cafe.request.get('/api/staff/owner-email')).json() as { available?: boolean }).available, { timeout: 30_000 }).toBe(true);
     const owner = await cafe.newPage(); await owner.goto('/');
     await openSettings(owner, 'Uzaktan erişim');
-    const page = owner.locator('.remote-access'), step = (name: string) => page.locator('section.settings-card', { has: owner.getByRole('heading', { name }) });
-    const step1 = step('1 · Telefon kodu'), step2 = step('2 · E-posta'), step3 = step('3 · Cihazlarınızı bağlayın'), devicesCard = step('5 · Eşleşmiş cihazlar');
-    await expect(step('4 · Uzaktan yönetim')).toBeVisible();
-    // Nothing to pair here any more: no question, no QR of a pairing, no shortcut.
-    await expect(owner.getByText('Bu ekranı şu an telefonunuzdan mı açtınız?')).toHaveCount(0);
+    const page = owner.locator('.remote-access'), card = (name: string) => page.locator('section.settings-card', { has: owner.getByRole('heading', { name }) });
+    // Exactly five numbered cards, in this order, nothing else on the page.
+    await expect(page.locator('section.settings-card h3')).toHaveText(['1 · Telefon kodu', '2 · E-posta', '3 · Cihaz eşleştirme', '4 · Eşleşmiş cihazlar', '5 · Uzaktan yönetim']);
+    const step1 = card('1 · Telefon kodu'), step2 = card('2 · E-posta'), step3 = card('3 · Cihaz eşleştirme'), devicesCard = card('4 · Eşleşmiş cihazlar');
+    await expect(page.locator(':scope > .notice')).toHaveCount(0);
+    await expect(page).not.toContainText('Önce telefon');
+    // Nothing to pair here: no question, no pairing QR, no shortcut; card 3 waits for 1 and 2.
     await expect(owner.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' })).toHaveCount(0);
     await expect(owner.getByRole('link', { name: 'Bu cihaza kısayol ekle' })).toHaveCount(0);
-    await expect(devicesCard).toContainText('Henüz eşleşmiş cihaz yok.');
-    // 3: the plain address in big letters, Kopyala, its small QR; until 1 and 2 are done it says so.
-    const address = `${MERKEZ}/raporlarim`;
-    await expect(step3.locator('.remote-address-text')).toHaveText(address.replace(/^https?:\/\//, ''));
-    await expect(step3).toContainText('Telefonunuzda ve laptopunuzda bu adresi açın, e-posta, şifre ve telefon kodunuzla giriş yapın.');
-    await expect(step3.getByRole('img', { name: 'Raporlarım adresinin QR kodu' })).toBeVisible();
-    await expect(step3).toContainText('Telefon kodu ve e-posta (1 ve 2) tamamlanınca giriş açılır.');
-    await step3.getByRole('button', { name: 'Kopyala' }).click();
-    await expect(step3.getByRole('button', { name: /Kopyalandı|Kopyala/ })).toBeVisible();
-    // 1: the phone code: the password, the authenticator's QR, its code; the recovery codes once.
+    await expect(step3).toContainText('Önce 1 ve 2\'yi tamamlayın.');
+    await expect(devicesCard).toContainText('Henüz cihaz yok.');
+    // 1: the phone code: the password, the authenticator's QR, its code; the recovery codes once; then one line.
     await step1.getByLabel('Şifreniz').fill(PASSWORD);
     await step1.getByRole('button', { name: 'Telefon kodunu kur' }).click();
     await expect(step1.getByRole('img', { name: 'Doğrulama uygulaması kurulum QR kodu' })).toBeVisible();
@@ -50,7 +51,7 @@ test('Uzaktan erişim → five steps; Raporlarım sign-in: phone first, live rep
     await step1.getByRole('button', { name: 'Kodu onayla' }).click();
     recovery = (await step1.getByRole('textbox', { name: 'Kurtarma kodları' }).inputValue()).split('\n')[0];
     await step1.getByRole('button', { name: 'Kodları sakladım' }).click();
-    await expect(step1).toContainText('Telefon kodu kurulu.');
+    await expect(step1.getByRole('status')).toHaveText('Kurulu ✓');
     // 2: the e-mail, verified with the code sent to it (Mola Merkez keeps it).
     const email = step2.getByRole('form', { name: 'E-postanızı doğrulayın' });
     await email.getByLabel('E-posta').fill(OWNER_EMAIL);
@@ -59,88 +60,134 @@ test('Uzaktan erişim → five steps; Raporlarım sign-in: phone first, live rep
     const verify = step2.getByRole('form', { name: 'E-postayı doğrula' });
     await verify.getByLabel('E-postadaki kod').fill(await mail.lastCode(OWNER_EMAIL));
     await verify.getByRole('button', { name: 'Doğrula' }).click();
-    await expect(step2).toContainText('Giriş e-postanız: s');
-    await expect(step3).toContainText('Önce telefonunuzla girin; laptop ve tablet ondan sonra.');
+    await expect(step2.getByRole('status')).toHaveText(/^s\S*@ornekkafe\.com ✓$/);
+    // 3: the plain address in big letters, Kopyala, its small QR; nothing else.
+    const address = `${MERKEZ}/yonet`;
+    await expect(step3.locator('.remote-address-text')).toHaveText(address.replace(/^https?:\/\//, ''));
+    await expect(step3.getByRole('img', { name: 'Kafemi yönet adresinin QR kodu' })).toBeVisible();
+    await step3.getByRole('button', { name: 'Kopyala' }).click();
     await owner.screenshot({ path: info.outputPath('sahip-uzaktan-erisim.png'), fullPage: true });
     await remoteLoginOpen();
 
-    // The laptop, not signed in: an old pairing link (#e=…) lands on the sign-in, out of the address bar.
+    // The laptop first (0.1.23: no phone-first rule), the old address typed with a Turkish letter: Kafemi yönet's sign-in.
     const laptop = await laptopContext.newPage();
-    await laptop.goto(`${address}#e=${'A'.repeat(22)}.${'B'.repeat(43)}.${'C'.repeat(43)}.0`);
-    const laptopForm = laptop.getByRole('form', { name: 'Giriş yap' });
-    await expect(laptopForm).toBeVisible();
-    expect(new URL(laptop.url()).hash).toBe('');
-    await expect(laptopForm.getByLabel('Bu cihazın adı')).toHaveValue('Laptop');
-    // A wrong code: the same words as a wrong password. Then the right one: the phone first.
-    await raporlarimLogin(laptop, { code: '000000' });
-    await expect(laptopForm.getByRole('alert')).toHaveText('E-posta, şifre ya da kod hatalı.');
-    await raporlarimLogin(laptop, { code: await code() });
-    await expect(laptopForm.getByRole('alert')).toContainText('Önce telefonunuzdan giriş yapın.');
-    await laptop.screenshot({ path: info.outputPath('laptop-once-telefon.png'), fullPage: true });
+    await laptop.goto(`${MERKEZ}/raporlarım#e=${'A'.repeat(22)}`);
+    await expect(laptop).toHaveURL(`${MERKEZ}/yonet`);
+    await expect(laptop).toHaveTitle('Kafemi yönet · Mola');
+    const loginForm = laptop.getByRole('form', { name: 'Giriş yap' });
+    await expect(loginForm).toBeVisible();
+    await expect(loginForm.getByLabel('Bu cihazın adı')).toHaveCount(0);
+    await expect(loginForm.getByLabel('Telefon kodu')).toHaveCount(0);
+    await laptop.screenshot({ path: info.outputPath('laptop-1-giris.png'), fullPage: true });
+    // A wrong password is said on the first screen.
+    await raporlarimPassword(laptop, { password: 'yanlis-sifre' });
+    await expect(loginForm.getByRole('alert')).toHaveText('E-posta ya da şifre hatalı.');
+    // The right one: the code screen (numeric keyboard, focused); a wrong code stays there with its own words.
+    await raporlarimPassword(laptop);
+    const codeForm = laptop.getByRole('form', { name: 'Telefon kodu' });
+    await expect(codeForm.getByLabel('Telefon kodu')).toBeFocused();
+    await expect(codeForm.getByLabel('Telefon kodu')).toHaveAttribute('inputmode', 'numeric');
+    await expect(codeForm.getByLabel('Telefon kodu')).toHaveAttribute('autocomplete', 'one-time-code');
+    await laptop.screenshot({ path: info.outputPath('laptop-2-kod.png'), fullPage: true });
+    await raporlarimCode(laptop, '000000');
+    await expect(codeForm.getByRole('alert')).toHaveText('Telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.');
+    await raporlarimCode(laptop, code);
+    await expect(laptop.getByRole('status').filter({ hasText: 'Giriş yapıldı ✓' })).toHaveText(`Giriş yapıldı ✓ · ${state.name}`);
+    await expect(laptop.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
+    await expect(laptop.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Bugün ·');
+    // Uzaktan yönetim is in the demo package but off: a quiet line says where it is turned on, no button.
+    await expect(laptop.getByText('Kafeyi yönet kapalı · kasada Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açılır.')).toBeVisible();
+    await expect(laptop.getByRole('button', { name: /^Kafeyi yönet/ })).toHaveCount(0);
+    expect(await wide(laptop)).toBe(true);
+    await laptop.screenshot({ path: info.outputPath('laptop-3-rapor.png'), fullPage: true });
+    // The café computer lists it, named by itself, as a computer; the owner was told.
+    const list = devicesCard.getByRole('list', { name: 'Eşleşmiş cihazlar' });
+    await expect(list).toContainText(`Windows laptop · ${today()}`, { timeout: 15_000 });
+    await expect(list).toContainText('Bilgisayar ·');
+    const notes = await (await cafe.request.get('/api/staff/notifications')).json() as { items: { title: string; text: string }[] };
+    expect(notes.items.some(n => n.title === 'Yeni cihaz bağlandı' && n.text.startsWith(`Yeni cihaz bağlandı: Windows laptop · ${today()}.`))).toBe(true);
 
-    // The phone signs in: "Giriş yapıldı ✓ · <işletme>", then the live report.
+    // The phone goes in too.
     const phone = await phoneContext.newPage();
     await phone.goto(address);
-    await expect(phone.getByRole('form', { name: 'Giriş yap' }).getByLabel('Bu cihazın adı')).toHaveValue('iPhone');
-    expect(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await phone.screenshot({ path: info.outputPath('telefon-giris.png'), fullPage: true });
-    await raporlarimLogin(phone, { code: await code(), name: 'Ahmet’in telefonu' });
-    await expect(phone.getByRole('status').filter({ hasText: 'Giriş yapıldı ✓' })).toHaveText(`Giriş yapıldı ✓ · ${state.name}`);
+    await expect(phone.getByRole('form', { name: 'Giriş yap' })).toBeVisible();
+    expect(await wide(phone)).toBe(true);
+    await phone.screenshot({ path: info.outputPath('telefon-1-giris.png'), fullPage: true });
+    await raporlarimPassword(phone);
+    await expect(phone.getByRole('form', { name: 'Telefon kodu' })).toBeVisible();
+    await phone.screenshot({ path: info.outputPath('telefon-2-kod.png'), fullPage: true });
+    await raporlarimCode(phone, code);
     await expect(phone.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
-    await expect(phone.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Bugün ·');
-    await expect(phone.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Nakit');
     await expect(phone.getByRole('region', { name: 'Son 30 gün' })).toBeVisible();
-    // Uzaktan yönetim is in the demo package: "Kafeyi yönet" says what it opens.
-    await expect(phone.getByRole('link', { name: 'Kafeyi yönet · Satış ve Raporlar, menü, ayarlar' })).toHaveAttribute('href', '/yonet');
-    expect(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await phone.screenshot({ path: info.outputPath('telefon-raporlarim.png'), fullPage: true });
-    // The café computer lists it, as a phone, and the owner was told.
-    const list = devicesCard.getByRole('list', { name: 'Eşleşmiş cihazlar' });
-    await expect(list).toContainText('Ahmet’in telefonu', { timeout: 15_000 });
-    await expect(list).toContainText('Telefon ·');
+    expect(await wide(phone)).toBe(true);
+    await phone.screenshot({ path: info.outputPath('telefon-3-rapor.png'), fullPage: true });
+    // Dark like the device (prefers-color-scheme).
+    await phone.emulateMedia({ colorScheme: 'dark' });
+    await phone.screenshot({ path: info.outputPath('telefon-3-rapor-koyu.png'), fullPage: true });
+    await phone.emulateMedia({ colorScheme: 'light' });
+    await expect(list).toContainText(`iPhone · ${today()}`, { timeout: 15_000 });
     await expect(list).toContainText(/Son rapor: \d/, { timeout: 15_000 });
-    const notes = await (await cafe.request.get('/api/staff/notifications')).json() as { items: { title: string; text: string }[] };
-    expect(notes.items.some(n => n.title === 'Yeni cihaz bağlandı' && n.text.startsWith('Yeni cihaz bağlandı: Ahmet’in telefonu.'))).toBe(true);
 
-    // Now the laptop goes in.
-    await raporlarimLogin(laptop, { code: await code(), name: 'Ev laptopu' });
-    await expect(laptop.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
-    await expect(list).toContainText('Ev laptopu', { timeout: 15_000 });
-    await expect(list.getByRole('listitem').filter({ hasText: 'Ev laptopu' })).toContainText('Bilgisayar ·');
-
-    // The café computer is off (Merkez answers "offline"): the phone opens the encrypted snapshot left at Mola Merkez.
-    await phone.route('**/api/merkez/v1/phone/live', route => route.fulfill({ json: { offline: true, seenAt: new Date().toISOString(), waiting: true } }));
-    let boxes = 0; phone.on('response', r => { if (r.url().endsWith('/phone/postbox') && r.status() === 200) boxes++; });
-    await phone.getByRole('button', { name: 'Yenile' }).click();
-    await expect(phone.getByText(/^Kafe bilgisayarı kapalı · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 15_000 });
-    expect(boxes).toBeGreaterThan(0);
-    // The last state, labelled so (never "Bugün" for a snapshot).
+    // The café computer off (its köprü stops; Merkez calls it off a few seconds later): the last report from the postbox,
+    // "Kasa bilgisayarı kapalı · Son durum", and "Kafeyi yönet: kasa açıkken".
+    let boxes = 0; phone.on('response', r => { if (r.url().endsWith('/phone/postbox') && r.status() === 200) void r.json().then((b: { box?: unknown }) => { if (b.box) boxes++; }).catch(() => {}); });
+    expect((await relay(false)).ok()).toBe(true);
+    const offLine = phone.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/);
+    await expect(async () => { await phone.getByRole('button', { name: 'Yenile' }).click(); await expect(offLine).toBeVisible({ timeout: 3000 }); }).toPass({ timeout: 60_000 });
     await expect(phone.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
-    await phone.screenshot({ path: info.outputPath('telefon-kafe-kapali.png'), fullPage: true });
-    // Opened again later: still signed in (IndexedDB), live again.
-    await phone.unroute('**/api/merkez/v1/phone/live');
-    await phone.goto(address);
-    await expect(phone.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
+    await expect(phone.getByText('Kafeyi yönet: kasa açıkken')).toBeVisible();
+    await expect.poll(() => boxes, { timeout: 10_000 }).toBeGreaterThan(0);
+    await phone.screenshot({ path: info.outputPath('telefon-4-kasa-kapali.png'), fullPage: true });
+    // Opened again later, still off: signed in, the full last report at once.
+    await phone.reload();
+    await expect(offLine).toBeVisible({ timeout: 30_000 });
+    await expect(phone.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
+    await expect(phone.getByRole('region', { name: 'Son 30 gün' })).toBeVisible();
     await expect(phone.getByText('Giriş yapıldı ✓')).toHaveCount(0);
+    // The laptop opened while the café is off: the same.
+    await laptop.reload();
+    await expect(laptop.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
+    await laptop.screenshot({ path: info.outputPath('laptop-4-kasa-kapali.png'), fullPage: true });
+    // Back on: live again.
+    expect((await relay(true)).ok()).toBe(true);
+    await expect(async () => { await phone.getByRole('button', { name: 'Yenile' }).click(); await expect(phone.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 3000 }); }).toPass({ timeout: 60_000 });
+    // Any other answer (a slow café computer, an error): never an empty card, the last report with a short reason.
+    await phone.route('**/api/merkez/v1/phone/live', route => route.fulfill({ status: 504, json: { code: 'CAFE_TIMEOUT', message: 'Kasa bilgisayarı yanıt vermedi.' } }));
+    await phone.getByRole('button', { name: 'Yenile' }).click();
+    await expect(phone.getByText(/^Kasa bilgisayarı yanıt vermedi · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 15_000 });
+    await expect(phone.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
+    await phone.unroute('**/api/merkez/v1/phone/live');
+    await phone.getByRole('button', { name: 'Yenile' }).click();
+    await expect(phone.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
 
     // "Çıkış" on the laptop (a shared laptop cleaned): the sign-in again, and the café drops it.
     await laptop.getByRole('button', { name: 'Çıkış', exact: true }).click();
+    await expect(laptop.getByRole('group', { name: 'Çıkış' })).toContainText('Bu cihaz unutulsun mu?');
+    await laptop.screenshot({ path: info.outputPath('laptop-5-cikis.png'), fullPage: true });
     await laptop.getByRole('group', { name: 'Çıkış' }).getByRole('button', { name: 'Evet, çıkış yap' }).click();
     await expect(laptop.getByRole('form', { name: 'Giriş yap' })).toBeVisible();
     await expect(laptop.getByRole('form', { name: 'Giriş yap' }).getByRole('status')).toHaveText('Çıkış yapıldı. Bu cihaz unutuldu.');
-    await expect(list.getByRole('listitem').filter({ hasText: 'Ev laptopu' })).toHaveCount(0, { timeout: 15_000 });
+    await expect(list.getByRole('listitem').filter({ hasText: 'Windows laptop' })).toHaveCount(0, { timeout: 15_000 });
 
     // The owner removes the phone on the café computer ("Kaldır" asks the password, not the code): back to the sign-in.
-    await devicesCard.getByRole('button', { name: 'Ahmet’in telefonu cihazını kaldır' }).click();
-    await devicesCard.getByRole('form', { name: 'Ahmet’in telefonu cihazını kaldır' }).getByLabel('Şifreniz').fill(PASSWORD);
+    await devicesCard.getByRole('button', { name: /^iPhone · .* cihazını kaldır$/ }).click();
+    await devicesCard.getByRole('form', { name: /cihazını kaldır$/ }).getByLabel('Şifreniz').fill(PASSWORD);
     await devicesCard.getByRole('button', { name: 'Evet, kaldır' }).click();
-    await expect(devicesCard.getByText('Henüz eşleşmiş cihaz yok.')).toBeVisible();
+    await expect(devicesCard.getByText('Henüz cihaz yok.')).toBeVisible();
     await expect(async () => {
       await phone.getByRole('button', { name: 'Yenile' }).click({ timeout: 2000 }).catch(() => {});
       await expect(phone.getByRole('form', { name: 'Giriş yap' })).toBeVisible({ timeout: 2000 });
     }).toPass({ timeout: 30_000 });
     await expect(phone.getByRole('form', { name: 'Giriş yap' }).getByRole('status')).toHaveText('Bu cihazın bağlantısı kaldırıldı. Yeniden giriş yapabilirsiniz.');
+
+    // An address nobody answers: the plain 404 page with the way to Kafemi yönet (no Mola Yönetim).
+    await phone.goto(`${MERKEZ}/raporlar-eski`);
+    await expect(phone.getByRole('heading', { name: 'Bu sayfa bulunamadı.' })).toBeVisible();
+    await phone.screenshot({ path: info.outputPath('telefon-404.png'), fullPage: true });
+    await phone.getByRole('link', { name: 'Kafemi yönet’e git' }).click();
+    await expect(phone).toHaveURL(`${MERKEZ}/yonet`);
   } finally {
+    await relay(true).catch(() => {});
     // The owner's phone code off again (with a recovery code), for the suites after this one.
     if (recovery) await cafe.request.post('/api/staff/report-security/recover', { data: { password: PASSWORD, recoveryCode: recovery } });
     await mail.close(); await laptopContext.close(); await phoneContext.close(); await cafe.close();

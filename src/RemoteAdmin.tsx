@@ -1,82 +1,31 @@
-import { lazy, useEffect, useId, useState, type FormEvent } from 'react';
+import { lazy, useEffect, useState } from 'react';
 import { DeferredPanel } from './DeferredPanel';
-import { readPaired, type Paired } from './phoneVault';
-import { openRemote, REMOTE_ENDED_EVENT, RemoteError, resumeRemote, type RemoteSession } from './remoteTransport';
+import { closeRemote, type RemoteSession } from './remoteTransport';
 import './remote-admin.css';
 
 /*
- * "Kafeyi yönet" on Mola Merkez's /yonet page (the owner's paired device; server/remote-admin.ts). The device's keys come
- * from Raporlarım's own safe (src/phoneVault.ts, same origin); a device that is not signed in there goes to Raporlarım's
- * sign-in (0.1.22). Every session here asks the owner's password and the 6-digit code;
- * then the café's usual screens (src/Workspace.tsx) run here with every request sealed through src/remoteTransport.ts.
- * When the session ends (Çıkış, "Bütün uzak oturumları kapat", 05:00, the device removed…) this page comes back with why.
+ * "Kafeyi yönet" inside Kafemi yönet (/yonet on Mola Merkez, src/ReportsPhone.tsx decides when): the café's usual screens
+ * (src/Workspace.tsx) run here with every request sealed through src/remoteTransport.ts. A slim bar over them says where
+ * they run: "<İşletme> · Uzaktan", the connection, "Raporlar" (the report view, the session stays) and "Çıkış" (ends this
+ * remote session; the device stays signed in). The bar's height is taken off the screens' own layout (remote-admin.css).
  */
 const Workspace = lazy(() => import('./Workspace').then(module => ({ default: module.Workspace })));
-type Phase = 'checking' | 'https' | 'unpaired' | 'revoked' | 'login' | 'in';
 
-export function RemoteShell() {
-  const [phase, setPhase] = useState<Phase>('checking'), [paired, setPaired] = useState<Paired | null>(null);
-  const [session, setSession] = useState<RemoteSession | null>(null), [notice, setNotice] = useState('');
+export function ManageFrame({ session, onReports }: { session: RemoteSession; onReports: () => void }) {
+  const [leaving, setLeaving] = useState(false);
   useEffect(() => {
-    document.title = 'Kafeyi yönet · Mola';
-    if (!window.isSecureContext || !globalThis.crypto?.subtle || !('indexedDB' in window)) { setPhase('https'); return; }
-    void (async () => {
-      let p: Paired | undefined; try { p = await readPaired(); } catch { p = undefined; }
-      // Not signed in on this device: Raporlarım's sign-in first (e-mail, password, phone code), then "Kafeyi yönet" there.
-      if (!p) { setPhase('unpaired'); location.replace('/raporlarim'); return; }
-      setPaired(p);
-      const s = await resumeRemote(p);
-      if (s) { setSession(s); setPhase('in'); } else setPhase('login');
-    })();
+    document.documentElement.classList.add('remote-on');
+    return () => document.documentElement.classList.remove('remote-on');
   }, []);
-  useEffect(() => {
-    const off = (e: Event) => { setSession(null); setNotice(String((e as CustomEvent).detail ?? 'Uzak oturum kapandı.')); setPhase(p => p === 'in' ? 'login' : p); };
-    window.addEventListener(REMOTE_ENDED_EVENT, off);
-    return () => window.removeEventListener(REMOTE_ENDED_EVENT, off);
-  }, []);
-  if (phase === 'in' && session) return <>
-    <div className="remote-pill" role="status" aria-label="Uzaktan yönetim">Uzaktan · uçtan uca şifreli</div>
+  return <>
+    <div className="remote-bar" role="region" aria-label="Uzaktan yönetim">
+      <span className="remote-bar-mark" aria-hidden="true">M</span>
+      <strong className="remote-bar-name">{session.business}</strong><span className="remote-bar-tag">Uzaktan</span>
+      <span className="remote-bar-state" role="status"><span className="remote-bar-dot" aria-hidden="true" />Bağlı · şifreli</span>
+      <span className="remote-bar-gap" />
+      <button type="button" className="remote-bar-btn" onClick={onReports}>Raporlar</button>
+      <button type="button" className="remote-bar-btn" disabled={leaving} onClick={() => { setLeaving(true); void closeRemote().finally(() => setLeaving(false)); }}>{leaving ? 'Çıkılıyor…' : 'Çıkış'}</button>
+    </div>
     <DeferredPanel><Workspace key={session.sid} /></DeferredPanel>
   </>;
-  return <div className="remote-page"><header className="remote-head"><span className="remote-logo" aria-hidden="true">M</span><div><strong>Kafeyi yönet</strong>{paired && <span>{paired.business}</span>}</div></header>
-    <main>
-      {phase === 'checking' && <p className="remote-muted" aria-busy="true">Açılıyor…</p>}
-      {phase === 'https' && <section className="remote-card" role="alert"><h1>Bu sayfa burada açılamıyor</h1><p>Kafeyi yönet yalnız güvenli bağlantıyla (https://) ve güncel bir tarayıcıda açılır.</p></section>}
-      {(phase === 'unpaired' || phase === 'revoked') && <section className="remote-card"><h1>{phase === 'revoked' ? 'Bu cihazın bağlantısı kaldırıldı' : 'Bu cihaz bağlı değil'}</h1>
-        <p>Kafeyi uzaktan yönetmek için önce Raporlarım’a e-posta, şifre ve telefon kodunuzla giriş yapın.</p>
-        <a className="remote-link" href="/raporlarim">Raporlarım’a giriş yap</a></section>}
-      {phase === 'login' && paired && <Login paired={paired} notice={notice} onIn={s => { setNotice(''); setSession(s); setPhase('in'); }} onRevoked={() => setPhase('revoked')} />}
-    </main>
-    <footer className="remote-foot">Bütün istekler bu cihazla kafe bilgisayarı arasında şifrelenir. Mola Merkez yalnız iletir, okuyamaz.</footer>
-  </div>;
-}
-
-function Login({ paired, notice, onIn, onRevoked }: { paired: Paired; notice: string; onIn: (s: RemoteSession) => void; onRevoked: () => void }) {
-  const id = useId();
-  const [password, setPassword] = useState(''), [code, setCode] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  async function submit(e: FormEvent) {
-    e.preventDefault(); setBusy(true); setError('');
-    const typed = password; setPassword('');
-    try { const s = await openRemote(paired, typed, code); setCode(''); onIn(s); }
-    catch (err) {
-      setCode('');
-      if (err instanceof RemoteError && ['PHONE_UNKNOWN', 'PHONE_REVOKED'].includes(err.code)) { onRevoked(); return; }
-      setError(err instanceof RemoteError ? err.message : 'Bağlantı kurulamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.');
-    } finally { setBusy(false); }
-  }
-  return <form className="remote-card remote-login" aria-label="Kafeyi yönet" onSubmit={e => void submit(e)}>
-    <h1>Kafeyi yönet</h1>
-    <p>Kafenin bütün ekranlarını bu cihazdan, işletme sahibi olarak açın. Her girişte şifreniz ve doğrulama uygulamanızdaki 6 haneli telefon kodu sorulur.</p>
-    {notice && <p className="remote-note" role="status">{notice}</p>}
-    {/* The last report from the café says it is off (0.1.21): where to turn it on, before a wasted try. */}
-    {!notice && paired.last?.report.admin === 'off' && <p className="remote-note" role="status">Uzaktan yönetim kapalı. Kafedeyken <strong>Ayarlar → Uzaktan erişim → Uzaktan yönetim</strong>’den açın.</p>}
-    <label htmlFor={`${id}-password`}>Şifreniz</label>
-    <input id={`${id}-password`} type="password" value={password} maxLength={200} required autoComplete="current-password" disabled={busy} onChange={e => setPassword(e.target.value)} />
-    <label htmlFor={`${id}-code`}>Telefon kodu</label>
-    <input id={`${id}-code`} value={code} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required placeholder="6 haneli kod" disabled={busy} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
-    {error && <p className="remote-error" role="alert">{error}</p>}
-    <button type="submit" className="remote-btn" disabled={busy || !password || code.length !== 6}>{busy ? 'Bağlanılıyor…' : 'Giriş yap'}</button>
-    <p className="remote-muted">Uzaktan yönetim kafede Ayarlar → Uzaktan erişim → <strong>Uzaktan yönetim</strong>’den açılır. Yedekten geri yükleme, kurtarma kodu ve cihaz kaldırma yalnız kafede yapılır.</p>
-    <a className="remote-link" href="/raporlarim">Raporlarım’a dön</a>
-  </form>;
 }

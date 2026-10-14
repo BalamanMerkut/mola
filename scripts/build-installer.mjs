@@ -305,7 +305,7 @@ if (chosen.includes('windows')) {
   // ayarlar.cmd next to it (the owner's, kept by updates and normal removal) may set PORT (Mola.exe reads it too) or
   // MOLA_LAN=0 (this computer only). The server runs under the watchdog (nobetci.mjs): it comes back after a crash; "Kapat"
   // and Mola-Durdur.cmd stop it for good. MOLA_MODE=installed: the packaged app, not a local test (no test badges).
-  // MOLA_FIREWALL_HELPER: Cihaz bağla > "İzni düzelt" runs Mola.exe --guvenlik-duvari (server/desktop.ts).
+  // MOLA_FIREWALL_HELPER: Kafe içi cihazlar > "İzni düzelt" runs Mola.exe --guvenlik-duvari (server/desktop.ts).
   // The text lives in scripts/desktop/mola-sunucu-cmd.mjs (the update tests start the same launcher).
   writeFileSync(join(prog, 'Mola-Sunucu.cmd'), molaSunucuCmd({ merkezUrl: MERKEZ_URL, merkezLan: MERKEZ_LAN }));
   writeFileSync(join(prog, 'Mola-Durdur.cmd'), stopCmd('Mola durduruldu.'));
@@ -353,7 +353,7 @@ KURULUM: Mola Kurulum.exe'ye çift tıklayın.
 1. Bu klasörün tamamını flash bellekten kafenin bilgisayarına kopyalayın (ya da doğrudan flash bellekten çalıştırın).
 2. "Mola Kurulum.exe"ye çift tıklayın, "Kur" düğmesine basın. İnternet gerekmez.
    Windows bir kez "değişiklik yapılsın mı?" diye sorar: yalnız tabletlerin bağlanabilmesi için (güvenlik duvarı,
-   yalnız yerel ağ). "Evet" deyin; "Hayır" derseniz kurulum yine biter, izni sonra Cihaz bağla > "İzni düzelt" ile verebilirsiniz.
+   yalnız yerel ağ). "Evet" deyin; "Hayır" derseniz kurulum yine biter, izni sonra Kafe içi cihazlar > "İzni düzelt" ile verebilirsiniz.
    Program %LOCALAPPDATA%\\Mola klasörüne kurulur ("Değiştir" ile başka bir klasör seçilebilir).
    Masaüstüne ve Başlat menüsüne "Mola" simgesi eklenir.
    Bilgisayar açıldığında Mola arka planda kendiliğinden başlar; tabletler hemen bağlanabilir.
@@ -362,8 +362,8 @@ KURULUM: Mola Kurulum.exe'ye çift tıklayın.
 3. Kurulum bitince "Mola'yı aç"a basın; sonra hep masaüstündeki Mola simgesini kullanın.
    Mola kendi penceresinde açılır. İlk açılışta "Mola'yı etkinleştir" çıkar: "Hesap açma başvurusu" (onaylanınca 30 günlük deneme başlar) ya da size verilen
    etkinleştirme kodunu girin. Ardından işletme sahibi hesabını oluşturun ve kurulum sihirbazını tamamlayın.
-   Soldaki şeritte Panel, Yedekle, Cihaz bağla, Güvenlik ve Kapat bulunur. Kurtarma kodunu yazdırıp saklayın.
-4. Tabletler bağlanamazsa Mola penceresinde Cihaz bağla > "İzni düzelt"e basın (Windows yönetici onayı sorar).
+   Soldaki şeritte Panel, Yedekle, Kafe içi cihazlar, Güvenlik ve Kapat bulunur. Kurtarma kodunu yazdırıp saklayın.
+4. Tabletler bağlanamazsa Mola penceresinde Kafe içi cihazlar > "İzni düzelt"e basın (Windows yönetici onayı sorar).
    Mola açıkken simgeye yeniden tıklamak açık pencereyi öne getirir. Mola beklenmedik şekilde kapanırsa kendiliğinden
    yeniden açılır (logs\\sunucu.log).
 
@@ -427,7 +427,7 @@ KURULUM
    (ya da Sistem Ayarları > Gizlilik ve Güvenlik > "Yine de Aç")
 4. Mola kendi penceresinde açılır (Microsoft Edge, Google Chrome ya da Brave yüklüyse). Yalnız Safari varsa sekmede açılır.
    İlk açılışta "Mola'yı etkinleştir" çıkar: "Hesap açma başvurusu" gönderin (onaylanınca 30 günlük deneme başlar) ya da etkinleştirme kodunu girin.
-   Soldaki şeritte Panel, Yedekle, Cihaz bağla, Güvenlik ve Kapat bulunur.
+   Soldaki şeritte Panel, Yedekle, Kafe içi cihazlar, Güvenlik ve Kapat bulunur.
 5. Bilgisayar açılınca kendiliğinden başlasın: Sistem Ayarları > Genel > Giriş Öğeleri > + > Mola.
 6. Tabletler bağlanamazsa: Sistem Ayarları > Ağ > Güvenlik Duvarı'nda Mola'ya (node) gelen bağlantı izni verin.
 
@@ -497,9 +497,9 @@ if (chosen.includes('yonetim')) {
   await bundle('scripts/merkez-sifre-sifirla.ts', 'merkez-sifre-sifirla.mjs', { 'process.env.MOLA_RELEASE_BUILD': '"1"' });
   mkdirSync(join(prog, 'runtime'), { recursive: true });
   // The built screens: Merkez serves merkez.html for every page; index.html only inside a Mola destek session
-  // (/destek/<id>, server/merkez/relay.ts) and raporlarim.html on /raporlarim (the owner's phone).
+  // (/destek/<id>, server/merkez/relay.ts) and on /yonet ("Kafemi yönet", the owner's devices; 0.1.23, once raporlarim.html).
   for (const name of readdirSync('dist')) copyTree(join('dist', name), join(app, 'dist', name));
-  if (!existsSync(join(app, 'dist', 'raporlarim.html'))) throw new Error('dist/raporlarim.html yok: önce npm run build.');
+  if (!existsSync(join(app, 'dist', 'index.html'))) throw new Error('dist/index.html yok: önce npm run build.');
   if (!existsSync(join(app, 'dist', 'merkez.html'))) throw new Error('dist/merkez.html yok: önce npm run build.');
   copyFileSync(join(stage, 'merkez.mjs'), join(app, 'merkez.mjs'));
   copyFileSync(join(stage, 'merkez-sifre-sifirla.mjs'), join(app, 'merkez-sifre-sifirla.mjs'));

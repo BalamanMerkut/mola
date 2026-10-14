@@ -15,7 +15,7 @@ async function shot(page: Page, file: string, path: string, fullPage = false) {
 }
 const login = async (page: Page) => { await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } }); await ensureSetup(page.request); };
 const fits = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
-const files: Record<SettingsPage, string> = { 'İşletme': 'isletme', 'Paket ve lisans': 'isletme-paket-lisans', 'Sosyal medya': 'sosyal-medya', 'Masalar ve QR': 'masalar-qr', 'QR kodlarını yazdır': 'qr-yazdir', 'Engellenen telefonlar': 'engellenen-telefonlar', 'Sipariş ve onay': 'siparis-onay', 'Mutfak': 'mutfak', 'Paket platformları': 'paket-platformlari', 'Yazıcılar': 'yazicilar', 'Sesler': 'sesler-sayfa', 'Cihaz bağla': 'cihazlar', 'Yedek': 'yedek', 'Kilit ve güncelleme': 'kilit-guncelleme', 'Uzaktan erişim': 'uzaktan-erisim' };
+const files: Record<SettingsPage, string> = { 'İşletme': 'isletme', 'Paket ve lisans': 'isletme-paket-lisans', 'Sosyal medya': 'sosyal-medya', 'Masalar ve QR': 'masalar-qr', 'QR kodlarını yazdır': 'qr-yazdir', 'Engellenen telefonlar': 'engellenen-telefonlar', 'Sipariş ve onay': 'siparis-onay', 'Mutfak': 'mutfak', 'Paket platformları': 'paket-platformlari', 'Yazıcılar': 'yazicilar', 'Sesler': 'sesler-sayfa', 'Kafe içi cihazlar': 'cihazlar', 'Yedek': 'yedek', 'Kilit ve güncelleme': 'kilit-guncelleme', 'Uzaktan erişim': 'uzaktan-erisim' };
 
 /** A year of synthetic sales (weekends busier, a slow winter), in the server's overview shape. */
 function syntheticOverview(from: string, to: string) {

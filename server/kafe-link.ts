@@ -1143,7 +1143,7 @@ export class MerkezLink {
     if (!code || !SOCIAL_CODE.test(code)) return { problem: 'waiting' };
     return { url: `${(r.lanLink?.base ?? this.url).replace(/\/+$/, '')}/k/${code}` };
   }
-  /** The desktop window's Cihaz bağla: the link of this computer's business (the first one when it has several). */
+  /** The desktop window's Kafe içi cihazlar: the link of this computer's business (the first one when it has several). */
   installLanAddress() {
     const tenant = Object.keys(this.read()?.licenses ?? {}).find(t => !this.removed(t));
     return tenant ? this.lanAddress(tenant) : { problem: 'inactive' as const };
@@ -1179,6 +1179,7 @@ export class MerkezLink {
   }
   private async run(): Promise<{ ok: boolean; error?: string }> {
     const record = this.read(); if (!record) return { ok: false, error: 'Etkinleştirilmedi.' };
+    const knew = new Set(record.accepts ?? []);
     this.lastAttempt = Date.now();
     await this.machine(record).catch(() => {});
     const body = this.payload(record);
@@ -1220,7 +1221,7 @@ export class MerkezLink {
         r.tickets = r.tickets.filter(t => t.status !== 'closed' || t.messages.some(m => m.queued) || Math.max(Date.parse(t.createdAt) || 0, ...t.messages.map(m => Date.parse(m.at) || 0)) >= keepFrom);
         const freezes = new Set(answer.delivered?.freezes ?? []); r.freezes = r.freezes.filter(f => !freezes.has(f.id));
         r.failuresSentAt = sentUntil; r.serverTime = answer.serverTime;
-        r.accepts = Array.isArray(answer.accepts) ? answer.accepts.filter(x => typeof x === 'string').slice(0, 20) : [];
+        r.accepts = Array.isArray(answer.accepts) ? answer.accepts.filter(x => typeof x === 'string').slice(0, 50) : [];
         r.lastSync = { at: this.now().toISOString(), ok: true }; r.lastSuccessAt = r.lastSync.at;
         // Tanıtım işletmesi: reports Merkez now has go; Merkez's signed word per business is kept (the newest, ours only).
         if (body.demo?.length) { const sent = new Set(body.demo.map(x => x.resetId)); r.demoReports = (r.demoReports ?? []).filter(x => !sent.has(x.resetId)); }
@@ -1273,6 +1274,10 @@ export class MerkezLink {
       if (answer.integrityManifest && this.integrity) try { void Promise.resolve(this.integrity.manifest(answer.integrityManifest)).catch(() => {}); } catch { /* checked again tomorrow */ }
       { const kept = this.read()!; this.high = Math.max(kept.highWater ?? 0, this.floor ?? 0); this.saveMark(kept, true); this.savedHigh = this.high; }
       for (const f of this.afterSync) try { f(); } catch { /* their own business */ }
+      // Merkez just said it takes something new (an update of Merkez, or this café's first heartbeat): what goes with it
+      // (0.1.22's `remote`: Raporlarım's sign-in key) leaves with the next heartbeat in a few seconds, not in 10 minutes
+      // (0.1.22: "Kasa bilgisayarı hazırlanıyor" for 10–20 minutes after an update). Once: the next answer brings nothing new.
+      if ((this.read()?.accepts ?? []).some(x => !knew.has(x))) { this.owed = true; if (this.auto && !this.closed()) this.schedule(AUTO_GAP_MS); }
       this.failuresInRow = 0; return { ok: true };
     } catch (error) {
       this.failuresInRow++;
