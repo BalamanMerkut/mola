@@ -12,7 +12,7 @@ import { createApp } from '../server/app.js';
 import { Store } from '../server/store.js';
 import { lanClient, mobileAppRoutes, privateAddress } from '../server/mobile-app.js';
 import { devAllowList } from '../server/web-serving.js';
-import { WEB_ICONS, YONETIM_BLACK, iconSvg, webIcon } from '../scripts/mola-icons.mjs';
+import { WEB_ICONS, YONETIM_FILL, iconSvg, webIcon } from '../scripts/mola-icons.mjs';
 import { androidTools, badging, PACKAGE, verifySignature, versionCode } from '../scripts/build-apk.mjs';
 
 /** A raw GET with chosen headers (fetch cannot send a forwarding header the way a tunnel does… it can, but this keeps Host exact). */
@@ -89,7 +89,7 @@ test('web app manifests, iOS tags and icons: Mola, standalone, staff entry, 16/3
     assert.ok(icons.some(i => i.sizes === size && i.purpose === purpose && i.type === 'image/png'), `${size} ${purpose}`);
   // Mola Yönetim (merkez.html): its own manifest with the near-black icons.
   const yonetim = JSON.parse(readFileSync('public/manifest-yonetim.webmanifest', 'utf8'));
-  assert.equal(yonetim.name, 'Mola Yönetim'); assert.equal(yonetim.theme_color, YONETIM_BLACK); assert.equal(yonetim.start_url, '/');
+  assert.equal(yonetim.name, 'Mola Yönetim'); assert.equal(yonetim.theme_color, YONETIM_FILL); assert.equal(yonetim.start_url, '/');
   const yonetimIcons = yonetim.icons as typeof icons;
   for (const [size, purpose] of [['192x192', 'any'], ['256x256', 'any'], ['512x512', 'any'], ['512x512', 'maskable']])
     assert.ok(yonetimIcons.some(i => i.sizes === size && i.purpose === purpose && /^\/icon-yonetim-/.test(i.src)), `Mola Yönetim ${size} ${purpose}`);
@@ -111,7 +111,7 @@ test('web app manifests, iOS tags and icons: Mola, standalone, staff entry, 16/3
   // Café green and Mola Yönetim near-black stay apart at every size.
   for (const [cafe, vendor] of [['favicon-16.png', 'favicon-yonetim-16.png'], ['favicon-32.png', 'favicon-yonetim-32.png'], ['icon-192.png', 'icon-yonetim-192.png'], ['icon-512.png', 'icon-yonetim-512.png']]) {
     const middleBottom = async (name: string) => { const { data, info } = await sharp(await webIcon(name)!).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); const at = ((info.height - 2) * info.width + info.width / 2) * 4; return [...data.subarray(at, at + 3)].map(v => v.toString(16).padStart(2, '0')).join(''); };
-    assert.equal(`#${await middleBottom(cafe)}`, '#234c3e', cafe); assert.equal(`#${await middleBottom(vendor)}`, YONETIM_BLACK, vendor);
+    assert.equal(`#${await middleBottom(cafe)}`, '#234c3e', cafe); assert.equal(`#${await middleBottom(vendor)}`, YONETIM_FILL, vendor);
   }
   // Maskable and apple-touch-icon fill the square (Android crops them, iOS shows transparency black).
   for (const name of ['icon-maskable-512.png', 'icon-yonetim-maskable-512.png', 'apple-touch-icon.png']) {
@@ -122,7 +122,7 @@ test('web app manifests, iOS tags and icons: Mola, standalone, staff entry, 16/3
     assert.ok(html.includes(tag), tag);
   // Browser tab icons: the pixel-aligned 32-px drawing (sharp at tab size), green for cafés, near-black for Mola Yönetim.
   assert.equal(readFileSync('public/favicon.svg', 'utf8'), iconSvg.small());
-  assert.equal(readFileSync('public/favicon-yonetim.svg', 'utf8'), iconSvg.small(YONETIM_BLACK));
+  assert.equal(readFileSync('public/favicon-yonetim.svg', 'utf8'), iconSvg.small(YONETIM_FILL));
   assert.ok(readFileSync('merkez.html', 'utf8').includes('href="/favicon-yonetim.svg"'));
   // No service worker: nothing may ever cache the API (orders must be live).
   assert.equal(existsSync('public/sw.js'), false);

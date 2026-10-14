@@ -24,7 +24,7 @@ import { finished } from 'node:stream/promises';
 import { folderItems, includeRuntime, updateBundlesWanted, writeUpdateBundle } from './update-bundle.mjs';
 import { writeIntegrityManifest } from './integrity-manifest.mjs';
 import { molaSunucuCmd } from './desktop/mola-sunucu-cmd.mjs';
-import { ICO_SIZES, MOLA_GREEN, YONETIM_BLACK, exeIconImages, icoFile } from './mola-icons.mjs';
+import { ICO_SIZES, MOLA_GREEN, YONETIM_FILL, exeIconImages, icoFile } from './mola-icons.mjs';
 
 if (process.platform !== 'win32') throw new Error('Kurulum paketleri Windows bilgisayarda hazırlanmalı (Mola.exe Windows içindeki C# derleyicisiyle derlenir).');
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version;
@@ -511,7 +511,7 @@ if (chosen.includes('yonetim')) {
   writeManifest(app);
   copyFileSync(process.execPath, join(prog, 'runtime', 'node.exe'));
   const icon = join(stage, 'mola-yonetim.ico');
-  writeFileSync(icon, await ico(YONETIM_BLACK));
+  writeFileSync(icon, await ico(YONETIM_FILL));
   compile('Mola.cs', join(prog, 'Mola Yönetim.exe'), { icon, yonetim: true });
   compile('Kurulum.cs', join(root, 'Mola Yönetim Kurulum.exe'), { icon, yonetim: true });
   compile('Kaldir.cs', join(prog, 'Mola-Yonetim-Kaldir.exe'), { icon, yonetim: true });

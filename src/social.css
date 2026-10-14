@@ -34,7 +34,7 @@
 .social-rows{display:grid;gap:0;min-width:0}
 .social-row{display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;align-items:start;padding:14px 0;border-top:1px solid var(--set-line,#edf0e9);min-width:0}
 .social-row:first-child{border-top:0;padding-top:4px}
-.social-row-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--set-tile,#eaf1e5);color:var(--green)}
+.social-row-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--brand-soft,#eaf1e5);color:var(--green)}
 .social-row-main{display:grid;gap:7px;min-width:0}
 .social-row-main>label{margin:0}
 .social-row-main input{width:100%;min-width:0;margin:0}

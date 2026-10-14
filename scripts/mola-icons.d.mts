@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite';
 
 export const MOLA_GREEN: string;
-export const YONETIM_BLACK: string;
+export const YONETIM_FILL: string;
 export const iconSvg: {
   rounded: (fill?: string) => string; square: (k?: number, fill?: string) => string; cup: (k?: number) => string; small: (fill?: string) => string;
   forSize: (size: number, fill?: string) => string;

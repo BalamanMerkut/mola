@@ -184,8 +184,10 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
   const mailHref = `mailto:${config.email}`;
   const year = String(new Date().getFullYear());
   // data-iletisim: site.js puts Mola Yönetim's contact (GET /api/site/iletisim) over these after the page opens.
+  // 14 Ekim: the phone and WhatsApp numbers are never written on the page, only behind their links ("Aramak için dokunun").
+  const hiddenNumber: Record<string, string> = { phone: 'Aramak için dokunun', whatsapp: 'Yazmak için dokunun' };
   const contactCard = (kind: 'whatsapp' | 'phone' | 'email', href: string, title: string, value: string) => href
-    ? `<a class="contact-item c-${kind}" data-iletisim="${kind}" href="${esc(href)}"${kind === 'whatsapp' ? ' rel="noopener"' : ''}><span class="card-icon">${icon(kind === 'whatsapp' ? 'MessageCircle' : kind === 'phone' ? 'Phone' : 'Mail')}</span><span><b>${title}</b><span>${esc(value)}</span></span></a>`
+    ? `<a class="contact-item c-${kind}" data-iletisim="${kind}" href="${esc(href)}"${kind === 'whatsapp' ? ' rel="noopener"' : ''}><span class="card-icon">${icon(kind === 'whatsapp' ? 'MessageCircle' : kind === 'phone' ? 'Phone' : 'Mail')}</span><span><b>${title}</b><span>${esc(hiddenNumber[kind] ?? value)}</span></span></a>`
     : `<div class="contact-item c-${kind} pending" data-iletisim="${kind}" aria-disabled="true"><span class="card-icon">${icon(kind === 'whatsapp' ? 'MessageCircle' : 'Phone')}</span><span><b>${title}</b><span>Numara yakında burada</span></span></div>`;
   const tokens = (name: string, arg: string | undefined, page: PageMeta): string => {
     switch (name) {
@@ -196,8 +198,8 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
       case 'address': return esc(config.address);
       case 'hours': return `<span data-iletisim="hours">${esc(config.hours)}</span>`;
       case 'company': return esc(config.company);
-      case 'phone': return filled(config.phone) ? esc(config.phone) : '<span class="placeholder">telefon numarası</span>';
-      case 'phoneLink': return filled(config.phone) ? `<a href="${phoneHref}">${esc(config.phone)}</a>` : '<span class="placeholder">telefon numarası</span>';
+      case 'phone': return filled(config.phone) ? 'telefon' : '<span class="placeholder">telefon numarası</span>';
+      case 'phoneLink': return filled(config.phone) ? `<a href="${phoneHref}">Bizi arayın</a>` : '<span class="placeholder">telefon numarası</span>';
       case 'emailLink': return `<a data-iletisim="email" href="${mailHref}">${esc(config.email)}</a>`;
       case 'legalUpdated': return trDate(config.legalUpdated);
       case 'consentVersion': return SITE_CONSENT_VERSION;
@@ -233,7 +235,7 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
 
   const layout = readFileSync(join(SRC, 'layout.html'), 'utf8');
   const pages = readdirSync(join(SRC, 'pages')).filter(f => f.endsWith('.html')).map(file => parsePage(file, readFileSync(join(SRC, 'pages', file), 'utf8')));
-  const footerContact = [`<li data-iletisim="phone"${phoneHref ? '' : ' hidden'}><a href="${phoneHref || '#'}">${phoneHref ? esc(config.phone) : ''}</a></li>`, `<li data-iletisim="whatsapp"${waHref ? '' : ' hidden'}><a href="${esc(waHref || '#')}" rel="noopener">WhatsApp</a></li>`, `<li data-iletisim="email"><a href="${mailHref}">${esc(config.email)}</a></li>`].join('');
+  const footerContact = [`<li data-iletisim="phone"${phoneHref ? '' : ' hidden'}><a href="${phoneHref || '#'}">Telefon</a></li>`, `<li data-iletisim="whatsapp"${waHref ? '' : ' hidden'}><a href="${esc(waHref || '#')}" rel="noopener">WhatsApp</a></li>`, `<li data-iletisim="email"><a href="${mailHref}">${esc(config.email)}</a></li>`].join('');
   const cssVersion = version(css), jsVersion = version(js);
   for (const page of pages) {
     const content = fill(page.body, page);

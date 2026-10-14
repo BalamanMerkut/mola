@@ -164,10 +164,22 @@ test('café owner: "Yeni sürüm hazır" banner; "Şimdi kur" waits for open tab
     const banner = page.getByRole('region', { name: 'Yeni sürüm' });
     await expect(banner).toContainText('Yeni sürüm hazır');
     await expect(banner).toContainText('kapanışta ya da yarın açılışta kurulacak');
-    await expect(banner).toContainText('Hesap ekranı yenilendi.');
+    // 14 Ekim: the update window opens by itself: what is new, and why it cannot install right now.
+    const dialog = page.getByRole('dialog', { name: `Mola ${version} hazır` });
+    await expect(dialog).toContainText('Hesap ekranı yenilendi.');
+    await expect(dialog).toContainText('1 açık masa ve 1 bitmemiş sipariş var');
+    await expect(dialog.getByRole('button', { name: 'Şimdi güncelle' })).toBeDisabled();
     await page.screenshot({ path: info.outputPath('kafe-yeni-surum.png') });
+    // "1 saat sonra hatırlat": closed, and not again on the next page load; the line's "Şimdi kur" opens it again.
+    await dialog.getByRole('button', { name: '1 saat sonra hatırlat' }).click();
+    await expect(dialog).toHaveCount(0);
+    await page.reload();
+    await expect(banner).toBeVisible(); await page.waitForTimeout(500);
+    await expect(dialog).toHaveCount(0);
     await banner.getByRole('button', { name: 'Şimdi kur' }).click();
-    await expect(banner).toContainText('1 açık masa ve 1 bitmemiş sipariş var');
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Kapanışta kur' }).click();
+    await expect(dialog).toHaveCount(0);
     // The server says the same even if a screen does not.
     const refused = await api.post(`${kafe.base}/api/staff/update/install`, { data: {} });
     expect(refused.status()).toBe(409); expect((await refused.json()).code).toBe('UPDATE_BUSY');
@@ -187,7 +199,11 @@ test('café owner: "Yeni sürüm hazır" banner; "Şimdi kur" waits for open tab
     expect((await api.post(`${kafe.base}/api/staff/close-empty`, { data: { requestId: 'guncelleme-kapat', accountId: account.id } })).ok()).toBe(true);
     await page.goto(kafe.base);
     await banner.getByRole('button', { name: 'Şimdi kur' }).click();
-    await expect(page.getByText('Mola güncelleniyor.')).toBeVisible();
+    await dialog.getByRole('button', { name: 'Şimdi güncelle' }).click();
+    // A percentage while it backs up and restarts; the window cannot be closed meanwhile.
+    await expect(dialog.getByRole('progressbar', { name: 'Güncelleme ilerlemesi' })).toBeVisible();
+    await expect(dialog).toContainText('Güncelleniyor');
+    await expect.poll(async () => Number((await dialog.getByTestId('update-percent').textContent())?.replace(/\D/g, ''))).toBeGreaterThanOrEqual(35);
     await page.screenshot({ path: info.outputPath('kafe-guncelleniyor.png') });
     await kafe.exited;
     expect(kafe.exitCode(), 'the server closed itself with 75: the watchdog applies the update now').toBe(75);

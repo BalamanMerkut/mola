@@ -15,7 +15,7 @@
 .activation-choice small{color:var(--muted)}
 .activation-sector{display:flex;gap:8px;flex-wrap:wrap}
 .activation-sector button{flex:1;min-width:110px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fbf7ef;color:var(--ink)}
-.activation-sector button[aria-pressed=true]{border-color:var(--primary,#234c3e);background:var(--surface-soft,#eef4ee);font-weight:600}
+.activation-sector button[aria-pressed=true]{border-color:var(--primary,#234c3e);background:var(--brand-soft,#eef4ee);font-weight:600}
 .activation-code-input{font:600 20px/1.4 Consolas,monospace;letter-spacing:2px;text-transform:uppercase;text-align:center}
 .activation-actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
 .activation-code{font:700 24px/1.4 Consolas,monospace;letter-spacing:3px;text-align:center;border:2px dashed var(--line);border-radius:12px;padding:14px;margin:12px 0;overflow-wrap:anywhere}

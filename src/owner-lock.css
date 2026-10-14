@@ -5,7 +5,7 @@ dialog.owner-lock{width:100%;height:100%;max-width:none;max-height:none;margin:0
 dialog.owner-lock:not([open]){display:none}
 dialog.owner-lock::backdrop{background:var(--paper,#f6f7f4)}
 .owner-lock-card{width:min(400px,100%);display:grid;gap:10px;justify-items:stretch;text-align:center;padding:30px 24px 22px;border-radius:18px;background:var(--paper,#fff);border:1px solid var(--line,#e2e6df);box-shadow:0 10px 30px #183b2f14}
-.owner-lock-icon{justify-self:center;display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:var(--surface-soft,#eef4ec);color:var(--green,#234c3e)}
+.owner-lock-icon{justify-self:center;display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:var(--brand-soft,#eef4ec);color:var(--green,#234c3e)}
 .owner-lock-card h1{margin:4px 0 0;font-size:22px;color:var(--ink,#1d2b23)}
 .owner-lock-card>p{margin:0;color:#4d5c51;line-height:1.5}
 .owner-lock-card label{display:block;min-height:0;padding:0;text-align:left;font-size:13px;font-weight:600;color:var(--ink,#1d2b23);margin:6px 0 -4px}

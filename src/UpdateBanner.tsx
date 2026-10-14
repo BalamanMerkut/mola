@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
-import { CloudDownload, X } from 'lucide-react';
+import { Clock3, CloudDownload, X } from 'lucide-react';
 import { api } from './api';
-import { Notice } from './components';
+import { Modal, Notice } from './components';
 import './update-banner.css';
 
 /** GET /api/staff/update (server/update-routes.ts): the café's own update state. */
@@ -22,32 +22,104 @@ function useUpdate() {
 }
 const busyText = (v: UpdateView) => [v.openAccounts && `${v.openAccounts} açık masa`, v.pendingOrders && `${v.pendingOrders} bitmemiş sipariş`].filter(Boolean).join(' ve ');
 
+/** "1 saat sonra hatırlat": per browser, per version (a newer version asks again at once). */
+const SNOOZE = 'mola-guncelleme-ertele';
+function snoozed(version: string | null) {
+  try { const s = JSON.parse(localStorage.getItem(SNOOZE) ?? 'null') as { version: string; until: number } | null; return !!s && s.version === version && Date.now() < s.until; } catch { return false; }
+}
+function snooze(version: string | null, ms: number) { try { localStorage.setItem(SNOOZE, JSON.stringify({ version, until: Date.now() + ms })); } catch { /* private mode: asks again next time */ } }
+
 /**
- * Otomatik güncelleme, the owner's quiet banner (Masalar and every owner page): "Yeni sürüm hazır · kapanışta ya da yarın
- * açılışta kurulacak" and "Şimdi kur" (only when nothing is open; otherwise it says why), then once "güncellendi" or
- * "geri alındı" after the restart. Nothing while a download runs or when there is nothing new.
+ * Otomatik güncelleme for the owner (Masalar and every owner page). 14 Ekim (the owner: a window says it better than a line
+ * at the top): when a new version is ready, a window opens: what is new, "Şimdi güncelle", "1 saat sonra hatırlat" or
+ * "Kapanışta kur". "Şimdi güncelle" shows a percentage: the backup (the request itself), then the restart (the server is
+ * away; the bar moves on its own towards 95 %), then 100 % when /api/health answers with the new version, and the page
+ * reloads itself, fresh. Put off: the quiet line at the top stays, its "Şimdi kur" opens the window again. Then once
+ * "güncellendi" or "geri alındı". The window takes the business's palette like every Mola window.
  */
 export function UpdateBanner() {
   const [view, setView] = useUpdate();
-  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [warning, setWarning] = useState(''), [restarting, setRestarting] = useState(false);
+  const [open, setOpen] = useState<boolean | null>(null), [, tick] = useState(0);
   if (!view) return null;
   const close = () => void api<UpdateView>('/api/staff/update/seen', {}).then(setView, () => undefined);
-  if (restarting || view.state === 'installing') return <Notice><span className="update-banner"><CloudDownload size={17} aria-hidden="true" /><span><strong>Mola güncelleniyor.</strong> Birkaç dakika içinde yeni sürümle yeniden açılır; verileriniz önce yedeklendi.</span></span></Notice>;
+  if (view.state === 'installing') return <Notice><span className="update-banner"><CloudDownload size={17} aria-hidden="true" /><span><strong>Mola güncelleniyor.</strong> Birkaç dakika içinde yeni sürümle yeniden açılır; verileriniz önce yedeklendi.</span></span></Notice>;
   if (view.state === 'installed' && !view.seen) return <Notice tone="success"><span className="update-banner"><span>Mola <strong>{view.version}</strong> sürümüne güncellendi.{view.notes ? ` ${view.notes}` : ''}</span><button type="button" className="icon-btn" aria-label="Güncelleme bilgisini kapat" onClick={close}><X size={16} /></button></span></Notice>;
   if ((view.state === 'rolled_back' || (view.state === 'failed' && view.from)) && !view.seen) return <Notice tone="error"><span className="update-banner"><span>Yeni sürüm ({view.version}) kurulamadı; Mola önceki sürüme döndü, verileriniz yerinde. Mola ekibine bilgi gitti.</span><button type="button" className="icon-btn" aria-label="Güncelleme bilgisini kapat" onClick={close}><X size={16} /></button></span></Notice>;
   if (view.state !== 'ready') return null;
+  // Opens by itself once per page unless put off; the line above it opens it again.
+  const shown = open ?? (view.restartable && !snoozed(view.version));
+  return <>
+    <div className="update-banner-box" role="region" aria-label="Yeni sürüm">
+      <p><CloudDownload size={17} aria-hidden="true" /><span><strong>Yeni sürüm hazır</strong> · kapanışta ya da yarın açılışta kurulacak <span className="muted">({view.current} → {view.version})</span></span></p>
+      {view.restartable && <button type="button" className="btn secondary small-btn" onClick={() => setOpen(true)}>Şimdi kur</button>}
+    </div>
+    {shown && <UpdateDialog view={view} onLater={ms => { if (ms) snooze(view.version, ms); setOpen(false); tick(t => t + 1); }} />}
+  </>;
+}
+
+type Phase = 'ask' | 'backup' | 'restart' | 'done' | 'slow';
+function UpdateDialog({ view, onLater }: { view: UpdateView; onLater: (ms: number) => void }) {
+  const [phase, setPhase] = useState<Phase>('ask'), [percent, setPercent] = useState(0), [error, setError] = useState('');
+  const busy = view.openAccounts || view.pendingOrders ? `${busyText(view)} var. Hesaplar kapanınca güncelleyebilirsiniz; yoksa kapanışta ya da yarın açılışta kendiliğinden kurulur.` : '';
+  const working = phase !== 'ask';
+  // The bar: the backup (5 → 35 %) while the request runs, then the restart (35 → 95 %) until the new version answers.
+  useEffect(() => {
+    if (phase !== 'backup' && phase !== 'restart' && phase !== 'slow') return;
+    const [from, to, ms] = phase === 'backup' ? [5, 35, 40_000] : [35, 95, 90_000], started = Date.now();
+    const t = setInterval(() => setPercent(p => Math.max(p, Math.round(from + (to - from) * (1 - Math.exp(-3 * (Date.now() - started) / ms))))), 400);
+    return () => clearInterval(t);
+  }, [phase]);
+  // Waiting for the new version: /api/health every 1.5 s; after 6 minutes it says so and keeps waiting.
+  useEffect(() => {
+    if (phase !== 'restart') return;
+    let live = true; const started = Date.now();
+    const poll = async () => {
+      if (!live) return;
+      try {
+        const h = await (await fetch('/api/health', { cache: 'no-store' })).json() as { version?: string };
+        if (h.version && h.version === view.version) {
+          setPercent(100); setPhase('done');
+          setTimeout(() => void fetch(location.pathname, { cache: 'reload' }).catch(() => undefined).finally(() => location.reload()), 900);
+          return;
+        }
+        // The old version answers again after a while: it was put back (rolled back); the page shows why after a reload.
+        if (h.version && h.version === view.current && Date.now() - started > 45_000) { setError('Yeni sürüm açılamadı; Mola önceki sürüme döndü, verileriniz yerinde. Sayfa yenileniyor.'); setTimeout(() => location.reload(), 4000); return; }
+      } catch { /* restarting: no answer yet */ }
+      if (Date.now() - started > 6 * 60_000) setError('Kurulum beklenenden uzun sürüyor; bu pencere açık kalsın, bitince kendiliğinden yenilenir.');
+      setTimeout(() => void poll(), 1500);
+    };
+    const first = setTimeout(() => void poll(), 2500);
+    return () => { live = false; clearTimeout(first); };
+  }, [phase, view.version, view.current]);
   async function install() {
-    setError(''); setWarning('');
-    if (view!.openAccounts || view!.pendingOrders) { setWarning(`${busyText(view!)} var. Hesaplar kapanınca kurabilirsiniz; yoksa kapanışta ya da yarın açılışta kendiliğinden kurulur.`); return; }
-    setBusy(true);
-    try { await api('/api/staff/update/install', {}, undefined, 120000); setRestarting(true); }
-    catch (e) { setError((e as Error).message); } finally { setBusy(false); }
+    setError(''); setPercent(5); setPhase('backup');
+    try { await api('/api/staff/update/install', {}, undefined, 120000); setPercent(p => Math.max(p, 35)); setPhase('restart'); }
+    catch (e) { setError((e as Error).message); setPhase('ask'); setPercent(0); }
   }
-  return <div className="update-banner-box" role="region" aria-label="Yeni sürüm">
-    <p><CloudDownload size={17} aria-hidden="true" /><span><strong>Yeni sürüm hazır</strong> · kapanışta ya da yarın açılışta kurulacak <span className="muted">({view.current} → {view.version})</span>{view.notes && <span className="update-notes">{view.notes}</span>}</span></p>
-    {view.restartable && <button type="button" className="btn secondary small-btn" disabled={busy} onClick={() => void install()}>{busy ? 'Yedekleniyor…' : 'Şimdi kur'}</button>}
-    {warning && <Notice>{warning}</Notice>}{error && <Notice tone="error">{error}</Notice>}
-  </div>;
+  const step = phase === 'backup' ? 'Verileriniz yedekleniyor…' : phase === 'restart' ? 'Yeni sürüm kuruluyor; Mola kısa bir süre kapanıp yeniden açılacak…' : phase === 'done' ? 'Güncellendi. Sayfa yenileniyor…' : '';
+  return <Modal title={`Mola ${view.version ?? ''} hazır`} onClose={() => { if (!working) onLater(0); }} dismissible={!working} className="update-dialog">
+    <div className="modal-body update-dialog-body">
+      {!working && <>
+        <p className="update-dialog-lead"><CloudDownload size={20} aria-hidden="true" /><span>Yeni sürüm indirildi ve kuruluma hazır <span className="muted">({view.current} → {view.version})</span>.</span></p>
+        {view.notes && <div className="update-dialog-notes"><strong>Neler yeni</strong><p>{view.notes}</p></div>}
+        <p className="muted small">Kurulum birkaç dakika sürer. Önce verileriniz yedeklenir; Mola kısa bir süre kapanıp yeni sürümle açılır. Yeni sürüm açılmazsa kendiliğinden önceki sürüme döner.</p>
+        {busy && <Notice>{busy}</Notice>}
+        {error && <Notice tone="error">{error}</Notice>}
+        <div className="update-dialog-actions">
+          <button type="button" className="btn primary" disabled={!!busy} onClick={() => void install()}><CloudDownload size={16} aria-hidden="true" />Şimdi güncelle</button>
+          <button type="button" className="btn secondary" onClick={() => onLater(60 * 60_000)}><Clock3 size={16} aria-hidden="true" />1 saat sonra hatırlat</button>
+          <button type="button" className="text-btn" onClick={() => onLater(24 * 60 * 60_000)}>Kapanışta kur</button>
+        </div>
+      </>}
+      {working && <div className="update-progress" aria-live="polite">
+        <div className="update-progress-head"><strong>{phase === 'done' ? 'Tamamlandı' : 'Güncelleniyor'}</strong><span className="update-percent" data-testid="update-percent">%{percent}</span></div>
+        <div className="update-bar" role="progressbar" aria-label="Güncelleme ilerlemesi" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}><span style={{ width: `${percent}%` }} /></div>
+        <p className="update-step">{step}</p>
+        {error && <Notice tone="error">{error}</Notice>}
+        {phase !== 'done' && <p className="muted small">Bu pencereyi kapatmayın. Bilgisayarı kapatmayın.</p>}
+      </div>}
+    </div>
+  </Modal>;
 }
 
 const stateLine = (v: UpdateView) => ({

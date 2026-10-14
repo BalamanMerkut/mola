@@ -46,7 +46,7 @@
 .campaign-preview-card p{margin:4px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
 .campaign-preview-card del{font-size:12px;color:var(--muted)}
 .campaign-preview-card b{font-size:15px;color:var(--green)}
-.campaign-preview-badge{display:inline-block;margin-top:4px;padding:2px 7px;border-radius:6px;background:#edf3e8;color:#285447;font-size:11.5px}
+.campaign-preview-badge{display:inline-block;margin-top:4px;padding:2px 7px;border-radius:6px;background:var(--brand-soft,#edf3e8);color:var(--green,#285447);font-size:11.5px}
 .campaign-preview-when{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0;font-size:13px;font-weight:600;color:var(--ink)}
 .campaign-pick-btn{justify-self:start}
 .step-duration{display:grid;gap:8px;min-width:0}

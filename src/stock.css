@@ -79,7 +79,7 @@ button.stock-row-main:focus-visible{outline:2px solid var(--green);outline-offse
 .stock-row-status small{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;font-size:11.5px;color:#7d8a79}
 .stock-quiet{font-size:12.5px;color:#9aa395;display:flex;align-items:center;gap:10px}
 .stock-quiet em{font-style:normal;display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;border:1px solid #d9e4d3;background:var(--paper,#fff);color:#3f6a4b;font-size:11.5px;font-weight:600}
-button.stock-row-main:hover .stock-quiet em{border-color:#9fbf99;background:var(--brand-soft,#f2f8ee)}
+button.stock-row-main:hover .stock-quiet em{border-color:var(--line,#9fbf99);background:var(--brand-soft,#f2f8ee)}
 .stock-row.untracked .stock-row-name strong{color:#566352;font-weight:500}
 .stock-row.low{background:linear-gradient(90deg,var(--stk-warn-soft),#fff 70%)}
 .stock-row.low button.stock-row-main:hover{background:#fbebe2}

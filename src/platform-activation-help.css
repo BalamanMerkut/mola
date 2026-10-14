@@ -7,13 +7,13 @@
 .act-steps li div { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .act-steps strong { font-size:14px; font-weight:650; color:#22362b; overflow-wrap:anywhere; }
 .act-steps small { font-size:12.5px; color:#5c665f; overflow-wrap:anywhere; }
-.act-step-no { flex:none; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:#2c6436; color:#fff; font-size:12.5px; font-weight:700; }
+.act-step-no { flex:none; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:#4d5323; color:#fff; font-size:12.5px; font-weight:700; }
 .act-picture { width:100%; height:auto; max-width:240px; justify-self:center; }
 .act-note { grid-column:1 / -1; display:flex; gap:8px; align-items:flex-start; margin:0; padding:10px 12px; border-radius:12px; background:#f3e9d4; color:#6b5320; font-size:13px; line-height:1.45; }
 .act-note svg { flex:none; margin-top:2px; }
 .act-share { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
 .act-share .btn { margin:0; min-height:44px; display:inline-flex; align-items:center; gap:6px; text-decoration:none; }
-.act-whatsapp svg { color:#1f8f55; }
+.act-whatsapp svg { color:#6d7819; }
 .act-help.compact { grid-template-columns:minmax(0,1fr) 180px; }
 @media (max-width: 640px) {
   .act-help, .act-help.compact { grid-template-columns:minmax(0,1fr); }

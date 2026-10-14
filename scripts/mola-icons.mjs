@@ -15,9 +15,12 @@ const source = readFileSync(new URL('./desktop/mola-icon.svg', import.meta.url),
 const glyph = /<g[\s\S]*<\/g>/.exec(source)?.[0];
 if (!glyph) throw new Error('mola-icon.svg içinde fincan çizimi (<g>) bulunamadı.');
 export const MOLA_GREEN = '#234c3e';
-/** Mola Yönetim: the same cup on near-black (scripts/desktop/mola-yonetim-icon.svg, src/MolaLogo.tsx YonetimBrand). */
-export const YONETIM_BLACK = '#1c1f1e';
-const CREAM = '#f3ebdd';
+/** Mola Yönetim: the same cup, walnut on brass (14 Ekim; was near-black), as src/MolaLogo.tsx YonetimBrand and scripts/desktop/mola-yonetim-icon.svg. */
+export const YONETIM_FILL = '#c9a368';
+const CREAM = '#f3ebdd', WALNUT = '#3a281e';
+/** The cup's colour on a background: walnut on Yönetim's brass, cream on everything else. */
+const cupOn = (fill) => fill === YONETIM_FILL ? WALNUT : CREAM;
+const tinted = (svg, fill) => fill === YONETIM_FILL ? svg.split(CREAM).join(WALNUT) : svg;
 const SVG = (body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">${body}</svg>`;
 // The cup sits in a 24-unit box centred on (12, 11.5); `k` is its scale in the 256 box (the desktop icon uses 7.2).
 const cup = (k) => glyph.replace(/transform="[^"]*"/, `transform="translate(${+(128 - 12 * k).toFixed(2)} ${+(128 - 11.5 * k).toFixed(2)}) scale(${k})"`);
@@ -36,14 +39,14 @@ function pixelCup(size, fill) {
   const handle = `M${p.R} ${p.T}H${p.Hx - p.c}A${p.c} ${p.c} 0 0 1 ${p.Hx} ${p.T + p.c}V${p.HB - p.c}A${p.c} ${p.c} 0 0 1 ${p.Hx - p.c} ${p.HB}H${p.R}`;
   const steam = p.steam.map(x => `<path d="M${x} ${p.sy1}V${p.sy2}"/>`).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${p.rx}" fill="${fill}"/>` +
-    `<g fill="none" stroke="${CREAM}" stroke-width="${p.w}" stroke-linecap="butt" stroke-linejoin="miter"><path d="${body}"/><path d="${handle}"/>${steam}</g></svg>\n`;
+    `<g fill="none" stroke="${cupOn(fill)}" stroke-width="${p.w}" stroke-linecap="butt" stroke-linejoin="miter"><path d="${body}"/><path d="${handle}"/>${steam}</g></svg>\n`;
 }
 
 export const iconSvg = {
   /** The desktop icon as it is: rounded corners, transparent outside. "any" icons, the large Windows icon sizes. */
-  rounded: (fill = MOLA_GREEN) => fill === MOLA_GREEN ? source : source.replace(MOLA_GREEN, fill),
+  rounded: (fill = MOLA_GREEN) => fill === MOLA_GREEN ? source : tinted(source.replace(MOLA_GREEN, fill), fill),
   /** Full square, smaller cup: maskable icons (Android crops to a circle or squircle, safe zone 80 %) and iOS. */
-  square: (k = 6, fill = MOLA_GREEN) => SVG(`<rect width="256" height="256" fill="${fill}"/>${cup(k)}`),
+  square: (k = 6, fill = MOLA_GREEN) => tinted(SVG(`<rect width="256" height="256" fill="${fill}"/>${cup(k)}`), fill),
   /** Cup only, transparent: the Android adaptive icon's foreground layer (and its monochrome layer). */
   cup: (k = 5.4) => SVG(cup(k)),
   /**
@@ -51,7 +54,7 @@ export const iconSvg = {
    * 2-px strokes, so every line falls on whole pixels. public/favicon.svg and public/favicon-yonetim.svg are exactly this text
    * (tests/mobile-app.test.ts).
    */
-  small: (fill = MOLA_GREEN) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="${fill}"/>${glyph.replace(/transform="[^"]*"/, 'transform="translate(4 5)"').replace(/stroke-width="[^"]*"/, 'stroke-width="2"')}</svg>\n`,
+  small: (fill = MOLA_GREEN) => tinted(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="${fill}"/>${glyph.replace(/transform="[^"]*"/, 'transform="translate(4 5)"').replace(/stroke-width="[^"]*"/, 'stroke-width="2"')}</svg>\n`, fill),
   /** The drawing for one icon size: pixel-grid at 16/20/24/32, the detailed one from 40 px up. */
   forSize: (size, fill = MOLA_GREEN) => PIXEL[size] ? pixelCup(size, fill) : size === 32 ? iconSvg.small(fill) : iconSvg.rounded(fill),
 };
@@ -63,18 +66,18 @@ export function renderPng(svg, size) {
 export const WEB_ICONS = {
   'favicon-16.png': [() => iconSvg.forSize(16), 16],
   'favicon-32.png': [() => iconSvg.small(), 32],
-  // Mola Yönetim's tab and window (merkez.html): near-black.
-  'favicon-yonetim-16.png': [() => iconSvg.forSize(16, YONETIM_BLACK), 16],
-  'favicon-yonetim-32.png': [() => iconSvg.small(YONETIM_BLACK), 32],
+  // Mola Yönetim's tab and window (merkez.html): brass.
+  'favicon-yonetim-16.png': [() => iconSvg.forSize(16, YONETIM_FILL), 16],
+  'favicon-yonetim-32.png': [() => iconSvg.small(YONETIM_FILL), 32],
   'icon-192.png': [iconSvg.rounded, 192],
   'icon-256.png': [iconSvg.rounded, 256],
   'icon-512.png': [iconSvg.rounded, 512],
   'icon-maskable-192.png': [() => iconSvg.square(), 192],
   'icon-maskable-512.png': [() => iconSvg.square(), 512],
-  'icon-yonetim-192.png': [() => iconSvg.rounded(YONETIM_BLACK), 192],
-  'icon-yonetim-256.png': [() => iconSvg.rounded(YONETIM_BLACK), 256],
-  'icon-yonetim-512.png': [() => iconSvg.rounded(YONETIM_BLACK), 512],
-  'icon-yonetim-maskable-512.png': [() => iconSvg.square(6, YONETIM_BLACK), 512],
+  'icon-yonetim-192.png': [() => iconSvg.rounded(YONETIM_FILL), 192],
+  'icon-yonetim-256.png': [() => iconSvg.rounded(YONETIM_FILL), 256],
+  'icon-yonetim-512.png': [() => iconSvg.rounded(YONETIM_FILL), 512],
+  'icon-yonetim-maskable-512.png': [() => iconSvg.square(6, YONETIM_FILL), 512],
   // iOS rounds the corners itself and shows transparency as black: a full square.
   'apple-touch-icon.png': [() => iconSvg.square(6.4), 180],
 };

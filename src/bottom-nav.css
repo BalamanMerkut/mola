@@ -39,7 +39,7 @@
   /* "Daha fazla": a sheet from the bottom, over a dim layer; its own scroll if the list is long. */
   .bottom-sheet-layer{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;background:#18261f66;animation:bottom-sheet-fade .15s ease-out}
   .bottom-sheet{position:relative;width:100%;max-height:calc(100dvh - 56px);overflow-y:auto;overscroll-behavior:contain;padding:8px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--paper,#fff);border-radius:20px 20px 0 0;box-shadow:0 -12px 40px #12241b33;box-sizing:border-box;animation:bottom-sheet-up .2s ease-out}
-  .bottom-sheet-grip{display:block;width:40px;height:4px;margin:2px auto 6px;border-radius:2px;background:#d6ddd2}
+  .bottom-sheet-grip{display:block;width:40px;height:4px;margin:2px auto 6px;border-radius:2px;background:var(--brand-soft,#d6ddd2)}
   .bottom-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 0 8px}
   .bottom-sheet-head h2{margin:0;font-size:17px;font-weight:700;color:var(--ink)}
   .bottom-sheet-head .icon-btn{width:44px;height:44px}

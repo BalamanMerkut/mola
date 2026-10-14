@@ -13,7 +13,7 @@ span.desktop-rail-logo { flex:none; aspect-ratio:1; border-radius:24%; }
 .brand>div>small:not(.x) { font-size:8px; letter-spacing:2px; font-weight:600; }
 
 /* Mola Yönetim: the same cup, walnut on brass (14 Ekim), "Mola Yönetim" beside it. */
-.ybrand { display:flex; align-items:center; gap:12px; min-width:0; color:#1c1f1e; }
+.ybrand { display:flex; align-items:center; gap:12px; min-width:0; color:#2a1c14; }
 .ybrand-mark { width:40px; height:40px; flex:0 0 40px; aspect-ratio:1; display:grid; place-items:center; border-radius:10px; background:#c9a368; color:#3a281e; }
 .ybrand-word { font-size:19px; line-height:1.15; letter-spacing:-.2px; white-space:nowrap; min-width:0; }
 .ybrand-word strong { font-weight:700; }

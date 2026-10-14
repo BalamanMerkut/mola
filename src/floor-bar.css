@@ -46,7 +46,7 @@
 .floor-head .cash-day.compact{display:contents}
 .floor-head .cash-day.compact>:not(.cash-chip-wrap){flex-basis:100%;order:10;margin:0}
 .cash-chip-wrap{position:relative}
-.cash-chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px 0 14px;border:1px solid #cfe0c6;border-radius:20px;background:#eef6ea;color:#2f5a3e;font:inherit;font-size:13.5px;font-weight:650;white-space:nowrap;cursor:pointer;max-width:100%}
+.cash-chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px 0 14px;border:1px solid var(--line,#cfe0c6);border-radius:20px;background:var(--brand-soft,#eef6ea);color:var(--green,#2f5a3e);font:inherit;font-size:13.5px;font-weight:650;white-space:nowrap;cursor:pointer;max-width:100%}
 .cash-chip span{overflow:hidden;text-overflow:ellipsis}
 .cash-chip.warn{border-color:#e4c27f;background:#fff5df;color:#7a4f0c}
 .cash-chip[aria-expanded=true]{box-shadow:0 0 0 3px #23574326}

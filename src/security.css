@@ -83,7 +83,7 @@
 /* "İşletme sahibi şifresini unuttum": two ways (recovery code, the Mola team's one-time code), two steps. */
 .owner-reset-ways{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
 .owner-reset-ways button{border:1px solid #d6ddd2;border-radius:999px;background:var(--paper,#fff);padding:6px 14px;font-weight:600;color:var(--muted);cursor:pointer}
-.owner-reset-ways button.active{background:var(--brand-soft,#eef4ea);border-color:#b9c6b3;color:var(--green)}
+.owner-reset-ways button.active{background:var(--brand-soft,#eef4ea);border-color:var(--line,#b9c6b3);color:var(--green)}
 .owner-reset-ways button:disabled{opacity:.55;cursor:not-allowed}
 .owner-reset{display:grid;gap:10px}
 .owner-reset label{display:flex;flex-direction:column;gap:6px;font-weight:600}

@@ -9,7 +9,7 @@
 .yonetim .folder-field .field-problem { color:var(--bad-fg, #983f28); font-size:12.5px; }
 .yonetim .folder-places { display:flex; flex-wrap:wrap; gap:8px; min-width:0; }
 .yonetim .folder-place { display:inline-flex; align-items:center; gap:8px; min-height:44px; max-width:100%; padding:6px 12px; border:1px solid var(--y-line); border-radius:12px; background:var(--y-soft,#f1f5ee); color:#3d5345; font:inherit; text-align:left; cursor:pointer; min-width:0; }
-.yonetim .folder-place:hover:not(:disabled) { border-color:#cfdac9; background:var(--y-soft,#f1f5ee); }
+.yonetim .folder-place:hover:not(:disabled) { border-color:#dbd2c3; background:var(--y-soft,#f1f5ee); }
 .yonetim .folder-place.active { border-color:#c9a368; background:#efe2c9; }
 .yonetim .folder-place.gdrive svg, .yonetim .folder-place.onedrive svg { color:#2d5579; }
 .yonetim .folder-place.usb svg { color:#55487d; }

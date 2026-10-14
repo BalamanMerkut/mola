@@ -7,13 +7,13 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import sharp from 'sharp';
-import { ICO_SIZES, MOLA_GREEN, YONETIM_BLACK, exeIconImages, icoFile, icoImages, iconImagePng, iconSvg, renderPng } from '../scripts/mola-icons.mjs';
+import { ICO_SIZES, MOLA_GREEN, YONETIM_FILL, exeIconImages, icoFile, icoImages, iconImagePng, iconSvg, renderPng } from '../scripts/mola-icons.mjs';
 
 const rgb = (hex: string) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
 async function pixels(png: Buffer) { const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); return { data, width: info.width }; }
 
-test('the .ico has every Windows size, each image its real size; café green and Mola Yönetim near-black', async () => {
-  for (const [fill, other] of [[MOLA_GREEN, YONETIM_BLACK], [YONETIM_BLACK, MOLA_GREEN]]) {
+test('the .ico has every Windows size, each image its real size; café green and Mola Yönetim brass', async () => {
+  for (const [fill, other] of [[MOLA_GREEN, YONETIM_FILL], [YONETIM_FILL, MOLA_GREEN]]) {
     const images = icoImages(await icoFile(fill));
     assert.deepEqual(images.map(i => i.size), ICO_SIZES);
     assert.deepEqual(ICO_SIZES, [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]);
@@ -27,7 +27,7 @@ test('the .ico has every Windows size, each image its real size; café green and
     }
     assert.equal(images.at(-1)!.data.subarray(1, 4).toString('latin1'), 'PNG', '256 px stored as PNG');
   }
-  assert.equal(readFileSync('scripts/desktop/mola-yonetim-icon.svg', 'utf8'), iconSvg.rounded(YONETIM_BLACK), 'Mola Yönetim is the same drawing on near-black');
+  assert.equal(readFileSync('scripts/desktop/mola-yonetim-icon.svg', 'utf8'), iconSvg.rounded(YONETIM_FILL), 'Mola Yönetim is the same drawing on brass');
 });
 
 test('16/20/24/32 px are drawn on the pixel grid: crisp lines, not the 256 drawing scaled down', async () => {
@@ -103,7 +103,7 @@ static class Deneme { [STAThread] static int Main(string[] a) {
 test('built Windows programs carry every icon size (skipped before npm run installer)', async t => {
   const version = JSON.parse(readFileSync('package.json', 'utf8')).version, base = resolve('.local/installer', `Mola-${version}`);
   const programs = [[join(base, 'Windows', 'program', 'Mola.exe'), MOLA_GREEN], [join(base, 'Windows', 'Mola Kurulum.exe'), MOLA_GREEN], [join(base, 'Windows', 'program', 'Mola-Kaldir.exe'), MOLA_GREEN],
-    [join(base, 'Mola-Yonetim', 'program', 'Mola Yönetim.exe'), YONETIM_BLACK], [join(base, 'Mola-Yonetim', 'Mola Yönetim Kurulum.exe'), YONETIM_BLACK], [join(base, 'Mola-Yonetim', 'program', 'Mola-Yonetim-Kaldir.exe'), YONETIM_BLACK]] as const;
+    [join(base, 'Mola-Yonetim', 'program', 'Mola Yönetim.exe'), YONETIM_FILL], [join(base, 'Mola-Yonetim', 'Mola Yönetim Kurulum.exe'), YONETIM_FILL], [join(base, 'Mola-Yonetim', 'program', 'Mola-Yonetim-Kaldir.exe'), YONETIM_FILL]] as const;
   if (!programs.some(([p]) => existsSync(p))) return t.skip('Önce npm run installer');
   for (const [program, fill] of programs) {
     if (!existsSync(program)) continue;

@@ -1,5 +1,5 @@
 /* Hesap güvenliği opened for a waiting change (src/PlatformMfa.tsx `pending`): the two-step card comes first and says why. */
-.yonetim .ps-security .ps-mfa-focus { order:-1; border-color:#9cc096; box-shadow:0 0 0 3px #e6f1e3; }
+.yonetim .ps-security .ps-mfa-focus { order:-1; border-color:#bfaa84; box-shadow:0 0 0 3px #f1eadd; }
 .yonetim .mfa-pending { display:flex; flex-wrap:wrap; align-items:flex-start; gap:8px 10px; padding:12px 14px; border-radius:14px; background:#f3e9d4; border:1px solid #f0dfb8; color:#5d4512; }
 .yonetim .mfa-pending > svg { flex:none; margin-top:2px; color:#7d520e; }
 .yonetim .mfa-pending p { flex:1 1 220px; margin:0; font-size:13.5px; line-height:1.45; overflow-wrap:anywhere; }

@@ -5,7 +5,7 @@
 .alert-bell-count { position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#b96844; color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; }
 .alert-list { list-style:none; margin:12px 0 0; padding:0; display:grid; gap:8px; }
 .alert-list li { display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:12px; align-items:start; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--y-card,#fff); }
-.alert-list li.unread { background:var(--y-soft,#f1f5ee); border-color:#cddfc7; }
+.alert-list li.unread { background:var(--y-soft,#f1f5ee); border-color:#dfd3be; }
 .alert-list li p { margin:2px 0; overflow-wrap:anywhere; }
 .alert-list li small { color:var(--muted); }
 .alert-dot { width:8px; height:8px; border-radius:50%; margin-top:7px; background:transparent; }
@@ -15,7 +15,7 @@
 .checkbox-line input { width:auto; margin:0; }
 .mail-queue { list-style:none; padding:0; margin:6px 0 0; display:grid; gap:6px; }
 .mail-queue li { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 12px; font-size:13px; border-bottom:1px solid #f0f2ec; padding-bottom:6px; }
-.ok { color:#366046; } .warn { color:#7c520f; } .bad { color:#9d442e; }
+.ok { color:#525632; } .warn { color:#7c520f; } .bad { color:#9d442e; }
 .merkez-backup .detail-facts.compact { margin:10px 0; }
 .merkez-backup .path { overflow-wrap:anywhere; font-family:Consolas,monospace; font-size:12px; }
 .second-place { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px; margin:14px 0; }
@@ -83,7 +83,7 @@
 @media (max-width: 560px) { .application-repeats ul { grid-template-columns:minmax(0, 1fr); } .application-repeats li small { margin:0 0 6px 2px; } }
 .release-warning { margin:4px 0 0; font-size:14px; color:#7c520f; }
 /* "Şifremi unuttum": code or e-mail, two equal halves of one pill (44 px each); the e-mail half greys out without SMTP. */
-.auth-card .reset-methods { display:flex; gap:4px; padding:4px; background:#e8ece5; border-radius:999px; }
+.auth-card .reset-methods { display:flex; gap:4px; padding:4px; background:#ede9e3; border-radius:999px; }
 .auth-card .reset-methods button { flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:0 12px; border:0; border-radius:999px; background:transparent; color:#5d6a60; font:inherit; font-size:14px; font-weight:500; cursor:pointer; text-align:center; }
 .auth-card .reset-methods button.active { background:var(--y-card); color:var(--y-text); font-weight:600; box-shadow:0 1px 3px #1c2e2420; }
 .auth-card .reset-methods button:disabled { cursor:default; opacity:.55; }

@@ -50,7 +50,7 @@
 .agenda-note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .agenda-note-tags:empty{display:none}
 .agenda-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--surface-soft,#eef2ec);color:#46604f}
-.agenda-tag.sales{background:#e2efe3;color:#245a3c}
+.agenda-tag.sales{background:var(--brand-soft,#e2efe3);color:var(--green,#245a3c)}
 .agenda-tag.reminder{background:var(--agenda-amber-soft);color:#8a5408}
 .agenda-note-actions{display:flex;gap:2px;flex-shrink:0}
 .agenda-note-actions .icon-btn{width:44px;height:44px;color:#5c6b60}

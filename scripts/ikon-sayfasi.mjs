@@ -8,7 +8,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import sharp from 'sharp';
-import { ICO_SIZES, MOLA_GREEN, YONETIM_BLACK, exeIconImages, icoFile, icoImages, iconImagePng, webIcon } from './mola-icons.mjs';
+import { ICO_SIZES, MOLA_GREEN, YONETIM_FILL, exeIconImages, icoFile, icoImages, iconImagePng, webIcon } from './mola-icons.mjs';
 
 const option = name => process.argv.find(a => a.startsWith(`${name}=`))?.slice(name.length + 1);
 const output = resolve(option('--cikti') ?? 'docs/ekran/ikonlar.png');
@@ -34,7 +34,7 @@ const zoom = (png, size, k) => sharp(png).resize(size * k, size * k, { kernel: '
 text(PAD, y + 22, 'Mola simgeleri: gerçek boyut ve 6× büyütülmüş (yumuşatmasız)', 22, 600); y += 34;
 text(PAD, y + 16, 'Windows simgesi (.ico): 16, 20, 24, 32 piksel ızgarasına çizilmiş; 40 ve üstü ayrıntılı çizim. Görev çubuğu 100 % = 24, 125 % = 30→32, 150 % = 36→40, 200 % = 48.', 13, 400, '#56645b'); y += 34;
 
-for (const [name, exe, fill] of [['Mola (kafe)', join(built, 'Windows', 'program', 'Mola.exe'), MOLA_GREEN], ['Mola Yönetim', join(built, 'Mola-Yonetim', 'program', 'Mola Yönetim.exe'), YONETIM_BLACK]]) {
+for (const [name, exe, fill] of [['Mola (kafe)', join(built, 'Windows', 'program', 'Mola.exe'), MOLA_GREEN], ['Mola Yönetim', join(built, 'Mola-Yonetim', 'program', 'Mola Yönetim.exe'), YONETIM_FILL]]) {
   const icon = await windowsIcon(exe, fill);
   const sizes = icon.images.map(i => i.size);
   for (const want of ICO_SIZES) if (!sizes.includes(want)) throw new Error(`${name}: ${want} px simge yok (${icon.from}).`);

@@ -2,7 +2,7 @@
 .step-form{display:grid;gap:12px;min-width:0}
 .step-card{display:grid;gap:12px;min-width:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--paper,#fff)}
 .step-head{display:flex;align-items:center;gap:10px;min-height:26px}
-.step-num{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--surface-soft,#e8f0e9);color:var(--green);font-size:13px;font-weight:700}
+.step-num{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--brand-soft,#e8f0e9);color:var(--green);font-size:13px;font-weight:700}
 .step-head h3{margin:0;font-size:15px;line-height:1.3;color:var(--ink)}
 .step-head h3 small{font-size:12px;font-weight:400;color:var(--muted)}
 .step-head .help-tip{margin-left:auto}
@@ -22,7 +22,7 @@
 .step-choice button.selected{background:var(--paper,#fff);color:var(--ink);font-weight:600;box-shadow:0 1px 3px #1d3a2b22}
 .step-choice button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 /* A live sentence of what the form will do ("25 masa: D1, D2 … D25"). */
-.step-result{margin:0;padding:10px 12px;border-radius:10px;background:#edf3e8;color:#285447;font-size:13.5px;font-weight:600;line-height:1.45}
+.step-result{margin:0;padding:10px 12px;border-radius:10px;background:var(--brand-soft,#edf3e8);color:var(--green,#285447);font-size:13.5px;font-weight:600;line-height:1.45}
 .step-result.warn{background:#fbf1e8;color:#8a4a1f}
 .step-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
 .step-chips li{max-width:100%;padding:5px 10px;border:1px solid #dfe4d9;border-radius:999px;background:var(--paper,#fff);font-size:13px;overflow-wrap:anywhere}

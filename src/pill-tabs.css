@@ -16,7 +16,7 @@
 .pill-tabs .pill-tab:focus-visible{outline:2px solid var(--green);outline-offset:1px}
 .pill-tabs .pill-tab.active{background:var(--paper);color:var(--green);font-weight:600;box-shadow:0 1px 3px #1c2e2420}
 .pill-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;font-size:10.5px;line-height:1.5;padding:1px 7px;border-radius:99px;white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums;box-sizing:border-box}
-.pill-tab-badge.quiet{background:#dfe5da;color:#5b6a58}
+.pill-tab-badge.quiet{background:var(--brand-soft,#dfe5da);color:#5b6a58}
 .pill-tab.active .pill-tab-badge.quiet{background:var(--surface-soft,#edf2e9);color:var(--green)}
 .pill-tab-badge.warn{background:#fff1da;color:#8a5a12}
 /* Narrow bars: a little tighter, still 44 px tall. */

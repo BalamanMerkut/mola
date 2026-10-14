@@ -104,12 +104,14 @@ test('Mola Yönetim’s contact on the site: the cards, the footer, the hours an
   const list = page.locator('.contact-list');
   await expect(list.getByRole('link', { name: /WhatsApp’tan yazın/ })).toHaveAttribute('href', /^https:\/\/wa\.me\/905380492002\?text=/);
   await expect(list.getByRole('link', { name: /Bizi arayın/ })).toHaveAttribute('href', 'tel:+905380492002');
-  await expect(list.getByRole('link', { name: /Bizi arayın/ })).toContainText('0538 049 20 02');
+  // The numbers are never written on the page (14 Ekim), only behind the links.
+  await expect(list.getByRole('link', { name: /Bizi arayın/ })).toContainText('Aramak için dokunun');
+  await expect(page.locator('body')).not.toContainText('0538 049 20 02');
   await expect(list.getByRole('link', { name: /E-posta gönderin/ })).toHaveAttribute('href', 'mailto:merkut@example.com');
   await expect(list).not.toContainText('Numara yakında burada');
   await expect(page.locator('.hours')).toContainText('Her gün <b>10:00</b>–20:00');
   const footer = page.locator('footer');
-  await expect(footer.getByRole('link', { name: '0538 049 20 02' })).toHaveAttribute('href', 'tel:+905380492002');
+  await expect(footer.getByRole('link', { name: 'Telefon', exact: true })).toHaveAttribute('href', 'tel:+905380492002');
   await expect(footer.getByRole('link', { name: 'merkut@example.com' })).toBeVisible();
   await expect(footer.getByRole('link', { name: 'WhatsApp', exact: true })).toBeVisible();
   await page.screenshot({ path: info.outputPath('site-iletisim-merkezden.png'), fullPage: true });

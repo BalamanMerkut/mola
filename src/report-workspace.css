@@ -1,6 +1,6 @@
 /* Reports use a shared period bar and a consistent, compact card rhythm. */
 .reports-workspace{min-width:0;--report-gap:16px;--report-soft:var(--surface-soft,#f3f6f0);--report-muted:#6e7b6c}
-.reports-workspace .sales-tabs{width:fit-content;max-width:100%;margin:0 0 20px;padding:4px;gap:4px;border-radius:10px;background:var(--surface-soft,#eaf0e7)}
+.reports-workspace .sales-tabs{width:fit-content;max-width:100%;margin:0 0 20px;padding:4px;gap:4px;border-radius:10px;background:var(--brand-soft,#eaf0e7)}
 .reports-workspace .sales-tabs .btn{flex:0 1 auto;min-height:39px;padding:10px 18px;font-size:12px;border-radius:7px;white-space:nowrap}
 .reports-workspace .report-period{padding:0 0 18px;margin:0 0 18px;border-bottom:1px solid var(--line)}
 .reports-workspace .report-period-heading,.reports-workspace .report-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
@@ -13,7 +13,7 @@
 .reports-workspace .report-custom-period{min-width:0}
 .reports-workspace .report-custom-period>summary{list-style:none;display:flex;align-items:center;gap:7px;width:fit-content;cursor:pointer;min-height:36px;padding:8px 12px;border:1px solid #dce3d9;border-radius:8px;background:var(--paper,#fff);font-size:12px;font-weight:600;color:var(--green)}
 .reports-workspace .report-custom-period>summary::-webkit-details-marker{display:none}
-.reports-workspace .report-custom-period>summary.is-selected,.reports-workspace .report-custom-period[open]>summary{background:var(--brand-soft,#eaf2e6);border-color:#b5c6ad}
+.reports-workspace .report-custom-period>summary.is-selected,.reports-workspace .report-custom-period[open]>summary{background:var(--brand-soft,#eaf2e6);border-color:var(--line,#b5c6ad)}
 .reports-workspace .report-custom-period[open]{flex-basis:100%}
 .reports-workspace .report-filters{display:grid;grid-template-columns:repeat(2,minmax(0,190px)) auto;align-items:end;gap:12px;background:var(--paper,#fff);border:1px solid var(--line);padding:16px;border-radius:10px;margin:10px 0 0;max-width:680px}
 .reports-workspace .report-filters label{min-width:0;margin:0;font-size:12px}
@@ -32,7 +32,7 @@
 .reports-workspace .finance-kpis article>span{color:var(--report-muted);font-size:12px}
 .reports-workspace .finance-kpis strong{font-size:26px;line-height:1.2;letter-spacing:-.65px;margin:11px 0 9px;font-weight:600;font-variant-numeric:tabular-nums}
 .reports-workspace .finance-kpis small{color:var(--report-muted);font-size:10px;line-height:1.5;margin-top:auto}
-.reports-workspace .finance-kpis .report-kpi-highlight{background:var(--brand-soft,#eaf2e6);border-color:#cbdcc0}
+.reports-workspace .finance-kpis .report-kpi-highlight{background:var(--brand-soft,#eaf2e6);border-color:var(--line,#cbdcc0)}
 .reports-workspace .report-kpi-highlight strong{color:var(--green)}
 .reports-workspace .finance-charts{grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:var(--report-gap);align-items:stretch}
 .reports-workspace .finance-trend{display:flex;flex-direction:column}
@@ -108,7 +108,7 @@
 .reports-workspace .report-campaign-select{max-width:560px;margin:0}
 .reports-workspace .report-campaign-select select{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .reports-workspace .campaign-report-grid{margin-top:0}
-.reports-workspace .report-status{font-size:10px;line-height:1.4;padding:5px 8px;color:#55764c;background:#eaf2e6;border-radius:5px}
+.reports-workspace .report-status{font-size:10px;line-height:1.4;padding:5px 8px;color:var(--green,#55764c);background:var(--brand-soft,#eaf2e6);border-radius:5px}
 .reports-workspace .campaign-comparison-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
 .reports-workspace .campaign-comparison-summary>div{display:flex;flex-direction:column;gap:7px;min-width:0}
 .reports-workspace .campaign-comparison-summary span{font-size:11px;line-height:1.5;color:var(--report-muted)}
@@ -294,7 +294,7 @@
 
 /* Giderler: automatic expenses ("Otomatik", with the rule they came from); on a phone date, method and recorder go under the description. */
 .reports-v2 .expense-auto{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:4px;font-size:11.5px;font-weight:400}
-.reports-v2 .expense-auto-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;background:#e8f1e4;color:#2f6b3a;font-size:11px;font-weight:650}
+.reports-v2 .expense-auto-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;background:var(--brand-soft,#e8f1e4);color:var(--green,#2f6b3a);font-size:11px;font-weight:650}
 .reports-v2 .expense-auto .text-btn{margin:0;padding:6px 2px;min-height:32px;font-size:11.5px}
 .reports-v2 .product-table tbody th small.expense-meta{display:none}
 .reports-v2 .expense-table table{table-layout:auto}

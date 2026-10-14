@@ -194,15 +194,15 @@
 .yonetim .dsheet .dsum-lines dd.fact-bad .fact-dot { background:var(--bad-dot); } .yonetim .dsheet .dsum-lines dd:is(.fact-idle, .fact-info) .fact-dot { background:var(--idle-dot); }
 .yonetim .dsum-action { display:flex; margin-top:auto; padding-top:4px; }
 .yonetim .dsum-action .btn { margin:0; flex:1; justify-content:center; gap:4px; min-height:44px; }
-.yonetim .detail-sheet.dsheet > .dcalm { display:flex; align-items:center; gap:12px; padding:14px 20px; background:var(--y-soft,#f1f5ee); border-color:#d6e6d0; color:var(--ok-fg); }
-.yonetim .dcalm p { margin:0; font-size:14.5px; color:#3d5a42; }
+.yonetim .detail-sheet.dsheet > .dcalm { display:flex; align-items:center; gap:12px; padding:14px 20px; background:var(--y-soft,#f1f5ee); border-color:#e7dcc8; color:var(--ok-fg); }
+.yonetim .dcalm p { margin:0; font-size:14.5px; color:#4e5138; }
 .yonetim .dcalm svg { flex:none; }
 /* Short lines with a state dot (Uzaktan destek). */
 .yonetim .dlines { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; font-size:14px; }
 .yonetim .dlines li { display:flex; align-items:center; gap:8px; min-width:0; }
-.yonetim .dlines .status-dot { width:9px; height:9px; border-radius:50%; flex:none; background:#b8c1ba; }
-.yonetim .dlines .status-dot.ok { background:#2f8a5f; } .yonetim .dlines .status-dot.warn { background:var(--warn-dot); }
-.yonetim .dsheet .remote-support-admin.focused { border-color:#a9cfa0; box-shadow:0 0 0 3px #e6f1e3; }
+.yonetim .dlines .status-dot { width:9px; height:9px; border-radius:50%; flex:none; background:#c1bdb4; }
+.yonetim .dlines .status-dot.ok { background:#70792b; } .yonetim .dlines .status-dot.warn { background:var(--warn-dot); }
+.yonetim .dsheet .remote-support-admin.focused { border-color:#cfb78d; box-shadow:0 0 0 3px #f1eadd; }
 .yonetim .dsheet .remote-history-title { display:flex; align-items:center; gap:6px; margin:4px 0 0; font-size:14px; }
 
 /* ---------- Sizes ---------- */

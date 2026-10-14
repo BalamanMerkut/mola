@@ -9,3 +9,17 @@
 .update-banner-box .update-notes { display:block; color:#4c5d51; font-size:14px; margin-top:2px; }
 .update-banner-box .btn { min-height:44px; }
 .update-banner-box .notice { flex-basis:100%; margin:0; }
+/* The update window (14 Ekim): the business's palette like every Mola window; a percentage while it installs. */
+.update-dialog .update-dialog-body { display:grid; gap:14px; }
+.update-dialog-lead { display:flex; align-items:flex-start; gap:10px; margin:0; font-size:15px; }
+.update-dialog-lead > svg { flex:none; margin-top:2px; color:var(--green); }
+.update-dialog-notes { padding:12px 14px; border-radius:12px; background:var(--brand-soft,#eef3ec); color:var(--ink); }
+.update-dialog-notes p { margin:4px 0 0; white-space:pre-line; }
+.update-dialog-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.update-dialog-actions .btn { min-height:46px; }
+.update-progress { display:grid; gap:10px; }
+.update-progress-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.update-percent { font-size:28px; font-weight:700; color:var(--green); font-variant-numeric:tabular-nums; }
+.update-bar { height:12px; border-radius:999px; background:var(--surface-soft,#e8ece5); overflow:hidden; }
+.update-bar > span { display:block; height:100%; border-radius:inherit; background:var(--green); transition:width .4s ease; }
+.update-step { margin:0; }

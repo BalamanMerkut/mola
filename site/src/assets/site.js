@@ -81,12 +81,13 @@
             var a = el;
             // A "yakında" card becomes a link.
             if (el.tagName !== 'A') { a = document.createElement('a'); a.className = el.className.replace(/\s*\bpending\b/, ''); a.setAttribute('data-iletisim', kind); a.innerHTML = el.innerHTML; if (kind === 'whatsapp') a.rel = 'noopener'; el.parentNode.replaceChild(a, el); }
-            a.href = l.href; var value = a.querySelector('span > span'); if (value) value.textContent = l.text;
+            // The phone and WhatsApp numbers stay behind the link (14 Ekim): the card keeps "Aramak için dokunun".
+            a.href = l.href; var value = a.querySelector('span > span'); if (value) value.textContent = kind === 'email' ? l.text : kind === 'phone' ? 'Aramak için dokunun' : 'Yazmak için dokunun';
             return;
           }
           // The footer's lines and the e-mail links show the value; the WhatsApp button and line keep their words.
           var link = el.tagName === 'A' ? el : el.querySelector('a');
-          if (link) { link.href = l.href; if (el.tagName === 'A' ? kind === 'email' : kind !== 'whatsapp') link.textContent = l.text; }
+          if (link) { link.href = l.href; if (kind === 'email') link.textContent = l.text; else if (kind === 'phone' && el.tagName !== 'A') link.textContent = 'Telefon'; }
           el.hidden = false;
         });
       })['catch'](function () { /* the build's own contact stays */ });

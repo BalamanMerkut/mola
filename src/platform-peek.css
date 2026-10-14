@@ -2,7 +2,7 @@
 .peek-trigger { display:inline; padding:0; margin:0; border:0; background:none; font:inherit; color:inherit; font-weight:650; text-align:left; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; }
 .peek-trigger:hover { color:var(--green); }
 .peek-trigger:focus-visible { outline:2px solid var(--green); outline-offset:2px; border-radius:3px; }
-.peek { position:fixed; z-index:1000; display:flex; flex-direction:column; gap:10px; padding:14px 16px; overflow-y:auto; overscroll-behavior:contain; background:var(--y-card,#fff); border:1px solid #e3e8df; border-radius:14px; box-shadow:0 12px 32px rgba(30,45,30,.18); color:var(--ink); font-size:13.5px; outline:none; box-sizing:border-box; }
+.peek { position:fixed; z-index:1000; display:flex; flex-direction:column; gap:10px; padding:14px 16px; overflow-y:auto; overscroll-behavior:contain; background:var(--y-card,#fff); border:1px solid #e9e4dc; border-radius:14px; box-shadow:0 12px 32px rgba(30,45,30,.18); color:var(--ink); font-size:13.5px; outline:none; box-sizing:border-box; }
 .peek.sheet { left:0; right:0; bottom:0; top:auto; width:auto; max-height:85vh; border-radius:18px 18px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); }
 .peek-backdrop { position:fixed; inset:0; z-index:999; background:rgba(20,30,20,.35); }
 .peek-head { display:flex; align-items:center; gap:8px; min-width:0; }
@@ -23,7 +23,7 @@
 .tc-items li.tc-peek-row:hover { background:var(--y-soft,#f1f5ee); }
 .tc-items li.tc-peek-row:has(> .tc-item.selected) { background:color-mix(in srgb, var(--green) 9%, #fff); border-left-color:var(--green); }
 .tc-peek-row > .tc-item, .tc-peek-row > .tc-item.selected, .tc-peek-row > .tc-item:hover { border:0; background:transparent; min-height:0; padding-bottom:3px; }
-.tc-peek-row .tc-item-business-line { display:flex; align-items:center; gap:6px; min-width:0; padding:0 16px 10px 14px; font-size:12.5px; color:#46604f; }
+.tc-peek-row .tc-item-business-line { display:flex; align-items:center; gap:6px; min-width:0; padding:0 16px 10px 14px; font-size:12.5px; color:#575943; }
 .tc-peek-row .tc-item-business-line .peek-trigger { font-weight:600; }
 /* Phones and tablets: a finger-sized target (44 px), as every button there. */
 @media (max-width: 899.98px), (pointer: coarse) { .peek-trigger { display:inline-flex; align-items:center; min-height:44px; } .tc-peek-row .tc-item-business-line { padding-bottom:2px; } }

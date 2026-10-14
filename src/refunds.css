@@ -84,7 +84,7 @@
 
 /* K-A (9 Ekim): "Sahip iadeyi yaptı: Masa 02 · ₺190 nakit. Parayı müşteriye verin." on the cashier's Masalar (src/TillNotices.tsx). */
 .till-notices{display:grid;gap:8px;margin:0 0 12px}
-.till-notice{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 8px 8px 14px;border:1px solid #cddfc7;border-radius:12px;background:#edf6ec;color:#2f5a3f}
+.till-notice{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 8px 8px 14px;border:1px solid var(--line,#cddfc7);border-radius:12px;background:var(--brand-soft,#edf6ec);color:var(--green,#2f5a3f)}
 .till-notice>svg{flex:none;color:var(--green)}
 .till-notice p{flex:1;min-width:0;margin:0;font-weight:600;font-size:14px;overflow-wrap:anywhere}
 .till-notice small{display:block;font-weight:400;font-size:12px;color:#5d6a60}
