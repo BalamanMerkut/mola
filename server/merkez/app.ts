@@ -881,7 +881,8 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   // Sosyal medya: the public short addresses of the cafés' social QR codes (outside /api: no request log).
   socialRoutes(app, { store, now });
   // Kalıcı bağlantı: the owner's permanent link to the café computer (outside /api: no request log).
-  lanLinkRoutes(app, { store, now, publicOrigin: httpsOrigin });
+  // Its "no remote access" page names the web site's contact page (MERKEZ_SITE_ORIGIN, only when it is not Merkez itself).
+  lanLinkRoutes(app, { store, now, publicOrigin: httpsOrigin, ...(siteOrigin && siteOrigin !== httpsOrigin ? { siteOrigin } : {}) });
   app.get(`${MERKEZ_API}/health`, (_req, res) => { res.json({ ok: true, role: 'merkez', version: APP_VERSION, mode: process.env.MOLA_MODE === 'installed' ? 'installed' : 'development' }); });
   /*
    * "Mola ekibi iletişim bilgileri" for a café that is not activated yet (no install secret to sign with): the vendor's contact

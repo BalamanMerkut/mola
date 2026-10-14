@@ -6,7 +6,7 @@ import { DEMO_PASSWORD } from '../server/app.js';
 import { signedHeaders } from '../server/install-auth.js';
 import { totp, base32 } from '../server/totp.js';
 import { MERKEZ_API } from '../server/sync-protocol.js';
-import { newCafeKeys, cafePrivateKey, newPhoneKeys, openReport, pairConfirmed, pairRequest, readPairingFragment, sealReport, signLive, liveSigned, type ReportBox } from '../packages/domain/remote-crypto.js';
+import { newCafeKeys, cafePrivateKey, deviceKindOf, newPhoneKeys, openReport, pairConfirmed, pairRequest, readPairingFragment, sealReport, signLive, liveSigned, type DeviceKind, type ReportBox } from '../packages/domain/remote-crypto.js';
 import type { PhoneReport } from '../packages/domain/remote-report.js';
 import type { RelayClient } from '../server/relay.js';
 import type { RemoteReports } from '../server/remote-reports.js';
@@ -60,14 +60,14 @@ async function setup(name: string, now?: () => Date) {
   /** The phone's calls to Mola Merkez (recorded too). */
   const phone = async (path: string, body: unknown) => { wire.push(JSON.stringify(body)); const r = await fetch(`${pair.merkezBase}${MERKEZ_API}/phone/${path}`, json(body)); const text = await r.text(); wire.push(text); return { status: r.status, data: JSON.parse(text) }; };
   /** "Telefonu eşleştir" on the café computer (the device's name, the owner's password and phone code), then the phone scans the QR. */
-  const pairPhone = async (name = 'Test telefonu') => {
+  const pairPhone = async (name = 'Test telefonu', kind?: DeviceKind) => {
     const started = await owner('/staff/remote-reports/pair', { name, password: DEMO_PASSWORD, code: code() });
     assert.equal(started.status, 200, JSON.stringify(started.data));
     const url = new URL(started.data.url), link = readPairingFragment(url.hash)!;
     assert.equal(url.pathname, '/raporlarim'); assert.ok(link);
     await wait(() => hub.online(pair.link.read()!.installId));
     // The Raporlarım page sends no name of its own any more (an older one may): the owner's name on the café computer wins.
-    const keys = await newPhoneKeys(), request = await pairRequest(keys.privateKey, keys.publicKey, link, { name: 'Eski sayfanın adı' });
+    const keys = await newPhoneKeys(), request = await pairRequest(keys.privateKey, keys.publicKey, link, { name: 'Eski sayfanın adı', ...(kind ? { kind } : {}) });
     const answer = await phone('pair', request);
     return { link, keys, request, answer, started };
   };
@@ -241,6 +241,51 @@ test('owner’s own account only, password again: Müdür and staff 403, wrong p
   assert.deepEqual((await owner('/staff/remote-reports')).data.phones.map((p: { name: string }) => p.name), ['Ev laptopu']);
   // A remote session ("Kafeyi yönet") can neither pair nor remove, password or not.
   for (const path of ['/api/staff/remote-reports/pair', '/api/staff/remote-reports/phones/remove']) assert.ok(remoteRefusal('POST', path, { id, password: DEMO_PASSWORD, code: '123456' }), path);
+});
+
+test('the phone first (0.1.21): a tablet or a computer waits for a phone; devices without a kind count as phones; the report says "Kafeyi yönet"', async t => {
+  const { pair, owner, tenant, remote, phone, pairPhone } = await setup('remote-kinds');
+  t.after(() => pair.close());
+  // What the Raporlarım page says it is, from its own user agent (iPad asking for the desktop site: a Mac with touch).
+  const UA = { iphone: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+    android: 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36',
+    androidTablet: 'Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+    ipad: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+    windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0' };
+  assert.deepEqual([deviceKindOf(UA.iphone), deviceKindOf(UA.android), deviceKindOf(UA.androidTablet), deviceKindOf(UA.ipad, 5), deviceKindOf(UA.ipad, 0), deviceKindOf(UA.windows)], ['phone', 'phone', 'tablet', 'tablet', 'computer', 'computer']);
+  // No phone yet: a laptop is refused with a plain line, and nothing is listed.
+  const laptop = await pairPhone('Ev laptopu', 'computer');
+  assert.equal(laptop.answer.status, 409, JSON.stringify(laptop.answer.data)); assert.equal(laptop.answer.data.code, 'PHONE_FIRST');
+  assert.match(laptop.answer.data.message, /^Önce telefonunuzu eşleştirin\./);
+  assert.equal((await pairPhone('Tablet', 'tablet')).answer.data.code, 'PHONE_FIRST');
+  assert.equal((await owner('/staff/remote-reports')).data.phones.length, 0);
+  // The phone, then the laptop.
+  const mine = await pairPhone('Telefonum', 'phone');
+  assert.equal(mine.answer.status, 200, JSON.stringify(mine.answer.data));
+  // Merkez keeps a phone it paired a moment ago against a poll's list from before the pairing (the poll can arrive after
+  // the pairing's reply); a removal announced by the café (/relay/state) is not held back.
+  const hub = pair.merkezApp.locals.relayHub as RelayHub, install = pair.link.read()!.installId, { phoneId, token } = mine.answer.data;
+  hub.tenants(install, [], pair.merkezStore.read(), true);
+  assert.doesNotThrow(() => hub.phone(phoneId, token));
+  const live = await phone('live', { phoneId, token, request: await signLive(mine.keys.privateKey, mine.link.cafePublic, phoneId) });
+  assert.equal(live.status, 200, JSON.stringify(live.data));
+  const report = await openReport<PhoneReport>(mine.keys.privateKey, mine.link.cafePublic, live.data.box, { phone: phoneId, kind: 'live' });
+  // "Kafeyi yönet" in the package (the demo licence has every service), not turned on yet.
+  assert.equal(report.admin, 'off');
+  assert.equal((await pairPhone('Ev laptopu', 'computer')).answer.status, 200);
+  assert.deepEqual((await owner('/staff/remote-reports')).data.phones.map((p: { name: string; kind: string }) => [p.name, p.kind]), [['Telefonum', 'phone'], ['Ev laptopu', 'computer']]);
+  // The phone removed on the café computer: the laptop stays, a new tablet waits for a phone again.
+  assert.equal((await owner('/staff/remote-reports/phones/remove', { id: phoneId, password: DEMO_PASSWORD })).status, 200);
+  assert.equal((await pairPhone('Tablet', 'tablet')).answer.data.code, 'PHONE_FIRST');
+  // A device paired before 0.1.21 (no kind) counts as a phone: then a tablet may come.
+  (remote as unknown as { write: (t: string, fn: (r: { phones: { kind?: string }[] }) => void) => void }).write(tenant, r => { for (const p of r.phones) delete p.kind; });
+  assert.equal((await owner('/staff/remote-reports')).data.phones[0].kind, null);
+  const tablet = await pairPhone('Tablet', 'tablet');
+  assert.equal(tablet.answer.status, 200, JSON.stringify(tablet.answer.data));
+  // A poll's list still without it forgets a phone once the grace is over.
+  pair.merkezStore.db.prepare('UPDATE relay_phones SET created=? WHERE phone=?').run(new Date(Date.now() - 3 * 60_000).toISOString(), tablet.answer.data.phoneId);
+  hub.tenants(install, [], pair.merkezStore.read(), true);
+  assert.throws(() => hub.phone(tablet.answer.data.phoneId, tablet.answer.data.token), /eşleştirilmemiş/);
 });
 
 test('postbox: only the café’s own phones, size limit, deleted after 7 days', async t => {

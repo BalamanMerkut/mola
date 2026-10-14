@@ -22,7 +22,7 @@ import { FEATURE_NOT_IN_PACKAGE, notInPackage } from '../packages/domain/feature
 /*
  * Sahibin uzaktan yönetimi ("Kafeyi yönet"). The owner opens the café's full screens on a device paired for Raporlarım
  * (server/remote-reports.ts) from anywhere, through Mola Merkez (relay kind `admin`, server/merkez/remote-admin.ts).
- *   Açık mı   Ayarlar → Güvenlik ve diğer → "Uzaktan yönetim", default off. Turning it on: only on a computer of the café (never
+ *   Açık mı   Ayarlar → Uzaktan erişim → "Uzaktan yönetim" (0.1.21), default off. Turning it on: only on a computer of the café (never
  *             remotely), with the owner's password and the 6-digit code (Raporlar için telefon kodu, which must be set up first).
  *             Turning it off works from anywhere and ends every remote session at once.
  *   Giriş     Every remote session: password + code, sealed by the paired device to this computer (only that device and
@@ -70,7 +70,7 @@ export const REMOTE_ENDED = (why?: EndedBy) => new DomainError('REMOTE_ENDED', `
 const CAFE_ONLY_TEXT = 'Bu işlem yalnız kafedeki bilgisayardan yapılır: yedekten geri yükleme, kurtarma kodu ve masaüstü işlemleri uzaktan açılmaz.';
 const MEDIA = /^\/media\/[a-zA-Z0-9][a-zA-Z0-9_-]{0,99}\/[a-f0-9-]{36}(-small)?\.webp$/;
 const CAFE_ONLY: [string, RegExp, string, ((body: Record<string, unknown>) => boolean)?][] = [
-  ['POST', /^\/api\/staff\/remote-reports\/(pair|pair\/cancel|phones\/remove)$/, 'Cihaz eşleştirmek ve kaldırmak yalnız kafedeki bilgisayardan olur (Destek → Uzaktan erişim).'],
+  ['POST', /^\/api\/staff\/remote-reports\/(pair|pair\/cancel|phones\/remove)$/, 'Cihaz eşleştirmek ve kaldırmak yalnız kafede olur (Ayarlar → Uzaktan erişim).'],
   ['POST', /^\/api\/staff\/report-security\/(setup|enable|recover)$/, 'Telefon kodu yalnız kafedeki bilgisayardan kurulur ya da sıfırlanır.'],
   ['POST', /^\/api\/staff\/remote-admin$/, 'Uzaktan yönetim yalnız kafedeki bilgisayardan açılır. Buradan kapatabilirsiniz.', b => b.on === true],
   ['POST', /^\/api\/staff\/remote-support$/, 'Mola ekibine uzaktan destek izni yalnız kafedeki bilgisayardan verilir. Buradan kapatabilirsiniz.', b => b.on === true],
@@ -213,8 +213,8 @@ export class RemoteAdmin {
     const { owner } = this.phone(tenant, phoneId);
     // Hizmet paketi: no "Uzaktan yönetim" in the package (the owner's switch and history stay as they were).
     if (!this.link.has(tenant, 'remote-admin')) return fail(FEATURE_NOT_IN_PACKAGE, notInPackage('remote-admin'));
-    if (!this.read(tenant).on) return fail('REMOTE_OFF', 'Uzaktan yönetim kapalı. Kafedeki bilgisayarda Ayarlar → Güvenlik ve yedek → Telefonum → Uzaktan yönetim’den açabilirsiniz.');
-    if (!owner.mfa) return fail('REMOTE_NEEDS_CODE', 'Önce kafede Ayarlar → Güvenlik ve yedek → Telefonum’dan telefon kodunu kurun. Uzaktan yönetim şifre ve telefon koduyla açılır.');
+    if (!this.read(tenant).on) return fail('REMOTE_OFF', 'Uzaktan yönetim kapalı. Kafedeyken Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açabilirsiniz.');
+    if (!owner.mfa) return fail('REMOTE_NEEDS_CODE', 'Önce kafede Ayarlar → Uzaktan erişim’den telefon kodunu kurun. Uzaktan yönetim şifre ve telefon koduyla açılır.');
     const code = opened.credentials.code.replace(/\D/g, '');
     let ok = await passwordMatches(opened.credentials.password, owner);
     // The code is spent only after the right password (a wrong password does not burn the owner's current code).
@@ -229,7 +229,7 @@ export class RemoteAdmin {
     this.write(tenant, r => { r.sessions.push({ id: sid, phone: p.id, device, startedAt: new Date(t).toISOString() }); });
     this.audit(tenant, 'remote_admin.login', user.id, p.id);
     this.link?.reportRemoteAdmin?.({ tenantId: tenant, session: sid, event: 'start', at: new Date(t).toISOString() });
-    this.notify(tenant, `remote-admin:${sid}`, 'Uzaktan yönetim girişi', `${device} ile ${clock(t)}'de kafeye uzaktan girildi. Siz değilseniz Ayarlar → Güvenlik ve yedek → Telefonum → Uzaktan yönetim → “Bütün uzak oturumları kapat”a basın ve şifrenizi değiştirin.`);
+    this.notify(tenant, `remote-admin:${sid}`, 'Uzaktan yönetim girişi', `${device} ile ${clock(t)}'de kafeye uzaktan girildi. Siz değilseniz Ayarlar → Uzaktan erişim → Uzaktan yönetim → “Bütün uzak oturumları kapat”a basın ve şifrenizi değiştirin.`);
     if (user.mfa) try { this.sessions.grantReports?.(tenant, user.id, token, user.mfa.secret); } catch { /* the reports ask the code */ }
     return answer({ ok: true, sid, eph: session.eph, business: fresh.name, expiresAt: new Date(expires).toISOString(), device });
   }
@@ -332,7 +332,7 @@ export class RemoteAdmin {
 }
 
 /**
- * Owner routes (Ayarlar → Güvenlik ve diğer → Uzaktan yönetim; the owner's own account): GET /api/staff/remote-admin,
+ * Owner routes (Ayarlar → Uzaktan erişim → Uzaktan yönetim; the owner's own account): GET /api/staff/remote-admin,
  * POST /api/staff/remote-admin { on, password, code } (on: only at the café, password + code; off: anywhere, nothing asked),
  * POST /api/staff/remote-admin/end-all ("Bütün uzak oturumları kapat").
  */
@@ -347,7 +347,7 @@ export function remoteAdminRoutes(app: Express, store: Store, admin: RemoteAdmin
     if (b.on) {
       // (A remote session never gets here: server/remote-admin.ts gate refuses turning it on remotely.)
       if (!admin.activated()) throw new DomainError('NOT_ACTIVATED', 'Mola bu bilgisayarda henüz etkinleştirilmedi.', 409);
-      if (!s.staffUsers?.find(u => u.id === a.id)?.mfa) throw new DomainError('REMOTE_NEEDS_CODE', 'Önce telefon kodunu kurun: Ayarlar → Güvenlik ve yedek → Telefonum → Raporlar için telefon kodu.', 409);
+      if (!s.staffUsers?.find(u => u.id === a.id)?.mfa) throw new DomainError('REMOTE_NEEDS_CODE', 'Önce telefon kodunu kurun: Ayarlar → Uzaktan erişim → 1. adım.', 409);
       const t = now().getTime(), k =`${a.tenantId}:${a.id}`, c = tries.get(k);
       if (c && c.until > t && c.count >= 5) throw new DomainError('RATE_LIMIT', 'Bir dakika sonra tekrar deneyin.', 429);
       await confirmPassword(req, a, b.password);

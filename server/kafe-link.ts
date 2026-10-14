@@ -1139,7 +1139,7 @@ export class MerkezLink {
     if (!code || !SOCIAL_CODE.test(code)) return { problem: 'waiting' };
     return { url: `${(r.lanLink?.base ?? this.url).replace(/\/+$/, '')}/k/${code}` };
   }
-  /** The desktop window's Tabletler: the link of this computer's business (the first one when it has several). */
+  /** The desktop window's Cihaz bağla: the link of this computer's business (the first one when it has several). */
   installLanAddress() {
     const tenant = Object.keys(this.read()?.licenses ?? {}).find(t => !this.removed(t));
     return tenant ? this.lanAddress(tenant) : { problem: 'inactive' as const };

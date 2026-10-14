@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { newPhoneKeys, openReport, pairConfirmed, pairRequest, readPairingFragment, signLive, type PairingLink, type ReportBox } from '../packages/domain/remote-crypto';
+import { deviceKindOf, newPhoneKeys, openReport, pairConfirmed, pairRequest, readPairingFragment, signLive, type PairingLink, type ReportBox } from '../packages/domain/remote-crypto';
 import type { PhoneReport } from '../packages/domain/remote-report';
 import { forgetPaired, readPaired, savePaired, type Paired } from './phoneVault';
 
 /*
- * "Raporlarım" on the owner's phone (served by Mola Merkez; read only). Pairing: the QR from the café computer (Ayarlar →
- * Güvenlik ve yedek → Telefonum → "Telefonu eşleştir") opens this page with the pairing secret in the URL fragment (#e=…; never sent to a
+ * "Raporlarım" on the owner's phone (served by Mola Merkez; read only). Pairing: the QR from Ayarlar → Uzaktan erişim (or
+ * "Bu telefonu eşleştir" / "Bu cihazı eşleştir" there, on the device itself) opens this page with the pairing secret in the URL fragment (#e=…; never sent to a
  * server). The phone makes its own key pair here (the private key never leaves this browser), sends its public key through
  * Mola Merkez sealed with that secret, and keeps what it needs in IndexedDB (src/phoneVault.ts).
  * Reports: asked live from the café computer through Mola Merkez and opened here (packages/domain/remote-crypto.ts); while the
@@ -28,22 +28,42 @@ async function cryptoReady() {
   try { await newPhoneKeys(); return 'ok'; } catch { return 'old'; }
 }
 
+/** The permanent link's code this page came through (/k/<kod> → /raporlarim#k=<kod>), kept for this tab: "Kafedeyim, kasayı aç". */
+const LINK_KEY = 'mola-kalici-kod', LINK_CODE = /^[A-Za-z0-9]{10}$/;
+function readStart() {
+  const link = readPairingFragment(location.hash), k = /^#k=([A-Za-z0-9]{10})$/.exec(location.hash)?.[1];
+  try { if (k) sessionStorage.setItem(LINK_KEY, k); } catch { /* the link only */ }
+  // The secret (and the code) leave the address bar at once: not in history, not in a bookmark.
+  if (location.hash) history.replaceState(null, '', location.pathname);
+  let code = k ?? null; try { code ??= sessionStorage.getItem(LINK_KEY); } catch { /* none */ }
+  return { link, code: code && LINK_CODE.test(code) ? code : null };
+}
+/** An iPhone's Home Screen web app: its storage is not Safari's, so a device paired in Safari is not paired there. */
+const iosWebApp = () => (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 export function ReportsPhone() {
   const [ready, setReady] = useState<'checking' | 'ok' | 'https' | 'old'>('checking');
   const [paired, setPaired] = useState<Paired | null | undefined>(undefined);
   // The QR's pairing link: read once and taken out of the address bar (the secret stays out of history and bookmarks).
-  const [link] = useState<PairingLink | null>(() => { const l = readPairingFragment(location.hash); if (location.hash) history.replaceState(null, '', location.pathname); return l; });
-  const [revoked, setRevoked] = useState(false);
+  const [start] = useState(readStart), [link, setLink] = useState<PairingLink | null>(start.link);
+  const [revoked, setRevoked] = useState(false), [justPaired, setJustPaired] = useState('');
+  const k = start.code;
   useEffect(() => { void cryptoReady().then(r => setReady(r as 'ok' | 'https' | 'old')); void readPaired().then(p => setPaired(p ?? null)).catch(() => setPaired(null)); }, []);
   if (ready === 'checking' || paired === undefined) return <Shell><p className="rp-muted" aria-busy="true">Açılıyor…</p></Shell>;
   if (ready !== 'ok') return <Shell><div className="rp-card rp-warn" role="alert"><h2>Bu sayfa burada açılamıyor</h2><p>{ready === 'https' ? 'Raporlarım yalnız güvenli bağlantıyla (https://) açılır. Kafe bilgisayarındaki QR kodunu yeniden okutun ya da Mola ekibine danışın.' : 'Bu tarayıcı gereken şifrelemeyi desteklemiyor. Cihazınızı ve tarayıcınızı güncelleyip yeniden deneyin.'}</p></div></Shell>;
-  if (link && (!paired || revoked)) return <Shell><PairForm link={link} replacing={!!paired} onPaired={p => { setRevoked(false); setPaired(p); }} /></Shell>;
-  if (!paired) return <Shell><div className="rp-card"><h2>{revoked ? 'Bu cihazın eşleşmesi kaldırıldı' : 'Bu cihaz henüz eşleşmedi'}</h2><p>Kafe bilgisayarında <strong>Ayarlar → Güvenlik ve yedek → Telefonum → Telefonu eşleştir</strong>’e basın (işletme sahibi hesabıyla; şifreniz ve telefon kodunuz sorulur) ve çıkan QR kodunu bu cihazın kamerasıyla okutun.</p><p>Kamerasız cihazda (laptop, tablet): işletmenin Wi-Fi’sindeyken kalıcı bağlantıyla Mola’yı bu cihazda açın, aynı yerde <strong>Telefonu eşleştir → Bu cihazı eşleştir</strong>’e basın.</p></div></Shell>;
-  return <Reports paired={paired} onRevoked={() => { setRevoked(true); setPaired(null); void forgetPaired(); }} />;
+  // After "Eşleştir" the pairing link is spent: a later "eşleşme kaldırıldı" shows as such, never as the same form again
+  // (0.1.21: the owner saw the form stay as it was while the café computer listed the device).
+  if (link && (!paired || revoked)) return <Shell k={k}><PairForm link={link} replacing={!!paired} onPaired={p => { setLink(null); setRevoked(false); setJustPaired(p.business); setPaired(p); }} /></Shell>;
+  if (!paired) return <Shell k={k}><div className="rp-card"><h2>{revoked ? 'Bu cihazın eşleşmesi kaldırıldı' : 'Bu cihaz henüz eşleşmedi'}</h2>
+    {iosWebApp() ? <p>Bu simge Safari’den ayrı açılıyor; eşleşmeniz Safari’de. Simgeyi silin, Safari’de <strong>Paylaş → Ana Ekrana Ekle</strong> ile yeniden ekleyin ve “Web Uygulaması olarak aç”ı kapatın.</p>
+      : <p>Kafede, işletme sahibi hesabıyla <strong>Ayarlar → Uzaktan erişim</strong>’i açın ve adımları izleyin: önce telefonunuz, sonra laptop ya da tablet.</p>}</div></Shell>;
+  return <Reports paired={paired} justPaired={justPaired} k={k} onRevoked={() => { setRevoked(true); setPaired(null); void forgetPaired(); }} />;
 }
 
-function Shell({ children, business }: { children: ReactNode; business?: string }) {
+/** `k`: the permanent link's code, for "Kafedeyim, kasayı aç" (the same link, told to open the café computer). */
+function Shell({ children, business, k }: { children: ReactNode; business?: string; k?: string | null }) {
   return <div className="rp-page"><header className="rp-head"><span className="rp-logo" aria-hidden="true">M</span><div><strong>Raporlarım</strong>{business && <span>{business}</span>}</div></header><main>{children}</main>
+    {k && <a className="rp-cafe" href={`/k/${k}?kafe=1`}>Kafedeyim, kasayı aç</a>}
     <footer className="rp-foot">Raporlar kafe bilgisayarında yalnız bu cihaz için şifrelenir. Mola Merkez yalnız iletir, okuyamaz.</footer></div>;
 }
 
@@ -53,7 +73,8 @@ function PairForm({ link, replacing, onPaired }: { link: PairingLink; replacing:
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
     try {
-      const keys = await newPhoneKeys(), request = await pairRequest(keys.privateKey, keys.publicKey, link, { name: '', ...(link.code ? { code: code.replace(/\D/g, '') } : {}) });
+      // What this device is (from its own browser), sealed with the rest: the café pairs the phone first.
+      const keys = await newPhoneKeys(), request = await pairRequest(keys.privateKey, keys.publicKey, link, { name: '', kind: deviceKindOf(navigator.userAgent, navigator.maxTouchPoints), ...(link.code ? { code: code.replace(/\D/g, '') } : {}) });
       const r = await call('pair', request);
       if (r.status !== 200 || !r.data.ok) { setError(r.data.message ?? 'Eşleştirme tamamlanamadı. Biraz sonra yeniden deneyin.'); return; }
       // "Eşleşti" must come from the café computer itself (only it holds the QR's secret), not from Mola Merkez.
@@ -76,7 +97,7 @@ type Shown = { report: PhoneReport; kind: 'live' | 'snapshot' };
 /** Never back to an older report than the one on screen (a stale postbox box after a live answer). */
 const newer = (a: Shown | undefined, b: Shown) => !a || Date.parse(b.report.at) >= Date.parse(a.report.at);
 
-function Reports({ paired, onRevoked }: { paired: Paired; onRevoked: () => void }) {
+function Reports({ paired, justPaired, k, onRevoked }: { paired: Paired; justPaired: string; k: string | null; onRevoked: () => void }) {
   const [shown, setShown] = useState<Shown | undefined>(paired.last);
   const [status, setStatus] = useState<{ kind: 'live' | 'offline' | 'error' | 'loading'; text?: string }>({ kind: 'loading' });
   const busy = useRef(false), current = useRef(paired);
@@ -118,10 +139,12 @@ function Reports({ paired, onRevoked }: { paired: Paired; onRevoked: () => void 
     : status.kind === 'offline' ? <p className="rp-status off" role="status">Kafe bilgisayarı kapalı{r ? ` · Son durum ${when(r.at)}` : ''}</p>
     : status.kind === 'error' ? <p className="rp-status off" role="status">{status.text}{r ? ` · Son durum ${when(r.at)}` : ''}</p>
     : <p className="rp-status" role="status" aria-busy="true">Güncelleniyor…</p>;
-  return <Shell business={r?.business ?? paired.business}>
+  return <Shell business={r?.business ?? paired.business} k={k}>
+    {justPaired && <p className="rp-paired" role="status">Eşleşti ✓ · {justPaired}</p>}
     <div className="rp-bar">{line}<button type="button" className="rp-refresh" onClick={() => void refresh()}>Yenile</button></div>
-    {/* Sahibin uzaktan yönetimi: the café's full screens on this paired device (src/RemoteAdmin.tsx, password + code each time). */}
-    <a className="rp-refresh rp-manage" href="/yonet">Kafeyi yönet</a>
+    {/* Sahibin uzaktan yönetimi: the café's full screens on this paired device (src/RemoteAdmin.tsx, password + code each time),
+        only with it in the package (the report says so; while it is off, /yonet says where to turn it on). */}
+    {r?.admin && <a className="rp-refresh rp-manage" href="/yonet">Kafeyi yönet · Satış ve Raporlar, menü, ayarlar</a>}
     {!r ? <div className="rp-card"><p>{status.kind === 'loading' ? 'Rapor isteniyor…' : 'Henüz rapor gelmedi. Kafe bilgisayarı açılınca burada görünür.'}</p></div> : <ReportView r={r} />}
   </Shell>;
 }

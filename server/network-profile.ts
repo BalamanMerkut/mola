@@ -2,7 +2,7 @@ import { runPowerShell } from './os-lock.js';
 
 /*
  * Windows' network profile ("Ağ profili türü": Genel / Özel) of the connections phones and tablets use. Mola's firewall rule
- * (Mola.exe --guvenlik-duvari, offered by the installer and Tabletler › "İzni düzelt") covers every profile but only the local
+ * (Mola.exe --guvenlik-duvari, offered by the installer and Cihaz bağla › "İzni düzelt") covers every profile but only the local
  * network (14 Ekim; scripts/desktop/Ortak.cs Firewall). The rule of 0.1.12 and before allowed private networks only: on a
  * connection Windows calls "Genel" (Public) the phones and tablets could not reach Mola. So "Genel" is reported only while the
  * rule is not yet the new one (`covered`); "İzni düzelt" then fixes it, no Windows setting needed.

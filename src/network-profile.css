@@ -1,4 +1,4 @@
-/* src/NetworkProfileNotice.tsx: "Genel" network with the old firewall rule keeps phones and tablets out (Tabletler, Ayarlar → Cihazlar). */
+/* src/NetworkProfileNotice.tsx: "Genel" network with the old firewall rule keeps phones and tablets out (Cihaz bağla, Ayarlar → Cihazlar). */
 .network-profile-warning{display:flex;align-items:flex-start;gap:12px;background:#fff7e6;border:1px solid #ecd39a;color:#6b4d12;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.5;text-align:left}
 .network-profile-warning>svg{flex:none;margin-top:2px;color:#b07a12}
 .network-profile-warning>div{flex:1;min-width:0}

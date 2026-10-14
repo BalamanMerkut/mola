@@ -5,7 +5,7 @@ import { deviceKind, inMolaApp, molaAppVersion, standalone, type DeviceKind } fr
 import './install-page.css';
 
 /*
- * /uygulama: how the staff put Mola on their phones and tablets (the café computer's Tabletler window and Ayarlar →
+ * /uygulama: how the staff put Mola on their phones and tablets (the café computer's Cihaz bağla window and Ayarlar →
  * Cihazlar show a QR of this address). Android: the thin Mola app (APK) served by this café computer. iPhone/iPad: Safari
  * → Paylaş → Ana Ekrana Ekle. Café network only: from elsewhere /api/uygulama answers 404 and the page says so.
  */

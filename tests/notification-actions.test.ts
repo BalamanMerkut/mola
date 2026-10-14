@@ -14,7 +14,8 @@ test('each bell notification opens its home', () => {
   assert.equal(go('expense', 'Otomatik gider kaydedildi: Kira'), 'Giderleri aç → {"view":"cash","tab":"expenses","part":"records"}');
   assert.equal(go('stock', 'Süt azalıyor'), 'Stoğa git → {"view":"stock","tab":"items"}');
   assert.equal(go('merkez', 'Mola ekibi bağlandı'), 'Uzaktan erişim → {"view":"support","tab":"remote"}');
-  assert.equal(go('merkez', 'Uzaktan yönetim açıldı'), 'Telefonum → {"view":"settings","topic":"security","part":"phone"}');
+  assert.equal(go('merkez', 'Uzaktan yönetim açıldı'), 'Uzaktan erişim → {"view":"settings","topic":"remote"}');
+  assert.equal(go('merkez', 'Cihaz eşleştirildi'), 'Uzaktan erişim → {"view":"settings","topic":"remote"}');
   assert.equal(go('backup', 'Yedek alınamadı'), 'Yedek → {"view":"settings","topic":"security","part":"backup"}');
   assert.equal(go('reminder', 'Tedarikçiyi ara'), null);
 });

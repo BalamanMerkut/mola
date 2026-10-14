@@ -28,4 +28,6 @@ export type PhoneReport = {
   lastClosing: { at: string; day: string; byName: string; extra?: boolean; counted: number; expected: number; difference: number } | null;
   /** The last 30 business days, oldest first. */
   days: { day: string; sales: number }[];
+  /** "Kafeyi yönet": absent when the package has no Uzaktan yönetim; otherwise whether the owner turned it on (0.1.21). */
+  admin?: 'on' | 'off';
 };

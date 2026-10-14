@@ -8,7 +8,7 @@
 // server, close the Mola window, shut the server down; copy; register; shortcuts; firewall: if runtime\node.exe has not
 // exactly Mola's rule ("Mola", inbound, allow, local network only, Ortak.cs Firewall), Windows asks ONCE for administrator approval (UAC)
 // and only "--guvenlik-duvari" runs elevated, before the server ever listens, so Windows' own "Node.js JavaScript
-// Runtime" question does not come up; if the owner says no, the installation goes on (Tabletler > "İzni düzelt" later);
+// Runtime" question does not come up; if the owner says no, the installation goes on (Cihaz bağla > "İzni düzelt" later);
 // finally the server is started again in the background (Mola.exe --arkaplan).
 //
 //   "Mola Kurulum.exe"                                              window

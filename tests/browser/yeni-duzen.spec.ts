@@ -84,11 +84,11 @@ test('owner: grouped menu, the bell, Kasa ve giderler (two tab levels), Personel
   await openMenu(page, 'Kampanyalar');
   await expect(page.getByRole('button', { name: 'Kampanya ekle' })).toBeVisible();
 
-  // Ayarlar: five topics; the remembered "Giderler ve kâr" landed on İşletme without an error; no "Taşınan ayarlar" (13 Ekim).
+  // Ayarlar: six topics (0.1.21: Uzaktan erişim, the owner's); the remembered "Giderler ve kâr" landed on İşletme without an error; no "Taşınan ayarlar" (13 Ekim).
   await openView(page, 'Ayarlar');
-  await expect(settingsTopics(page).getByRole('button')).toHaveText(['İşletme', 'Masalar ve QR', 'Sipariş ve mutfak', 'Cihazlar', 'Güvenlik ve yedek'].map(n => new RegExp(`^${n}`)));
+  await expect(settingsTopics(page).getByRole('button')).toHaveText(['İşletme', 'Masalar ve QR', 'Sipariş ve mutfak', 'Cihazlar', 'Güvenlik ve yedek', 'Uzaktan erişim'].map(n => new RegExp(`^${n}`)));
   await expect(settingsTopics(page).getByRole('button', { name: /^İşletme/ })).toHaveAttribute('aria-current', 'page');
-  await openSettings(page, 'Telefonum');
+  await openSettings(page, 'Kilit ve güncelleme');
   await expect(page.locator('summary').getByText('Raporlar için telefon kodu', { exact: true })).toBeVisible();
   await shot(page, 'yeni-duzen-ayarlar.png', info.outputPath('ayarlar.png'));
   await expect(page.getByText('Taşınan ayarlar')).toHaveCount(0);
@@ -100,7 +100,7 @@ test('owner: grouped menu, the bell, Kasa ve giderler (two tab levels), Personel
 
   // Destek: only talking to Mola; Bildirimler is the bell.
   await openView(page, 'Destek');
-  await expect(page.getByRole('tablist', { name: 'Destek bölümleri' }).getByRole('tab')).toHaveText(['Talepler', 'Duyurular', 'Uzaktan erişim']);
+  await expect(page.getByRole('tablist', { name: 'Destek bölümleri' }).getByRole('tab')).toHaveText(['Talepler', 'Duyurular', 'Mola desteği']);
   await expect(page.getByRole('button', { name: /^Bildirimler: üst çubuktaki zil/ })).toHaveCount(0);
   await bell(page).click();
   await expect(page.getByRole('region', { name: 'Bildirimler' })).toBeVisible();

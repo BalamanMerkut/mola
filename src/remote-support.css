@@ -1,4 +1,4 @@
-/* Destek → Uzaktan erişim (src/RemoteSupport.tsx, src/PhonePairing.tsx), the "Mola ekibi bağlı" banner and Mola destek's own frame. */
+/* Destek → Mola desteği (src/RemoteSupport.tsx), the "Mola ekibi bağlı" banner and Mola destek's own frame. */
 .remote-access{display:grid;gap:18px;max-width:860px;margin:0 auto}
 .remote-access .settings-card{margin:0}
 .remote-live{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 4px;padding:12px 14px;border:1px solid #f0d3a8;border-radius:12px;background:#fff8ec}
@@ -89,3 +89,24 @@
 .support-ended>div{max-width:440px;text-align:center;display:grid;gap:12px;justify-items:center;padding:32px 24px;border-radius:18px;background:var(--paper,#fff);border:1px solid var(--line);box-shadow:0 10px 30px #183b2f14}
 .support-ended h1{margin:0;font-size:22px}
 .support-ended p{margin:0;color:#4d5c51;line-height:1.5}
+
+/* Ayarlar → Uzaktan erişim (src/RemoteAccess.tsx, 0.1.21): numbered steps, one column, calm. */
+.remote-access{display:grid;gap:16px;max-width:760px}
+.remote-done{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:600;color:var(--green)}
+.remote-done svg{flex-shrink:0}
+.remote-where{display:grid;gap:8px;margin-top:4px}
+.remote-where p{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+.remote-where .btn{min-height:44px}
+.remote-where .btn[aria-pressed="true"]{box-shadow:0 0 0 2px var(--green) inset}
+.remote-substeps{display:grid;gap:14px;margin:6px 0 0;padding-left:22px}
+.remote-substeps h4{margin:0 0 6px;font-size:14px;color:var(--ink)}
+.remote-code{display:grid;gap:6px;max-width:420px}
+.remote-code label{margin:4px 0 0;font-size:13px;font-weight:600;color:var(--ink)}
+.remote-code input,.remote-code textarea{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--field,#fff);color:var(--ink)}
+.remote-code textarea{font-family:ui-monospace,Consolas,monospace}
+.remote-code .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 0}
+.remote-code .btn,.remote-otp{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.remote-key{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.remote-key code{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper,#fff);overflow-wrap:anywhere;font-size:13px}
+.remote-code-qr{width:200px;height:200px;border-radius:10px;background:#fff;padding:6px;border:1px solid var(--line)}
+.remote-step .settings-actions .btn{min-height:44px;text-decoration:none;display:inline-flex;align-items:center;gap:6px}

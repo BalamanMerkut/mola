@@ -111,7 +111,7 @@ export class SupportDesk {
       const t = this.now();
       this.live.set(r.session, { id: r.session, tenant: r.tenantId, startedAt: t.getTime(), lastAt: t.getTime() });
       this.write(r.tenantId, x => { x.sessions.push({ id: r.session, startedAt: t.toISOString(), actions: 0 }); x.log.push({ at: t.toISOString(), session: r.session, text: 'Mola ekibi bağlandı.' }); });
-      this.notify(r.tenantId, `support:start:${r.session}`, 'Mola ekibi bağlandı', `Uzaktan destek oturumu ${clock(t.getTime())}'de başladı. Yapılan her değişiklik Destek → Uzaktan erişim'de görünür; izni oradan kapatabilirsiniz.`);
+      this.notify(r.tenantId, `support:start:${r.session}`, 'Mola ekibi bağlandı', `Uzaktan destek oturumu ${clock(t.getTime())}'de başladı. Yapılan her değişiklik Destek → Mola desteği'nde görünür; izni oradan kapatabilirsiniz.`);
     }
     return { status: 200, json: { ok: true } };
   }
@@ -122,7 +122,7 @@ export class SupportDesk {
     let actions = 0;
     try {
       this.write(l.tenant, x => { const row = x.sessions.find(s => s.id === session); if (row && !row.endedAt) { row.endedAt = at; row.endedBy = why; actions = row.actions; } x.log.push({ at, session, text: why === 'off' ? 'Oturum kapandı: izin kapatıldı.' : why === 'owner' ? 'Oturumu işletme sahibi kesti.' : why === 'timeout' ? 'Oturum kapandı: 30 dakika işlem yapılmadı.' : 'Mola ekibi oturumu kapattı.' }); });
-      this.notify(l.tenant, `support:end:${session}`, 'Mola destek oturumu bitti', `Oturum ${clock(at)}'de bitti${actions ? ` · ${actions} değişiklik` : ' · değişiklik yapılmadı'}. Ayrıntılar Destek → Uzaktan erişim'de.`);
+      this.notify(l.tenant, `support:end:${session}`, 'Mola destek oturumu bitti', `Oturum ${clock(at)}'de bitti${actions ? ` · ${actions} değişiklik` : ' · değişiklik yapılmadı'}. Ayrıntılar Destek → Mola desteği'nde.`);
     } catch { /* store closing */ }
     // Merkez hears that this café ended it (the vendor's screen says "oturum kapandı").
     if (why === 'owner' || why === 'off' || why === 'timeout') void this.relay.announce();
@@ -233,7 +233,7 @@ export class SupportDesk {
       ...(l ? { supportConnected: { since: new Date(l.startedAt).toISOString() } } : {}),
     };
   }
-  /** Owner screen: Destek → Uzaktan erişim. */
+  /** Owner screen: Destek → Mola desteği. */
   view(tenant: string) {
     const r = this.read(tenant), l = this.connected(tenant);
     return { on: r.on, since: r.since ?? null, by: r.by ?? null, active: l ? { since: l.since } : null, relay: { connected: this.relay.connected(), error: this.relay.lastError },
@@ -280,7 +280,7 @@ export function describe(path: string, b: Record<string, any>, before: State, af
 }
 
 /**
- * Owner routes (Destek → Uzaktan erişim; the owner's own account, 403 for Müdür, other staff and Mola destek):
+ * Owner routes (Destek → Mola desteği; the owner's own account, 403 for Müdür, other staff and Mola destek):
  * GET /api/staff/remote-support, POST /api/staff/remote-support { on, password } (izin aç/kapat: turning it on needs the
  * owner's password again, checked in this request; turning it off needs nothing), POST /api/staff/remote-support/end
  * ("Bağlantıyı kes"). Mola destek's own: GET /api/staff/support-session(/diagnostics), answered in `gate`.

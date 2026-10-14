@@ -60,7 +60,7 @@ test('network profile: no warning once the firewall rule covers every profile; t
   assert.deepEqual(await new NetworkProfile({ platform: 'win32', read: fake('Public|Ethernet').read, lan: () => ['Ethernet'], covered: failing }).view(), { checked: true, public: ['Ethernet'] });
 });
 
-test('network profile routes: the Tabletler window (desktop key) and Ayarlar → Cihazlar (owner); read only', async t => {
+test('network profile routes: the Cihaz bağla window (desktop key) and Ayarlar → Cihazlar (owner); read only', async t => {
   const pair = await merkezPair('net-profile', { demo: true, desktop: true }); t.after(() => pair.close());
   await pair.importDemo();
   const profile = pair.kafeApp.locals.networkProfile as NetworkProfile, windows = fake('Public|Ethernet\nPrivate|Wi-Fi\n');

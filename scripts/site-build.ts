@@ -27,7 +27,7 @@ export const SITE = join(ROOT, 'site'), SRC = join(SITE, 'src'), DIST = join(SIT
  * Every platform reads "Yakında" until `enabled` is true: the owner turns it on once the installers built for the VDS Merkez
  * exist (the ones built on his computer point to 127.0.0.1).
  */
-// android: the staff app (Mola.apk, a thin shell that opens the café's own screens); the café's "Tabletler" QR still offers it too.
+// android: the staff app (Mola.apk, a thin shell that opens the café's own screens); the café's "Cihaz bağla" QR still offers it too.
 export const PLATFORMS = ['windows', 'macos-arm64', 'macos-x64', 'linux-x64', 'android'] as const;
 export type Platform = typeof PLATFORMS[number];
 export type DownloadFile = { file: string; size: number; sha256: string };
@@ -104,7 +104,7 @@ const PLATFORM_COPY: Record<Platform, { icon: string; name: string; sub: string;
   'macos-arm64': { icon: 'Laptop', name: 'Mac · Apple Silicon', sub: 'M1, M2, M3, M4 işlemcili Mac’ler (2020 sonrası)', how: 'Dosyaya çift tıklayın; açılan “Mola” klasöründeki BENIOKU.txt’yi izleyin.' },
   'macos-x64': { icon: 'Laptop', name: 'Mac · Intel', sub: 'Intel işlemcili Mac’ler', how: 'Dosyaya çift tıklayın; açılan “Mola” klasöründeki BENIOKU.txt’yi izleyin.' },
   'linux-x64': { icon: 'HardDrive', name: 'Linux', sub: 'Ubuntu, Pardus, Mint, Debian…', how: 'Arşivi açın; “Mola” klasöründeki BENIOKU.txt’yi izleyin.' },
-  android: { icon: 'Smartphone', name: 'Android · personel', sub: 'Garson, kasa ve mutfak için telefon ve tablet', how: 'APK’yı telefonda açın, “Bilinmeyen uygulamalara izin ver”i onaylayıp kurun; sonra kafedeki Mola’nın “Tabletler” penceresindeki QR’ı okutun. Aynı APK o QR’dan da indirilebilir.' },
+  android: { icon: 'Smartphone', name: 'Android · personel', sub: 'Garson, kasa ve mutfak için telefon ve tablet', how: 'APK’yı telefonda açın, “Bilinmeyen uygulamalara izin ver”i onaylayıp kurun; sonra kafedeki Mola’nın “Cihaz bağla” penceresindeki QR’ı okutun. Aynı APK o QR’dan da indirilebilir.' },
 };
 function downloadsOf(config: Config, dist: string, warnings: string[]): Downloads {
   const d = config.downloads ?? { enabled: false, version: '', files: {} };

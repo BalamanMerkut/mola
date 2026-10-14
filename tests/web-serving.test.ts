@@ -57,6 +57,15 @@ test('built screens carry the security headers on both servers; Mola Yönetim an
   const yonetim = await raw(merkezPort, '/');
   assert.equal(yonetim.status, 200); assert.match(yonetim.body, /Mola Yönetim/);
   assert.match(String(yonetim.headers['content-security-policy']), /frame-ancestors 'none'/); assert.equal(yonetim.headers['x-frame-options'], 'DENY');
+  // Only "/" is Mola Yönetim (0.1.21): any other address nobody answers is a plain 404 page, never its sign-in; the owner's
+  // own pages (Raporlarım, Kafeyi yönet) stay what they are.
+  for (const path of ['/yonetim', '/raporlar', '/k', '/x/y/z', '/merkez']) {
+    const r = await raw(merkezPort, path);
+    assert.equal(r.status, 404, path); assert.match(r.body, /Bu sayfa bulunamadı/, path); assert.doesNotMatch(r.body, /Mola Yönetim|merkez-main/, path);
+  }
+  const reports = await raw(merkezPort, '/raporlarim'), manage = await raw(merkezPort, '/yonet');
+  assert.equal(reports.status, 200); assert.match(reports.body, /<title>Raporlarım · Mola<\/title>/);
+  assert.equal(manage.status, 200); assert.doesNotMatch(manage.body, /Mola Yönetim/);
   // Another device of the network (this computer's name in Host, as a LAN address would be): no panel, no admin API.
   const name = hostname().toLowerCase();
   for (const path of ['/', '/api/merkez/admin/state']) { const r = await raw(merkezPort, path, { Host: `${name}:${merkezPort}` }); assert.equal(r.status, 403, path); assert.match(r.body, /yalnız Mola Merkez’in çalıştığı bilgisayardan/); }

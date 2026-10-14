@@ -18,7 +18,8 @@ export function importantNotification(n: Pick<NotificationItem, 'kind' | 'title'
 }
 /**
  * Each notification opens the home of its topic (10 Ekim düzeni): an İade isteği → Kasa ve giderler → İadeler, a closing
- * difference → Kapanışlar, an expense → Giderler, low stock → Stok → Malzemeler, a remote session → Destek → Uzaktan erişim.
+ * difference → Kapanışlar, an expense → Giderler, low stock → Stok → Malzemeler, a Mola support session → Destek → Uzaktan
+ * erişim, the owner's own remote login or a paired device → Ayarlar → Uzaktan erişim.
  * Titles are matched in Turkish lower case: JavaScript's /i does not fold "İ" to "i", so "İade yapıldı: ₺190 · Masa 03"
  * (the owner's refund, K-A) offered "Kapanışları aç" (10 Ekim son kullanıcı testi).
  */
@@ -31,7 +32,7 @@ export function notificationActionOf(n: Pick<NotificationItem, 'kind' | 'title' 
   if (n.kind === 'cash' && /iade/.test(title)) return ['İadeleri aç', { view: 'cash', tab: 'refunds' }];
   if (n.kind === 'cash') return ['Kapanışları aç', { view: 'cash', tab: 'closings' }];
   if (n.kind === 'merkez' && /mola (ekibi|destek)/.test(title)) return ['Uzaktan erişim', { view: 'support', tab: 'remote' }];
-  if (n.kind === 'merkez' && /uzaktan yönetim/.test(title)) return ['Telefonum', { view: 'settings', topic: 'security', part: 'phone' }];
+  if (n.kind === 'merkez' && /uzaktan yönetim|cihaz eşleştirildi/.test(title)) return ['Uzaktan erişim', { view: 'settings', topic: 'remote' }];
   if (n.kind === 'report') return ['Raporları aç', { view: 'reports', tab: 'summary' }];
   if (n.kind === 'license') return ['Paket ve lisans', { view: 'settings', topic: 'business', part: 'package' }];
   if (n.kind === 'backup') return ['Yedek', { view: 'settings', topic: 'security', part: 'backup' }];

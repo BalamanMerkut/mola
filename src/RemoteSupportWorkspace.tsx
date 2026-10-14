@@ -23,7 +23,7 @@ import './remote-support.css';
  * "Mola destek": the Mola team inside this café's screens, through Mola Merkez (server/support-session.ts). Only the places
  * the café server lets the `support` role reach: menu (with its Kampanyalar tab, as on the café since 10 Ekim), tables and
  * QR, Cihazlar (printers and sounds), non-money settings, diagnostics. No Masalar with bills, no Satış ve Raporlar, no Kasa, no Çalışanlar: those are not here, and the café answers
- * 403 to them anyway. The owner sees every change in Destek → Uzaktan erişim.
+ * 403 to them anyway. The owner sees every change in Destek → Mola desteği.
  */
 type View = 'menu' | 'tables' | 'printers' | 'settings' | 'diagnostics';
 const places: { id: View; label: string; icon: typeof Coffee }[] = [
@@ -51,7 +51,7 @@ export function RemoteSupportWorkspace({ data, load, onLogout, loggingOut, conne
     <main className="main">
       <header className="topbar"><div className="breadcrumb">Uzaktan destek <ChevronRight size={13} /><strong>{title}</strong></div><div className="topbar-right"><span className={`connection ${connected ? '' : 'lost'}`}>{connected ? 'Kafeye bağlı' : 'Bağlantı kesildi'}</span><button className="btn secondary small-btn" disabled={loggingOut} onClick={onLogout}><LogOut size={15} />{loggingOut ? 'Kapatılıyor…' : 'Oturumu kapat'}</button></div></header>
       <div className="main-content owner-compact">
-        <div className="support-banner" role="status"><span className="remote-live-dot" aria-hidden="true" /><p><strong>Mola ekibi olarak {data.name} kafesine bağlısınız.</strong> Yaptığınız her değişiklik işletme sahibinin Destek → Uzaktan erişim ekranında görünür.{session ? ` ${session.idleMinutes} dakika işlem yapılmazsa oturum kapanır.` : ''}</p></div>
+        <div className="support-banner" role="status"><span className="remote-live-dot" aria-hidden="true" /><p><strong>Mola ekibi olarak {data.name} kafesine bağlısınız.</strong> Yaptığınız her değişiklik işletme sahibinin Destek → Mola desteği ekranında görünür.{session ? ` ${session.idleMinutes} dakika işlem yapılmazsa oturum kapanır.` : ''}</p></div>
         <div className="page-heading"><div><span className="eyebrow">{data.name}</span><h1>{title}</h1></div>
           {view === 'tables' && <div className="table-management-actions"><button className="btn secondary" onClick={() => setTables('add')}><Plus size={18} />Masa ekle</button><button className="btn secondary" onClick={() => setTables('remove')}>Masa çıkar</button></div>}</div>
         {error && <Notice tone="error">{error}<button className="text-btn" onClick={() => setError('')}>Kapat</button></Notice>}

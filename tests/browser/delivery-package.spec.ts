@@ -11,8 +11,8 @@ test('owner sees refund history tools and Authenticator setup on mobile without 
   await expect(page.getByRole('tooltip')).toContainText('İade kaydı bankadan para göndermez');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath('payment-records-mobile.png'), fullPage: true });
-  await openSettings(page, 'Telefonum');
-  // The section's own heading (Uzaktan yönetim's notice also names it, in bold).
+  // Güvenlik ve yedek → Kilit ve güncelleme (0.1.21; once Telefonum): the section's own heading.
+  await openSettings(page, 'Kilit ve güncelleme');
   await page.locator('summary').getByText('Raporlar için telefon kodu', { exact: true }).click();
   await expect(page.getByLabel('İşletme şifreniz')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

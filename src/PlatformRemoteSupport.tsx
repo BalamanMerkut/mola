@@ -17,7 +17,7 @@ type Status = { access: { on: boolean; since: string | null; seenAt: string } | 
 const at = (iso: string) => new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 const clock = (iso: string) => new Date(iso).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' });
 const endedBy: Record<string, string> = { vendor: 'Mola ekibi kapattı', owner: 'işletme sahibi kesti', off: 'izin kapatıldı', timeout: '30 dakika işlem yok', restart: 'yeniden başlatma' };
-const TIP = 'Bağlanınca kafenin ekranları yeni sekmede “Mola destek” olarak açılır: menü, kampanya, masa ve QR, yazıcı ve ayarlar. Satış, kasa, çalışan ve güvenlik bilgileri görünmez. Her değişiklik işletme sahibinin ekranına yazılır. İzni yalnız işletme sahibi açar (kafedeki Mola → Destek → Uzaktan erişim). 30 dakika işlem yapılmazsa oturum kapanır.';
+const TIP = 'Bağlanınca kafenin ekranları yeni sekmede “Mola destek” olarak açılır: menü, kampanya, masa ve QR, yazıcı ve ayarlar. Satış, kasa, çalışan ve güvenlik bilgileri görünmez. Her değişiklik işletme sahibinin ekranına yazılır. İzni yalnız işletme sahibi açar (kafedeki Mola → Destek → Mola desteği). 30 dakika işlem yapılmazsa oturum kapanır.';
 
 /** The remote-support state of one business, read every `every` ms while the page is visible, and the two actions. */
 function useRemoteSupport(tenantId: string, every: number) {
@@ -65,7 +65,7 @@ export function PlatformRemoteSupport({ tenantId, name, disabled, focus = 0 }: {
     </ul>
     {s?.active ? <div className="remote-live" role="status"><span className="remote-live-dot" aria-hidden="true" /><p><strong>Bağlısınız</strong> · {clock(s.active.startedAt)}’den beri · {s.active.requests} istek</p><button type="button" className="btn secondary" disabled={busy || disabled} onClick={() => void end()}><Unplug size={16} aria-hidden="true" />Bağlantıyı kes</button></div> : null}
     <div className="application-actions"><button type="button" className="btn primary" disabled={busy || disabled || !on || !s?.online} onClick={() => void connect()}><MonitorSmartphone size={16} aria-hidden="true" />{s?.active ? 'Yeniden bağlan' : 'Kafeye bağlan'}</button>
-      {s && (!on || !s.online) && <small className="section-note">{!on ? `${name} sahibi kafedeki Mola’da Destek → Uzaktan erişim’den izni açmalı.` : 'Bilgisayar açılınca bağlanabilirsiniz.'}</small>}</div>
+      {s && (!on || !s.online) && <small className="section-note">{!on ? `${name} sahibi kafedeki Mola’da Destek → Mola desteği’nden izni açmalı.` : 'Bilgisayar açılınca bağlanabilirsiniz.'}</small>}</div>
     {error && <Notice tone="error">{error}</Notice>}
     {s && s.history.length > 0 && <><h3 className="remote-history-title"><History size={15} aria-hidden="true" />Oturum geçmişi</h3><ul className="remote-sessions" aria-label="Destek oturumları">{s.history.map(h => <li key={h.id}><strong>{at(h.startedAt)}{h.endedAt ? `–${clock(h.endedAt)}` : ' · şu an açık'}</strong><span>{h.endedBy ? `${endedBy[h.endedBy] ?? h.endedBy} · ` : ''}{h.requests} istek</span></li>)}</ul></>}
   </DCard>;

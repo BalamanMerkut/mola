@@ -551,12 +551,12 @@ const sahipAyarlar: Grup = async (browser, { sahip }) => {
   await ayar(s, 'Güvenlik ve yedek', 'Kilit ve güncelleme');
   await sleep(800);
   await dene('s-guvenlik', async () => cek(s, 's-guvenlik', { kirp: await ayarAlani(s), isaretler: [{ n: 1, loc: s.locator('.owner-lock-settings'), yon: 'sol' }] }));
-  await ayar(s, 'Güvenlik ve yedek', 'Telefonum');
+  await ayar(s, 'Uzaktan erişim');
   const uz = s.locator('.remote-admin-settings');
   if (await uz.count()) { await uz.scrollIntoViewIfNeeded(); await sleep(400); await dene('s-uzaktan-yonetim', () => cek(s, 's-uzaktan-yonetim', { kirp: uz, pay: 10 })); }
   await s.evaluate(() => scrollTo(0, document.body.scrollHeight)); await sleep(400);
   await sahip.post('/api/staff/lock/settings', { data: { minutes: 0 } });
-  await ayar(s, 'Cihazlar', 'Tablet ve telefonlar');
+  await ayar(s, 'Cihazlar', 'Cihaz bağla');
   await dene('s-cihazlar', async () => cek(s, 's-cihazlar', { kirp: await ayarAlani(s) }));
   await ayar(s, 'Sipariş ve mutfak', 'Paket platformları');
   await s.context().close();
@@ -577,18 +577,15 @@ const sahipDestek: Grup = async browser => {
   await git(s, 'Destek');
   await s.getByRole('tab', { name: /Uzaktan erişim/ }).click(); await sleep(900);
   await dene('s-uzaktan-erisim', () => cek(s, 's-uzaktan-erisim'));
-  // Raporlarım: Ayarlar → Güvenlik ve yedek → Telefonum (once Destek → Uzaktan erişim).
-  await ayar(s, 'Güvenlik ve yedek', 'Telefonum');
-  // Raporlarım: telefonu eşleştir. Eşleştirme telefon kodu ister (0.1.20): kod API'den kurulur, çekimden sonra kurtarma
-  // koduyla kapatılır (sonraki çekimlerde raporlar kod sormaz).
+  // Raporlarım: Ayarlar → Uzaktan erişim (0.1.21; once Güvenlik ve yedek → Telefonum): önce telefon. Eşleştirme telefon kodu
+  // ister: kod API'den kurulur, çekimden sonra kurtarma koduyla kapatılır (sonraki çekimlerde raporlar kod sormaz).
   const kurulum = await (await s.request.post(`${KAFE}/api/staff/report-security/setup`, { data: { password: 'MolaDemo!2026' } })).json() as { secret: string };
   const acildi = await (await s.request.post(`${KAFE}/api/staff/report-security/enable`, { data: { code: totp(kurulum.secret, Date.now() - 30_000) } })).json() as { recoveryCodes: string[] };
-  const card = s.locator('.phone-pairing');
-  await card.scrollIntoViewIfNeeded();
-  // The card asks again every 8 s: the button comes once it sees the code.
-  await dugme(card, 'Telefonu eşleştir').waitFor({ timeout: 20_000 });
-  await dugme(card, 'Telefonu eşleştir').click();
-  const ask = card.getByRole('form', { name: 'Cihaz eşleştir' });
+  await ayar(s, 'Uzaktan erişim');
+  const card = s.locator('.remote-access .settings-card').first();
+  // On the café computer: the computer's way at once (QR codes), the pairing form once the page sees the code.
+  const ask = card.getByRole('form', { name: 'QR kodu göster' });
+  await ask.waitFor({ timeout: 20_000 });
   await ask.getByLabel('Cihazın adı').fill('Serkan’ın telefonu');
   await ask.getByLabel('Şifreniz').fill('MolaDemo!2026');
   await ask.getByLabel('Telefon kodu').fill(totp(kurulum.secret, Date.now()));
@@ -597,7 +594,7 @@ const sahipDestek: Grup = async browser => {
   await sleep(600);
   const url = (await dugme(card, 'Bağlantıyı kopyala').getAttribute('title'))!;
   await dene('s-telefon-eslestir', () => cek(s, 's-telefon-eslestir', { kirp: card, pay: 10, isaretler: [{ n: 1, loc: s.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' }), yon: 'sag' }] }));
-  const tel =await yeniSayfa(browser, 'telefon');
+  const tel = await yeniSayfa(browser, 'telefon', { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' });
   await tel.context().route(`${KAFE}/**`, r => r.abort());
   await tel.goto(url);
   await dugme(tel, 'Eşleştir').click();
@@ -762,7 +759,7 @@ const yeniDuzen: Grup = async browser => {
     { n: 1, loc: s.getByRole('navigation', { name: 'Personel bölümleri', exact: true }), yon: 'alt' },
     { n: 2, loc: s.getByRole('navigation', { name: 'Personel ayarları bölümleri', exact: true }), yon: 'alt' },
   ] }));
-  await ayar(s, 'Güvenlik ve yedek', 'Telefonum');
+  await ayar(s, 'Güvenlik ve yedek', 'Kilit ve güncelleme');
   await dene('yeni-duzen-ayarlar', () => cek(s, 'yeni-duzen-ayarlar', { isaretler: [
     { n: 1, loc: s.getByRole('navigation', { name: 'Ayarlar konuları' }), yon: 'alt' },
     { n: 2, loc: s.getByRole('navigation', { name: 'Güvenlik ve yedek bölümleri', exact: true }), yon: 'alt' },

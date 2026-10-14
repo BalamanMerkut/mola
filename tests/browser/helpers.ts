@@ -37,6 +37,17 @@ export async function phoneCodeOn(request: APIRequestContext, password = 'MolaDe
     off: async () => expect((await request.post('/api/staff/report-security/recover', { data: { password, recoveryCode: recoveryCodes[0] } })).ok()).toBe(true),
   };
 }
+/** The next unused code of a phone code set up on screen (Ayarlar → Uzaktan erişim): the secret read from the page. */
+export function codesOf(secret: string) {
+  let used = Math.floor(Date.now() / 30000) - 1;
+  return async () => {
+    for (;;) {
+      const current = Math.floor(Date.now() / 30000), step = Math.max(current, used + 1);
+      if (step <= current + 1) { used = step; return totp(secret, step * 30000); }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  };
+}
 /** The browser tests' Mola Merkez (scripts/test-server.mjs); the café is the default baseURL (port 3100). */
 export const MERKEZ = `http://127.0.0.1:${process.env.E2E_MERKEZ_PORT ?? '3190'}`;
 export const ADMIN_API = `${MERKEZ}/api/merkez/admin`;
@@ -152,21 +163,23 @@ export async function yonetimShot(page: Page, file: string, path: string, fullPa
  * in a second row ("<topic> bölümleri"). A test opens a page by its name: "İşletme" is İşletme → Görünüm, "Masalar ve QR"
  * is Masalar ve QR → Masalar ve QR (tables, the QR address, renewing one code); printing is "QR kodlarını yazdır".
  * Names of the earlier Ayarlar still work: "Paketiniz" is Paket ve lisans, "Entegrasyonlar" Paket platformları, "Cihazlar"
- * Tablet ve telefonlar, "Güvenlik ve yedek" Yedek. Places that left Ayarlar open their new home (`movedSettings`).
+ * and "Tablet ve telefonlar" Cihaz bağla, "Güvenlik ve yedek" Yedek, "Telefonum" Uzaktan erişim (0.1.21: a topic of the
+ * owner's with one page, no second row). Places that left Ayarlar open their new home (`movedSettings`).
  */
-export type SettingsTopic = 'İşletme' | 'Masalar ve QR' | 'Sipariş ve mutfak' | 'Cihazlar' | 'Güvenlik ve yedek';
-export const settingsTopicNames: SettingsTopic[] = ['İşletme', 'Masalar ve QR', 'Sipariş ve mutfak', 'Cihazlar', 'Güvenlik ve yedek'];
+export type SettingsTopic = 'İşletme' | 'Masalar ve QR' | 'Sipariş ve mutfak' | 'Cihazlar' | 'Güvenlik ve yedek' | 'Uzaktan erişim';
+/** The owner's topics (a Müdür sees all but Uzaktan erişim). */
+export const settingsTopicNames: SettingsTopic[] = ['İşletme', 'Masalar ve QR', 'Sipariş ve mutfak', 'Cihazlar', 'Güvenlik ve yedek', 'Uzaktan erişim'];
 /** Every page of Ayarlar: a part of a topic. */
-export type SettingsPage = 'İşletme' | 'Sosyal medya' | 'Paket ve lisans' | 'Masalar ve QR' | 'QR kodlarını yazdır' | 'Engellenen telefonlar' | 'Sipariş ve onay' | 'Mutfak' | 'Paket platformları' | 'Yazıcılar' | 'Sesler' | 'Tablet ve telefonlar' | 'Yedek' | 'Kilit ve güncelleme' | 'Telefonum';
+export type SettingsPage = 'İşletme' | 'Sosyal medya' | 'Paket ve lisans' | 'Masalar ve QR' | 'QR kodlarını yazdır' | 'Engellenen telefonlar' | 'Sipariş ve onay' | 'Mutfak' | 'Paket platformları' | 'Yazıcılar' | 'Sesler' | 'Cihaz bağla' | 'Yedek' | 'Kilit ve güncelleme' | 'Uzaktan erişim';
 export const settingsPlaces: Record<SettingsPage, [SettingsTopic, string]> = {
   'İşletme': ['İşletme', 'Görünüm'], 'Sosyal medya': ['İşletme', 'Sosyal medya'], 'Paket ve lisans': ['İşletme', 'Paket ve lisans'],
   'Masalar ve QR': ['Masalar ve QR', 'Masalar ve QR'], 'QR kodlarını yazdır': ['Masalar ve QR', 'QR kodlarını yazdır'], 'Engellenen telefonlar': ['Masalar ve QR', 'Engellenen telefonlar'],
   'Sipariş ve onay': ['Sipariş ve mutfak', 'Sipariş ve onay'], 'Mutfak': ['Sipariş ve mutfak', 'Mutfak'], 'Paket platformları': ['Sipariş ve mutfak', 'Paket platformları'],
-  'Yazıcılar': ['Cihazlar', 'Yazıcılar'], 'Sesler': ['Cihazlar', 'Sesler'], 'Tablet ve telefonlar': ['Cihazlar', 'Tablet ve telefonlar'],
-  'Yedek': ['Güvenlik ve yedek', 'Yedek'], 'Kilit ve güncelleme': ['Güvenlik ve yedek', 'Kilit ve güncelleme'], 'Telefonum': ['Güvenlik ve yedek', 'Telefonum'],
+  'Yazıcılar': ['Cihazlar', 'Yazıcılar'], 'Sesler': ['Cihazlar', 'Sesler'], 'Cihaz bağla': ['Cihazlar', 'Cihaz bağla'],
+  'Yedek': ['Güvenlik ve yedek', 'Yedek'], 'Kilit ve güncelleme': ['Güvenlik ve yedek', 'Kilit ve güncelleme'], 'Uzaktan erişim': ['Uzaktan erişim', ''],
 };
 /** Earlier names of Ayarlar pages that are still Ayarlar pages. */
-const settingsAliases: Record<string, SettingsPage> = { 'Paketiniz': 'Paket ve lisans', 'Entegrasyonlar': 'Paket platformları', 'Cihazlar': 'Tablet ve telefonlar', 'Güvenlik ve yedek': 'Yedek' };
+const settingsAliases: Record<string, SettingsPage> = { 'Paketiniz': 'Paket ve lisans', 'Entegrasyonlar': 'Paket platformları', 'Cihazlar': 'Cihaz bağla', 'Tablet ve telefonlar': 'Cihaz bağla', 'Telefonum': 'Uzaktan erişim', 'Güvenlik ve yedek': 'Yedek' };
 /** Earlier Ayarlar pages that moved to a home (10 Ekim): the home's tab and sub-tab. */
 const movedSettings: Record<string, () => [(page: Page, tab: string, part?: string) => Promise<void>, string, string?]> = {
   'Kasa ve ödeme': () => [openCash, 'Kasa ayarları'], 'Kasa ayarları': () => [openCash, 'Kasa ayarları'],

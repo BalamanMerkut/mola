@@ -259,9 +259,11 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   });
   // Tanıtım işletmesi (server/demo-reset.ts): manual reset only, table QRs kept; tokens renewed by older resets answer "Bu tanıtım yenilendi".
   const demoResets = new DemoResets(store, link, now, backups); app.locals.demoResets = demoResets;
-  // Uzaktan destek and uzaktan raporlar: the owner's switches and phones (Destek → Uzaktan erişim); before the cash routes,
-  // because a gün sonu sends the phones' postbox at once.
+  // Uzaktan destek (Destek → Mola desteği) and uzaktan raporlar (Ayarlar → Uzaktan erişim): the owner's switches and phones;
+  // before the cash routes, because a gün sonu sends the phones' postbox at once.
   const remote = new RemoteReports(store, link, relay, now, cash);
+  // Raporlarım shows "Kafeyi yönet" only with Uzaktan yönetim in the package (the report says whether it is on).
+  remote.adminState = tenant => { try { return link.has(tenant, 'remote-admin') ? remoteAdmin.read(tenant).on ? 'on' : 'off' : undefined; } catch { return undefined; } };
   link.onStop.push(() => remote.close()); link.beforeClose.push(() => remote.push('shutdown', true));
   // Turning support on, pairing and removing a device ask the owner's password again (confirmPassword, below the login);
   // pairing also the owner's phone code, checked by reportSecurity (registered later, hence the late lookup).
@@ -396,7 +398,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   }
   function authFailed(...keys: string[]) { for (const key of keys) { const t = now().getTime(), entry = authLimits.get(key); if (entry && entry.until > t) entry.count++; else authLimits.set(key, { count: 1, until: t + 60_000 }); } }
   /**
-   * "Şifrenizi yeniden yazın" (Telefonu eşleştir, uzaktan destek iznini açmak): the signed-in user's own password, checked
+   * "Şifrenizi yeniden yazın" (cihaz eşleştirme, uzaktan destek iznini açmak): the signed-in user's own password, checked
    * in this very request. Wrong attempts count on the login's own counters (same keys), so guessing here slows the login
    * down too, and the other way round. Wrong: 403 INVALID_PASSWORD (not 401: the session itself stays).
    */

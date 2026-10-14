@@ -160,7 +160,7 @@ function basvuruDestek() {
     ]),
     h3('Uzaktan destek'),
     adimlar([
-      'Sahip kafede Destek → Uzaktan erişim → <b>Uzaktan destek izni</b>\'ni açar.',
+      'Sahip kafede Destek → Mola desteği → <b>Uzaktan destek izni</b>\'ni açar.',
       'İşletme sayfası → Destek → <b>Kafeye bağlan</b>. Kafenin ekranları yeni sekmede açılır.',
       'İş bitince <b>Bağlantıyı kes</b>.',
     ]),

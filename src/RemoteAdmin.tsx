@@ -41,7 +41,7 @@ export function RemoteShell() {
       {phase === 'checking' && <p className="remote-muted" aria-busy="true">Açılıyor…</p>}
       {phase === 'https' && <section className="remote-card" role="alert"><h1>Bu sayfa burada açılamıyor</h1><p>Kafeyi yönet yalnız güvenli bağlantıyla (https://) ve güncel bir tarayıcıda açılır.</p></section>}
       {(phase === 'unpaired' || phase === 'revoked') && <section className="remote-card"><h1>{phase === 'revoked' ? 'Bu cihazın eşleşmesi kaldırıldı' : 'Bu cihaz eşleşmemiş'}</h1>
-        <p>Kafeyi uzaktan yönetmek için önce bu cihazı eşleştirin: kafedeki bilgisayarda <strong>Ayarlar → Güvenlik ve yedek → Telefonum → Telefonu eşleştir</strong>, sonra çıkan QR kodunu bu cihazla okutun.</p>
+        <p>Kafeyi uzaktan yönetmek için önce bu cihazı eşleştirin: kafede <strong>Ayarlar → Uzaktan erişim</strong>’deki adımlar.</p>
         <a className="remote-link" href="/raporlarim">Raporlarım’a dön</a></section>}
       {phase === 'login' && paired && <Login paired={paired} notice={notice} onIn={s => { setNotice(''); setSession(s); setPhase('in'); }} onRevoked={() => setPhase('revoked')} />}
     </main>
@@ -66,13 +66,15 @@ function Login({ paired, notice, onIn, onRevoked }: { paired: Paired; notice: st
     <h1>Kafeyi yönet</h1>
     <p>Kafenin bütün ekranlarını bu cihazdan, işletme sahibi olarak açın. Her girişte şifreniz ve doğrulama uygulamanızdaki 6 haneli telefon kodu sorulur.</p>
     {notice && <p className="remote-note" role="status">{notice}</p>}
+    {/* The last report from the café says it is off (0.1.21): where to turn it on, before a wasted try. */}
+    {!notice && paired.last?.report.admin === 'off' && <p className="remote-note" role="status">Uzaktan yönetim kapalı. Kafedeyken <strong>Ayarlar → Uzaktan erişim → Uzaktan yönetim</strong>’den açın.</p>}
     <label htmlFor={`${id}-password`}>Şifreniz</label>
     <input id={`${id}-password`} type="password" value={password} maxLength={200} required autoComplete="current-password" disabled={busy} onChange={e => setPassword(e.target.value)} />
     <label htmlFor={`${id}-code`}>Telefon kodu</label>
     <input id={`${id}-code`} value={code} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required placeholder="6 haneli kod" disabled={busy} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
     {error && <p className="remote-error" role="alert">{error}</p>}
     <button type="submit" className="remote-btn" disabled={busy || !password || code.length !== 6}>{busy ? 'Bağlanılıyor…' : 'Giriş yap'}</button>
-    <p className="remote-muted">Uzaktan yönetim kafedeki bilgisayarda Ayarlar → Güvenlik ve yedek → Telefonum → <strong>Uzaktan yönetim</strong>’den açılır. Yedekten geri yükleme, kurtarma kodu ve cihaz eşleştirme yalnız kafede yapılır.</p>
+    <p className="remote-muted">Uzaktan yönetim kafede Ayarlar → Uzaktan erişim → <strong>Uzaktan yönetim</strong>’den açılır. Yedekten geri yükleme, kurtarma kodu ve cihaz eşleştirme yalnız kafede yapılır.</p>
     <a className="remote-link" href="/raporlarim">Raporlarım’a dön</a>
   </form>;
 }

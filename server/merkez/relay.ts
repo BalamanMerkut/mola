@@ -39,6 +39,8 @@ const hash = (text: string) => createHash('sha256').update(text).digest('hex');
 const same = (a: string, b: string) => { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && timingSafeEqual(x, y); };
 const cookieOf = (req: Request, name: string) => (req.headers.cookie ?? '').split(';').map(v => v.trim()).find(v => v.startsWith(`${name}=`))?.slice(name.length + 1);
 const DAY = 86400000;
+/** A phone paired this recently is not forgotten for missing from a poll's list (see `tenants`). */
+export const PAIRED_GRACE_MS = 2 * 60_000;
 export const SUPPORT_COOKIE = 'mola_destek';
 
 export class RelayHub {
@@ -87,8 +89,11 @@ export class RelayHub {
   // ---------- Café side ----------
   online(install: string) { return this.waiters.has(install) || this.now().getTime() - (this.lastPoll.get(install) ?? 0) < RELAY.HOLD_MS + 10_000; }
   seenAt(install: string) { const t = this.lastPoll.get(install); return t ? new Date(t).toISOString() : null; }
-  /** What the café says each business allows; anything of this install's not listed allows nothing. Alerts on changes. */
-  tenants(install: string, list: TenantState[], d: MerkezData) {
+  /**
+   * What the café says each business allows; anything of this install's not listed allows nothing. Alerts on changes.
+   * `poll`: the list came with a long-poll, which may have left the café before a pairing it does not know of yet.
+   */
+  tenants(install: string, list: TenantState[], d: MerkezData, poll = false) {
     const mine = d.businesses.filter(b => b.installId === install), at = this.now().toISOString(), changed: { tenant: string; name: string; on: boolean }[] = [];
     for (const b of mine) {
       const t = list.find(x => x.tenantId === b.tenantId) ?? { tenantId: b.tenantId, support: false, phones: [] };
@@ -96,9 +101,13 @@ export class RelayHub {
       if (!!before?.support !== t.support) changed.push({ tenant: b.tenantId, name: b.name, on: t.support });
       this.store.db.prepare('INSERT INTO relay_tenants (tenant,install,support,since,seen) VALUES (?,?,?,?,?) ON CONFLICT(tenant) DO UPDATE SET install=excluded.install, support=excluded.support, since=CASE WHEN relay_tenants.support=excluded.support THEN relay_tenants.since ELSE excluded.since END, seen=excluded.seen')
         .run(b.tenantId, install, t.support ? 1 : 0, at, at);
-      // A phone the café no longer lists is gone at once: its token and its box.
-      const keep = new Set(t.phones);
-      for (const { phone } of this.store.db.prepare('SELECT phone FROM relay_phones WHERE tenant=?').all(b.tenantId) as { phone: string }[]) if (!keep.has(phone)) this.forgetPhone(phone);
+      // A phone the café no longer lists is gone at once: its token and its box. Except, in a poll's list, one paired in the
+      // last PAIRED_GRACE_MS: the café's next poll leaves with the list from before the pairing and, over the internet, can
+      // arrive after the pairing reply (a fresh connection for the poll, an idle one for the reply). Forgetting the new phone
+      // then made Raporlarım fall back to "Eşleştir" right after a pairing the café computer showed as done (0.1.21, the
+      // owner's test). A removal is announced at once (/relay/state, no grace); the café itself answers no removed phone.
+      const keep = new Set(t.phones), since = poll ? new Date(this.now().getTime() - PAIRED_GRACE_MS).toISOString() : undefined;
+      for (const { phone, created } of this.store.db.prepare('SELECT phone, created FROM relay_phones WHERE tenant=?').all(b.tenantId) as { phone: string; created: string }[]) if (!keep.has(phone) && (!since || created < since)) this.forgetPhone(phone);
       if (!t.support) for (const s of [...this.sessions.values()]) if (s.tenant === b.tenantId) this.endSession(s.id, 'off', false);
     }
     if (changed.length) this.store.mutate(x => { for (const c of changed) { addAlert(x, at, 'support.access', `${c.name}: işletme sahibi uzaktan destek iznini ${c.on ? 'açtı. Mola Yönetim → işletme → Destek → “Kafeye bağlan”' : 'kapattı'}.`, { tenantId: c.tenant, title: c.on ? 'Uzaktan destek izni verildi' : 'Uzaktan destek izni kapatıldı', ...(c.on ? {} : { priority: 'low' as const }) }); x.audit.push({ action: c.on ? 'support.access_on' : 'support.access_off', target: c.tenant, at, by: 'cafe' }); } });
@@ -165,7 +174,7 @@ export class RelayHub {
   }
   phone(phone: string, token: string) {
     const r = this.store.db.prepare('SELECT phone, tenant, install, token FROM relay_phones WHERE phone=?').get(phone) as { phone: string; tenant: string; install: string; token: string } | undefined;
-    if (!r || !same(r.token, hash(token))) throw new DomainError('PHONE_UNKNOWN', 'Bu telefon eşleştirilmemiş ya da eşleşmesi kaldırılmış. Kafe bilgisayarında yeniden eşleştirin.', 403);
+    if (!r || !same(r.token, hash(token))) throw new DomainError('PHONE_UNKNOWN', 'Bu cihaz eşleştirilmemiş ya da eşleşmesi kaldırılmış. Kafede Ayarlar → Uzaktan erişim’den yeniden eşleştirin.', 403);
     this.store.db.prepare('UPDATE relay_phones SET seen=? WHERE phone=?').run(this.now().toISOString(), phone);
     return r;
   }
@@ -191,7 +200,7 @@ export class RelayHub {
   // ---------- Support sessions ----------
   async startSession(tenant: string, install: string, name: string) {
     const access = this.access(tenant);
-    if (!access?.on || access.install !== install) throw new DomainError('SUPPORT_OFF', 'İşletme sahibi uzaktan destek izni vermedi. İzni işletmenin bilgisayarında Destek → Uzaktan erişim’den açabilir.', 409);
+    if (!access?.on || access.install !== install) throw new DomainError('SUPPORT_OFF', 'İşletme sahibi uzaktan destek izni vermedi. İzni işletmenin bilgisayarında Destek → Mola desteği’nden açabilir.', 409);
     if (!this.online(install)) throw new DomainError('CAFE_OFFLINE', 'İşletmenin bilgisayarı şu anda Mola Merkez’e bağlı değil. Bilgisayar açık ve internete bağlı olmalı.', 409);
     for (const s of [...this.sessions.values()]) if (s.tenant === tenant) this.endSession(s.id, 'vendor', false);
     const id = randomUUID(), secret = randomBytes(32).toString('base64url');
@@ -268,7 +277,7 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
   };
   app.post(`${MERKEZ_API}/relay/poll`, (req, res) => {
     const { install, nonce, d } = cafe(req, 'poll', 120), b = stateBody.parse(req.body);
-    hub.tenants(install.id, b.tenants, d);
+    hub.tenants(install.id, b.tenants, d, true);
     hub.poll(install.id, install.secret, nonce, res);
   });
   app.post(`${MERKEZ_API}/relay/state`, (req, res) => {
@@ -296,7 +305,7 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
   app.post(`${MERKEZ_API}/phone/pair`, async (req, res) => {
     phoneLimits(req, 'pair', 20);
     const r = pairRequestSchema.parse(req.body), p = hub.pairingOf(r.pairId);
-    if (!p) throw new DomainError('PAIRING_EXPIRED', 'Eşleştirme kodunun süresi doldu ya da kullanıldı. Kafe bilgisayarında “Telefonu eşleştir”e yeniden basın.', 410);
+    if (!p) throw new DomainError('PAIRING_EXPIRED', 'Eşleştirme kodunun süresi doldu ya da kullanıldı. Kafede Ayarlar → Uzaktan erişim’den yeniden eşleştirin.', 410);
     hub.take(`pair:${r.pairId}`, 8, 10 * 60_000);
     const reply = await hub.send(p.install, { kind: 'pair', tenantId: p.tenant, request: r }, 15_000);
     const j = (reply.json ?? {}) as { ok?: boolean; phoneId?: string; business?: string; confirm?: string; code?: string; message?: string };

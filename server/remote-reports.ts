@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { addDays, businessDay } from '../packages/domain/business-day.js';
 import type { CashClosing } from '../packages/domain/cash.js';
 import { DomainError, requireRole } from '../packages/domain/engine.js';
-import { cafePrivateKey, liveSigned, newCafeKeys, openPairRequest, pairConfirm, pairingFragment, randomB64u, sealReport, type LiveRequest, type PairRequest, type ReportBox } from '../packages/domain/remote-crypto.js';
+import { cafePrivateKey, liveSigned, newCafeKeys, openPairRequest, pairConfirm, pairingFragment, randomB64u, sealReport, type DeviceKind, type LiveRequest, type PairRequest, type ReportBox } from '../packages/domain/remote-crypto.js';
 import type { PhoneReport, PhoneReportReason } from '../packages/domain/remote-report.js';
 import { openBalance, overviewFrom, previousRange, reportRange } from '../packages/domain/reports.js';
 import type { Actor } from '../packages/domain/types.js';
@@ -18,8 +18,8 @@ import { featureRefusal } from './feature-guard.js';
 
 /*
  * Uzaktan raporlar ("Raporlarım" on the owner's phone), end to end encrypted (packages/domain/remote-crypto.ts).
- *   Pairing  Only the owner's own account (403 for everyone else, Müdür and Mola destek too). "Telefonu eşleştir" (Destek →
- *            Uzaktan erişim) asks the device's name ("Ahmet'in telefonu", "Ev laptopu": the Raporlarım page opens in any browser),
+ *   Pairing  Only the owner's own account (403 for everyone else, Müdür and Mola destek too). Ayarlar → Uzaktan erişim (0.1.21;
+ *            src/RemoteAccess.tsx) asks the device's name ("Ahmet'in telefonu", "Ev laptopu": the Raporlarım page opens in any browser),
  *            the owner's password again (wrong attempts count on the login limiter) and, since 0.1.20, the owner's 6-digit
  *            phone code (Raporlar için telefon kodu; 409 PHONE_CODE_REQUIRED until it is set up; wrong codes count on the report
  *            code's own counters, server/report-security.ts), all in that same request; only then a one-time pairing id +
@@ -28,7 +28,10 @@ import { featureRefusal } from './feature-guard.js';
  *            device is no longer asked the code (it was typed at the café a moment before, and the same 30-second code could
  *            not be used twice); an older QR's code, if sent, is ignored. Devices paired before keep working without a code.
  *            At most 3 phones per business; "Kaldır" (the password again) revokes one at once (here, and Merkez forgets its
- *            token and postbox).
+ *            token and postbox). The phone first (0.1.21): the Raporlarım page says what it is ('phone' | 'tablet' |
+ *            'computer', from its own user agent) inside the sealed request, so Mola Merkez cannot change it; while no phone is
+ *            paired, a tablet or a computer is refused ("Önce telefonunuzu eşleştirin."). Devices paired before 0.1.21 have no
+ *            kind and count as phones.
  *   Live     The phone asks through Merkez (relay kind `phone`): HMAC-signed, fresh (±5 min) and one-time (nonce); the answer
  *            is the report sealed for that phone, bound to the question.
  *   Postbox  Every RELAY postbox period while this computer runs (MOLA_POSTBOX_MS), after a gün sonu and when Mola closes,
@@ -36,7 +39,7 @@ import { featureRefusal } from './feature-guard.js';
  *            the phone shows "Kafe bilgisayarı kapalı · Son durum 23:40" while this computer is off.
  * Only an active owner's phones are answered: a phone paired by an owner whose account was closed gets nothing.
  */
-type Phone = { id: string; name: string; pub: string; ownerId: string; ownerName: string; pairedAt: string; lastSeenAt?: string };
+type Phone = { id: string; name: string; pub: string; ownerId: string; ownerName: string; pairedAt: string; lastSeenAt?: string; kind?: DeviceKind };
 type Record_ = { v: 1; key?: { privateKey: string; publicKey: string }; phones: Phone[]; log: { at: string; text: string }[] };
 type Pairing = { tenant: string; secret: string; ownerId: string; name: string; expiresAt: number; tries: number };
 const POSTBOX_MS = () => Number(process.env.MOLA_POSTBOX_MS) || 15 * 60_000;
@@ -56,6 +59,8 @@ export class RemoteReports {
   private timer?: NodeJS.Timeout; private lastPush = 0; private pushing?: Promise<number>;
   private keys = new Map<string, Promise<CryptoKey>>();
   notifications?: () => Pick<Notifications, 'add'> | undefined;
+  /** "Kafeyi yönet" in the report: undefined without it in the package, else whether the owner turned it on (server/app.ts). */
+  adminState?: (tenant: string) => 'on' | 'off' | undefined;
   constructor(private store: Store, private link: MerkezLink, private relay: RelayClient, private now: () => Date, private cash?: CashBook) {
     store.db.exec('CREATE TABLE IF NOT EXISTS remote_reports (tenant TEXT PRIMARY KEY, payload BLOB NOT NULL)');
     relay.sources.push(() => this.tenants());
@@ -118,23 +123,27 @@ export class RemoteReports {
   private async pair(r: Extract<RelayRequest, { kind: 'pair' }>): Promise<RelayReply> {
     if (!this.link.has(r.tenantId, 'remote-reports')) throw featureRefusal('remote-reports');
     const p = this.pairings.get(r.request.pairId), t = this.now().getTime();
-    if (!p || p.tenant !== r.tenantId || p.expiresAt <= t) throw new DomainError('PAIRING_EXPIRED', 'Eşleştirme kodunun süresi doldu. Kafe bilgisayarında “Telefonu eşleştir”e yeniden basın.', 410);
-    if (p.tries >= 5) { this.pairings.delete(r.request.pairId); throw new DomainError('PAIRING_EXPIRED', 'Çok fazla hatalı deneme. Kafe bilgisayarında “Telefonu eşleştir”e yeniden basın.', 410); }
+    if (!p || p.tenant !== r.tenantId || p.expiresAt <= t) throw new DomainError('PAIRING_EXPIRED', 'Eşleştirme kodunun süresi doldu. Kafede Ayarlar → Uzaktan erişim’den yeniden eşleştirin.', 410);
+    if (p.tries >= 5) { this.pairings.delete(r.request.pairId); throw new DomainError('PAIRING_EXPIRED', 'Çok fazla hatalı deneme. Kafede Ayarlar → Uzaktan erişim’den yeniden eşleştirin.', 410); }
     const key = await this.cafeKey(p.tenant), inner = await openPairRequest(await this.privateKey(p.tenant, key.privateKey), p.secret, r.request as PairRequest);
     if (!inner) { p.tries++; throw new DomainError('PAIRING_INVALID', 'Eşleştirme doğrulanamadı. QR kodunu yeniden okutun.', 403); }
     const s = this.store.read(p.tenant), owner = s.staffUsers?.find(u => u.id === p.ownerId && u.role === 'owner' && u.active);
     if (!owner) { this.pairings.delete(r.request.pairId); throw new DomainError('FORBIDDEN', 'Bu işlem için yetkiniz yok.', 403); }
     // The name the owner typed on this computer; an older Raporlarım page may still send its own (used only without one).
     const name = p.name || deviceName(typeof inner.name === 'string' ? inner.name : '') || 'Cihaz';
+    // An older Raporlarım page says nothing: it counts as a phone, like the devices paired before 0.1.21.
+    const kind: DeviceKind = inner.kind ?? 'phone';
     const id = randomB64u(16), at = this.now().toISOString();
     this.write(p.tenant, x => {
       if (x.phones.length >= RELAY.MAX_PHONES) throw new DomainError('PHONE_LIMIT', `En fazla ${RELAY.MAX_PHONES} cihaz eşleştirilebilir.`, 409);
-      x.phones.push({ id, name, pub: r.request.phonePub, ownerId: owner.id, ownerName: owner.name, pairedAt: at });
+      // The QR stays open: the owner can scan it with the phone now.
+      if (kind !== 'phone' && !x.phones.some(v => (v.kind ?? 'phone') === 'phone')) throw new DomainError('PHONE_FIRST', 'Önce telefonunuzu eşleştirin. Sonra bu cihazı aynı yerden ekleyebilirsiniz.', 409);
+      x.phones.push({ id, name, pub: r.request.phonePub, ownerId: owner.id, ownerName: owner.name, pairedAt: at, kind });
       x.log.push({ at, text: `Cihaz eşleştirildi: ${name} (${owner.name}).` });
     });
     this.pairings.delete(r.request.pairId);
     this.store.mutate(p.tenant, x => { x.audit.push({ action: 'remote.phone_paired', actor: owner.id, target: id, at }); });
-    try { this.notifications?.()?.add(p.tenant, `phone:paired:${id}`, { kind: 'merkez', title: 'Cihaz eşleştirildi', text: `${name} artık raporlarınızı görebilir. Kaldırmak için Destek → Uzaktan erişim.` }); } catch { /* the log has it */ }
+    try { this.notifications?.()?.add(p.tenant, `phone:paired:${id}`, { kind: 'merkez', title: 'Cihaz eşleştirildi', text: `${name} artık raporlarınızı görebilir. Kaldırmak için Ayarlar → Uzaktan erişim.` }); } catch { /* the log has it */ }
     this.relay.refresh(); void this.relay.announce();
     // The first postbox box at once, so the phone has something even if this computer goes off right after.
     setTimeout(() => void this.push('paired', true).catch(() => {}), 50).unref?.();
@@ -156,7 +165,7 @@ export class RemoteReports {
   private phoneOf(tenant: string, phoneId: string) {
     const p = this.read(tenant).phones.find(x => x.id === phoneId);
     const owner = p && this.store.read(tenant).staffUsers?.find(u => u.id === p.ownerId && u.role === 'owner' && u.active);
-    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın eşleşmesi kaldırıldı. Kafe bilgisayarında yeniden eşleştirin.', 403);
+    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın eşleşmesi kaldırıldı. Kafede Ayarlar → Uzaktan erişim’den yeniden eşleştirin.', 403);
     return p;
   }
   private async live(r: Extract<RelayRequest, { kind: 'phone' }>): Promise<RelayReply> {
@@ -187,6 +196,7 @@ export class RemoteReports {
       open: { accounts: s.accounts.filter(a => a.status === 'open').length, amount: o.openAccounts ?? 0 },
       lastClosing: closing && closing.status === 'closed' ? { at: closing.closedAt ?? closing.to, day: closing.day, byName: closing.byName, ...(closing.extra ? { extra: true } : {}), counted: closing.counted, expected: closing.figures.expected, difference: closing.difference } : null,
       days: m.daily.map(d => ({ day: d.day, sales: d.sales })),
+      ...((admin => admin ? { admin } : {})(this.adminState?.(tenant))),
     };
   }
   // ---------- Postbox ----------
@@ -211,7 +221,7 @@ export class RemoteReports {
   }
   view(tenant: string) {
     const r = this.read(tenant), t = this.now().getTime(), pairing = [...this.pairings.values()].find(p => p.tenant === tenant && p.expiresAt > t);
-    return { phones: r.phones.map(p => ({ id: p.id, name: p.name, ownerName: p.ownerName, pairedAt: p.pairedAt, lastSeenAt: p.lastSeenAt ?? null })), max: RELAY.MAX_PHONES, pairing: pairing ? { expiresAt: new Date(pairing.expiresAt).toISOString() } : null,
+    return { phones: r.phones.map(p => ({ id: p.id, name: p.name, ownerName: p.ownerName, pairedAt: p.pairedAt, lastSeenAt: p.lastSeenAt ?? null, kind: p.kind ?? null })), max: RELAY.MAX_PHONES, pairing: pairing ? { expiresAt: new Date(pairing.expiresAt).toISOString() } : null,
       relay: { connected: this.relay.connected(), error: this.relay.lastError }, log: [...r.log].reverse().slice(0, 30) };
   }
 }
@@ -233,7 +243,7 @@ export function remoteReportRoutes(app: Express, store: Store, reports: RemoteRe
     const { a } = owner(req), b = z.object({ name: z.string().max(200).optional(), password: z.string().max(200).optional(), code: z.string().max(12).optional() }).strict().parse(req.body ?? {});
     reports.canPair(a.tenantId);
     // A new device needs the phone code (devices paired before keep working): said before the password, no wasted try.
-    if (!hasCode(a)) throw new DomainError('PHONE_CODE_REQUIRED', 'Cihaz eşleştirmek için önce telefon kodunu kurun: Ayarlar → Güvenlik ve yedek → Telefonum → Raporlar için telefon kodu.', 409);
+    if (!hasCode(a)) throw new DomainError('PHONE_CODE_REQUIRED', 'Cihaz eşleştirmek için önce telefon kodunu kurun: Ayarlar → Uzaktan erişim → 1. adım.', 409);
     if (!deviceName(b.name ?? '')) throw new DomainError('NAME_REQUIRED', 'Cihaza bir ad verin: örneğin “Ahmet’in telefonu” ya da “Ev laptopu”.', 400);
     await confirmPassword(req, a, b.password);
     const { a: still } = owner(req), code = (b.code ?? '').replace(/\D/g, '');

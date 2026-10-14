@@ -10,7 +10,7 @@ import { z } from 'zod';
  *   POST /api/merkez/v1/relay/poll     { v, tenants }       → { requests } (held up to RELAY.HOLD_MS while there is nothing)
  *   POST /api/merkez/v1/relay/reply    { id, status, … }    → { ok }
  *   POST /api/merkez/v1/relay/state    { v, tenants }       → { ok }   (at once: permission switched off, a phone removed)
- *   POST /api/merkez/v1/relay/pairing  { tenantId, pairId, expiresAt } → { ok }   ("Telefonu eşleştir" announced)
+ *   POST /api/merkez/v1/relay/pairing  { tenantId, pairId, expiresAt } → { ok }   (a device pairing announced)
  *   POST /api/merkez/v1/relay/postbox  { items }            → { ok }   (encrypted snapshots for the phones)
  */
 const ms = (name: string, fallback: number) => Number(process.env[name]) || fallback;

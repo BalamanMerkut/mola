@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Lock, MonitorCheck, MonitorSmartphone, RefreshCw, Wifi } from 'lucide-react';
 
 type Result = { connected: boolean; latency: number | null; checkedAt: string };
-/** `page`: Ayarlar → Cihazlar → Tablet ve telefonlar shows the check as an open card (no fold). */
+/** `page`: Ayarlar → Cihazlar → Cihaz bağla shows the check as an open card (no fold). */
 export function DeviceChecks({ page = false }: { page?: boolean } = {}) {
   const [open, setOpen] = useState(page), [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null), [showReport, setShowReport] = useState(false);

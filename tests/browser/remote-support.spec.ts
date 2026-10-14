@@ -3,7 +3,7 @@ import { detailTab, ensureSetup, MERKEZ, openBusiness, openYonetim, yonetimBell 
 
 /*
  * Uzaktan destek (server/support-session.ts, server/merkez/relay.ts): the owner switches "Uzaktan destek izni" on in Destek →
- * Uzaktan erişim; the vendor presses "Kafeye bağlan" in Mola Yönetim → işletme → Destek and gets the café's screens as
+ * Mola desteği; the vendor presses "Kafeye bağlan" in Mola Yönetim → işletme → Destek and gets the café's screens as
  * "Mola destek" in a new tab; edits a price; reports are refused (403); the owner sees the change and the banner; switching
  * the permission off ends the session at once.
  */
@@ -18,7 +18,7 @@ test('Uzaktan destek: owner allows, vendor connects through Mola Merkez, edits a
     const state = await (await cafe.request.get('/api/staff/state')).json();
     const owner = await cafe.newPage(); await owner.goto('/');
     await owner.getByRole('button', { name: 'Destek', exact: true }).click();
-    await owner.getByRole('tab', { name: /Uzaktan erişim/ }).click();
+    await owner.getByRole('tab', { name: /Mola desteği/ }).click();
     await expect(owner.getByText('Kapalı · Mola ekibi bağlanamaz')).toBeVisible();
     // Turning it on asks the owner's password again; a wrong one leaves it off.
     await owner.getByRole('checkbox', { name: 'Mola ekibi bağlanabilsin' }).click();

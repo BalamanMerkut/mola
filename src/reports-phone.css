@@ -57,3 +57,6 @@ html,body{margin:0;background:var(--rp-paper);color:var(--rp-ink);font-family:In
 .rp-chart span:last-child{background:var(--rp-green)}
 @media(max-width:360px){.rp-split{grid-template-columns:1fr}.rp-grid{grid-template-columns:1fr}}
 .rp-manage{display:flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700}
+/* "Eşleşti ✓ · <işletme>" right after pairing; "Kafedeyim, kasayı aç" quiet under the page (0.1.21). */
+.rp-paired{margin:0 0 12px;padding:12px 14px;border-radius:12px;background:#e3f1e8;color:var(--rp-green);font-weight:700;font-size:15px}
+.rp-cafe{display:block;margin-top:14px;padding:10px;text-align:center;font-size:13px;color:var(--rp-muted)}

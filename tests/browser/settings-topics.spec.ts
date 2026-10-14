@@ -26,13 +26,13 @@ const fakeAudio = () => {
 };
 const login = async (page: Page, username = 'isletme') => { await page.request.post('/api/login', { data: { username, password: 'MolaDemo!2026' } }); };
 
-test('Ayarlar: five topics of one-time settings; every setting of the earlier pages is still there (here or in its home); parts, memory and links land right', async ({ page }, info) => {
+test('Ayarlar: six topics of one-time settings (Uzaktan erişim the owner\'s own); every setting of the earlier pages is still there (here or in its home); parts, memory and links land right', async ({ page }, info) => {
   test.setTimeout(90000);
   await login(page); await ensureSetup(page.request);
   await page.setViewportSize({ width: 1280, height: 860 }); await page.goto('/');
   await openView(page, 'Ayarlar');
   const topics = settingsTopics(page);
-  await expect(topics.getByRole('button')).toHaveCount(5);
+  await expect(topics.getByRole('button')).toHaveCount(6);
   for (const [i, name] of settingsTopicNames.entries()) await expect(topics.getByRole('button').nth(i)).toContainText(name);
   await expect(topics.getByRole('button', { name: /^İşletme/ })).toHaveAttribute('aria-current', 'page');
   await expect(topics.getByRole('button', { name: /^Cihazlar/ })).toHaveAttribute('title', /yazıcı/);
@@ -62,10 +62,11 @@ test('Ayarlar: five topics of one-time settings; every setting of the earlier pa
     'Paket platformları': async p => { await expect(p.locator('.settings-integrations')).toBeVisible(); await expect(p.getByRole('heading', { name: 'Ekran açılamadı' })).toHaveCount(0); await expect(p.locator('.settings-integrations')).not.toBeEmpty(); },
     'Yazıcılar': async p => { await visible(p.getByRole('heading', { name: /Fiş yazıcıları/ })); await visible(p.getByRole('button', { name: /Yazıcı ekle/ })); },
     'Sesler': async p => { for (const event of ['Garson çağrısı', 'Hesap isteme', 'Yeni QR siparişi (onay bekliyor)', 'Mutfağa yeni sipariş', 'Sipariş hazır (garsona)', 'Dış platform siparişi']) await visible(p.getByLabel(`${event} sesi`, { exact: true })); await expect(p.locator('.sound-chip')).toHaveCount(20); await visible(p.getByRole('slider', { name: 'Bu cihazın ses düzeyi' })); },
-    'Tablet ve telefonlar': async p => { await visible(p.getByRole('heading', { name: 'Bağlantı ve cihaz kontrolü' })); await visible(p.getByRole('heading', { name: 'Tablet ve telefon bağlama' })); await expect(p.locator('.photo-storage summary')).toContainText('Fotoğraf alanı'); },
+    'Cihaz bağla': async p => { await visible(p.getByRole('heading', { name: 'Bağlantı ve cihaz kontrolü' })); await visible(p.getByRole('heading', { name: 'Cihaz bağla', exact: true })); await visible(p.getByRole('button', { name: /Ayarlar → Uzaktan erişim/ })); await expect(p.locator('.photo-storage summary')).toContainText('Fotoğraf alanı'); },
     'Yedek': async p => { await visible(p.getByRole('heading', { name: 'Yedek', exact: true })); await visible(p.getByRole('button', { name: /^Açık oturumlar/ })); },
-    'Kilit ve güncelleme': async p => { await visible(p.getByRole('heading', { name: /Güncellemeler/ })); await visible(p.getByText('Sahip hesabı otomatik kilit').first()); },
-    'Telefonum': async p => { await visible(p.locator('summary').getByText('Raporlar için telefon kodu', { exact: true })); await visible(p.getByText('Raporlarım telefonda').first()); await visible(p.getByText('Uzaktan yönetim').first()); },
+    'Kilit ve güncelleme': async p => { await visible(p.getByRole('heading', { name: /Güncellemeler/ })); await visible(p.getByText('Sahip hesabı otomatik kilit').first()); await visible(p.locator('summary').getByText('Raporlar için telefon kodu', { exact: true })); },
+    // One page, no second row: the numbered steps, the phone first (on the café computer: no "telefonunuzdan mı" question).
+    'Uzaktan erişim': async p => { await expect(settingsParts(p, 'Uzaktan erişim')).toHaveCount(0); for (const h of ['1 · Telefonunuz', '2 · Laptop ve tablet', '3 · Kısayol', '4 · Uzaktan yönetim', '5 · Eşleşmiş cihazlar']) await visible(p.getByRole('heading', { name: h })); await visible(p.getByText('Önce telefonunuzu bağlayın.')); await expect(p.getByText('Bu ekranı şu an telefonunuzdan mı açtınız?')).toHaveCount(0); },
   };
   expect(Object.keys(reach).sort()).toEqual([...settingsPageNames].sort());
   for (const name of settingsPageNames) {
@@ -92,7 +93,7 @@ test('Ayarlar: five topics of one-time settings; every setting of the earlier pa
   await visible(page.getByRole('dialog', { name: 'Raporları gönder' }).getByRole('heading', { name: /E-posta hesabı/ }));
   await page.keyboard.press('Escape');
   // No jargon left in Güvenlik: the words the owner asked to replace are gone from the page (help texts may name the app).
-  for (const part of ['Yedek', 'Kilit ve güncelleme', 'Telefonum'] as const) {
+  for (const part of ['Yedek', 'Kilit ve güncelleme'] as const) {
     await openSettings(page, part);
     const securityText = await page.locator('.settings-page-body').innerText();
     for (const word of ['Authenticator', 'IP engeli', 'BitLocker', 'tarayıcı kaydı']) expect(securityText, `${part}: ${word}`).not.toContain(word);
@@ -125,12 +126,16 @@ test('Ayarlar: five topics of one-time settings; every setting of the earlier pa
     await expect(settingsParts(page, topic).getByRole('button', { name: new RegExp(`^${part}`) })).toHaveAttribute('aria-current', 'page');
   }
   // The part remembered under an earlier topic lands on its new page (10 Ekim son kullanıcı testi: the topic's first part).
-  for (const [old, parts, topic, part] of [['print', { print: 'sounds' }, 'Cihazlar', 'Sesler'], ['other', { other: 'devices' }, 'Cihazlar', 'Tablet ve telefonlar'], ['other', { other: 'integrations' }, 'Sipariş ve mutfak', 'Paket platformları']] as const) {
+  for (const [old, parts, topic, part] of [['print', { print: 'sounds' }, 'Cihazlar', 'Sesler'], ['other', { other: 'devices' }, 'Cihazlar', 'Cihaz bağla'], ['other', { other: 'integrations' }, 'Sipariş ve mutfak', 'Paket platformları']] as const) {
     await page.evaluate(([v, p]) => { localStorage.setItem('mola-settings-topic', v); localStorage.setItem('mola-settings-part', JSON.stringify(p)); }, [old, parts] as const);
     await page.reload(); await openView(page, 'Ayarlar');
     await expect(topics.getByRole('button', { name: new RegExp(`^${topic}`) })).toHaveAttribute('aria-current', 'page');
     await expect(settingsParts(page, topic).getByRole('button', { name: new RegExp(`^${part}`) })).toHaveAttribute('aria-current', 'page');
   }
+  // Güvenlik ve yedek → Telefonum (until 0.1.20) opens Uzaktan erişim.
+  await page.evaluate(() => { localStorage.setItem('mola-settings-topic', 'security'); localStorage.setItem('mola-settings-part', JSON.stringify({ security: 'phone' })); });
+  await page.reload(); await openView(page, 'Ayarlar');
+  await expect(topics.getByRole('button', { name: /^Uzaktan erişim/ })).toHaveAttribute('aria-current', 'page');
   // Links from elsewhere: İlk adımlar' "Yazıcı bağla" lands on Yazıcılar, "QR kodlarına git" on the QR card (when those steps show).
   await openView(page, 'Masalar');
   const steps = page.locator('.first-steps');

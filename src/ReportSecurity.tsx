@@ -23,7 +23,7 @@ function Controls({ enabled, onDone, manager = false }: { enabled: boolean; onDo
     {error && <Notice tone="error">{error}</Notice>}
   </div>;
 }
-/** Ayarlar → Güvenlik ve yedek → Telefonum, the first step (`open`: shown unfolded there). */
+/** Ayarlar → Güvenlik ve yedek → Kilit ve güncelleme (0.1.21; setting it up is also step 1 of Ayarlar → Uzaktan erişim). `open`: shown unfolded. */
 export function ReportSecurity({ open = false }: { open?: boolean }) {
   const [status, setStatus] = useState<Status | null>(null), [error, setError] = useState('');
   const load = () => api<Status>('/api/staff/report-security').then(setStatus).catch(e => setError(e.message));
@@ -36,6 +36,6 @@ export function FinancialAccess({ children }: { children: ReactNode }) {
   useEffect(() => { void load(); const id = setInterval(() => void load(), 5000); return () => clearInterval(id); }, []);
   if (error) return <Notice tone="error">{error}<button className="text-btn" onClick={() => void load()}>Yeniden kontrol et</button></Notice>;
   if (!status) return <p>Rapor erişimi kontrol ediliyor…</p>;
-  if (!status.verified) return <section className="panel"><h2>Raporları açmak için telefon kodu</h2><Controls enabled manager={status.owner === false} onDone={() => void load()} />{status.owner !== false && <div className="home-links"><PlaceLink to={{ view: 'settings', topic: 'security', part: 'phone' }}>Telefon kodunu yönet (Ayarlar → Güvenlik ve yedek → Telefonum)</PlaceLink></div>}</section>;
+  if (!status.verified) return <section className="panel"><h2>Raporları açmak için telefon kodu</h2><Controls enabled manager={status.owner === false} onDone={() => void load()} />{status.owner !== false && <div className="home-links"><PlaceLink to={{ view: 'settings', topic: 'security', part: 'lock' }}>Telefon kodunu yönet (Ayarlar → Güvenlik ve yedek → Kilit ve güncelleme)</PlaceLink></div>}</section>;
   return <>{children}</>;
 }

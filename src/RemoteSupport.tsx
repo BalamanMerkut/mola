@@ -7,10 +7,10 @@ import { Card, Row, Toggle } from './SettingsKit';
 import './remote-support.css';
 
 /*
- * Destek → Uzaktan erişim (owner only): "Uzaktan destek izni" (the Mola team may open this café's screens, without money and
+ * Destek → Mola desteği (owner only): "Uzaktan destek izni" (the Mola team may open this café's screens, without money and
  * security; server/support-session.ts; turning it on asks the owner's password again, turning it off never does).
- * Everything the Mola team changes is listed here, with who connected when. "Raporlarım telefonda" (src/PhonePairing.tsx)
- * is in Ayarlar → Güvenlik ve yedek → Telefonum.
+ * Everything the Mola team changes is listed here, with who connected when. The owner's own devices (Raporlarım, uzaktan
+ * yönetim) are in Ayarlar → Uzaktan erişim (src/RemoteAccess.tsx).
  */
 type Session = { id: string; startedAt: string; endedAt?: string; endedBy?: 'owner' | 'vendor' | 'timeout' | 'restart' | 'off'; actions: number };
 type View = { on: boolean; since: string | null; by: string | null; active: { since: string } | null; relay: { connected: boolean; error: string | null }; sessions: Session[]; log: { at: string; session: string; text: string }[]; can: string[]; cannot: string[] };

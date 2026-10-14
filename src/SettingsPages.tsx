@@ -1,7 +1,6 @@
 import { lazy, useEffect, useId, useState, type ReactNode } from 'react';
 import { Building2, Check, ClipboardCheck, Mail, Cloud, CreditCard, DatabaseBackup, Download, FolderOpen, Footprints, HardDrive, KeyRound, LayoutGrid, Info, MapPin, Minus, Plus, ShieldAlert, ShieldCheck, ShieldOff, TabletSmartphone, Usb } from 'lucide-react';
 import { PlaceLink } from './Moved';
-import { PhonePairing } from './PhonePairing';
 import QRCode from 'qrcode';
 import { cloudLine, type CloudView } from './cloudBackupText';
 import type { StaffSnapshot } from '../packages/domain/types';
@@ -21,7 +20,6 @@ import { PhotoStorage } from './PhotoStorage';
 import { PermanentLink } from './PermanentLink';
 import { ReportSecurity } from './ReportSecurity';
 import { OwnerLockSettings } from './OwnerLock';
-import { RemoteAdminSettings } from './RemoteAdminSettings';
 import { DeferredPanel } from './DeferredPanel';
 import { openRail } from './FirstSteps';
 import { TableLayout } from './TableLayout';
@@ -218,27 +216,32 @@ export function PrintersPage({ data, onCount }: { data: StaffSnapshot; onCount: 
 
 export function SoundsPage() { return <SoundSettings />; }
 
-/** Opening Mola on a tablet: one QR to /uygulama (install the Android app, or add to the iPhone/iPad home screen). */
-function ConnectTablet({ business }: { business: string }) {
+/**
+ * Cihaz bağla (0.1.21, once "Tablet ve telefonlar"): the staff's tablets and phones by one QR to /uygulama (install the
+ * Android app, or add to the iPhone/iPad home screen), and the permanent link for laptops and phones with "Bu cihaza kısayol
+ * ekle". The owner's remote reports and remote management live in Ayarlar → Uzaktan erişim (a line points there).
+ */
+function ConnectTablet() {
   const [network] = useNetwork(), [image, setImage] = useState('');
   const base = network ? qrBase(network) : '', reachable = !!network && (network.lan || !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname));
   useEffect(() => { let live = true; if (base && reachable) void QRCode.toDataURL(`${base}/uygulama`, { width: 240, margin: 1 }).then(v => { if (live) setImage(v); }).catch(() => {}); return () => { live = false; }; }, [base, reachable]);
   // On the café computer itself: Windows' "Genel" network profile keeps the phones out while Mola's firewall rule is the old
   // private-only one. A phone or tablet showing this page is already connected, so it is not told.
   const here = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-  const profile = useNetworkProfile(() => api<NetworkProfileView>('/api/staff/network-profile'), here && !!network?.lan);
-  return <Card icon={<TabletSmartphone size={18} aria-hidden="true" />} title="Tablet ve telefon bağlama" className="connect-tablet">
+  const profile = useNetworkProfile(() => api<NetworkProfileView>('/api/staff/network-profile'), here && !!network?.lan), pk = usePackage();
+  return <Card icon={<TabletSmartphone size={18} aria-hidden="true" />} title="Cihaz bağla" className="connect-tablet">
     <NetworkProfileNotice view={profile} />
     {!network ?<p className="settings-card-note" aria-busy="true">Ağ adresi okunuyor…</p> : reachable ? <div className="connect-tablet-body">
       <div className="connect-tablet-qr">{image ? <img src={image} width={160} height={160} alt="Mola uygulaması kurulum sayfasının QR kodu" /> : <span />}</div>
       <div><p className="settings-card-note"><strong>Telefon ya da tabletin kamerasıyla okutun.</strong> Açılan sayfa Mola'yı Android'e uygulama olarak, iPhone ve iPad'e ana ekrana kurmayı anlatır. Cihaz bu bilgisayarla aynı Wi-Fi ağında olmalı.</p><p className="connect-tablet-address"><code>{base.replace(/^https?:\/\//, '')}/uygulama</code></p><p className="muted small">Garsona ve mutfağa kendi hesaplarını Personel → Çalışanlar'dan açın.</p></div>
-    </div> : <p className="settings-card-note">Mola şu anda yalnız bu bilgisayara açık; tabletler bağlanamaz. Kasa bilgisayarındaki Mola penceresinde sol şerit → <strong>Tabletler</strong>'e bakın.</p>}
+    </div> : <p className="settings-card-note">Mola şu anda yalnız bu bilgisayara açık; tabletler bağlanamaz. Kasa bilgisayarındaki Mola penceresinde sol şerit → <strong>Cihaz bağla</strong>'ya bakın.</p>}
     {/* Kalıcı bağlantı: the owner's (and Müdür's) link for laptops and phones, whatever address the modem gives this computer. */}
-    <PermanentLink link={network?.link} business={business} />
+    <PermanentLink link={network?.link} />
+    {pk.owner && <p className="muted small connect-remote-line">Raporlarınızı ve kafenizi dışarıdan açmak için: <PlaceLink to={{ view: 'settings', topic: 'remote' }}>Ayarlar → Uzaktan erişim</PlaceLink></p>}
   </Card>;
 }
-export function DevicesPage({ business }: { business: string }) {
-  return <><DeviceChecks page /><ConnectTablet business={business} /><div className="settings-card-fold"><PhotoStorage /></div></>;
+export function DevicesPage() {
+  return <><DeviceChecks page /><ConnectTablet /><div className="settings-card-fold"><PhotoStorage /></div></>;
 }
 
 type SecondPlace = { folder: string; kind: 'usb' | 'onedrive' | 'gdrive' | 'folder'; label: string | null; lastCopyAt: string | null; lastError: string | null };
@@ -398,21 +401,12 @@ export function BackupPage({ backup }: { backup: Backup | null }) {
   </>;
 }
 
-/** Güvenlik ve yedek → Kilit ve güncelleme: "Sahip hesabı otomatik kilit" and the update settings (the version lines link here). */
-export function LockPage() { return <><OwnerLockSettings /><UpdateSettings /></>; }
-
 /**
- * Güvenlik ve yedek → Telefonum: the owner's phone, three steps in order: Raporlar için telefon kodu, Telefonu eşleştir
- * (Raporlarım telefonda; once Destek → Uzaktan erişim), Uzaktan yönetim.
+ * Güvenlik ve yedek → Kilit ve güncelleme: "Sahip hesabı otomatik kilit", "Raporlar için telefon kodu" (0.1.21, from the
+ * former Telefonum: its reset with the recovery code; setting it up is also step 1 of Ayarlar → Uzaktan erişim) and the
+ * update settings (the version lines link here).
  */
-export function PhonePage() {
-  const pk = usePackage();
-  return <>
-    <div className="settings-card-fold"><ReportSecurity /></div>
-    {pk.has('remote-reports') ? <PhonePairing /> : <LockedRow feature="remote-reports" title="Raporlarım telefonda" />}
-    {pk.has('remote-admin') ? <RemoteAdminSettings /> : <LockedRow feature="remote-admin" />}
-  </>;
-}
+export function LockPage() { return <><OwnerLockSettings /><div className="settings-card-fold"><ReportSecurity /></div><UpdateSettings /></>; }
 
 /** Masalar ve QR → Engellenen telefonlar (once in Güvenlik ve yedek): blocked from QR ordering in a table's window. */
 export function BlockedPage({ blocks, onUnblock, error }: { blocks: { orderId: string; number: number; label: string }[]; onUnblock: (orderId: string) => void; error: string }) {

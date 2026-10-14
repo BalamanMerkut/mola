@@ -131,7 +131,7 @@ export function SalesReports({ open, onRecipe }: { open?: ReportsOpening; onReci
   // Campaigns are compared on their own dates, so the period does not apply there.
   const usesPeriod = !detail || tab !== 'campaigns';
   const pk = usePackage(), tabLocked = (id: Tab) => { const f = TAB_FEATURE[id]; return !!f && !pk.has(f); }, lockedHere = TAB_FEATURE[tab] && tabLocked(tab) ? TAB_FEATURE[tab] : undefined;
-  // The owner's own: "Raporları gönder" (e-posta raporları) and "Raporları telefonda gör" (Ayarlar → Güvenlik ve yedek → Telefonum).
+  // The owner's own: "Raporları gönder" (e-posta raporları) and "Raporları telefonda gör" (Ayarlar → Uzaktan erişim).
   const owner = pk.owner, [sending, setSending] = useState(!!open?.send && pk.has('email-reports'));
   return <div className="reports-workspace reports-v2">
     {usesPeriod && <PeriodBar range={range} onChange={setRange} />}
@@ -139,7 +139,7 @@ export function SalesReports({ open, onRecipe }: { open?: ReportsOpening; onReci
       {detail && <button type="button" className="btn secondary report-mode-btn" onClick={() => setDetail(false)}>Sade özete dön</button>}
       <ReportTools view={detail ? tab : 'summary'} viewName={detail ? TAB_NAMES[tab] : 'Satış özeti'} range={range} extra={owner ? [
         { id: 'email', icon: <Mail size={18} aria-hidden="true" />, label: 'Raporları gönder', sub: 'Günlük, haftalık, aylık özet e-postayla', locked: !pk.has('email-reports'), onClick: () => pk.has('email-reports') ? setSending(true) : openFeatureLock('email-reports') },
-        { id: 'phone', icon: <Smartphone size={18} aria-hidden="true" />, label: 'Raporları telefonda gör', sub: 'Telefonunuzu bir kez eşleştirin, her yerden bakın', onClick: () => goTo({ view: 'settings', topic: 'security', part: 'phone' }) },
+        { id: 'phone', icon: <Smartphone size={18} aria-hidden="true" />, label: 'Raporları telefonda gör', sub: 'Telefonunuzu bir kez eşleştirin, her yerden bakın', onClick: () => goTo({ view: 'settings', topic: 'remote' }) },
       ] : []} />
     </div>
     {sending && <Modal title="Raporları gönder" wide className="email-reports-dialog" onClose={() => setSending(false)}><div className="modal-body settings-shell"><div className="settings-page wide email-reports-page"><div className="settings-page-body"><EmailReports /></div></div></div></Modal>}

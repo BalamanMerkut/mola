@@ -24,9 +24,9 @@ const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { day: 'nume
 export type SupportTab = 'tickets' | 'notifications' | 'announcements' | 'remote';
 /**
  * Destek is only about talking to Mola (10 Ekim düzeni): "Talepler" (support tickets and contact), "Duyurular" (the Mola
- * team's announcements, src/Announcements.tsx; red dot while unread) and "Uzaktan erişim" (the Mola team's remote support
+ * team's announcements, src/Announcements.tsx; red dot while unread) and "Mola desteği" (the Mola team's remote support
  * permission and who connected when, src/RemoteSupport.tsx). Bildirimler are on the bell of the top bar, the licence in
- * Ayarlar → İşletme → Paket ve lisans, "Telefonu eşleştir" in Ayarlar → Güvenlik ve yedek → Telefonum. An old
+ * Ayarlar → İşletme → Paket ve lisans, the owner's devices in Ayarlar → Uzaktan erişim. An old
  * 'notifications' tab opens Talepler.
  */
 /** draft: a new ticket already written ("Mola ekibine yaz" on a service not in the package, src/FeatureLock.tsx). */
@@ -38,7 +38,7 @@ export function Support({ tab = 'tickets', onTab, announcements = 0, onWrite, dr
   const asked = onTab ? tab : own, current = asked === 'notifications' ? 'tickets' : asked, choose = (t: SupportTab) => { if (onTab) onTab(t); else setOwn(t); };
   const tabs = <PillTabs kind="tabs" label="Destek bölümleri" wrapClassName="support-pill-tabs" idPrefix="support-tab" panelId={id => `support-panel-${id}`} value={current} onChange={choose}
     items={[{ id: 'tickets' as const, label: 'Talepler', icon: MessagesSquare },
-      { id: 'announcements' as const, label: 'Duyurular', icon: Megaphone, extra: announcements > 0 ? <span className="red-dot" title={`${announcements} okunmamış duyuru`} aria-hidden="true" /> : undefined }, { id: 'remote' as const, label: 'Uzaktan erişim', icon: MonitorSmartphone }]} />;
+      { id: 'announcements' as const, label: 'Duyurular', icon: Megaphone, extra: announcements > 0 ? <span className="red-dot" title={`${announcements} okunmamış duyuru`} aria-hidden="true" /> : undefined }, { id: 'remote' as const, label: 'Mola desteği', icon: MonitorSmartphone }]} />;
   if (current === 'announcements') return <>{tabs}<div role="tabpanel" id="support-panel-announcements" aria-labelledby="support-tab-announcements"><AnnouncementList owner onWrite={d => { if (onWrite) onWrite(d); else { setOwnDraft(d); choose('tickets'); } }} /></div></>;
   if (current === 'remote') return <>{tabs}<div role="tabpanel" id="support-panel-remote" aria-labelledby="support-tab-remote"><RemoteAccess /></div></>;
   return <>{tabs}<div role="tabpanel" id="support-panel-tickets" aria-labelledby="support-tab-tickets"><SupportTickets key={ownDraft?.subject} draft={ownDraft} /></div></>;

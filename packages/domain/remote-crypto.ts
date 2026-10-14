@@ -109,8 +109,17 @@ export function readPairingFragment(hash: string): PairingLink | null {
   return m ? { pairId: m[1], secret: m[2], cafePublic: m[3], code: m[4] === '1' } : null;
 }
 export type PairRequest = { pairId: string; phonePub: string; iv: string; ct: string; mac: string };
-/** The phone's own words for the café: its name and, when the café asks, the 6-digit report code. Encrypted to the café. */
-export type PairInner = { name: string; code?: string };
+/** What the paired device is, as its own browser tells (0.1.21: the phone must be paired first). */
+export type DeviceKind = 'phone' | 'tablet' | 'computer';
+export const DEVICE_KINDS: readonly DeviceKind[] = ['phone', 'tablet', 'computer'];
+/** From the user agent: iPad (also when it asks for the desktop site with a Mac user agent and a touch screen) and an Android without "Mobile" are tablets. */
+export function deviceKindOf(ua: string, touchPoints = 0): DeviceKind {
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1)) return 'tablet';
+  if (/iPhone|iPod/.test(ua) || (/Android/.test(ua) && /Mobile/.test(ua))) return 'phone';
+  return /Android/.test(ua) ? 'tablet' : 'computer';
+}
+/** The phone's own words for the café: its name, what it is and, when the café asks, the 6-digit report code. Encrypted to the café. */
+export type PairInner = { name: string; code?: string; kind?: DeviceKind };
 const pairInfo = (pairId: string, phonePub: string) => `eslestir|${pairId}|${phonePub}`;
 export async function pairRequest(phonePrivate: CryptoKey, phonePublic: string, link: PairingLink, inner: PairInner): Promise<PairRequest> {
   const secret = fromB64u(link.secret), info = pairInfo(link.pairId, phonePublic);
@@ -127,7 +136,7 @@ export async function openPairRequest(cafePrivate: CryptoKey, secret: string, r:
     const key = await hkdf(await dh(cafePrivate, r.phonePub), raw, info);
     const plain = await subtle().decrypt({ name: 'AES-GCM', iv: bytes(fromB64u(r.iv)), additionalData: utf8(info) }, await aes(key, 'decrypt'), bytes(fromB64u(r.ct)));
     const inner = JSON.parse(td.decode(plain)) as PairInner;
-    return typeof inner?.name === 'string' && (inner.code === undefined || typeof inner.code === 'string') ? inner : null;
+    return typeof inner?.name === 'string' && (inner.code === undefined || typeof inner.code === 'string') && (inner.kind === undefined || DEVICE_KINDS.includes(inner.kind)) ? inner : null;
   } catch { return null; }
 }
 /** "Eşleşti", from the café: only the pairing secret's holder can say it, so Mola Merkez cannot fake a pairing. */

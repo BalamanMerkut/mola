@@ -1,10 +1,11 @@
-import { test, expect, type Request as PwRequest } from '@playwright/test';
+import { test, expect, devices, type Request as PwRequest } from '@playwright/test';
 import { ensureSetup, openSettings, openView, phoneCodeOn, reportAction } from './helpers';
 
 /*
  * Sahibin uzaktan yönetimi (server/remote-admin.ts, src/RemoteAdmin.tsx, src/remoteTransport.ts): a device paired for
- * Raporlarım opens "Kafeyi yönet", signs in with the password and the phone code, and runs the café's own screens through
- * Mola Merkez. Every request and answer between the device and the café is sealed: Merkez carries ciphertext only.
+ * Raporlarım (the phone first, then the laptop: 0.1.21) opens "Kafeyi yönet", signs in with the password and the phone code,
+ * and runs the café's own screens through Mola Merkez: Satış ve Raporlar, Menü yönetimi (a price changed), Ayarlar. Every
+ * request and answer between the device and the café is sealed: Merkez carries ciphertext only.
  */
 const PASSWORD = 'MolaDemo!2026';
 
@@ -12,11 +13,19 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
   test.setTimeout(240_000);
   const cafe = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const laptop = await browser.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true });
+  const phoneContext = await browser.newContext({ ...devices['Pixel 7'] });
   try {
     expect((await cafe.request.post('/api/login', { data: { username: 'isletme', password: PASSWORD } })).ok()).toBe(true);
     await ensureSetup(cafe.request);
-    // The phone code first (pairing a device needs it), then pair the device (covered by remote-reports.spec.ts).
+    // The phone code first (pairing a device needs it), then the owner's phone (the café pairs no laptop before a phone), then
+    // the laptop (the screens of pairing: remote-reports.spec.ts, permanent-link.spec.ts).
     const phoneCode = await phoneCodeOn(cafe.request, PASSWORD);
+    const first = await cafe.request.post('/api/staff/remote-reports/pair', { data: { name: 'Ahmet’in telefonu', password: PASSWORD, code: await phoneCode.code() } });
+    expect(first.status()).toBe(200);
+    const phonePage = await phoneContext.newPage();
+    await phonePage.goto((await first.json() as { url: string }).url);
+    await phonePage.getByRole('button', { name: 'Eşleştir', exact: true }).click();
+    await expect(phonePage.getByText(/^Eşleşti ✓/)).toBeVisible({ timeout: 30_000 });
     const paired = await cafe.request.post('/api/staff/remote-reports/pair', { data: { name: 'Ev laptopu', password: PASSWORD, code: await phoneCode.code() } });
     expect(paired.status()).toBe(200);
     const { url } = await paired.json() as { url: string };
@@ -27,23 +36,27 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
     device.on('response', r => { if (new URL(r.url()).pathname.startsWith('/api/merkez/v1/phone/')) wire.push(r.text().catch(() => '')); });
     await device.goto(url);
     await device.getByRole('button', { name: 'Eşleştir', exact: true }).click();
+    await expect(device.getByText(/^Eşleşti ✓/)).toBeVisible({ timeout: 30_000 });
     await expect(device.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
 
-    // Not on yet: the device is told where to turn it on.
-    await device.getByRole('link', { name: 'Kafeyi yönet' }).click();
+    // Not on yet: the device is told where to turn it on, before and after a try.
+    await device.getByRole('link', { name: 'Kafeyi yönet · Satış ve Raporlar, menü, ayarlar' }).click();
     await expect(device).toHaveURL(/\/yonet$/);
     const form = device.getByRole('form', { name: 'Kafeyi yönet' });
+    await expect(form.getByRole('status')).toContainText('Uzaktan yönetim kapalı. Kafedeyken Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açın.');
     await form.getByLabel('Şifreniz').fill(PASSWORD);
     await form.getByLabel('Telefon kodu').fill('123456');
     await form.getByRole('button', { name: 'Giriş yap' }).click();
     await expect(form.getByRole('alert')).toContainText('Uzaktan yönetim kapalı');
 
-    // Ayarlar → Güvenlik ve yedek → Telefonum → "Uzaktan yönetim": the password and the code, at the café.
+    await expect(form.getByRole('alert')).toContainText('Ayarlar → Uzaktan erişim');
+    // Ayarlar → Uzaktan erişim → "4 · Uzaktan yönetim": the password and the code, at the café.
     const owner = await cafe.newPage(); await owner.goto('/');
-    await openSettings(owner, 'Telefonum');
+    await openSettings(owner, 'Uzaktan erişim');
     const card = owner.locator('.remote-admin-settings');
+    await expect(card.getByRole('heading', { name: '4 · Uzaktan yönetim' })).toBeVisible();
     await expect(card).toContainText('Kapalı · uzaktan giriş yapılamaz.');
-    await expect(card).toContainText('Eşleşmiş cihazlar: Ev laptopu.');
+    await expect(card).toContainText('Her uzaktan girişte Bildirimler’e not düşer.');
     await card.getByRole('button', { name: 'Aç', exact: true }).click();
     const on = card.getByRole('form', { name: 'Uzaktan yönetimi aç' });
     await on.getByLabel('Şifreniz').fill(PASSWORD);
@@ -70,6 +83,17 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
     // Café-only actions answer plainly.
     const refused = await device.evaluate(async () => { const r = await fetch('/api/staff/remote-reports/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'X', password: 'x' }) }); return r.json(); });
     expect(refused.code).toBe('REMOTE_FORBIDDEN');
+    // Menü yönetimi opens with the new price; Ayarlar opens, and Uzaktan erişim there says pairing is done at the café.
+    await openView(device, 'Menü yönetimi');
+    await expect(device.getByText(product.name).first()).toBeVisible({ timeout: 30_000 });
+    await device.screenshot({ path: info.outputPath('cihaz-menu.png'), fullPage: true });
+    await openSettings(device, 'Uzaktan erişim');
+    await expect(device.getByRole('heading', { name: '1 · Telefonunuz' })).toBeVisible({ timeout: 30_000 });
+    await expect(device.locator('.remote-access')).toContainText('Telefonunuz bağlı: Ahmet’in telefonu.');
+    await expect(device.locator('.remote-access')).toContainText('Eşleştirme yalnız kafede yapılır.');
+    await expect(device.getByRole('button', { name: /cihazını kaldır$/ })).toHaveCount(0);
+    await openSettings(device, 'Yazıcılar');
+    await expect(device.getByRole('heading', { name: /Fiş yazıcıları/ })).toBeVisible({ timeout: 30_000 });
 
     // Satış ve Raporlar opens without a second code; the Excel file downloads whole.
     await openView(device, 'Satış ve Raporlar');
@@ -85,7 +109,7 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
     expect(bytes.subarray(0, 2).toString('latin1')).toBe('PK');
 
     // The café sees the session and was told; "Bütün uzak oturumları kapat" sends the device back to its sign-in.
-    await owner.reload(); await openSettings(owner, 'Telefonum');
+    await owner.reload(); await openSettings(owner, 'Uzaktan erişim');
     const list = card.getByRole('list', { name: 'Açık uzak oturumlar' });
     await expect(list).toContainText('Ev laptopu');
     const notes = await (await cafe.request.get('/api/staff/notifications')).json() as { items: { title: string }[] };
@@ -99,5 +123,5 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
     expect(texts.some(t => t.includes('"op":"call"'))).toBe(true);
     for (const text of texts) for (const marker of [product.name, `"price":${price}`, PASSWORD, '/api/staff/', '"role":"owner"', 'accountant.xlsx', '"products"']) expect(text.includes(marker), `Merkez saw "${marker}"`).toBe(false);
     expect(direct, 'no café request went to Merkez in the clear').toEqual([]);
-  } finally { await laptop.close(); await cafe.close(); }
+  } finally { await phoneContext.close(); await laptop.close(); await cafe.close(); }
 });

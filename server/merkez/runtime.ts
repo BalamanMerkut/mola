@@ -18,6 +18,7 @@ import type { JournalInput } from './journal.js';
 import type { WorkFolder } from './workfolder.js';
 import { devAllowList, pageHeaders } from '../web-serving.js';
 import { tunnelUpgrades, type GuestTunnelHub } from './guest-tunnel.js';
+import { noticePage } from './notice-page.js';
 
 /*
  * Mola Merkez as one process: its own data folder and data lock, its own key (sealed records), the API and the
@@ -53,14 +54,19 @@ export async function startMerkez(options: MerkezRuntimeOptions) {
     // Köprü (server/merkez/relay.ts) names another page: the owner's phone page ("Raporlarım") or, in a Mola destek session,
     // the café's own screens (index.html of this same build).
     const page = (res: express.Response) => ['index.html', 'raporlarim.html'].includes(res.locals.molaPage) ? res.locals.molaPage as string : 'merkez.html';
+    // Mola Yönetim is the page at "/" only (its screens change inside the page). Any other address nobody answered is a plain
+    // 404 page (0.1.21): an owner's mistyped or old address never lands on Mola Yönetim's sign-in.
+    const known = (req: express.Request, res: express.Response) => !!res.locals.molaPage || (req.path === '/' && ['GET', 'HEAD'].includes(req.method));
+    const missing = (res: express.Response) => res.status(404).type('html').set('Cache-Control', 'no-store').send(noticePage({ status: 'missing', tr: 'Bu sayfa bulunamadı.', en: 'This page could not be found.' }));
     if (options.serveBuild) {
       app.use(express.static(build, { index: false }));
-      app.use((_req, res) => res.sendFile(page(res), { root: build }));
+      app.use((req, res) => { if (known(req, res)) res.sendFile(page(res), { root: build }); else missing(res); });
     } else {
       // The same allow-list as the café's development server: browser code and page routes only.
       devAllowList(app, '');
       app.use(vite!.middlewares);
       app.use(async (req, res, next) => {
+        if (!known(req, res)) { missing(res); return; }
         try { res.status(200).set('Content-Type', 'text/html').end(await vite!.transformIndexHtml(req.originalUrl, readFileSync(join(process.cwd(), page(res)), 'utf8'))); }
         catch (error) { next(error); }
       });

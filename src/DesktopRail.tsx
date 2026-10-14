@@ -119,7 +119,7 @@ export function DesktopRail({ children }: { children?: ReactNode }) {
         : split.on ? <button type="button" onClick={() => setSplit({ ...split, on: false })} title="Tek Mola ekranına dön (sol ekranın girişiyle)"><Square size={20} strokeWidth={1.7} /><span>Tek ekran</span></button>
         : <button type="button" onClick={() => setSplit({ ...split, on: true })} title="İki Mola ekranını yan yana açın (ör. kasa ve mutfak); her biri ayrı giriş yapar"><Columns2 size={20} strokeWidth={1.7} /><span>İkiye böl</span></button>}
       <button type="button" onClick={() => setOpen('backup')}><DatabaseBackup size={20} strokeWidth={1.7} /><span>Yedekle</span>{status.security?.secondError && <span className="rail-dot" aria-label="İkinci yedek alınamadı" />}</button>
-      <button type="button" onClick={() => setOpen('tablets')}><TabletSmartphone size={20} strokeWidth={1.7} /><span>Tabletler</span></button>
+      <button type="button" onClick={() => setOpen('tablets')}><TabletSmartphone size={20} strokeWidth={1.7} /><span>Cihaz bağla</span></button>
       {status.security && status.security.protection !== 'off' && <button type="button" onClick={() => setDialog('security')}><KeyRound size={20} strokeWidth={1.7} /><span>Güvenlik</span>{needsAttention(status.security) && <span className="rail-dot" aria-label="Bakılması gereken güvenlik adımı var" />}</button>}
       <button type="button" className="desktop-rail-off" onClick={() => setOpen('off')}><Power size={20} strokeWidth={1.7} /><span>Kapat</span></button>
     </nav>
@@ -168,7 +168,7 @@ function BackupDialog({ token, backup, security, onChange, onRefresh, onRestore,
 
 type Firewall = { supported: boolean; state?: 'ok' | 'missing' | 'fix' | 'unknown' };
 /**
- * Tabletler › "İzni düzelt": Windows' firewall rule for the tablets (packaged Windows app only, server/desktop.ts). Windows asks
+ * Cihaz bağla › "İzni düzelt": Windows' firewall rule for the tablets (packaged Windows app only, server/desktop.ts). Windows asks
  * once for administrator approval; that prompt may only blink in the taskbar, so the wait is long and the hint says where to look.
  */
 function FirewallFix({ token }: { token: string }) {
@@ -181,7 +181,7 @@ function FirewallFix({ token }: { token: string }) {
   }
   if (!fw?.supported || fw.state === 'ok') return null;
   return <div className="firewall-fix">
-    <Notice>Tabletler bu bilgisayara bağlanamayabilir: Windows güvenlik duvarı izni eksik.</Notice>
+    <Notice>Tablet ve telefonlar bu bilgisayara bağlanamayabilir: Windows güvenlik duvarı izni eksik.</Notice>
     {declined && <Notice tone="error">Windows izni verilmedi.</Notice>}
     {error && <Notice tone="error">{error}</Notice>}
     <button type="button" className="btn primary" disabled={busy} onClick={() => void fix()}>{busy ? 'Windows onayı bekleniyor…' : 'İzni düzelt'}</button>
@@ -197,7 +197,7 @@ function TabletsDialog({ token, status, onClose }: { token: string; status: Desk
     if (page) void import('qrcode').then(m => m.default.toDataURL(page, { width: 260, margin: 2, color: { dark: '#234c3e', light: '#ffffff' } })).then(v => { if (live) setImage(v); }); return () => { live = false; }; }, [page]);
   // Windows' "Genel" network profile while Mola's firewall rule is the old private-only one; read only ("İzni düzelt" fixes it).
   const profile = useNetworkProfile(() => call<NetworkProfileView>(token, '/api/desktop/network-profile'), status.lan);
-  return <Modal title="Tabletler" onClose={onClose}><div className="modal-body desktop-dialog">
+  return <Modal title="Cihaz bağla" onClose={onClose}><div className="modal-body desktop-dialog">
     <NetworkProfileNotice view={profile} here />
     <FirewallFix token={token} />
     {!status.lan ? <Notice>Mola şu anda yalnız bu bilgisayara açık. Tabletler bağlanamaz.</Notice>
