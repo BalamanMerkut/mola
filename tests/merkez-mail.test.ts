@@ -90,5 +90,36 @@ test('Bildirim merkezi: important events become unread alerts (once), mark read;
   await post({ ...app, requestId: rid(), installId: randomUUID(), businessName: 'Üçüncü Başvuru', invoice: { ...app.invoice, taxNumber: '1111111114' } });
   for (let i = 0; i < MAIL_ATTEMPTS; i++) { await queue.tick(); time += 7 * 3600_000; }
   await pair.adminLogin(); const items = (await pair.admin('/email', undefined)).data.queue;
-  assert.equal(items[0].failed, true); assert.equal(items[0].attempts, MAIL_ATTEMPTS); assert.match(items[0].error, /kabul edilmedi/);
+  // (The newest item may be the "E-posta gönderilemiyor" alert's own e-mail, queued when this one finally failed.)
+  const failed = items.find((i: { failed?: boolean }) => i.failed);
+  assert.equal(failed.attempts, MAIL_ATTEMPTS); assert.match(failed.error, /kabul edilmedi/);
+});
+
+test('aylık e-posta kontrolü: after 30 days without a sent e-mail one check goes to the vendor; a final failure shows once a day in Bildirim merkezi', async t => {
+  const pair = await merkezPair('mail-keepalive'); t.after(() => pair.close());
+  let time = Date.parse('2026-10-14T09:00:00Z');
+  const settings = { enabled: true, host: 'smtp-relay.example.com', port: 587, security: 'starttls' as const, user: 'u@example.com', password: 'anahtar', to: 'satici@example.com', updatedAt: new Date(time).toISOString() };
+  pair.merkezStore.mutate(d => { d.mail = { settings, queue: [] }; });
+  const sent: { to: string; subject: string }[] = [];
+  const queue = new MailQueue(pair.merkezStore, () => new Date(time), async (_s, to, subject) => { sent.push({ to, subject }); });
+  // The first run only starts the count; nothing for 29 days.
+  assert.equal(await queue.tick(), 0);
+  time += 29 * DAY; assert.equal(await queue.tick(), 0); assert.equal(sent.length, 0);
+  // Day 31: one check e-mail to the vendor's own address, then quiet again for 30 days.
+  time += 2 * DAY; assert.equal(await queue.tick(), 1);
+  assert.deepEqual(sent, [{ to: 'satici@example.com', subject: 'Mola Yönetim: aylık e-posta kontrolü' }]);
+  time += DAY; assert.equal(await queue.tick(), 0);
+  time += 28 * DAY; assert.equal(await queue.tick(), 0);
+  time += 2 * DAY; assert.equal(await queue.tick(), 1); assert.equal(sent.length, 2);
+  // Any e-mail counts: one sent on the way moves the next check.
+  time += 20 * DAY; pair.merkezStore.mutate(d => { d.mail!.lastSentAt = new Date(time).toISOString(); });
+  time += 15 * DAY; assert.equal(await queue.tick(), 0);
+  // The key no longer works: the check is retried, then marked failed, and Bildirim merkezi says so (once that day).
+  const broken = new MailQueue(pair.merkezStore, () => new Date(time), async () => { throw new Error('535 Authentication failed'); });
+  time += 20 * DAY;
+  for (let i = 0; i < MAIL_ATTEMPTS; i++) { await broken.tick(); time += 7 * 3600_000; }
+  const d = pair.merkezStore.read();
+  assert.equal(d.mail!.queue.filter(m => m.keepAlive && m.failed).length, 1);
+  assert.equal((d.alerts ?? []).filter(a => a.kind === 'mail.failing').length, 1);
+  assert.match((d.alerts ?? []).find(a => a.kind === 'mail.failing')!.text, /e-posta gönderemiyor/);
 });

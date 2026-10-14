@@ -6,21 +6,22 @@ import type { MerkezData } from './store.js';
  * also go out by e-mail (server/merkez/mail.ts) when the vendor set it up: queued here, sent and retried by the mail loop.
  * `key` makes an event once-only (the same café offline since the same last contact, the same licence end date).
  */
-export type AlertKind = 'application.new' | 'application.resubmitted' | 'machine.conflict' | 'cafe.offline' | 'cafe.backup' | 'backup.failing' | 'ticket.new' | 'ticket.reply' | 'license.expiring' | 'owner.reset' | 'mail.test' | 'update.failed' | 'admin.password_reset' | 'demo.reset' | 'support.access' | 'support.session' | 'cafe.cloud_backup' | 'journal.broken' | 'cafe.integrity' | 'site.lead' | 'merkez.recovery';
+export type AlertKind = 'application.new' | 'application.resubmitted' | 'machine.conflict' | 'cafe.offline' | 'cafe.backup' | 'backup.failing' | 'ticket.new' | 'ticket.reply' | 'license.expiring' | 'owner.reset' | 'mail.test' | 'mail.failing' | 'update.failed' | 'admin.password_reset' | 'demo.reset' | 'support.access' | 'support.session' | 'cafe.cloud_backup' | 'journal.broken' | 'cafe.integrity' | 'site.lead' | 'merkez.recovery';
 /** `priority: 'low'`: shown grey, no sound, never e-mailed (e.g. "ikinci yedek yeri ayarlı değil"). */
 export type Alert = { id: string; kind: AlertKind; title: string; text: string; at: string; tenantId?: string; ticketId?: string; key?: string; readAt?: string; priority?: 'low' };
 /** E-mail: SMTP settings (the app password stays in this sealed record; never logged, never sent back to the screen). */
 /** `adminEmail`: "Yönetici e-postası" for the password reset code and "Şifreniz değiştirildi" (empty: the notification address `to`). */
 export type MailSettings = { enabled: boolean; host: string; port: number; security: 'tls' | 'starttls' | 'none'; user: string; password: string; to: string; from?: string; adminEmail?: string; updatedAt: string };
 /** `announcementId`: an e-mail copy of a Duyuru to one business (the queue counts it on the announcement when it goes or fails). */
-export type MailItem = { id: string; alertId?: string; announcementId?: string; subject: string; text: string; to?: string; attempts: number; nextAt: string; createdAt: string; sentAt?: string; error?: string; failed?: boolean };
+/** `keepAlive`: the monthly check of the mailbox (server/merkez/mail.ts keepAlive). */
+export type MailItem = { id: string; alertId?: string; announcementId?: string; keepAlive?: true; subject: string; text: string; to?: string; attempts: number; nextAt: string; createdAt: string; sentAt?: string; error?: string; failed?: boolean };
 export const ALERTS_KEEP = 500, MAIL_KEEP = 200, MAIL_ATTEMPTS = 6;
 /** Retry after 1, 5, 30 minutes, 2 and 6 hours; then the item is marked failed (shown in "E-posta bildirimleri"). */
 export const MAIL_RETRY_MS = [60_000, 5 * 60_000, 30 * 60_000, 2 * 3600_000, 6 * 3600_000];
 export const alertTitles: Record<AlertKind, string> = {
   'application.new': 'Yeni hesap açma başvurusu', 'application.resubmitted': 'Başvuru yeniden gönderildi', 'machine.conflict': 'İki farklı bilgisayar',
   'cafe.offline': 'İşletme 3 gündür bağlanmadı', 'cafe.backup': 'İşletmenin yedeği başarısız', 'backup.failing': 'Mola Merkez yedeği alınamadı',
-  'ticket.new': 'Yeni destek talebi', 'ticket.reply': 'Destek talebine yanıt', 'license.expiring': 'Lisans 7 gün içinde bitiyor', 'owner.reset': 'Sahip şifresi Mola koduyla yenilendi', 'mail.test': 'Deneme e-postası', 'update.failed': 'Güncelleme kurulamadı',
+  'ticket.new': 'Yeni destek talebi', 'ticket.reply': 'Destek talebine yanıt', 'license.expiring': 'Lisans 7 gün içinde bitiyor', 'owner.reset': 'Sahip şifresi Mola koduyla yenilendi', 'mail.test': 'Deneme e-postası', 'mail.failing': 'E-posta gönderilemiyor', 'update.failed': 'Güncelleme kurulamadı',
   'admin.password_reset': 'Yönetici şifresi değiştirildi', 'demo.reset': 'Tanıtım işletmesi sıfırlandı',
   // Uzaktan destek (server/merkez/relay.ts): the owner's permission and each session's start and end.
   'support.access': 'Uzaktan destek izni', 'support.session': 'Destek oturumu',

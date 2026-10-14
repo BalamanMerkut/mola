@@ -134,7 +134,7 @@ export type MerkezData = {
   /** `name`: kept when the target itself is gone (a deleted record), so the history still says which business it was. */
   audit: AuditEntry[]; notifications: Notification[]; requests: Record<string, { fingerprint: string; at?: string; result: unknown }>;
   /** "Bildirim merkezi" and the e-mail queue (server/merkez/alerts.ts); missing in older records. */
-  alerts?: Alert[]; mail?: { settings?: MailSettings; queue: MailItem[] };
+  alerts?: Alert[]; mail?: { settings?: MailSettings; queue: MailItem[]; /** The last e-mail that went (queue or "Deneme e-postası"): the monthly check counts from here. */ lastSentAt?: string };
   /** Deleted connected businesses (see Tombstone); missing in older records. */
   removed?: Tombstone[];
   /** Owner password reset codes (hashes only); missing in older records. */

@@ -765,7 +765,7 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
     if (!s) throw new DomainError('EMAIL_OFF', 'Önce e-posta ayarlarını kaydedin.', 409);
     try { await (options.sendMail ?? sendMail)(s, s.to, 'Mola Yönetim: deneme e-postası', `Bu e-posta Mola Yönetim’in e-posta bildirimleri ayarından gönderildi.\nBundan sonra önemli olaylar (yeni başvuru, destek talebi, yedek sorunu…) bu adrese de gelir.\n${at().slice(0, 16).replace('T', ' ')} (UTC)`); }
     catch (e) { throw new DomainError('EMAIL_FAILED', e instanceof MailError ? e.message : 'Deneme e-postası gönderilemedi.', 409); }
-    store.mutate(d => { d.audit.push({ action: 'email.test_sent', target: 'admin', at: at(), by: 'admin' }); });
+    store.mutate(d => { d.audit.push({ action: 'email.test_sent', target: 'admin', at: at(), by: 'admin' }); if (d.mail) d.mail.lastSentAt = at(); });
     res.json({ ok: true, to: s.to });
   });
   // ---------- Merkez yedeği ve kurtarma kodu ----------
