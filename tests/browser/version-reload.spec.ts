@@ -18,8 +18,11 @@ test('café: a newer server version reloads the page once it is quiet; never whi
   await page.clock.runFor(90_000);
   expect(loads).toBe(1);
   await expect(user).toHaveValue('yarim');
-  // Field left, nobody touches anything for 30 s: one reload, fetched fresh.
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  // The version line offers the newer version at once (should the page never reload by itself).
+  await expect(page.getByTestId('app-version').first()).toContainText('Yeni sürüm (9.9.9) yüklendi');
+  // The field emptied but still holding the focus (14 Ekim: a search box clicked once held the reload back for good):
+  // nobody touches anything for 30 s, one reload, fetched fresh.
+  await user.fill('');
   await page.clock.runFor(40_000);
   await expect.poll(() => loads).toBe(2);
   await expect(page.getByLabel('Kullanıcı adı')).toBeVisible();

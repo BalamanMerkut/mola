@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from './api';
 import type { UpdateView } from './UpdateBanner';
 import { APP_VERSION, STUDIO, versionLine } from './version';
+import { reloadFresh, useNewerVersion } from './versionReload';
 import './app-version.css';
 
 /** Otomatik güncelleme in a few words (GET /api/staff/update, owner only). */
@@ -24,5 +25,8 @@ export function AppVersion({ product = 'Mola', update = false, merkez }: { produ
     return () => { live = false; };
   }, [update]);
   const line = merkez ? `${product} ${APP_VERSION} · Merkez ${merkez} · ${STUDIO}` : versionLine(product);
-  return <p className="app-version" data-testid="app-version">{line}{status && <span className="app-version-update">&nbsp;· Güncelleme: {status}</span>}</p>;
+  // The server already runs a newer version (src/versionReload.ts): one click to it, should the page not reload by itself.
+  const newer = useNewerVersion() ?? (merkez && merkez !== APP_VERSION ? merkez : null);
+  return <p className="app-version" data-testid="app-version">{line}{status && <span className="app-version-update">&nbsp;· Güncelleme: {status}</span>}
+    {newer && <span className="app-version-newer">&nbsp;· Yeni sürüm ({newer}) yüklendi <button type="button" className="text-btn" onClick={reloadFresh}>Yenile</button></span>}</p>;
 }

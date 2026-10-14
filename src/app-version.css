@@ -3,3 +3,5 @@
 .app-version-update { display: inline-block; }
 .login-form .app-version { margin-top: 22px; }
 .yonetim .app-version { color: var(--y-muted, #66736a); }
+.app-version-newer { display:inline-block; font-weight:600; color:var(--ink, #24382e); }
+.app-version-newer .text-btn { font-size:inherit; padding:2px 4px; }
