@@ -219,7 +219,7 @@ export function PrintersPage({ data, onCount }: { data: StaffSnapshot; onCount: 
 export function SoundsPage() { return <SoundSettings />; }
 
 /** Opening Mola on a tablet: one QR to /uygulama (install the Android app, or add to the iPhone/iPad home screen). */
-function ConnectTablet() {
+function ConnectTablet({ business }: { business: string }) {
   const [network] = useNetwork(), [image, setImage] = useState('');
   const base = network ? qrBase(network) : '', reachable = !!network && (network.lan || !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname));
   useEffect(() => { let live = true; if (base && reachable) void QRCode.toDataURL(`${base}/uygulama`, { width: 240, margin: 1 }).then(v => { if (live) setImage(v); }).catch(() => {}); return () => { live = false; }; }, [base, reachable]);
@@ -234,11 +234,11 @@ function ConnectTablet() {
       <div><p className="settings-card-note"><strong>Telefon ya da tabletin kamerasıyla okutun.</strong> Açılan sayfa Mola'yı Android'e uygulama olarak, iPhone ve iPad'e ana ekrana kurmayı anlatır. Cihaz bu bilgisayarla aynı Wi-Fi ağında olmalı.</p><p className="connect-tablet-address"><code>{base.replace(/^https?:\/\//, '')}/uygulama</code></p><p className="muted small">Garsona ve mutfağa kendi hesaplarını Personel → Çalışanlar'dan açın.</p></div>
     </div> : <p className="settings-card-note">Mola şu anda yalnız bu bilgisayara açık; tabletler bağlanamaz. Kasa bilgisayarındaki Mola penceresinde sol şerit → <strong>Tabletler</strong>'e bakın.</p>}
     {/* Kalıcı bağlantı: the owner's (and Müdür's) link for laptops and phones, whatever address the modem gives this computer. */}
-    <PermanentLink link={network?.link} />
+    <PermanentLink link={network?.link} business={business} />
   </Card>;
 }
-export function DevicesPage() {
-  return <><DeviceChecks page /><ConnectTablet /><div className="settings-card-fold"><PhotoStorage /></div></>;
+export function DevicesPage({ business }: { business: string }) {
+  return <><DeviceChecks page /><ConnectTablet business={business} /><div className="settings-card-fold"><PhotoStorage /></div></>;
 }
 
 type SecondPlace = { folder: string; kind: 'usb' | 'onedrive' | 'gdrive' | 'folder'; label: string | null; lastCopyAt: string | null; lastError: string | null };

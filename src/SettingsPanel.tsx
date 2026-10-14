@@ -157,7 +157,7 @@ export function SettingsPanel({ data, onSaved, open, onTables }: { data: StaffSn
     integrations: () => <IntegrationsPage />,
     printers: () => <PrintersPage data={data} onCount={setPrinters} />,
     sounds: () => <SoundsPage />,
-    devices: () => <DevicesPage />,
+    devices: () => <DevicesPage business={data.name} />,
     backup: () => <BackupPage backup={backup} />,
     lock: () => <LockPage />,
     phone: () => <PhonePage />,

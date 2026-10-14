@@ -1,6 +1,5 @@
 import { test, expect, type Request as PwRequest } from '@playwright/test';
-import { ensureSetup, openSettings, openView, reportAction } from './helpers';
-import { totp } from '../../server/totp';
+import { ensureSetup, openSettings, openView, phoneCodeOn, reportAction } from './helpers';
 
 /*
  * Sahibin uzaktan yönetimi (server/remote-admin.ts, src/RemoteAdmin.tsx, src/remoteTransport.ts): a device paired for
@@ -16,8 +15,9 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
   try {
     expect((await cafe.request.post('/api/login', { data: { username: 'isletme', password: PASSWORD } })).ok()).toBe(true);
     await ensureSetup(cafe.request);
-    // Pair the device first (Destek → Uzaktan erişim; covered by remote-reports.spec.ts), then set up the phone code.
-    const paired = await cafe.request.post('/api/staff/remote-reports/pair', { data: { name: 'Ev laptopu', password: PASSWORD } });
+    // The phone code first (pairing a device needs it), then pair the device (covered by remote-reports.spec.ts).
+    const phoneCode = await phoneCodeOn(cafe.request, PASSWORD);
+    const paired = await cafe.request.post('/api/staff/remote-reports/pair', { data: { name: 'Ev laptopu', password: PASSWORD, code: await phoneCode.code() } });
     expect(paired.status()).toBe(200);
     const { url } = await paired.json() as { url: string };
     const device = await laptop.newPage();
@@ -28,9 +28,6 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
     await device.goto(url);
     await device.getByRole('button', { name: 'Eşleştir', exact: true }).click();
     await expect(device.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
-
-    const setup = await (await cafe.request.post('/api/staff/report-security/setup', { data: { password: PASSWORD } })).json() as { secret: string };
-    expect((await cafe.request.post('/api/staff/report-security/enable', { data: { code: totp(setup.secret, Date.now() - 30_000) } })).ok()).toBe(true);
 
     // Not on yet: the device is told where to turn it on.
     await device.getByRole('link', { name: 'Kafeyi yönet' }).click();
@@ -50,14 +47,14 @@ test('Kafeyi yönet: paired device → password + code → change a price, repor
     await card.getByRole('button', { name: 'Aç', exact: true }).click();
     const on = card.getByRole('form', { name: 'Uzaktan yönetimi aç' });
     await on.getByLabel('Şifreniz').fill(PASSWORD);
-    await on.getByLabel('Telefon kodu').fill(totp(setup.secret, Date.now()));
+    await on.getByLabel('Telefon kodu').fill(await phoneCode.code());
     await on.getByRole('button', { name: 'Uzaktan yönetimi aç' }).click();
     await expect(card).toContainText(/Açık · .*'den beri/);
     await owner.screenshot({ path: info.outputPath('sahip-uzaktan-yonetim.png'), fullPage: true });
 
     // The device signs in: password + the next code.
     await form.getByLabel('Şifreniz').fill(PASSWORD);
-    await form.getByLabel('Telefon kodu').fill(totp(setup.secret, Date.now() + 30_000));
+    await form.getByLabel('Telefon kodu').fill(await phoneCode.code());
     await device.screenshot({ path: info.outputPath('cihaz-giris.png'), fullPage: true });
     await form.getByRole('button', { name: 'Giriş yap' }).click();
     await expect(device.getByRole('status', { name: 'Uzaktan yönetim' })).toBeVisible({ timeout: 30_000 });

@@ -31,8 +31,11 @@ async function setup(name: string) {
   const owner = pair.kafe(); assert.equal((await owner('/login', { username: 'isletme', password: DEMO_PASSWORD })).status, 200);
   const tenant = pair.store.findUser('isletme')!.tenantId;
   const hub = pair.merkezApp.locals.relayHub as RelayHub, admin = pair.kafeApp.locals.remoteAdmin as RemoteAdmin;
-  // Pair a device (Raporlarım) the usual way.
-  const started = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD });
+  // Pair a device (Raporlarım) the usual way: password and phone code (0.1.20). The code goes off again right after: the
+  // paired device keeps working, and the tests below turn the code on when they need it.
+  const mfa = (on: boolean) => pair.store.mutate(tenant, s => { const u = s.staffUsers!.find(u => u.username === 'isletme')!; if (on) u.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; else delete u.mfa; });
+  mfa(true);
+  const started = await owner('/staff/remote-reports/pair', { name: 'Ahmet’in telefonu', password: DEMO_PASSWORD, code: totp(SECRET, time) });
   assert.equal(started.status, 200, JSON.stringify(started.data));
   const link = readPairingFragment(new URL(started.data.url).hash)!, keys = await newPhoneKeys();
   await wait(() => hub.online(pair.link.read()!.installId));
@@ -40,6 +43,7 @@ async function setup(name: string) {
   const paired = await merkez('pair', await pairRequest(keys.privateKey, keys.publicKey, link, { name: '' }));
   assert.equal(paired.status, 200, JSON.stringify(paired.data));
   const { phoneId, token } = paired.data as { phoneId: string; token: string };
+  mfa(false);
   /** The owner's code on: the TOTP secret, as "Telefon kodunu kur" would leave it. */
   const codeOn = () => pair.store.mutate(tenant, s => { s.staffUsers!.find(u => u.username === 'isletme')!.mfa = { secret: SECRET, lastStep: -1, recoveryHashes: [] }; });
   /** The next unused code: one step ahead each time (the café accepts ±1 step, never the same step twice). */
@@ -253,7 +257,7 @@ test('the session ends: switched off, device removed, end-all, Açık oturumlar,
   // The device removed at the café: its session ends (Merkez forgets the device at once, the café on its next look).
   d = await login();
   const phone = (await owner2('/staff/remote-reports')).data.phones[0].id;
-  assert.equal((await owner2('/staff/remote-reports/phones/remove', { id: phone })).status, 200);
+  assert.equal((await owner2('/staff/remote-reports/phones/remove', { id: phone, password: DEMO_PASSWORD })).status, 200);
   const gone = await d.call('GET', '/api/staff/me');
   assert.ok(['REMOTE_ENDED', 'PHONE_UNKNOWN', 'PHONE_REVOKED'].includes(gone.code!), JSON.stringify(gone));
   admin.sweep();

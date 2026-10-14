@@ -56,7 +56,10 @@ const kafeChild = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts']
     MOLA_TEST_TUNNEL: '1', MOLA_TUNNEL_RETRY_MS: '500',
     // QR siparişleri (server/qr-ordering.ts): the suites order as guests without a staff screen open, so "a staff screen is
     // connected" starts off here; tests/browser/qr-ordering.spec.ts turns it on (POST /api/test/qr-staff). The menu copy goes fast.
-    MOLA_QR_STAFF_CHECK: '0', MOLA_MIRROR_DELAY_MS: '500' },
+    MOLA_QR_STAFF_CHECK: '0', MOLA_MIRROR_DELAY_MS: '500',
+    // A laptop on the café's Wi-Fi (not the café computer itself): tests/browser/permanent-link.spec.ts opens Mola as
+    // http://laptop.localhost (the browser resolves *.localhost to this computer; the page's address is not loopback).
+    MOLA_ALLOWED_HOSTS: 'laptop.localhost' },
 });
 children.push(kafeChild);
 kafeChild.on('exit', code => { stop('SIGTERM'); process.exit(code ?? 0); });

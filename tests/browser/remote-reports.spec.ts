@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ensureSetup, openSettings } from './helpers';
+import { ensureSetup, openSettings, phoneCodeOn } from './helpers';
 
 /*
  * Raporlarım (src/ReportsPhone.tsx, server/remote-reports.ts): the owner pairs a phone with the QR from Destek → Uzaktan
@@ -22,24 +22,34 @@ test('Raporlarım: pair a phone by QR, live report, offline snapshot, removal re
     await openSettings(owner, 'Telefonum');
     const card = owner.locator('.phone-pairing');
     await expect(card.getByText('Henüz eşleşmiş cihaz yok.')).toBeVisible();
-    await expect(card).toContainText('Tablet ya da dizüstü bilgisayar da eşleştirebilirsiniz');
-    // "Telefonu eşleştir" asks the device's name and the owner's password again; a wrong password shows no QR.
-    await card.getByRole('button', { name: 'Telefonu eşleştir' }).click();
+    await expect(card).toContainText('telefon, tablet ya da dizüstü bilgisayarınızdan');
+    // No phone code yet: no pairing; "Telefon koduna git" opens Raporlar için telefon kodu at the top of the page.
+    await expect(card).toContainText('Cihaz eşleştirmek için önce telefon kodunu kurun.');
+    await expect(card.getByRole('button', { name: 'Telefonu eşleştir' })).toHaveCount(0);
+    await card.getByRole('button', { name: 'Telefon koduna git' }).click();
+    await expect(owner.locator('details.report-security')).toHaveAttribute('open', '');
+    const phoneCode = await phoneCodeOn(cafe.request);
+    // "Telefonu eşleştir" asks the device's name, the owner's password and the phone code; a wrong password shows no QR.
+    await card.getByRole('button', { name: 'Telefonu eşleştir' }).click({ timeout: 15_000 });
     const ask = card.getByRole('form', { name: 'Cihaz eşleştir' });
     await ask.getByLabel('Cihazın adı').fill('Ahmet’in telefonu');
     await ask.getByLabel('Şifreniz').fill('yanlis-sifre');
+    await ask.getByLabel('Telefon kodu').fill('000000');
     await ask.getByRole('button', { name: 'QR kodu göster' }).click();
     await expect(card.getByText(/^Şifre yanlış/)).toBeVisible();
     await expect(owner.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' })).toHaveCount(0);
     await expect(ask.getByLabel('Şifreniz')).toHaveValue('');
     await ask.getByLabel('Şifreniz').fill(PASSWORD);
+    await ask.getByLabel('Telefon kodu').fill(await phoneCode.code());
     await owner.screenshot({ path: info.outputPath('sahip-cihaz-sifre.png'), fullPage: true });
     const [paired] = await Promise.all([owner.waitForResponse(r => r.url().endsWith('/api/staff/remote-reports/pair') && r.request().method() === 'POST'), ask.getByRole('button', { name: 'QR kodu göster' }).click()]);
     expect(paired.status()).toBe(200);
     const { url } = await paired.json() as { url: string };
     expect(new URL(url).pathname).toBe('/raporlarim'); expect(new URL(url).hash).toMatch(/^#e=/);
     await expect(owner.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' })).toBeVisible();
-    await expect(card.getByRole('textbox', { name: 'Eşleştirme bağlantısı' })).toHaveValue(url);
+    // On the café computer itself: no "Bu cihazı eşleştir"; the link sits in the copy button (no long address on screen).
+    await expect(card.getByRole('button', { name: 'Bağlantıyı kopyala' })).toHaveAttribute('title', url);
+    await expect(card.getByRole('link', { name: 'Bu cihazı eşleştir' })).toHaveCount(0);
     await owner.screenshot({ path: info.outputPath('sahip-telefon-qr.png'), fullPage: true });
 
     // The phone scans the QR: the secret is in the fragment and leaves the address bar at once.
@@ -75,7 +85,9 @@ test('Raporlarım: pair a phone by QR, live report, offline snapshot, removal re
     await expect(phone.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
 
     // The owner removes the phone on the café computer: it gets nothing any more.
+    // "Kaldır" asks the password again (not the phone code: the lost phone may hold the authenticator app).
     await card.getByRole('button', { name: 'Ahmet’in telefonu cihazını kaldır' }).click();
+    await card.getByRole('form', { name: 'Ahmet’in telefonu cihazını kaldır' }).getByLabel('Şifreniz').fill(PASSWORD);
     await card.getByRole('button', { name: 'Evet, kaldır' }).click();
     await expect(card.getByText('Henüz eşleşmiş cihaz yok.')).toBeVisible();
     await expect(async () => {

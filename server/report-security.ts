@@ -48,10 +48,12 @@ export function reportSecurity(app: Express, store: Store, actorFor: (r: Request
     store.mutate(a.tenantId, s => { const u = s.staffUsers!.find(u => u.id === a.id)!; if (u.mfa) throw new DomainError('MFA_ENABLED', 'Doğrulama zaten açık.', 409); u.mfa = { secret: p.secret, lastStep: step, recoveryHashes: recoveryCodes.map(digest) }; s.audit.push({ action: 'mfa.enabled', actor: a.id, target: a.id, at: now().toISOString() }); });
     pending.delete(key); grants.set(key, { secret: p.secret, until: now().getTime() + 600000 }); res.json({ recoveryCodes });
   });
-  app.post('/api/staff/report-security/verify', (req, res) => {
-    const a = reader(req); attempt(a); const { code } = z.object({ code: z.string().max(6) }).parse(req.body);
-    // Güvenlik denetimi: wrong codes add up for a day per person (a Müdür guessing the owner's code 8 times a minute would find
-    // one within weeks): after 5, each try waits twice as long (1, 2, 4 … at most 15 minutes); 50 in a day close it until tomorrow.
+  /**
+   * One 6-digit code from `a` against its code holders (the owner's own; a Müdür: an owner's). Güvenlik denetimi: wrong codes
+   * add up for a day per person (a Müdür guessing the owner's code 8 times a minute would find one within weeks): after 5,
+   * each try waits twice as long (1, 2, 4 … at most 15 minutes); 50 in a day close it until tomorrow. Returns the secret.
+   */
+  function checkCode(a: Actor, code: string) {
     const k = `${a.tenantId}:${a.id}`, t = clock(), w = wrong.get(k);
     if (w && w.until > t && w.count >= WRONG_PER_DAY) throw new DomainError('RATE_LIMIT', 'Bugün çok fazla yanlış kod yazıldı. Yarın yeniden deneyin ya da işletme sahibine haber verin.', 429);
     if (w && w.waitUntil > t) throw new DomainError('RATE_LIMIT', `Çok fazla yanlış kod. ${Math.ceil((w.waitUntil - t) / 60000)} dakika sonra yeniden deneyin.`, 429);
@@ -75,6 +77,13 @@ export function reportSecurity(app: Express, store: Store, actorFor: (r: Request
       throw e;
     }
     wrong.delete(k);
+    return secret;
+  }
+  // "Telefonu eşleştir" (server/remote-reports.ts) asks the owner's own code too: the same check and the same counters.
+  app.locals.ownerCode = (a: Actor, code: string) => { attempt(a); checkCode(a, code); };
+  app.post('/api/staff/report-security/verify', (req, res) => {
+    const a = reader(req); attempt(a); const { code } = z.object({ code: z.string().max(6) }).parse(req.body);
+    const secret = checkCode(a, code);
     grants.set(session(req, a), { secret, until: now().getTime() + 600000 }); res.json({ ok: true });
   });
   app.post('/api/staff/report-security/recover', async (req, res) => {

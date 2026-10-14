@@ -28,14 +28,14 @@ export function RemoteAdminSettings() {
   function turnOn(e: FormEvent) { e.preventDefault(); void send({ on: true, password, code }); }
   if (hidden) return null;
   return <Card icon={<Globe2 size={18} aria-hidden="true" />} title="Uzaktan yönetim" className="remote-admin-settings"
-    lead="Eşleşmiş cihazınızdan (Raporlarım sayfasındaki “Kafeyi yönet”) kafenin bütün ekranlarını her yerden açın. Her girişte şifreniz ve telefon kodunuz sorulur; bütün trafik bu bilgisayarla cihazınız arasında şifrelenir, Mola Merkez yalnız iletir ve okuyamaz.">
+    lead="Eşleşmiş cihazınızdan (Raporlarım → “Kafeyi yönet”) kafenin ekranlarını her yerden açın. Her girişte şifre ve telefon kodu sorulur; bağlantı uçtan uca şifrelidir.">
     {!view ? (error ? <Notice tone="error">{error}</Notice> : <p className="settings-card-note" aria-busy="true">Yükleniyor…</p>) : <>
-      <div className="settings-row"><div className="settings-row-copy"><div className="settings-row-title"><strong>Durum</strong></div><p role="status">{view.on ? `Açık${view.since ? ` · ${when(view.since)}'den beri` : ''}` : 'Kapalı · uzaktan giriş yapılamaz.'}</p></div>
+      {/* What keeps it closed is said in the status line itself; "Aç" shows only when it can open. */}
+      <div className="settings-row"><div className="settings-row-copy"><div className="settings-row-title"><strong>Durum</strong></div><p role="status">{view.on ? `Açık${view.since ? ` · ${when(view.since)}'den beri` : ''}`
+          : view.remote ? 'Kapalı.' : !view.code ? 'Kapalı. Açmak için önce bu sayfanın en üstünde telefon kodunu kurun (“Raporlar için telefon kodu”).' : !view.activated ? 'Kapalı. Mola bu bilgisayarda etkinleştirilince açılabilir.' : 'Kapalı · uzaktan giriş yapılamaz.'}</p></div>
         <div className="settings-row-control">{view.on ? <button type="button" className="btn secondary" disabled={busy} onClick={() => void send({ on: false })}>Kapat</button>
-          : !view.remote && <button type="button" className="btn primary" disabled={busy || !view.code || !view.activated || asking} onClick={() => { setAsking(true); setError(''); }}>Aç</button>}</div>
+          : !view.remote && view.code && view.activated && <button type="button" className="btn primary" disabled={busy || asking} onClick={() => { setAsking(true); setError(''); }}>Aç</button>}</div>
       </div>
-      {!view.code && <Notice>Önce telefon kodunu kurun: bu sayfadaki <strong>Raporlar için telefon kodu</strong>. Uzaktan yönetim şifre ve telefon koduyla açılır.</Notice>}
-      {view.code && !view.activated && <Notice>Mola bu bilgisayarda etkinleştirilince açılabilir.</Notice>}
       {view.remote && <p className="settings-field-hint">Bu ekranı uzaktan açtınız. Uzaktan yönetimi buradan kapatabilirsiniz; açmak yalnız kafedeki bilgisayardan olur.</p>}
       {asking && !view.on && <form className="remote-admin-form" aria-label="Uzaktan yönetimi aç" onSubmit={turnOn}>
         <label htmlFor={`${id}-password`}>Şifreniz</label>
@@ -45,7 +45,7 @@ export function RemoteAdminSettings() {
         <p className="settings-field-hint"><LockKeyhole size={13} aria-hidden="true" /> Güvenlik için şifrenizi ve doğrulama uygulamanızdaki kodu yazın.</p>
         <div className="settings-actions"><button type="submit" className="btn primary" disabled={busy || !password || code.length !== 6}>{busy ? 'Doğrulanıyor…' : 'Uzaktan yönetimi aç'}</button><button type="button" className="btn secondary" disabled={busy} onClick={() => { setAsking(false); setPassword(''); setCode(''); }}>Vazgeç</button></div>
       </form>}
-      <p className="settings-field-hint">{view.devices.length ? `Eşleşmiş cihazlar: ${view.devices.join(', ')}.` : 'Henüz eşleşmiş cihaz yok: bu sayfadaki “Telefonu eşleştir”.'} Her uzaktan girişte Bildirimler’e not düşer.</p>
+      <p className="settings-field-hint">{view.devices.length ? `Eşleşmiş cihazlar: ${view.devices.join(', ')}.` : 'Henüz eşleşmiş cihaz yok: yukarıda “Raporlarım telefonda” → “Telefonu eşleştir”.'} Her uzaktan girişte Bildirimler’e not düşer.</p>
       {view.active.length > 0 && <>
         <ul className="remote-admin-list" aria-label="Açık uzak oturumlar">{view.active.map(a => <li key={a.id}><strong>{a.device}{a.current ? ' · bu oturum' : ''}</strong><span>Giriş: {when(a.startedAt)} · açık</span></li>)}</ul>
         <div className="settings-actions"><button type="button" className="btn danger" disabled={busy} onClick={() => void send({}, '/api/staff/remote-admin/end-all')}>Bütün uzak oturumları kapat</button></div>

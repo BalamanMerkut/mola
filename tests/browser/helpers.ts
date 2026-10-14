@@ -14,6 +14,29 @@ export async function ensureSetup(request: APIRequestContext) {
   }
 }
 
+/**
+ * "Raporlar için telefon kodu" on for the signed-in owner over the API (pairing a new device needs it since 0.1.20). `code()`
+ * gives the next code not used yet (a step is good once, ±1 step accepted: it waits for the clock when needed), `off()` turns
+ * it off again with a recovery code.
+ */
+export async function phoneCodeOn(request: APIRequestContext, password = 'MolaDemo!2026') {
+  const { secret } = await (await request.post('/api/staff/report-security/setup', { data: { password } })).json() as { secret: string };
+  const enabled = await request.post('/api/staff/report-security/enable', { data: { code: totp(secret, Date.now() - 30_000) } });
+  expect(enabled.ok(), await enabled.text()).toBe(true);
+  const { recoveryCodes } = await enabled.json() as { recoveryCodes: string[] };
+  let used = Math.floor(Date.now() / 30000) - 1;
+  return {
+    secret,
+    async code() {
+      for (;;) {
+        const current = Math.floor(Date.now() / 30000), step = Math.max(current, used + 1);
+        if (step <= current + 1) { used = step; return totp(secret, step * 30000); }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    },
+    off: async () => expect((await request.post('/api/staff/report-security/recover', { data: { password, recoveryCode: recoveryCodes[0] } })).ok()).toBe(true),
+  };
+}
 /** The browser tests' Mola Merkez (scripts/test-server.mjs); the café is the default baseURL (port 3100). */
 export const MERKEZ = `http://127.0.0.1:${process.env.E2E_MERKEZ_PORT ?? '3190'}`;
 export const ADMIN_API = `${MERKEZ}/api/merkez/admin`;

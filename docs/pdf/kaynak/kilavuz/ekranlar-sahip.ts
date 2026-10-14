@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Locator, Page } from '@playwright/test';
 import type { Grup } from './ekranlar.ts';
+import { totp } from '../../../../server/totp.ts';
 import { KAFE, MERKEZ } from './sunucular.ts';
 import { cek, dene, giris, hazirGoruntu, sesiAc, sleep, yeniSayfa, type Hedef } from './cekim.ts';
 
@@ -578,17 +579,23 @@ const sahipDestek: Grup = async browser => {
   await dene('s-uzaktan-erisim', () => cek(s, 's-uzaktan-erisim'));
   // Raporlarım: Ayarlar → Güvenlik ve yedek → Telefonum (once Destek → Uzaktan erişim).
   await ayar(s, 'Güvenlik ve yedek', 'Telefonum');
-  // Raporlarım: telefonu eşleştir.
+  // Raporlarım: telefonu eşleştir. Eşleştirme telefon kodu ister (0.1.20): kod API'den kurulur, çekimden sonra kurtarma
+  // koduyla kapatılır (sonraki çekimlerde raporlar kod sormaz).
+  const kurulum = await (await s.request.post(`${KAFE}/api/staff/report-security/setup`, { data: { password: 'MolaDemo!2026' } })).json() as { secret: string };
+  const acildi = await (await s.request.post(`${KAFE}/api/staff/report-security/enable`, { data: { code: totp(kurulum.secret, Date.now() - 30_000) } })).json() as { recoveryCodes: string[] };
   const card = s.locator('.phone-pairing');
   await card.scrollIntoViewIfNeeded();
+  // The card asks again every 8 s: the button comes once it sees the code.
+  await dugme(card, 'Telefonu eşleştir').waitFor({ timeout: 20_000 });
   await dugme(card, 'Telefonu eşleştir').click();
   const ask = card.getByRole('form', { name: 'Cihaz eşleştir' });
   await ask.getByLabel('Cihazın adı').fill('Serkan’ın telefonu');
   await ask.getByLabel('Şifreniz').fill('MolaDemo!2026');
+  await ask.getByLabel('Telefon kodu').fill(totp(kurulum.secret, Date.now()));
   await dugme(ask, 'QR kodu göster').click();
   await s.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' }).waitFor();
   await sleep(600);
-  const url = await card.getByRole('textbox', { name: 'Eşleştirme bağlantısı' }).inputValue();
+  const url = (await dugme(card, 'Bağlantıyı kopyala').getAttribute('title'))!;
   await dene('s-telefon-eslestir', () => cek(s, 's-telefon-eslestir', { kirp: card, pay: 10, isaretler: [{ n: 1, loc: s.getByRole('img', { name: 'Cihaz eşleştirme QR kodu' }), yon: 'sag' }] }));
   const tel =await yeniSayfa(browser, 'telefon');
   await tel.context().route(`${KAFE}/**`, r => r.abort());
@@ -599,6 +606,7 @@ const sahipDestek: Grup = async browser => {
   await dene('t-raporlarim', () => cek(tel, 't-raporlarim', { isaretler: [{ n: 1, loc: tel.getByRole('region', { name: 'Bugünün satışı' }), yon: 'alt' }] }));
   await tel.evaluate(() => scrollTo(0, 700)); await sleep(400);
   await dene('t-raporlarim-2', () => cek(tel, 't-raporlarim-2'));
+  await s.request.post(`${KAFE}/api/staff/report-security/recover`, { data: { password: 'MolaDemo!2026', recoveryCode: acildi.recoveryCodes[0] } });
   await tel.context().close();
   await s.context().close();
   void MERKEZ;

@@ -7,7 +7,7 @@ import { qrAddressChanged } from '../packages/domain/qr-address';
 // The table's name under each code: large and bold, smaller only for long custom names (packages/domain/table-label.ts).
 import { tableLabelSize } from '../packages/domain/table-label';
 import { api, requestId } from './api';
-import type { LanLink } from './PermanentLink';
+import { loopbackPage as loopback, type LanLink } from './PermanentLink';
 import { Notice } from './components';
 import { usePackage } from './FeatureLock';
 import { HelpTip } from './HelpTip';
@@ -25,7 +25,6 @@ import './settings-qr.css';
  */
 /** `link`: Kalıcı bağlantı (src/PermanentLink.tsx), sent to the owner and Müdür only. */
 export type Network = { lan: boolean; addresses: { name: string; origin: string }[]; printed?: { origin: string; at: string }; public?: { base: string; connected: boolean }; publicProblem?: 'local' | 'inactive' | 'old' | 'waiting' | 'private'; link?: LanLink };
-const loopback = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 /** The address phones should open: on the café computer itself (localhost) the first LAN address, otherwise this page's own. */
 export const qrBase = (n: Network | null) => n?.lan && loopback() && n.addresses.length ? n.addresses[0].origin : location.origin;
 /** The address a table's QR holds: Mola Merkez's public menu address when it is ready (any network), else `lanBase` (Wi-Fi only). */

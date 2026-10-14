@@ -14,19 +14,21 @@ import type { RelayClient } from './relay.js';
 import { RELAY, type RelayReply, type RelayRequest } from './relay-protocol.js';
 import { open, seal } from './sealing.js';
 import { snapshotKey, type Store } from './store.js';
-import { verifyTotp } from './totp.js';
 import { featureRefusal } from './feature-guard.js';
 
 /*
  * Uzaktan raporlar ("Raporlarım" on the owner's phone), end to end encrypted (packages/domain/remote-crypto.ts).
  *   Pairing  Only the owner's own account (403 for everyone else, Müdür and Mola destek too). "Telefonu eşleştir" (Destek →
- *            Uzaktan erişim) asks the device's name ("Ahmet'in telefonu", "Ev laptopu": the Raporlarım page opens in any browser)
- *            and the owner's password again, checked in that same request (wrong attempts count on the login limiter); only
- *            then a one-time pairing id + secret, good for 10
- *            minutes, and this business's public key go into a QR (in the URL fragment, never sent to a server). The phone makes
- *            its own key pair, sends its public key through Mola Merkez sealed with the secret; when the owner turned the report
- *            code on (Ayarlar → Güvenlik), the phone's request also carries the 6-digit code, encrypted to this computer. At most
- *            3 phones per business; "Kaldır" revokes one at once (here, and Merkez forgets its token and postbox).
+ *            Uzaktan erişim) asks the device's name ("Ahmet'in telefonu", "Ev laptopu": the Raporlarım page opens in any browser),
+ *            the owner's password again (wrong attempts count on the login limiter) and, since 0.1.20, the owner's 6-digit
+ *            phone code (Raporlar için telefon kodu; 409 PHONE_CODE_REQUIRED until it is set up; wrong codes count on the report
+ *            code's own counters, server/report-security.ts), all in that same request; only then a one-time pairing id +
+ *            secret, good for 10 minutes, and this business's public key go into a QR (in the URL fragment, never sent to a
+ *            server). The phone makes its own key pair, sends its public key through Mola Merkez sealed with the secret. The
+ *            device is no longer asked the code (it was typed at the café a moment before, and the same 30-second code could
+ *            not be used twice); an older QR's code, if sent, is ignored. Devices paired before keep working without a code.
+ *            At most 3 phones per business; "Kaldır" (the password again) revokes one at once (here, and Merkez forgets its
+ *            token and postbox).
  *   Live     The phone asks through Merkez (relay kind `phone`): HMAC-signed, fresh (±5 min) and one-time (nonce); the answer
  *            is the report sealed for that phone, bound to the question.
  *   Postbox  Every RELAY postbox period while this computer runs (MOLA_POSTBOX_MS), after a gün sonu and when Mola closes,
@@ -45,6 +47,8 @@ const SEEN_MS = 60_000;
 export const deviceName = (v: string) => v.replace(/[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
 /** Checks the signed-in user's own password in this request (server/app.ts; wrong attempts count on the login limiter). */
 export type ConfirmPassword = (req: Request, actor: Actor, password: string | undefined) => Promise<void>;
+/** Checks the owner's own 6-digit phone code (server/report-security.ts: the same counters as the reports' code). */
+export type OwnerCode = (actor: Actor, code: string) => void;
 
 export class RemoteReports {
   private pairings = new Map<string, Pairing>();
@@ -107,8 +111,8 @@ export class RemoteReports {
     this.pairings.set(pairId, { tenant, secret, ownerId, name, expiresAt, tries: 0 });
     this.relay.refresh();
     const link = new URL('/raporlarim', `${this.link.url}/`);
-    link.hash = pairingFragment({ pairId, secret, cafePublic: key.publicKey, code: !!owner.mfa });
-    return { url: link.toString(), expiresAt: new Date(expiresAt).toISOString(), code: !!owner.mfa, name };
+    link.hash = pairingFragment({ pairId, secret, cafePublic: key.publicKey, code: false });
+    return { url: link.toString(), expiresAt: new Date(expiresAt).toISOString(), name };
   }
   cancelPairing(tenant: string) { for (const [id, p] of this.pairings) if (p.tenant === tenant) this.pairings.delete(id); }
   private async pair(r: Extract<RelayRequest, { kind: 'pair' }>): Promise<RelayReply> {
@@ -120,12 +124,6 @@ export class RemoteReports {
     if (!inner) { p.tries++; throw new DomainError('PAIRING_INVALID', 'Eşleştirme doğrulanamadı. QR kodunu yeniden okutun.', 403); }
     const s = this.store.read(p.tenant), owner = s.staffUsers?.find(u => u.id === p.ownerId && u.role === 'owner' && u.active);
     if (!owner) { this.pairings.delete(r.request.pairId); throw new DomainError('FORBIDDEN', 'Bu işlem için yetkiniz yok.', 403); }
-    // The report code (Raporlar için telefon kodu), when the owner turned it on: once, here, while pairing.
-    if (owner.mfa) {
-      const code = (inner.code ?? '').replace(/\D/g, '');
-      const ok = code.length === 6 && this.store.mutate(p.tenant, x => { const u = x.staffUsers!.find(v => v.id === owner.id)!; const step = u.mfa ? verifyTotp(u.mfa.secret, code, t, u.mfa.lastStep) : null; if (step === null) return false; u.mfa!.lastStep = step; return true; });
-      if (!ok) { p.tries++; throw new DomainError('CODE_WRONG', 'Raporlar için telefon kodu yanlış ya da süresi geçti. Doğrulama uygulamasındaki yeni kodu yazın.', 403); }
-    }
     // The name the owner typed on this computer; an older Raporlarım page may still send its own (used only without one).
     const name = p.name || deviceName(typeof inner.name === 'string' ? inner.name : '') || 'Cihaz';
     const id = randomB64u(16), at = this.now().toISOString();
@@ -220,26 +218,38 @@ export class RemoteReports {
 
 /**
  * Owner only (the owner's own account; Müdür, other staff and Mola destek get 403): GET /api/staff/remote-reports,
- * POST /api/staff/remote-reports/pair { name, password } (QR; the password is checked again right here), /pair/cancel,
- * /phones/remove { id }. "Gün sonu" (a final closing) sends the postbox at once.
+ * POST /api/staff/remote-reports/pair { name, password, code } (QR; the password and the phone code are checked right here),
+ * /pair/cancel, /phones/remove { id, password }. Every view says whether the owner has a phone code (`code`). A remote
+ * session ("Kafeyi yönet") can do none of the POSTs (server/remote-admin.ts REMOTE_FORBIDDEN). "Gün sonu" (a final closing)
+ * sends the postbox at once.
  */
-export function remoteReportRoutes(app: Express, store: Store, reports: RemoteReports, actorFor: (req: Request) => Actor, confirmPassword: ConfirmPassword) {
+export function remoteReportRoutes(app: Express, store: Store, reports: RemoteReports, actorFor: (req: Request) => Actor, confirmPassword: ConfirmPassword, ownerCode: OwnerCode) {
   const owner = (req: Request) => { const a = actorFor(req), s = store.read(a.tenantId); requireRole(s, a, ['owner']); return { a, s }; };
+  const hasCode = (a: Actor) => !!store.read(a.tenantId).staffUsers?.find(u => u.id === a.id)?.mfa;
+  const view = (a: Actor) => ({ ...reports.view(a.tenantId), code: hasCode(a) });
   app.use('/api/staff/cash/finish', (_req, res, next) => { res.on('finish', () => { if (res.statusCode < 400) void reports.push('closing', true).catch(() => {}); }); next(); });
-  app.get('/api/staff/remote-reports', (req, res) => { const { a } = owner(req); res.setHeader('Cache-Control', 'no-store'); res.json(reports.view(a.tenantId)); });
+  app.get('/api/staff/remote-reports', (req, res) => { const { a } = owner(req); res.setHeader('Cache-Control', 'no-store'); res.json(view(a)); });
   app.post('/api/staff/remote-reports/pair', async (req, res) => {
-    const { a } = owner(req), b = z.object({ name: z.string().max(200).optional(), password: z.string().max(200).optional() }).strict().parse(req.body ?? {});
+    const { a } = owner(req), b = z.object({ name: z.string().max(200).optional(), password: z.string().max(200).optional(), code: z.string().max(12).optional() }).strict().parse(req.body ?? {});
     reports.canPair(a.tenantId);
+    // A new device needs the phone code (devices paired before keep working): said before the password, no wasted try.
+    if (!hasCode(a)) throw new DomainError('PHONE_CODE_REQUIRED', 'Cihaz eşleştirmek için önce telefon kodunu kurun: Ayarlar → Güvenlik ve yedek → Telefonum → Raporlar için telefon kodu.', 409);
     if (!deviceName(b.name ?? '')) throw new DomainError('NAME_REQUIRED', 'Cihaza bir ad verin: örneğin “Ahmet’in telefonu” ya da “Ev laptopu”.', 400);
     await confirmPassword(req, a, b.password);
-    const { a: still } = owner(req);
-    res.json({ ...await reports.startPairing(still.tenantId, still.id, b.name!), ...reports.view(still.tenantId) });
+    const { a: still } = owner(req), code = (b.code ?? '').replace(/\D/g, '');
+    if (code.length !== 6) throw new DomainError('CODE_REQUIRED', 'Doğrulama uygulamanızdaki 6 haneli telefon kodunu da yazın.', 400);
+    ownerCode(still, code);
+    res.json({ ...await reports.startPairing(still.tenantId, still.id, b.name!), ...view(still) });
   });
-  app.post('/api/staff/remote-reports/pair/cancel', (req, res) => { const { a } = owner(req); reports.cancelPairing(a.tenantId); res.json(reports.view(a.tenantId)); });
-  app.post('/api/staff/remote-reports/phones/remove', (req, res) => {
-    const { a, s } = owner(req), { id } = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{22}$/) }).strict().parse(req.body);
-    const p = reports.removePhone(a.tenantId, id, s.staffUsers?.find(u => u.id === a.id)?.name ?? 'İşletme sahibi'); // one tap + "Evet, kaldır", no password
-    store.mutate(a.tenantId, x => { x.audit.push({ action: 'remote.phone_removed', actor: a.id, target: p.id, at: new Date().toISOString() }); });
-    res.json(reports.view(a.tenantId));
+  app.post('/api/staff/remote-reports/pair/cancel', (req, res) => { const { a } = owner(req); reports.cancelPairing(a.tenantId); res.json(view(a)); });
+  app.post('/api/staff/remote-reports/phones/remove', async (req, res) => {
+    const { a } = owner(req), b = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{22}$/), password: z.string().max(200).optional() }).strict().parse(req.body);
+    // The password again, but deliberately not the phone code: the lost phone may be the one with the authenticator app, and
+    // the owner must still be able to cut it off.
+    await confirmPassword(req, a, b.password);
+    const { a: still, s } = owner(req);
+    const p = reports.removePhone(still.tenantId, b.id, s.staffUsers?.find(u => u.id === still.id)?.name ?? 'İşletme sahibi');
+    store.mutate(still.tenantId, x => { x.audit.push({ action: 'remote.phone_removed', actor: still.id, target: p.id, at: new Date().toISOString() }); });
+    res.json(view(still));
   });
 }

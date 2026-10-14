@@ -350,12 +350,12 @@ function uzaktan() {
     hizmet('remote-reports', 'Kafede olmasanız da bugünün satışını ve kasayı telefonunuzdan görürsünüz.'),
     sekil('t-raporlarim', { genislik: 220, yan: true, aciklamalar: ['Bugünün satışı: nakit, kart, sipariş sayısı.'] }),
     adimlar([
-      'Kasa bilgisayarında Ayarlar → Güvenlik ve yedek → Telefonum → <b>Telefonu eşleştir</b>.',
-      'Cihaza ad verin, şifrenizi yazın.',
-      'Ekrandaki QR kodu telefonunuzla okutun, <b>Eşleştir</b>.',
+      'Kasa bilgisayarında Ayarlar → Güvenlik ve yedek → Telefonum\'da önce <b>Raporlar için telefon kodu</b>\'nu kurun (bir kez).',
+      '<b>Telefonu eşleştir</b>: cihaza ad verin, şifrenizi ve telefon kodunu yazın.',
+      'Ekrandaki QR kodu telefonunuzla okutun, <b>Eşleştir</b>. Laptopta Mola\'yı kalıcı bağlantıyla açtıysanız: <b>Bu cihazı eşleştir</b>.',
       'Sayfayı telefonunuzun ana ekranına ekleyin.',
     ]),
-    p('En fazla 3 telefon eşleşir. Kaybolan telefonu aynı sayfadan kaldırın.'),
+    p('En fazla 3 cihaz eşleşir. Kaybolan telefonu aynı sayfadan kaldırın: şifreniz sorulur, telefon kodu sorulmaz.'),
     h2('Uzaktan yönetim'),
     hizmet('remote-admin', 'Kafeye gitmeden fiyat değiştirir, kampanya açar, çalışan hesabı kapatırsınız.'),
     adimlar([

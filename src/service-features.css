@@ -237,3 +237,5 @@ body.desktop-shell #root{margin-left:68px}
 .permanent-link-row code{flex:1;min-width:0;padding:6px 10px;border-radius:8px;background:var(--field,var(--surface-soft,#f0f3ec));font-size:13px;overflow-wrap:anywhere;user-select:all}
 .permanent-link p{margin:8px 0 0}
 .permanent-link-wait{margin-top:12px}
+.permanent-link-shortcut{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.permanent-link-shortcut p{margin-top:6px}

@@ -82,7 +82,7 @@ import { DEMO_RENEWED, DemoResets, demoResetRoutes } from './demo-reset.js';
 // Köprü through Mola Merkez: uzaktan destek ("Mola destek") and uzaktan raporlar (the owner's phone, end to end encrypted).
 import { RelayClient } from './relay.js';
 import { SupportDesk, supportRoutes } from './support-session.js';
-import { RemoteReports, remoteReportRoutes } from './remote-reports.js';
+import { RemoteReports, remoteReportRoutes, type OwnerCode } from './remote-reports.js';
 import { ownerLock } from './owner-lock.js';
 import { RemoteAdmin, remoteAdminRoutes, type RemoteSessions } from './remote-admin.js';
 // Hizmet paketi: services not in this business's package are refused before their routes (server/feature-guard.ts).
@@ -263,8 +263,9 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   // because a gün sonu sends the phones' postbox at once.
   const remote = new RemoteReports(store, link, relay, now, cash);
   link.onStop.push(() => remote.close()); link.beforeClose.push(() => remote.push('shutdown', true));
-  // Turning support on and pairing a device ask the owner's password again (confirmPassword, below the login).
-  supportRoutes(app, store, desk, staffActor, confirmPassword); remoteReportRoutes(app, store, remote, staffActor, confirmPassword);
+  // Turning support on, pairing and removing a device ask the owner's password again (confirmPassword, below the login);
+  // pairing also the owner's phone code, checked by reportSecurity (registered later, hence the late lookup).
+  supportRoutes(app, store, desk, staffActor, confirmPassword); remoteReportRoutes(app, store, remote, staffActor, confirmPassword, (a, code) => (app.locals.ownerCode as OwnerCode)(a, code));
   remoteAdminRoutes(app, store, remoteAdmin, staffActor, confirmPassword, now);
   app.locals.relay = relay; app.locals.support = desk; app.locals.remote = remote;
   relay.refresh();
