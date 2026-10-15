@@ -1,3 +1,4 @@
+import type { LocalTries, LocalVerifier } from '../packages/domain/local-verifier';
 import type { PhoneReport } from '../packages/domain/remote-report';
 
 /*
@@ -10,6 +11,11 @@ export type Paired = {
   privateKey: CryptoKey; publicKey: string;
   /** The newest report this phone opened (live or from the postbox) and how it came. */
   last?: { report: PhoneReport; kind: 'live' | 'snapshot' };
+  /**
+   * 0.1.24 "Çıkış" locks the device instead of forgetting it: `locked`, and the e-mail (shown on "Kafeyi yönet") with the
+   * verifier from the last sign-in the café confirmed open it again while the café is off (packages/domain/local-verifier.ts).
+   */
+  email?: string; verifier?: LocalVerifier; locked?: boolean; tries?: LocalTries;
 };
 const DB = 'mola-raporlarim', STORE = 'kasa', KEY = 'telefon';
 function open(): Promise<IDBDatabase> {

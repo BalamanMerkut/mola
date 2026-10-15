@@ -58,12 +58,12 @@ async function setup(name: string) {
     const raw = (request: unknown) => merkez('admin', { phoneId, token, request });
     return {
       raw, get sid() { return s?.sid; },
-      async open(password: string, c: string, grant?: string) {
-        const o = await adminOpen(keys.privateKey, link.cafePublic, phoneId, { password, code: c, ...(grant ? { grant } : {}) }, time);
+      async open(password: string, c: string, grant?: string, ticket?: string) {
+        const o = await adminOpen(keys.privateKey, link.cafePublic, phoneId, { password, code: c, ...(grant ? { grant } : {}), ...(ticket ? { ticket } : {}) }, time);
         const r = await raw(o.request);
         if (r.status !== 200) return { ok: false as const, code: r.data.code as string, status: r.status, request: o.request };
         const answer = await readOpenAnswer(o.k1, o.request.nonce, r.data as { iv: string; ct: string });
-        if (!answer.ok) return { ok: false as const, code: answer.code, status: r.status, message: answer.message, request: o.request };
+        if (!answer.ok) return { ok: false as const, code: answer.code, status: r.status, message: answer.message, ticket: answer.ticket, request: o.request };
         s = { sid: answer.sid, key: await deviceSession(o.k1, o.ephPrivate, o.request.eph, answer.eph, answer.sid) };
         return { ok: true as const, answer, request: o.request };
       },
@@ -109,6 +109,42 @@ test('a grant older than 2 minutes asks the password and the code', async t => {
   clock.add(2 * 60_000);
   const late = await device().open('', '', grant);
   assert.equal(late.ok, false); assert.equal(late.code, 'GRANT_EXPIRED'); assert.equal(late.message, 'Giriş süresi doldu. Şifrenizi ve telefon kodunu yazın.');
+  assert.equal((await device().open(DEMO_PASSWORD, code())).ok, true);
+});
+
+test('two steps like the sign-in (0.1.24): the password → a ticket; the ticket and the code → the session; tickets are per device, once, 5 minutes', async t => {
+  const { pair, owner, codeOn, code, device, clock } = await setup('remote-admin-two-steps');
+  t.after(() => pair.close());
+  codeOn(); assert.equal((await owner('/staff/remote-admin', { on: true, password: DEMO_PASSWORD, code: code() })).status, 200);
+  // A wrong password alone: said on the first screen, no ticket.
+  const bad = await device().open('yanlis-sifre', '');
+  assert.equal(bad.ok, false); assert.equal(bad.code, 'INVALID_LOGIN'); assert.equal(bad.message, 'Şifre yanlış.'); assert.equal(bad.ticket, undefined);
+  // The right password alone: NEED_CODE with a ticket; no session yet.
+  const d = device(), first = await d.open(DEMO_PASSWORD, '');
+  assert.equal(first.ok, false); assert.equal(first.code, 'NEED_CODE'); assert.match(first.ticket ?? '', /^[A-Za-z0-9_-]{22}$/);
+  const ticket = first.ticket!;
+  // A made-up ticket: back to the first screen.
+  assert.equal((await d.open('', code(), undefined, 'x'.repeat(22))).code, 'LOGIN_EXPIRED');
+  // A wrong code keeps the ticket (the code screen stays).
+  const wrong = await d.open('', '000000', undefined, ticket);
+  assert.equal(wrong.code, 'CODE_WRONG'); assert.equal(wrong.ticket, ticket); assert.equal(wrong.message, 'Telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.');
+  // The ticket and the right code: the session, as the owner.
+  const opened = await d.open('', code(), undefined, ticket);
+  assert.equal(opened.ok, true, JSON.stringify(opened));
+  assert.equal((await d.call('GET', '/api/staff/me')).data.role, 'owner');
+  // Once only.
+  assert.equal((await device().open('', code(), undefined, ticket)).code, 'LOGIN_EXPIRED');
+  // Five minutes: gone.
+  const late = await device().open(DEMO_PASSWORD, '');
+  clock.add(5 * 60_000 + 1000);
+  assert.equal((await device().open('', code(), undefined, late.ticket)).code, 'LOGIN_EXPIRED');
+  // Five wrong codes on one ticket: it is spent (the password again).
+  const again = await device().open(DEMO_PASSWORD, '');
+  for (let i = 0; i < 4; i++) assert.equal((await device().open('', '000000', undefined, again.ticket)).ticket, again.ticket);
+  const fifth = await device().open('', '000000', undefined, again.ticket);
+  assert.ok(['CODE_WRONG', 'RATE_LIMIT'].includes(fifth.code!), JSON.stringify(fifth)); assert.equal(fifth.ticket, undefined);
+  // The page of 0.1.23 (both at once) still works.
+  clock.add(2 * 60_000);
   assert.equal((await device().open(DEMO_PASSWORD, code())).ok, true);
 });
 

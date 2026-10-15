@@ -8,7 +8,9 @@ import { codesOf, ensureSetup, MERKEZ, merkezMail, openSettings, OWNER_EMAIL, ra
  * "Giriş yap": the e-mail and the password ("Devam", checked by the café computer at once), then the phone code. Any device
  * may be first (no phone-first rule); it names itself ("Windows laptop · 15 Ekim"). Then the live report; the café computer
  * off (the köprü stopped, POST /api/test/relay) shows the last encrypted report with "Kasa bilgisayarı kapalı · Son durum …",
- * also after a reload; back on, live again. "Çıkış" on the laptop, the owner's "Kaldır" sends the phone back to the sign-in.
+ * also after a reload; back on, live again. "Çıkış" (0.1.24) locks the laptop and keeps it: with the café off the e-mail and
+ * the password open the last report (checked on the laptop, no code); with it on, the café checks them and asks the code.
+ * "Bu cihazı tamamen kaldır" forgets it and the café drops it; the owner's "Kaldır" sends the phone back to the sign-in.
  */
 const PASSWORD = 'MolaDemo!2026';
 const today = () => new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long' });
@@ -160,13 +162,52 @@ test('Uzaktan erişim → five plain cards; Kafemi yönet: any device first, two
     await phone.getByRole('button', { name: 'Yenile' }).click();
     await expect(phone.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
 
-    // "Çıkış" on the laptop (a shared laptop cleaned): the sign-in again, and the café drops it.
+    // "Çıkış" on the laptop while the café computer is off (0.1.24, the owner's case: he was locked out): the device is
+    // kept; the e-mail and the password open the last report, checked on the laptop itself (no code step offline).
+    expect((await relay(false)).ok()).toBe(true);
+    const laptopOff = laptop.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/);
+    await expect(async () => { await laptop.getByRole('button', { name: 'Yenile' }).click(); await expect(laptopOff).toBeVisible({ timeout: 3000 }); }).toPass({ timeout: 60_000 });
     await laptop.getByRole('button', { name: 'Çıkış', exact: true }).click();
-    await expect(laptop.getByRole('group', { name: 'Çıkış' })).toContainText('Bu cihaz unutulsun mu?');
+    const leave = laptop.getByRole('group', { name: 'Çıkış' });
+    await expect(leave).toContainText('Çıkış yapınca bu cihaz hatırlanır; yeniden girmek için e-posta ve şifreniz yeter.');
+    await expect(leave.getByRole('button', { name: 'Bu cihazı tamamen kaldır' })).toBeVisible();
     await laptop.screenshot({ path: info.outputPath('laptop-5-cikis.png'), fullPage: true });
-    await laptop.getByRole('group', { name: 'Çıkış' }).getByRole('button', { name: 'Evet, çıkış yap' }).click();
-    await expect(laptop.getByRole('form', { name: 'Giriş yap' })).toBeVisible();
-    await expect(laptop.getByRole('form', { name: 'Giriş yap' }).getByRole('status')).toHaveText('Çıkış yapıldı. Bu cihaz unutuldu.');
+    await leave.getByRole('button', { name: 'Evet, çıkış yap' }).click();
+    const again = laptop.getByRole('form', { name: 'Giriş yap' });
+    await expect(again).toBeVisible();
+    await expect(again.getByRole('status')).toHaveText('Çıkış yapıldı.');
+    await expect(again).toContainText('Bu cihaz hatırlanıyor.');
+    // Locked across a reload too; a wrong password is said plainly (and counted on the device).
+    await laptop.reload();
+    await expect(again).toBeVisible({ timeout: 30_000 });
+    await raporlarimPassword(laptop, { password: 'yanlis-sifre' });
+    await expect(again.getByRole('alert')).toHaveText('E-posta ya da şifre hatalı.', { timeout: 30_000 });
+    await laptop.screenshot({ path: info.outputPath('laptop-6-kilitli-giris.png'), fullPage: true });
+    await raporlarimPassword(laptop);
+    await expect(laptopOff).toBeVisible({ timeout: 30_000 });
+    await expect(laptop.getByRole('form', { name: 'Telefon kodu' })).toHaveCount(0);
+    await expect(laptop.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
+    await laptop.screenshot({ path: info.outputPath('laptop-7-kasa-kapali-giris.png'), fullPage: true });
+    // The café on again: Çıkış, then the café checks the e-mail and the password, and the code is asked (the same entry).
+    expect((await relay(true)).ok()).toBe(true);
+    await expect(async () => { await laptop.getByRole('button', { name: 'Yenile' }).click(); await expect(laptop.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 3000 }); }).toPass({ timeout: 60_000 });
+    await laptop.getByRole('button', { name: 'Çıkış', exact: true }).click();
+    await leave.getByRole('button', { name: 'Evet, çıkış yap' }).click();
+    await expect(again).toBeVisible();
+    await raporlarimPassword(laptop);
+    await raporlarimCode(laptop, code);
+    await expect(laptop.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
+    await expect(list.getByRole('listitem').filter({ hasText: 'Windows laptop' })).toHaveCount(1, { timeout: 15_000 });
+
+    // "Bu cihazı tamamen kaldır" (a shared laptop cleaned): the sign-in again, and the café drops it.
+    await laptop.getByRole('button', { name: 'Çıkış', exact: true }).click();
+    await leave.getByRole('button', { name: 'Bu cihazı tamamen kaldır' }).click();
+    const removeIt = laptop.getByRole('group', { name: 'Bu cihazı kaldır' });
+    await expect(removeIt).toContainText('Bu cihaz tamamen kaldırılsın mı?');
+    await removeIt.getByRole('button', { name: 'Evet, kaldır' }).click();
+    await expect(again).toBeVisible();
+    await expect(again.getByRole('status')).toHaveText('Bu cihaz kaldırıldı. Yeniden giriş yapabilirsiniz.');
+    await expect(again).not.toContainText('Bu cihaz hatırlanıyor.');
     await expect(list.getByRole('listitem').filter({ hasText: 'Windows laptop' })).toHaveCount(0, { timeout: 15_000 });
 
     // The owner removes the phone on the café computer ("Kaldır" asks the password, not the code): back to the sign-in.

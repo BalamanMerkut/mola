@@ -1,6 +1,6 @@
 import { lazy, useEffect, useState } from 'react';
 import { DeferredPanel } from './DeferredPanel';
-import { closeRemote, type RemoteSession } from './remoteTransport';
+import { closeRemote, dropRemote, remoteHealth, type RemoteSession } from './remoteTransport';
 import './remote-admin.css';
 
 /*
@@ -8,6 +8,8 @@ import './remote-admin.css';
  * (src/Workspace.tsx) run here with every request sealed through src/remoteTransport.ts. A slim bar over them says where
  * they run: "<İşletme> · Uzaktan", the connection, "Raporlar" (the report view, the session stays) and "Çıkış" (ends this
  * remote session; the device stays signed in). The bar's height is taken off the screens' own layout (remote-admin.css).
+ * While they run, Mola Merkez is asked every 10 s whether the café computer is still there (0.1.24): off, twice no answer,
+ * or the browser offline → the connection dropped (src/remoteTransport.ts dropRemote; Kafemi yönet shows "Bağlantı koptu").
  */
 const Workspace = lazy(() => import('./Workspace').then(module => ({ default: module.Workspace })));
 
@@ -16,6 +18,12 @@ export function ManageFrame({ session, onReports }: { session: RemoteSession; on
   useEffect(() => {
     document.documentElement.classList.add('remote-on');
     return () => document.documentElement.classList.remove('remote-on');
+  }, []);
+  useEffect(() => {
+    let misses = 0;
+    const t = setInterval(() => { void remoteHealth().then(h => { misses = h === 'net' ? misses + 1 : 0; if (h === 'off' || misses >= 2) dropRemote(); }); }, 10_000);
+    window.addEventListener('offline', dropRemote);
+    return () => { clearInterval(t); window.removeEventListener('offline', dropRemote); };
   }, []);
   return <>
     <div className="remote-bar" role="region" aria-label="Uzaktan yönetim">

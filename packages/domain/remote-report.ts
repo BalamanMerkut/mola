@@ -32,4 +32,6 @@ export type PhoneReport = {
   theme?: import('./theme.js').ThemeId;
   /** "Kafeyi yönet": absent when the package has no Uzaktan yönetim; otherwise whether the owner turned it on (0.1.21). */
   admin?: 'on' | 'off';
+  /** 0.1.24: "Kafeyi yönet" asks the password and then the code in two requests (absent: an older café, both in one). */
+  adminSteps?: 2;
 };

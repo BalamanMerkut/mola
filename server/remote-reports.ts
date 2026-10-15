@@ -284,7 +284,9 @@ export class RemoteReports {
       open: { accounts: s.accounts.filter(a => a.status === 'open').length, amount: o.openAccounts ?? 0 },
       lastClosing: closing && closing.status === 'closed' ? { at: closing.closedAt ?? closing.to, day: closing.day, byName: closing.byName, ...(closing.extra ? { extra: true } : {}), counted: closing.counted, expected: closing.figures.expected, difference: closing.difference } : null,
       days: m.daily.map(d => ({ day: d.day, sales: d.sales })),
-      ...((admin => admin ? { admin } : {})(this.adminState?.(tenant))),
+      // adminSteps: this café checks the password and the code of "Kafeyi yönet" in two steps (0.1.24; the page asks both
+      // screens either way, an older café gets them together).
+      ...((admin => admin ? { admin, adminSteps: 2 as const } : {})(this.adminState?.(tenant))),
     };
   }
   // ---------- Postbox ----------

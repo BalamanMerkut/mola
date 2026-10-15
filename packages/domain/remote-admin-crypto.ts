@@ -31,10 +31,14 @@ async function unseal(key: CryptoKey, aad: string, box: { iv: string; ct: string
 
 // ---------- Giriş ----------
 export type AdminOpenRequest = { v: 1; op: 'open'; phone: string; at: number; nonce: string; eph: string; iv: string; ct: string };
-/** `grant` (0.1.23): the login's one-time proof instead of the password and code, right after a Raporlarım sign-in. */
-export type AdminCredentials = { password: string; code: string; grant?: string };
-/** What the café answers to an open request (inside the box). */
-export type AdminOpenAnswer = { ok: false; code: string; message: string } | { ok: true; sid: string; eph: string; business: string; expiresAt: string; device: string };
+/**
+ * `grant` (0.1.23): the login's one-time proof instead of the password and code, right after a Raporlarım sign-in.
+ * Two steps (0.1.24, like the sign-in): the password alone (`code` empty) → NEED_CODE with a `ticket`; then the ticket and the
+ * code (`password` empty). Both at once still works (a page from before).
+ */
+export type AdminCredentials = { password: string; code: string; grant?: string; ticket?: string };
+/** What the café answers to an open request (inside the box); `ticket` with NEED_CODE and a wrong code (it stays good). */
+export type AdminOpenAnswer = { ok: false; code: string; message: string; ticket?: string } | { ok: true; sid: string; eph: string; business: string; expiresAt: string; device: string };
 const openInfo = (r: Pick<AdminOpenRequest, 'phone' | 'at' | 'nonce' | 'eph'>) => `yonet-giris|${r.phone}|${r.at}|${r.nonce}|${r.eph}`;
 const answerInfo = (nonce: string) => `yonet-cevap|${nonce}`;
 /** The device: its sealed open request, and what it keeps to read the answer (k1 and its ephemeral private key). */
@@ -51,7 +55,7 @@ export async function readAdminOpen(cafePrivate: CryptoKey, phonePublic: string,
     if (!PUBLIC_KEY.test(r.eph) || !PUBLIC_KEY.test(phonePublic)) return null;
     const k1 = await hkdf(concat(await dh(cafePrivate, r.eph), await dh(cafePrivate, phonePublic)), SALT, openInfo(r));
     const c = JSON.parse(td.decode(await unseal(await gcm(k1, ['decrypt']), openInfo(r), r))) as AdminCredentials;
-    return typeof c?.password === 'string' && typeof c.code === 'string' && (c.grant === undefined || (typeof c.grant === 'string' && c.grant.length <= 64)) ? { credentials: c, k1 } : null;
+    return typeof c?.password === 'string' && typeof c.code === 'string' && (c.grant === undefined || (typeof c.grant === 'string' && c.grant.length <= 64)) && (c.ticket === undefined || (typeof c.ticket === 'string' && c.ticket.length <= 64)) ? { credentials: c, k1 } : null;
   } catch { return null; }
 }
 export async function sealOpenAnswer(k1: Uint8Array, nonce: string, answer: AdminOpenAnswer) { return seal(await gcm(k1, ['encrypt']), answerInfo(nonce), utf8(JSON.stringify(answer))); }

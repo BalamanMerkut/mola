@@ -25,7 +25,8 @@ import { FEATURE_NOT_IN_PACKAGE, notInPackage } from '../packages/domain/feature
  *   Açık mı   Ayarlar → Uzaktan erişim → "Uzaktan yönetim" (0.1.21), default off. Turning it on: only on a computer of the café (never
  *             remotely), with the owner's password and the 6-digit code (Raporlar için telefon kodu, which must be set up first).
  *             Turning it off works from anywhere and ends every remote session at once.
- *   Giriş     Every remote session: password + code (or, within 2 minutes of the device's own sign-in, the one-time `grant`
+ *   Giriş     Every remote session: password, then code (0.1.24: two steps like the sign-in, a one-time 5-minute ticket
+ *             between them; both at once still works), or, within 2 minutes of the device's own sign-in, the one-time `grant`
  *             that sign-in gave it: server/remote-reports.ts takeGrant), sealed by the paired device to this computer (only
  *             that device and this computer can make the key: packages/domain/remote-admin-crypto.ts). Wrong answers are counted per device
  *             (5 free, then 1 min, 2 min, 4 min … at most 15 min) and per business (20 in 15 min stops every device for 15 min).
@@ -91,6 +92,8 @@ export class RemoteAdmin {
   private nonces = new Map<string, number>();
   private fails = new Map<string, { count: number; until: number; blocked: number }>();
   private keys = new Map<string, Promise<CryptoKey>>();
+  /** The second sign-in step's tickets (the password was right on this device a moment ago). */
+  private tickets = new Map<string, { tenant: string; phone: string; ownerId: string; until: number; tries: number }>();
   /** This process's own secret: only requests replayed by `dispatch` carry it. */
   private secret = randomBytes(32).toString('base64url');
   private internal?: Promise<{ server: Server; port: number }>;
@@ -152,6 +155,7 @@ export class RemoteAdmin {
     const t = this.now().getTime();
     for (const l of [...this.live.values()]) { const why = this.stale(l); if (why) this.end(l.id, why); else for (const [ref, p] of l.parts) if (p.until <= t) l.parts.delete(ref); }
     for (const [k, until] of this.nonces) if (until <= t) this.nonces.delete(k);
+    for (const [k, v] of this.tickets) if (v.until <= t) this.tickets.delete(k);
     for (const [k, f] of this.fails) if (f.until <= t && f.blocked <= t) this.fails.delete(k);
   }
   /** Live remote sessions of a business (the owner's list; "current" marks the asking one). */
@@ -208,7 +212,7 @@ export class RemoteAdmin {
     if (!opened) throw new DomainError('REQUEST_INVALID', 'İstek doğrulanamadı.', 403);
     this.nonces.set(`${p.id}:${q.nonce}`, t + 2 * FRESH_MS);
     const answer = async (a: AdminOpenAnswer): Promise<RelayReply> => ({ status: 200, json: await sealOpenAnswer(opened.k1, q.nonce, a) });
-    const fail = (code: string, message: string) => answer({ ok: false, code, message });
+    const fail = (code: string, message: string, ticket?: string) => answer({ ok: false, code, message, ...(ticket ? { ticket } : {}) });
     const wait = this.waitFor(tenant, p.id, t);
     if (wait) return fail('RATE_LIMIT', `Çok fazla hatalı deneme. ${wait < 60 ? `${wait} saniye` : `${Math.ceil(wait / 60)} dakika`} sonra yeniden deneyin.`);
     const { owner } = this.phone(tenant, phoneId);
@@ -216,12 +220,29 @@ export class RemoteAdmin {
     if (!this.link.has(tenant, 'remote-admin')) return fail(FEATURE_NOT_IN_PACKAGE, notInPackage('remote-admin'));
     if (!this.read(tenant).on) return fail('REMOTE_OFF', 'Uzaktan yönetim kapalı. Kafedeyken Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açabilirsiniz.');
     if (!owner.mfa) return fail('REMOTE_NEEDS_CODE', 'Önce kafede Ayarlar → Uzaktan erişim’den telefon kodunu kurun. Uzaktan yönetim şifre ve telefon koduyla açılır.');
-    const code = opened.credentials.code.replace(/\D/g, ''), grant = opened.credentials.grant;
-    // Right after the sign-in (0.1.23): its one-time grant stands for the password and the code just given on this device.
-    let ok = grant ? this.reports().takeGrant(tenant, p.id, grant)?.ownerId === owner.id : await passwordMatches(opened.credentials.password, owner);
+    const { password, grant, ticket } = opened.credentials, code = opened.credentials.code.replace(/\D/g, '');
+    const wrong = (code_: string, message: string, keep?: string) => { this.failed(tenant, p.id, t); this.audit(tenant, 'remote_admin.login_failed', owner.id, p.id); return fail(code_, message, keep); };
     // The code is spent only after the right password (a wrong password does not burn the owner's current code).
-    if (ok && !grant) ok = this.store.mutate(tenant, s => { const u = s.staffUsers!.find(x => x.id === owner.id); const step = u?.mfa ? verifyTotp(u.mfa.secret, code, t, u.mfa.lastStep) : null; if (step === null) return false; u!.mfa!.lastStep = step; return true; });
-    if (!ok) { this.failed(tenant, p.id, t); this.audit(tenant, 'remote_admin.login_failed', owner.id, p.id); return fail(grant ? 'GRANT_EXPIRED' : 'INVALID_LOGIN', grant ? 'Giriş süresi doldu. Şifrenizi ve telefon kodunu yazın.' : 'Şifre ya da telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.'); }
+    const codeOk = () => this.store.mutate(tenant, s => { const u = s.staffUsers!.find(x => x.id === owner.id); const step = u?.mfa ? verifyTotp(u.mfa.secret, code, t, u.mfa.lastStep) : null; if (step === null) return false; u!.mfa!.lastStep = step; return true; });
+    for (const [k, v] of this.tickets) if (v.until <= t) this.tickets.delete(k);
+    if (grant) {
+      // Right after the sign-in (0.1.23): its one-time grant stands for the password and the code just given on this device.
+      if (this.reports().takeGrant(tenant, p.id, grant)?.ownerId !== owner.id) return wrong('GRANT_EXPIRED', 'Giriş süresi doldu. Şifrenizi ve telefon kodunu yazın.');
+    } else if (ticket) {
+      // Step 2 (0.1.24): the code for the password given a moment ago on this device; a wrong code keeps the ticket (5 tries).
+      const held = this.tickets.get(ticket);
+      if (!held || held.tenant !== tenant || held.phone !== p.id || held.ownerId !== owner.id) { this.tickets.delete(ticket); return fail('LOGIN_EXPIRED', 'Süre doldu. Şifrenizi yeniden yazın.'); }
+      if (!codeOk()) {
+        if (++held.tries >= 5) { this.tickets.delete(ticket); return wrong('CODE_WRONG', 'Telefon kodu yanlış. Şifrenizi yeniden yazın.'); }
+        return wrong('CODE_WRONG', 'Telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.', ticket);
+      }
+      this.tickets.delete(ticket);
+    } else {
+      if (!await passwordMatches(password, owner)) return wrong('INVALID_LOGIN', code ? 'Şifre ya da telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.' : 'Şifre yanlış.');
+      // Step 1 (0.1.24): the password alone; the code comes on the next screen with this one-time ticket (5 minutes).
+      if (!code) { const next = randomB64u(16); this.tickets.set(next, { tenant, phone: p.id, ownerId: owner.id, until: t + RELAY.LOGIN_TICKET_MS, tries: 0 }); return fail('NEED_CODE', 'Telefon kodunu yazın.', next); }
+      if (!codeOk()) return wrong('INVALID_LOGIN', 'Şifre ya da telefon kodu yanlış. Doğrulama uygulamasındaki güncel kodu yazın.');
+    }
     this.fails.delete(`${tenant}:${p.id}`);
     const fresh = this.store.read(tenant), user = fresh.staffUsers!.find(x => x.id === owner.id)!;
     const sid = randomUUID(), session = await cafeSession(opened.k1, q.eph, sid), device = p.name;

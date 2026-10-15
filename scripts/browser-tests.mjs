@@ -2,6 +2,8 @@ import { readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { addDays, businessDay, dayStart, dayStartText } from '../packages/domain/business-day.ts';
+import { clearTestLeftovers } from './test-artiklari.mjs';
+{ const removed = clearTestLeftovers(); if (removed) console.log(`Eski test artıkları temizlendi: ${removed} klasör.`); }
 // Each suite gets a fresh server/data directory: no shared receipts, menu edits or login limits.
 const args = process.argv.slice(2);
 const suites = args.length ? [args] : readdirSync('tests/browser').filter(f => f.endsWith('.spec.ts')).sort().map(f => [f]);

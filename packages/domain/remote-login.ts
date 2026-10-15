@@ -19,19 +19,20 @@ export type LoginResult =
   /** "En fazla 3 cihaz": the owner picks the one to replace; the ticket stands for the password and code just given. */
   | { kind: 'full'; message: string; devices: LoginDevice[]; ticket: string; cafePublic: string }
   | { kind: 'error'; code: string; message: string };
-const failed = (data: Record<string, any>, fallback = 'Giriş yapılamadı. Biraz sonra yeniden deneyin.'): LoginResult => ({ kind: 'error', code: typeof data.code === 'string' ? data.code : 'LOGIN_FAILED', message: typeof data.message === 'string' ? data.message : fallback });
+/** `UNREACHABLE`: Mola Merkez itself did not answer properly (a 5xx without its own code; a locked device then checks locally). */
+const failed = (data: Record<string, any>, status = 400, fallback = 'Giriş yapılamadı. Biraz sonra yeniden deneyin.'): LoginResult => ({ kind: 'error', code: typeof data.code === 'string' ? data.code : status >= 500 ? 'UNREACHABLE' : 'LOGIN_FAILED', message: typeof data.message === 'string' ? data.message : fallback });
 
 /** `cafePublic`: from the step before (the code, "Hangisinin yerine?"), so the same key is used again. */
 export async function deviceLogin(post: PhonePost, keys: { privateKey: CryptoKey; publicKey: string }, email: string, inner: LoginInner, options: { at?: number; cafePublic?: string } = {}): Promise<LoginResult> {
   let cafePublic = options.cafePublic;
   if (!cafePublic) {
     const start = await post('login/start', { email });
-    if (start.status !== 200 || typeof start.data.cafePublic !== 'string') return failed(start.data);
+    if (start.status !== 200 || typeof start.data.cafePublic !== 'string') return failed(start.data, start.status);
     cafePublic = start.data.cafePublic as string;
   }
   const { request, key } = await loginRequest(keys.privateKey, keys.publicKey, cafePublic, inner, options.at);
   const r = await post('login', { email, request });
-  if (r.status !== 200 || !r.data.box) return failed(r.data);
+  if (r.status !== 200 || !r.data.box) return failed(r.data, r.status);
   let answer;
   try { answer = await openLoginAnswer(key, request.nonce, r.data.box); } catch { return { kind: 'error', code: 'LOGIN_INVALID', message: 'Giriş doğrulanamadı. Sayfayı yenileyip yeniden deneyin.' }; }
   if (!answer.ok) {

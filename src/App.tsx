@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { DeferredPanel } from './DeferredPanel';
 import { Customer } from './Customer';
 import { DesktopRail } from './DesktopRail';
@@ -18,7 +18,7 @@ export function App() {
   // guests' menu (a cart in progress) or the owner's tunnelled screens (/yonet, their own server).
   useServerVersion(() => /^\/(m|yonet)(\/|$)/.test(location.pathname) ? Promise.resolve(undefined) : fetch('/api/health', { cache: 'no-store' }).then(r => r.json()).then((h: { version?: string }) => h.version));
   if (/^\/uygulama\/?$/.test(location.pathname)) return <DeferredPanel><InstallPage /></DeferredPanel>;
-  if (/^\/(yonet|raporlarim)\/?$/.test(location.pathname)) { if (location.pathname !== '/yonet') history.replaceState(null, '', `/yonet${location.search}${location.hash}`); return <DeferredPanel><OwnerPage /></DeferredPanel>; }
+  if (/^\/(yonet|raporlarim)\/?$/.test(location.pathname)) { if (location.pathname !== '/yonet') history.replaceState(null, '', `/yonet${location.search}${location.hash}`); return <DeferredPanel><Suspense fallback={<OwnerBoot />}><OwnerPage /></Suspense></DeferredPanel>; }
   if (locked) return <LockedScreen guest={location.pathname.startsWith('/m/')} />;
   if (location.pathname.startsWith('/m/')) { guestPageHead(); return <Customer token={location.pathname.slice(3)} />; }
   const page = <DeferredPanel>{location.pathname === '/menu-preview' ? <MenuPreviewPage /> : <Workspace />}</DeferredPanel>;
@@ -27,4 +27,10 @@ export function App() {
   // remembered, the frame showed two staff screens instead of the guest menu).
   if (pane || location.pathname === '/menu-preview') return page;
   return <DesktopRail>{page}</DesktopRail>;
+}
+/** Kafemi yönet while its code loads: the same neutral "logo + Açılıyor…" the page shows until it knows the state (0.1.24). */
+function OwnerBoot() {
+  return <div role="status" aria-busy="true" style={{ minHeight: '100dvh', display: 'grid', placeContent: 'center', justifyItems: 'center', gap: 14, background: 'var(--brand-bg, #ece7dc)', color: '#66726b', font: '15px Inter, "Segoe UI", system-ui, sans-serif' }}>
+    <span aria-hidden="true" style={{ width: 52, height: 52, borderRadius: 16, background: '#234c3e', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800, fontSize: 24 }}>M</span>Açılıyor…
+  </div>;
 }

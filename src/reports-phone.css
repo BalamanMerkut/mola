@@ -64,41 +64,102 @@
 .rp-manage{display:flex;align-items:center;justify-content:center;text-align:center;width:100%}
 .rp-quiet{margin:0;font-size:13px;color:var(--rp-muted);text-align:center}
 .rp-cafe{display:block;max-width:560px;margin:0 auto;padding:10px;text-align:center;font-size:13px;color:var(--rp-muted)}
-/* The report: the day in the palette's colour, the numbers in small cards (like Satış ve Raporlar). */
+/* Until the page knows what to show (0.1.24): the mark and "Açılıyor…", nothing else. */
+.rp-opening{display:grid;place-content:center;justify-items:center;gap:14px;color:var(--rp-muted);font-size:15px}
+.rp-opening p{margin:0}
+.rp-logo.big{width:52px;height:52px;border-radius:16px;font-size:24px}
+.rp-login input.rp-readonly{background:transparent;color:var(--rp-muted);border-style:dashed}
+.rp-link{font:inherit;font-size:13px;background:none;border:0;padding:6px 0;color:var(--rp-muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;justify-self:start}
+.rp-link:disabled{opacity:.55}
+/* "Bağlantı koptu" over the café's screens (0.1.24), then the last report. */
+.rp-drop{position:fixed;inset:0;z-index:60;min-height:0;display:grid;place-items:center;padding:16px;background:#0f1512b3;backdrop-filter:blur(2px)}
+.rp-drop-card{max-width:400px;width:100%;text-align:center;justify-items:center;padding:26px 22px;gap:12px;box-shadow:0 20px 50px -20px #000a}
+.rp-drop-card .rp-btn{width:100%}
+.rp-drop-mark{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:22px;background:var(--rp-amber-bg);color:var(--rp-amber)}
+/* The report: the day in the palette's colour on top, then one card per subject with the same rhythm. */
 .rp-report{display:grid;gap:12px}
-.rp-hero{background:var(--rp-brand);border-color:var(--rp-brand);color:#fff;gap:8px}
+/* A phone: one column in this order (the column wrappers step aside); a laptop: two stacks side by side (below). */
+.rp-side{display:contents}
+.rp-o1{order:1}.rp-o2{order:2}.rp-o3{order:3}.rp-o4{order:4}.rp-o5{order:5}.rp-report .rp-wide{order:9}
+.rp-report h2{font-size:16px}
+.rp-empty-line{color:var(--rp-muted);font-size:14px;padding:6px 0}
+.rp-hero{background:var(--rp-brand);border-color:var(--rp-brand);color:#fff;gap:6px;padding:20px}
 .rp-hero .rp-label{font-size:13px;opacity:.85}
-.rp-big{font-size:36px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.rp-change{font-size:13px;opacity:.9}
-.rp-split{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-.rp-split div{background:#ffffff1f;border-radius:12px;padding:9px 10px;display:grid;gap:2px;min-width:0}
-.rp-split span{font-size:12px;opacity:.85}
-.rp-split strong{font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.rp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.rp-fact{background:var(--rp-card);border:1px solid var(--rp-line);border-radius:16px;padding:12px 14px;display:grid;gap:2px;min-width:0}
+.rp-big{font-size:40px;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.02em;overflow-wrap:anywhere}
+.rp-change{justify-self:start;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;padding:5px 10px;border-radius:999px;background:#ffffff1f}
+.rp-change b{font-weight:800}
+.rp-hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 0;padding:12px 0 0;border-top:1px solid #ffffff33}
+.rp-hero-stats div{min-width:0;display:grid;gap:2px}
+.rp-hero-stats dt{font-size:12px;opacity:.8}
+.rp-hero-stats dd{margin:0;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+/* Payments: one stacked bar (a 2 px gap between the parts) and its legend with amounts, so colour is never alone. */
+.rp-stack{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--rp-field)}
+.rp-stack span{flex-basis:0;min-width:6px}
+.rp-pay-cash{background:var(--rp-brand-ink)}.rp-pay-card{background:var(--accent,#b96844)}.rp-pay-platform{background:#c7bca9}
+.rp-legend{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:2px}
+.rp-legend li{display:grid;grid-template-columns:12px 1fr auto auto;gap:10px;align-items:center;padding:6px 0;font-size:14px}
+.rp-legend i{width:12px;height:12px;border-radius:4px}
+.rp-legend small{color:var(--rp-muted);font-size:13px;font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+.rp-legend strong{font-variant-numeric:tabular-nums;min-width:84px;text-align:right}
+.rp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start}
+.rp-fact{background:var(--rp-card);border:1px solid var(--rp-line);border-radius:16px;padding:12px 14px;display:grid;gap:2px;min-width:0;align-content:start}
 .rp-fact span{font-size:12px;color:var(--rp-muted)}
-.rp-fact strong{font-size:21px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rp-fact strong{font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .rp-fact small{font-size:12px;color:var(--rp-muted)}
-.rp-top,.rp-rows{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.rp-top li,.rp-rows li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--rp-line);font-size:14px}
-.rp-top li:last-child,.rp-rows li:last-child{border-bottom:0}
-.rp-top li span,.rp-rows li span{overflow-wrap:anywhere}
-.rp-top small,.rp-rows small{color:var(--rp-muted);font-size:12px}
-.rp-top strong,.rp-rows strong{font-variant-numeric:tabular-nums}
+/* Ranked rows with a bar in proportion to the first (top products, channels). */
+.rp-rank{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.rp-rank li{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start}
+.rp-rank.plain li{grid-template-columns:1fr}
+.rp-rank-n{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--rp-soft);color:var(--rp-brand-ink);font-variant-numeric:tabular-nums}
+.rp-rank li:first-child .rp-rank-n{background:var(--rp-brand);color:#fff}
+.rp-rank-main{min-width:0;display:grid;gap:5px}
+.rp-rank-line{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:14px}
+.rp-rank-line span{min-width:0;overflow-wrap:anywhere}
+.rp-rank-line strong{font-variant-numeric:tabular-nums;white-space:nowrap}
+.rp-rank small{font-size:12px;color:var(--rp-muted)}
+.rp-meter{height:6px;border-radius:3px;background:var(--rp-field);overflow:hidden}
+.rp-meter i{display:block;height:100%;border-radius:3px;background:var(--rp-brand-ink);opacity:.7}
+.rp-rank li:first-child .rp-meter i{opacity:1}
+.rp-rows{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.rp-rows li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--rp-line);font-size:14px}
+.rp-rows li:last-child{border-bottom:0}
+.rp-rows small{color:var(--rp-muted);font-size:12px}
+.rp-rows strong{font-variant-numeric:tabular-nums}
 .rp-diff strong{color:var(--rp-warn)}
-.rp-month{display:grid;gap:2px}
-.rp-month strong{font-size:22px;font-variant-numeric:tabular-nums}
-.rp-month span{font-size:13px;color:var(--rp-muted)}
-.rp-chart{height:96px;display:flex;align-items:flex-end;gap:2px}
-.rp-chart span{flex:1;background:var(--rp-brand);opacity:.45;border-radius:3px 3px 0 0;min-width:2px}
-.rp-chart span:last-child{opacity:1}
-@media(max-width:360px){.rp-split{grid-template-columns:1fr}.rp-grid{grid-template-columns:1fr}}
-/* A laptop: a wider page, the numbers in three columns and the lists side by side. */
+.rp-even strong{color:var(--rp-brand-ink)}
+/* Son 30 gün: three numbers, then the bars (SVG at the card's width), the dashed average, a date a week. */
+.rp-month{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rp-month div{display:grid;gap:1px;min-width:0;align-content:start}
+.rp-month span{font-size:12px;color:var(--rp-muted)}
+.rp-month strong{font-size:17px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rp-month small{font-size:12px;color:var(--rp-muted)}
+.rp-chart{position:relative;margin-top:6px;outline:none;border-radius:8px;touch-action:pan-y}
+.rp-chart:focus-visible{outline:2px solid var(--rp-brand);outline-offset:4px}
+.rp-chart svg{display:block;overflow:visible}
+.rp-col path{fill:var(--rp-brand-ink);opacity:.45;transition:opacity .12s}
+.rp-col.last path,.rp-col.on path{opacity:1}
+.rp-col .zero{fill:var(--rp-line)}
+.rp-avg{stroke:var(--rp-ink);stroke-opacity:.55;stroke-width:1.5;stroke-dasharray:4 4}
+.rp-tick{font-size:11px;fill:var(--rp-muted);font-variant-numeric:tabular-nums}
+.rp-avg-key{display:inline-block;width:14px;margin:0 6px 3px 0;border-top:1.5px dashed var(--rp-muted);vertical-align:middle}
+.rp-axis{stroke:var(--rp-line)}
+.rp-hit{fill:transparent;cursor:pointer}
+.rp-tip{position:absolute;transform:translate(-50%,-100%);pointer-events:none;background:var(--rp-ink);color:var(--rp-card);border-radius:10px;padding:6px 10px;display:grid;gap:1px;text-align:center;white-space:nowrap;box-shadow:0 6px 18px -8px #0007}
+.rp-tip small{font-size:11px;opacity:.8}
+.rp-tip strong{font-size:14px;font-variant-numeric:tabular-nums}
+@media (prefers-color-scheme:dark){.rp-pay-card{background:#d08a63}.rp-pay-platform{background:#6d675c}}
+@media(max-width:380px){.rp-big{font-size:34px}.rp-hero-stats dd{font-size:15px}.rp-legend strong{min-width:0}}
+@media(max-width:340px){.rp-grid{grid-template-columns:1fr}.rp-month{grid-template-columns:1fr 1fr}}
+/* A laptop: a wider page, two columns of cards; the day and the month across. */
 @media(min-width:900px){
   .rp-page,.rp-foot,.rp-cafe{max-width:960px}
   .rp-page{padding-top:24px}
-  .rp-report{grid-template-columns:1fr 1fr}
-  .rp-hero,.rp-grid,.rp-wide{grid-column:1/-1}
-  .rp-grid{grid-template-columns:repeat(6,1fr)}
+  .rp-report{grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .rp-hero,.rp-wide{grid-column:1/-1}
+  .rp-side{display:grid;gap:14px;align-content:start;min-width:0}
+  .rp-hero{grid-template-columns:1fr auto;column-gap:24px;align-items:end}
+  .rp-hero .rp-label,.rp-hero .rp-big,.rp-hero .rp-change{grid-column:1}
+  .rp-hero-stats{grid-column:2;grid-row:1/4;border-top:0;border-left:1px solid #ffffff33;padding:0 0 0 24px;margin:0;gap:18px;align-self:stretch;align-content:center}
+  .rp-big{font-size:46px}
   .rp-manage{max-width:440px;justify-self:start}
 }

@@ -1,5 +1,5 @@
 import { test, expect, devices, type Request as PwRequest } from '@playwright/test';
-import { ensureSetup, MERKEZ, openSettings, openView, ownerEmailOn, phoneCodeOn, raporlarimLogin, remoteLoginOpen, reportAction } from './helpers';
+import { ensureSetup, MERKEZ, openSettings, openView, OWNER_EMAIL, ownerEmailOn, phoneCodeOn, raporlarimLogin, remoteLoginOpen, reportAction } from './helpers';
 
 /*
  * Kafemi yönet with Uzaktan yönetim on (0.1.23: one address, /yonet; server/remote-admin.ts, src/ReportsPhone.tsx,
@@ -8,6 +8,9 @@ import { ensureSetup, MERKEZ, openSettings, openView, ownerEmailOn, phoneCodeOn,
  * changed, Ayarlar, the Excel file. The café computer off: the last report with "Kasa bilgisayarı kapalı"; back on: "Kasa
  * açıldı · Kafeyi yönet" brings the screens back with nothing typed. "Bütün uzak oturumları kapat": the password and the code
  * once (never the e-mail). Every request and answer between the device and the café is sealed: Merkez carries ciphertext.
+ * 0.1.24: the connection dropping during an edit shows "Bağlantı koptu" over the screens, then the last report (nothing
+ * spins); "Kafeyi yönet" asks the same two screens as the sign-in (the e-mail shown, read-only); F5 there never shows the
+ * report first (a MutationObserver from the first byte of the page).
  */
 const PASSWORD = 'MolaDemo!2026';
 
@@ -92,8 +95,21 @@ test('Kafemi yönet: sign in → the café screens at once, a price, reports, Ex
     await device.getByRole('button', { name: /^Kafeyi yönet/ }).click();
     await expect(bar).toBeVisible();
 
-    // The café computer goes off during the session: the last report with "Kasa bilgisayarı kapalı", not an empty screen.
+    // The café computer goes off while the owner marks a product "Tükendi" in Menü yönetimi (0.1.24, the owner's case):
+    // "Bağlantı koptu" over the screens soon, nothing spins on "Kaydediliyor…"; ~2 s later the last report by itself.
+    await openView(device, 'Menü yönetimi');
+    const soldOut = device.locator('label.availability').first();
+    await expect(soldOut).toBeVisible({ timeout: 30_000 });
     expect((await relay(false)).ok()).toBe(true);
+    await soldOut.click();
+    const lost = device.getByRole('alertdialog', { name: 'Bağlantı koptu' });
+    await expect(lost).toBeVisible({ timeout: 40_000 });
+    await expect(lost).toContainText('Kasa bilgisayarı kapalı ya da internete bağlı değil. Değişiklik kaydedilemedi.');
+    await expect(lost.getByRole('button', { name: 'Raporlara git' })).toBeVisible();
+    await device.screenshot({ path: info.outputPath('laptop-3a-baglanti-koptu.png') });
+    await expect(lost).toHaveCount(0, { timeout: 5000 });
+    await expect(device.getByText('Kaydediliyor…')).toHaveCount(0);
+    // The last report with "Kasa bilgisayarı kapalı", not an empty screen.
     await expect(device.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 60_000 });
     await expect(device.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
     await expect(device.getByText('Kafeyi yönet: kasa açıkken')).toBeVisible();
@@ -126,11 +142,35 @@ test('Kafemi yönet: sign in → the café screens at once, a price, reports, Ex
     const unlock = device.getByRole('form', { name: 'Kafeyi yönet' });
     await expect(unlock).toBeVisible({ timeout: 30_000 });
     await expect(unlock).toContainText('Uzak oturum kapandı');
-    await expect(unlock.getByLabel('E-posta')).toHaveCount(0);
+    // The same two screens as the sign-in: the e-mail shown and read-only, then the code.
+    await expect(unlock.getByLabel('E-posta')).toHaveValue(OWNER_EMAIL);
+    await expect(unlock.getByLabel('E-posta')).toHaveAttribute('readonly', '');
+    await expect(unlock.getByRole('button', { name: 'Devam' })).toBeVisible();
     await device.screenshot({ path: info.outputPath('laptop-5-yeniden-giris.png'), fullPage: true });
+    // F5 here: from the first byte of the page on, the report never shows before this form (only "Açılıyor…").
+    await device.addInitScript(() => {
+      const seen: string[] = []; (window as unknown as { __seen: string[] }).__seen = seen;
+      const look = () => { const s = document.querySelector('.rp-report, .rp-bar, .rp-paired') ? 'rapor' : document.querySelector('form[aria-label="Kafeyi yönet"]') ? 'giris' : document.querySelector('.rp-opening, [aria-busy="true"]') ? 'aciliyor' : ''; if (s && seen[seen.length - 1] !== s) seen.push(s); };
+      new MutationObserver(look).observe(document, { subtree: true, childList: true, attributes: true });
+    });
+    await device.reload();
+    await expect(unlock).toBeVisible({ timeout: 30_000 });
+    await device.waitForTimeout(1500);
+    const seen = await device.evaluate(() => (window as unknown as { __seen: string[] }).__seen);
+    expect(seen, seen.join(' → ')).not.toContain('rapor');
+    expect(seen[0]).toBe('aciliyor');
+    expect(seen).toContain('giris');
+    // Step 1: the password ("Şifre yanlış." said there), then step 2: the code.
+    await unlock.getByLabel('Şifre', { exact: true }).fill('yanlis-sifre');
+    await unlock.getByRole('button', { name: 'Devam' }).click();
+    await expect(unlock.getByRole('alert')).toHaveText('Şifre yanlış.');
     await unlock.getByLabel('Şifre', { exact: true }).fill(PASSWORD);
-    await unlock.getByLabel('Telefon kodu').fill(await phoneCode.code());
-    await unlock.getByRole('button', { name: 'Kafeyi yönet' }).click();
+    await unlock.getByRole('button', { name: 'Devam' }).click();
+    const codeStep = device.getByRole('form', { name: 'Telefon kodu' });
+    await expect(codeStep.getByLabel('Telefon kodu')).toBeFocused({ timeout: 30_000 });
+    await device.screenshot({ path: info.outputPath('laptop-6-yeniden-giris-kod.png'), fullPage: true });
+    await codeStep.getByLabel('Telefon kodu').fill(await phoneCode.code());
+    await codeStep.getByRole('button', { name: 'Giriş yap' }).click();
     await expect(bar).toBeVisible({ timeout: 30_000 });
     // "Çıkış" in the bar ends this remote session (the device stays signed in): the password and the code next time.
     await bar.getByRole('button', { name: 'Çıkış' }).click();
