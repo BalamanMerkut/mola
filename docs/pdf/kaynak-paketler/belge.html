@@ -17,7 +17,18 @@
   .paket li b { font-weight: 650; }
   .paket li i { font-style: normal; color: #6b7570; }
   .kural { font-size: 8.4pt; color: #5d6763; margin: 4pt 0 0; }
-  .hizmetler h2 { font-size: 13pt; margin: 4pt 0 6pt; border: 0; padding: 0; break-before: page; }
+  .karsilastirma h2 { font-size: 13pt; margin: 4pt 0 6pt; border: 0; padding: 0; break-before: page; }
+  table.mx { width: 100%; border-collapse: collapse; }
+  table.mx th { text-align: center; font-size: 8.6pt; }
+  table.mx th:first-child { text-align: left; width: 38%; }
+  table.mx td { font-size: 8.8pt; padding: 3.2pt 5pt; border-bottom: 1px solid var(--cizgi); }
+  table.mx td:first-child { font-weight: 600; }
+  table.mx td span { display: block; font-weight: 400; font-size: 7.4pt; color: #6b7570; }
+  table.mx td.var, table.mx td.yok, table.mx td.sec, table.mx td.yakin { text-align: center; }
+  table.mx .tik { display: inline-block; width: 14pt; height: 14pt; line-height: 14pt; border-radius: 50%; background: #234c3e; color: #f3ebdd; font-size: 9pt; font-weight: 700; }
+  table.mx td.yok { color: #b3bab6; font-size: 11pt; }
+  table.mx td.sec, table.mx td.yakin { color: #6b7570; font-size: 7.8pt; font-style: italic; }
+  .hizmetler h2 { font-size: 13pt; margin: 14pt 0 6pt; border: 0; padding: 0; break-before: page; }
   table.hz td:first-child { width: 31%; font-weight: 650; }
   table.hz td { font-size: 8.6pt; }
   table.hz td span { display: block; font-weight: 400; font-size: 7.4pt; color: #6b7570; margin-top: 1pt; }
@@ -80,6 +91,29 @@
     <li><b>Paket servis platformları</b> <i>· Yemeksepeti, Getir, Trendyol siparişleri mutfağa düşer</i></li>
   </ul>
 </div>
+
+<section class="karsilastirma">
+<h2 data-toc="no">Hangi pakette ne var?</h2>
+<table class="mx">
+  <thead><tr><th>Hizmet</th><th>Çay bahçesi</th><th>Kafe Standart</th><th>Restoran Pro</th><th>Özel paket</th></tr></thead>
+  <tbody>
+    <tr><td>Adisyon çekirdeği<span>mutfak ekranı ve fiş dahil</span></td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="sec">her zaman</td></tr>
+    <tr><td>QR menü</td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>QR sipariş ve garson çağırma</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Stok, reçete ve kârlılık</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Uzaktan erişim<span>raporlar ve kafeyi uzaktan yönetme</span></td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>E-posta raporları</td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Gelişmiş raporlar<span>PDF, Excel, KDV dökümü</span></td><td class="yok">–</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Rezervasyon ve etkinlik</td><td class="yok">–</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Vardiya, bahşiş ve personel raporu</td><td class="yok">–</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Sosyal medya ve QR kartları</td><td class="yok">–</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>İki ekran</td><td class="yok">–</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Bulutta şifreli yedek</td><td class="yok">–</td><td class="yok">–</td><td class="var"><span class="tik">✓</span></td><td class="sec">seçilebilir</td></tr>
+    <tr><td>Paket servis platformları</td><td class="yakin" colspan="4">yakında</td></tr>
+  </tbody>
+</table>
+<p class="kural">Bütün paketlerde: sınırsız cihaz, internet kesilse de çalışma, gece otomatik yedek, ilk 30 gün bütün hizmetler açık.</p>
+</section>
 
 <section class="hizmetler">
 <h2 data-toc="no">Hizmetler ne yapar?</h2>
