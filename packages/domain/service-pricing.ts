@@ -1,4 +1,4 @@
-import { featureById, featureIds, features, defaultPackages, isFeatureId, withRequirements, yearlyFromMonthly, type FeatureId } from './features.js';
+import { featureById, featureIds, features, defaultPackages, isFeatureId, shownFeatures, withRequirements, yearlyFromMonthly, type FeatureId } from './features.js';
 export { isFeatureId };
 
 /*
@@ -56,7 +56,8 @@ export function withoutFeature(chosen: readonly FeatureId[], id: FeatureId): Fea
 /** What a choice brought along: [added service, the chosen one that needs it] ("QR sipariş için QR menü de eklendi"). */
 export function addedFor(chosen: readonly FeatureId[]): [FeatureId, FeatureId][] {
   const pairs: [FeatureId, FeatureId][] = [];
-  for (const id of chosen) for (const need of featureById.get(id)?.requires ?? []) if (!pairs.some(([a]) => a === need)) pairs.push([need, id]);
+  // A part sold inside another service (Uzaktan yönetim) is not shown, so it never "brings" anything.
+  for (const id of shownFeatures(chosen)) for (const need of featureById.get(id)?.requires ?? []) if (!pairs.some(([a]) => a === need)) pairs.push([need, id]);
   return pairs;
 }
 
@@ -70,10 +71,13 @@ export function discounted(amount: number, d: Discount | undefined, months: numb
   if (!d || !d.value) return amount;
   return Math.max(0, d.kind === 'percent' ? Math.round(amount * (100 - Math.min(100, d.value)) / 100) : amount - d.value * months);
 }
-/** The price of a set of services ("Yakında" ones cost nothing: they cannot be used yet), then each discount in turn. */
+/**
+ * The price of a set of services ("Yakında" ones cost nothing: they cannot be used yet; nor does a part sold inside another
+ * service, 'remote-admin', even when an older catalogue stored a price for it), then each discount in turn.
+ */
 export function priceFor(ids: Iterable<FeatureId>, prices: ServicePrices = {}, ...discounts: (Discount | undefined)[]): Price {
   let listMonthly = 0, listYearly = 0;
-  for (const id of new Set(ids)) { const f = featureById.get(id); if (!f || f.soon) continue; const p = priceOf(id, prices); listMonthly += p.monthly; listYearly += p.yearly; }
+  for (const id of new Set(ids)) { const f = featureById.get(id); if (!f || f.soon || f.partOf) continue; const p = priceOf(id, prices); listMonthly += p.monthly; listYearly += p.yearly; }
   let monthly = listMonthly, yearly = listYearly;
   for (const d of discounts) { monthly = discounted(monthly, d, 1); yearly = discounted(yearly, d, 10); }
   return { monthly, yearly, listMonthly, listYearly };
@@ -86,7 +90,7 @@ export const monthlyRevenue = (p: Pick<Price, 'monthly' | 'yearly'>, planMonths:
 /** The starting packages (features.ts defaultPackages) and the two old plans, made once on the first start of this version. */
 export function startingPackages(at: string): ServicePackage[] {
   return [
-    ...defaultPackages.map(p => ({ id: p.id, name: p.name, features: normalFeatures(p.features), createdAt: at, updatedAt: at })),
+    ...defaultPackages.map(p => ({ id: p.id, name: p.name, features: normalFeatures(p.features), ...(p.discount ? { discount: { ...p.discount } } : {}), createdAt: at, updatedAt: at })),
     { id: LEGACY_FULL, name: 'Tam sistem (eski plan)', features: legacyFeatures('full'), legacy: 'full', createdAt: at, updatedAt: at },
     { id: LEGACY_MENU, name: 'Sadece QR menü (eski plan)', features: legacyFeatures('menu'), legacy: 'menu', createdAt: at, updatedAt: at },
   ];

@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties
 import { createPortal } from 'react-dom';
 import { ChevronRight, X } from 'lucide-react';
 import { ContactLinks, type DetailTab } from './PlatformDetail';
+import { serviceCount } from './platformCatalog';
 import { dateTime, planText, qrOrderingFact, rowStatus, seenAgo, shortDate, type Business } from './platformStatus';
 import './platform-peek.css';
 
@@ -42,7 +43,7 @@ export function BusinessPeek({ business: l, onOpen, className = '' }: { business
   const licence = !l.endsAt ? 'Başlatılmadı' : !l.active ? `Süresi doldu · ${shortDate(l.endsAt)}` : `${l.daysRemaining} gün kaldı · bitiş ${shortDate(l.endsAt)}`;
   const go = (tab: DetailTab) => { setOpen(false); onOpen(tab); };
   const facts: [string, string, string?][] = [
-    ['Paket', l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem', l.services ? `${l.services.features.length} hizmet dahil` : undefined],
+    ['Paket', l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem', l.services ? `${serviceCount(l.services.features)} hizmet dahil` : undefined],
     ['Lisans', planText(l), licence],
     ['Deneme', l.kind === 'trial' ? (l.active ? `Denemede · ${l.daysRemaining} gün kaldı` : 'Deneme bitti') : 'Yok · abonelik', l.kind === 'trial' && l.services ? `Aboneliğe geçince “${l.services.packageName}”` : undefined],
     ['Son bağlantı', seenAgo(l.lastSeenAt), l.lastSeenAt ? dateTime(l.lastSeenAt) : undefined],

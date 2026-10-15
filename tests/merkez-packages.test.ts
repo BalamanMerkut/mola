@@ -4,14 +4,14 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { inflateRawSync } from 'node:zlib';
 import { defaultPackages, features, monthlyTotal, type FeatureId } from '../packages/domain/features.js';
-import { addedFor, LEGACY_FULL, LEGACY_MENU, legacyFeatures, monthlyRevenue, normalFeatures, periodPrice, priceFor, sellableFeatures, withoutFeature } from '../packages/domain/service-pricing.js';
+import { addedFor, LEGACY_FULL, LEGACY_MENU, legacyFeatures, monthlyRevenue, normalFeatures, periodPrice, priceFor, sellableFeatures, startingPackages, withoutFeature } from '../packages/domain/service-pricing.js';
 import { publicKeyFrom, signLicense, verifyLicense } from '../server/license.js';
 import { LEGACY_LICENCE_UNTIL } from '../server/kafe-link.js';
 import { createMerkezApp } from '../server/merkez/app.js';
-import { ensureCatalog } from '../server/merkez/catalog.js';
+import { CATALOG_VERSION, catalogView, ensureCatalog } from '../server/merkez/catalog.js';
 import { journalRows } from '../server/merkez/journal.js';
 import { salesDocument, salesTotals, salesXlsx, type SaleEntry } from '../server/merkez/sales.js';
-import { licenseFeatures, MerkezStore } from '../server/merkez/store.js';
+import { licenseFeatures, MerkezStore, type MerkezBusiness } from '../server/merkez/store.js';
 import { MERKEZ_PASSWORD, merkezPair, temp } from './merkez-fixture.js';
 
 const rid = () => randomUUID().replace(/-/g, '');
@@ -27,17 +27,17 @@ test('prices: package totals follow the services, their requirements and discoun
   assert.deepEqual(withoutFeature(['core', 'qr-menu', 'qr-order', 'stock'], 'qr-menu'), ['core', 'stock'], 'unticking QR menü unticks QR sipariş');
   assert.deepEqual(withoutFeature(['core', 'stock'], 'core'), ['core', 'stock'], 'core stays');
   assert.equal(normalFeatures(['integrations']).includes('integrations'), false, '"Yakında" is not sellable');
-  // Çay bahçesi: 750 + 200 + 75 = 1.025 TL/ay, 10.250 TL/yıl (docs/FIYAT_ARASTIRMASI.md).
+  // Çay bahçesi: 750 + 200 + 30 = 980 TL/ay, 9.800 TL/yıl (15 Ekim, the owner's prices: docs/FIYAT_VE_RAKIPLER_2026-10.md E).
   const cay = priceFor(['core', 'qr-menu', 'email-reports']);
-  assert.deepEqual(cay, { monthly: 1025 * TL, yearly: 10250 * TL, listMonthly: 1025 * TL, listYearly: 10250 * TL });
+  assert.deepEqual(cay, { monthly: 980 * TL, yearly: 9800 * TL, listMonthly: 980 * TL, listYearly: 9800 * TL });
   // A changed price, a typed yearly price, a package discount (%) and a business discount (₺/ay, ×10 for the year).
   const prices = { core: { monthly: 800 * TL }, 'qr-menu': { monthly: 200 * TL, yearly: 1800 * TL } };
   const p = priceFor(['core', 'qr-menu'], prices, { kind: 'percent', value: 10 }, { kind: 'amount', value: 50 * TL });
   assert.equal(p.listMonthly, 1000 * TL); assert.equal(p.listYearly, 9800 * TL);
   assert.equal(p.monthly, 900 * TL - 50 * TL); assert.equal(p.yearly, Math.round(9800 * TL * 0.9) - 500 * TL);
   assert.equal(priceFor(['core'], {}, { kind: 'amount', value: 99999 * TL }).monthly, 0, 'never below zero');
-  assert.equal(periodPrice(cay, 6), 6 * 1025 * TL); assert.equal(periodPrice(cay, 12), 10250 * TL);
-  assert.equal(monthlyRevenue(cay, 12), Math.round(10250 * TL / 12)); assert.equal(monthlyRevenue(cay, 1), 1025 * TL);
+  assert.equal(periodPrice(cay, 6), 6 * 980 * TL); assert.equal(periodPrice(cay, 12), 9800 * TL);
+  assert.equal(monthlyRevenue(cay, 12), Math.round(9800 * TL / 12)); assert.equal(monthlyRevenue(cay, 1), 980 * TL);
   // The old plans: everything sellable; menu only = everything but QR ordering.
   assert.deepEqual(legacyFeatures('full'), features.filter(f => !f.soon).map(f => f.id));
   assert.deepEqual(legacyFeatures('menu'), sellableFeatures().filter(f => f !== 'qr-order'));
@@ -45,8 +45,22 @@ test('prices: package totals follow the services, their requirements and discoun
   assert.equal(features.some(f => (f.id as string) === 'manager-role'), false);
   const pro = defaultPackages.find(p => p.id === 'restoran-pro')!;
   assert.equal(pro.features.includes('cloud-backup'), true);
-  // 6 Ekim: Sosyal medya ve QR kartları (₺75) is a paid service, in Restoran Pro.
-  assert.equal(monthlyTotal(pro.features), 2450 * TL);
+  // 6 Ekim: Sosyal medya ve QR kartları is a paid service, in Restoran Pro. 15 Ekim: Restoran Pro ₺2.600/ay, no discount.
+  assert.equal(monthlyTotal(pro.features), 2600 * TL);
+  // 15 Ekim (owner): the starting packages with their discounts: Çay bahçesi ₺980, Kafe Standart ₺2.060 − ₺110 = ₺1.950, Restoran Pro ₺2.600.
+  const starting = new Map(startingPackages('').map(p => [p.id, priceFor(p.features, {}, p.discount)]));
+  assert.deepEqual(starting.get('cay-bahcesi'), { monthly: 980 * TL, yearly: 9800 * TL, listMonthly: 980 * TL, listYearly: 9800 * TL });
+  assert.deepEqual(starting.get('kafe-standart'), { monthly: 1950 * TL, yearly: 19500 * TL, listMonthly: 2060 * TL, listYearly: 20600 * TL });
+  assert.deepEqual(starting.get('restoran-pro'), { monthly: 2600 * TL, yearly: 26000 * TL, listMonthly: 2600 * TL, listYearly: 26000 * TL });
+  // "Uzaktan erişim" (15 Ekim): one service, ₺130; Uzaktan yönetim comes with it, is never priced on its own (a stored price from
+  // before is ignored), and leaves with it.
+  assert.deepEqual(normalFeatures(['remote-reports']), ['core', 'remote-reports', 'remote-admin']);
+  assert.deepEqual(normalFeatures(['remote-admin']), ['core', 'remote-reports', 'remote-admin']);
+  assert.deepEqual(withoutFeature(['core', 'remote-reports', 'remote-admin'], 'remote-reports'), ['core']);
+  assert.deepEqual(addedFor(['core', 'remote-reports', 'remote-admin']), [], 'nothing is "brought along" on screen');
+  assert.equal(priceFor(['core', 'remote-reports', 'remote-admin'], { 'remote-admin': { monthly: 100 * TL } }).monthly, 880 * TL);
+  assert.equal(monthlyTotal(['remote-reports', 'remote-admin'], { 'remote-admin': 100 * TL }), 130 * TL);
+  assert.deepEqual(defaultPackages.find(p => p.id === 'kafe-standart')!.features.filter(id => id.startsWith('remote')), ['remote-reports', 'remote-admin']);
   assert.ok(legacyFeatures('full').includes('cloud-backup'), 'Tam sistem (eski plan) keeps every sellable service');
   // "Yakında" (Paket servis platformları) is in no licence, the trial's neither; only the browser tests' Merkez opens it on old plans.
   for (const b of [{ kind: 'trial' as const }, { kind: 'subscription' as const, service: 'full' as const }]) assert.equal(licenseFeatures(b).includes('integrations'), false);
@@ -73,7 +87,7 @@ test('old data with the retired "manager-role" (prices, packages, Özel, old pla
   const cat = (await pair.admin('/catalog')).data;
   assert.ok(!cat.features.some((f: any) => f.id === 'manager-role'));
   const pro = cat.packages.find((p: any) => p.id === 'restoran-pro');
-  assert.equal(pro.price.monthly, 2450 * TL);
+  assert.equal(pro.price.monthly, 2600 * TL);
   // The package comes back from the screen as it was shown and saves; the business's price leaves the old service out.
   assert.equal((await pair.admin('/packages', { requestId: rid(), id: pro.id, name: pro.name, features: pro.features, discount: { kind: 'percent', value: 5 }, expectedUpdatedAt: pro.updatedAt })).status, 200);
   const b = (await pair.admin('/state')).data.businesses.find((x: any) => x.tenantId === 'mola-demo');
@@ -147,6 +161,75 @@ test('first start of this version: starting packages, every old business on its 
   assert.equal(store.read().businesses.find(b => b.tenantId === 'tam')!.serial, 5);
 });
 
+test('catalogue step 4 (15 Ekim): the owner’s 2026-10 prices and "Uzaktan erişim" once; later edits survive a restart', async t => {
+  // The owner's list, KDV hariç, ₺/ay (integrations, "Yakında", keeps its own price).
+  const LIST: Partial<Record<FeatureId, number>> = { core: 750, 'qr-menu': 200, 'qr-order': 300, stock: 650, 'remote-reports': 130, 'email-reports': 30, 'reports-advanced': 100, reservations: 50, social: 20, shifts: 20, 'split-screen': 50, 'cloud-backup': 300 };
+  const dir = temp('packages-2026-10'), key = randomBytes(32);
+  const old = new MerkezStore(join(dir, 'merkez'), key, { initialPassword: MERKEZ_PASSWORD });
+  const installId = randomUUID(), at = '2026-10-12T09:00:00.000Z', end = new Date(Date.now() + 90 * 86400000).toISOString();
+  // A live Merkez after step 3: the vendor typed some prices (a yearly one too, and one for Uzaktan yönetim), gave Restoran Pro
+  // 5 %, made his own package; Kafe Standart from before (Uzaktan raporlar only), an Özel business with its own discount.
+  const before: FeatureId[] = ['core', 'qr-menu', 'qr-order', 'stock', 'remote-reports', 'email-reports'];
+  old.mutate(d => {
+    d.installs.push({ id: installId, secret: 'x'.repeat(43), createdAt: at, lastSeenAt: at });
+    const packages = startingPackages(at).map(p => p.id === 'kafe-standart' ? { ...p, features: before, discount: undefined } : p.id === 'restoran-pro' ? { ...p, discount: { kind: 'percent' as const, value: 5 } } : p);
+    packages.push({ id: 'kendi-paketim', name: 'Kendi paketim', features: ['core', 'remote-reports'], discount: { kind: 'amount', value: 50 * TL }, createdAt: at, updatedAt: at });
+    d.catalog = { prices: { core: { monthly: 800 * TL }, stock: { monthly: 250 * TL, yearly: 2000 * TL }, 'remote-reports': { monthly: 200 * TL }, 'remote-admin': { monthly: 100 * TL }, integrations: { monthly: 150 * TL } }, packages, vatRate: 20, createdAt: at, updatedAt: at, version: 3 };
+    const biz = (tenantId: string, services: MerkezBusiness['services']): MerkezBusiness => ({ tenantId, name: tenantId, source: 'admin', serial: 3, installId, kind: 'subscription', planMonths: 12, endsAt: end, suspended: false, service: 'full', createdAt: at, services });
+    d.businesses.push(biz('standart', { packageId: 'kafe-standart', features: [...before], updatedAt: at }), biz('ozel', { packageId: null, features: ['core', 'remote-reports'], discount: { kind: 'amount', value: 25 * TL }, updatedAt: at }), biz('kendi', { packageId: 'kendi-paketim', features: ['core', 'remote-reports'], updatedAt: at }));
+  });
+  old.close();
+  const store = new MerkezStore(join(dir, 'merkez'), key); t.after(() => store.close());
+  createMerkezApp(store);
+  let d = store.read();
+  assert.equal(d.catalog!.version, CATALOG_VERSION);
+  // Prices: exactly the list, yearly ×10 (the typed one is gone); Uzaktan yönetim is not listed nor priced; integrations kept.
+  const view = catalogView(d);
+  for (const [id, monthly] of Object.entries(LIST)) { const f = view.features.find(x => x.id === id)!; assert.equal(f.monthly, monthly! * TL, id); assert.equal(f.yearly, monthly! * 10 * TL, id); assert.equal(f.yearlyTyped, false, id); }
+  assert.equal(view.features.some(f => f.id === 'remote-admin'), false, 'one service: "Uzaktan erişim"');
+  assert.equal(view.features.find(f => f.id === 'remote-reports')!.name, 'Uzaktan erişim');
+  assert.equal(view.features.find(f => f.id === 'integrations')!.monthly, 150 * TL);
+  assert.equal(d.catalog!.prices['remote-admin'], undefined);
+  // The starting packages: 980 / 1.950 / 2.600; the vendor's own package and the old plans keep their contents.
+  const pkg = (id: string) => view.packages.find(p => p.id === id)!;
+  assert.deepEqual(['cay-bahcesi', 'kafe-standart', 'restoran-pro'].map(id => pkg(id).price.monthly), [980 * TL, 1950 * TL, 2600 * TL]);
+  assert.deepEqual(pkg('kafe-standart').discount, { kind: 'amount', value: 110 * TL }); assert.equal(pkg('restoran-pro').discount, undefined);
+  assert.deepEqual(pkg('kafe-standart').features, ['core', 'qr-menu', 'qr-order', 'stock', 'remote-reports', 'remote-admin', 'email-reports']);
+  assert.deepEqual(pkg('kendi-paketim').features, ['core', 'remote-reports']); assert.deepEqual(pkg('kendi-paketim').discount, { kind: 'amount', value: 50 * TL });
+  assert.deepEqual(pkg(LEGACY_FULL).features, legacyFeatures('full'));
+  // Kafe Standart's business follows (its licence now holds Uzaktan yönetim, signed again); the others are untouched.
+  const one = (id: string) => d.businesses.find(b => b.tenantId === id)!;
+  assert.ok(one('standart').services!.features.includes('remote-admin'));
+  assert.ok(verifyLicense(one('standart').signed, publicKeyFrom(store.publicKey)).features!.includes('remote-admin'));
+  assert.deepEqual(one('ozel').services!.features, ['core', 'remote-reports']); assert.deepEqual(one('ozel').services!.discount, { kind: 'amount', value: 25 * TL });
+  assert.deepEqual(one('kendi').services!.features, ['core', 'remote-reports']);
+  const serial = one('standart').serial;
+  // One line in İşlem kayıtları, with the old → new values.
+  const lines = d.audit.filter(a => a.action === 'catalog.prices_2026_10');
+  assert.equal(lines.length, 1); assert.match(lines[0].detail!, /^Fiyatlar 2026-10 listesine güncellendi/); assert.match(lines[0].detail!, /Kafe Standart ₺1\.950/);
+  const changes = journalRows(store.journal.entries()).find(r => r.action === 'catalog.prices_2026_10')!.changes!;
+  assert.ok(changes.some(c => c.field === 'Adisyon çekirdeği' && /₺800/.test(c.from ?? '') && /₺750/.test(c.to ?? '')));
+  assert.ok(changes.some(c => c.field === 'Uzaktan yönetim' && c.to === 'Uzaktan erişim içinde'));
+  assert.ok(changes.some(c => c.field === 'Kafe Standart paket indirimi' && c.to === '₺110/ay indirim'));
+  // A second start changes nothing.
+  createMerkezApp(store);
+  d = store.read();
+  assert.equal(d.audit.filter(a => a.action === 'catalog.prices_2026_10').length, 1); assert.equal(one('standart').serial, serial);
+  // The owner changes a price and a package afterwards: a restart keeps them.
+  store.mutate(x => { x.catalog!.prices.core = { monthly: 800 * TL }; x.catalog!.packages.find(p => p.id === 'kafe-standart')!.discount = { kind: 'amount', value: 60 * TL }; });
+  createMerkezApp(store);
+  d = store.read();
+  assert.equal(d.catalog!.prices.core!.monthly, 800 * TL); assert.deepEqual(d.catalog!.packages.find(p => p.id === 'kafe-standart')!.discount, { kind: 'amount', value: 60 * TL });
+  assert.equal(d.audit.filter(a => a.action === 'catalog.prices_2026_10').length, 1);
+  // A new Merkez simply starts with the list (no line: there was nothing before).
+  const fresh = new MerkezStore(join(temp('packages-2026-10-fresh'), 'merkez'), randomBytes(32), { initialPassword: MERKEZ_PASSWORD }); t.after(() => fresh.close());
+  createMerkezApp(fresh);
+  const f = catalogView(fresh.read());
+  assert.equal(fresh.read().catalog!.version, CATALOG_VERSION);
+  assert.deepEqual(['cay-bahcesi', 'kafe-standart', 'restoran-pro'].map(id => f.packages.find(p => p.id === id)!.price.monthly), [980 * TL, 1950 * TL, 2600 * TL]);
+  assert.equal(fresh.read().audit.some(a => a.action === 'catalog.prices_2026_10'), false);
+});
+
 test('O6: an install that only held the old licence copy keeps its services and moves to the one listed licence on the heartbeat', async t => {
   const pair = await merkezPair('packages-o6', { demo: true }); t.after(() => pair.close());
   await pair.adminLogin(); await pair.adminStepUp();
@@ -208,7 +291,7 @@ test('trial = every service; after it the package; Özel with a discount; the ca
   assert.equal((await pair.admin('/business-services', { requestId: rid(), tenantId: 'mola-demo', packageId: null, features: ['qr-order', 'stock'], discount: { kind: 'percent', value: 10 }, expectedUpdatedAt: b.services.updatedAt })).status, 200);
   b = await state();
   assert.equal(b.services.packageName, 'Özel'); assert.deepEqual(b.services.features, ['core', 'qr-menu', 'qr-order', 'stock']);
-  assert.equal(b.services.price.monthly, Math.round((750 + 200 + 150 + 250) * TL * 0.9));
+  assert.equal(b.services.price.monthly, Math.round((750 + 200 + 300 + 650) * TL * 0.9));
   await pair.link.sync();
   claims = pair.link.claims('mola-demo')!;
   assert.deepEqual(claims.features, ['core', 'qr-menu', 'qr-order', 'stock']); assert.equal(claims.service, 'full');
@@ -233,7 +316,7 @@ test('packages and prices: build, edit (businesses on it follow), archive, dupli
   const id = created.data.id;
   let cat = (await pair.admin('/catalog')).data, pkg = cat.packages.find((p: any) => p.id === id);
   assert.deepEqual(pkg.features, ['core', 'qr-menu', 'qr-order', 'reservations']);
-  assert.equal(pkg.price.monthly, (750 + 200 + 150 + 150 - 100) * TL); assert.equal(pkg.price.yearly, (750 + 200 + 150 + 150) * 10 * TL - 1000 * TL);
+  assert.equal(pkg.price.monthly, (750 + 200 + 300 + 50 - 100) * TL); assert.equal(pkg.price.yearly, (750 + 200 + 300 + 50) * 10 * TL - 1000 * TL);
   assert.equal((await pair.admin('/packages', { requestId: rid(), name: 'kahve köşesi', features: ['core'], discount: null })).data.code, 'NAME_TAKEN');
   assert.equal((await pair.admin('/packages', { requestId: rid(), name: 'Yakında', features: ['integrations'], discount: null })).data.code, 'FEATURE_SOON');
   // Put it on the demo business (subscription), then add stock to the package: the business follows, its licence is signed again.
@@ -251,7 +334,7 @@ test('packages and prices: build, edit (businesses on it follow), archive, dupli
   assert.equal((await pair.admin('/business-services', { requestId: rid(), tenantId: 'other-demo', packageId: id, discount: null })).data.code, 'PACKAGE_UNAVAILABLE');
   assert.equal((await pair.admin('/business-services', { requestId: rid(), tenantId: 'mola-demo', packageId: id, discount: { kind: 'percent', value: 5 } })).status, 200);
   // Prices: QR menü 250 TL; the yearly price of core typed; only real changes are written.
-  assert.equal((await pair.admin('/catalog/prices', { requestId: rid(), prices: [{ id: 'qr-menu', monthly: 250 * TL, yearly: null }, { id: 'core', monthly: 750 * TL, yearly: 7000 * TL }, { id: 'stock', monthly: 250 * TL, yearly: null }] })).data.changed, 2);
+  assert.equal((await pair.admin('/catalog/prices', { requestId: rid(), prices: [{ id: 'qr-menu', monthly: 250 * TL, yearly: null }, { id: 'core', monthly: 750 * TL, yearly: 7000 * TL }, { id: 'stock', monthly: 650 * TL, yearly: null }] })).data.changed, 2);
   cat = (await pair.admin('/catalog')).data;
   const qr = cat.features.find((f: any) => f.id === 'qr-menu'), core = cat.features.find((f: any) => f.id === 'core'), soon = cat.features.find((f: any) => f.id === 'integrations');
   assert.equal(qr.monthly, 250 * TL); assert.equal(qr.yearly, 2500 * TL); assert.equal(core.yearly, 7000 * TL); assert.equal(core.yearlyTyped, true); assert.equal(soon.soon, true);
@@ -268,8 +351,8 @@ test('Satışlarım: the ledger from an extension and by hand, edits keep histor
   await pair.importDemo(); await pair.adminLogin(); await pair.adminStepUp();
   await pair.admin('/business-services', { requestId: rid(), tenantId: 'mola-demo', packageId: 'kafe-standart', discount: null });
   const b = (await pair.admin('/state')).data.businesses.find((x: any) => x.tenantId === 'mola-demo');
-  // Kafe Standart = 750 + 200 + 150 + 250 + 200 + 75 = 1.625 TL/ay (docs/FIYAT_ARASTIRMASI.md).
-  assert.equal(b.services.price.monthly, 1625 * TL); assert.equal(b.services.price.yearly, 16250 * TL);
+  // Kafe Standart = 750 + 200 + 300 + 650 + 130 + 30 = 2.060 TL/ay − 110 paket indirimi = 1.950 TL/ay (15 Ekim, the owner's prices).
+  assert.equal(b.services.price.monthly, 1950 * TL); assert.equal(b.services.price.yearly, 19500 * TL); assert.equal(b.services.packagePrice.listMonthly, 2060 * TL);
   assert.equal((await pair.admin('/licenses', { requestId: rid(), tenantId: 'mola-demo', expectedEnd: b.endsAt, expectedSuspended: false, months: 12, suspended: false, payment: { net: 16250 * TL, method: 'card', status: 'paid' } })).status, 200);
   assert.equal((await pair.admin('/licenses', { requestId: rid(), tenantId: 'mola-demo', expectedEnd: b.endsAt, expectedSuspended: false, months: 0, suspended: false, payment: { net: 1, method: 'card' } })).status, 400, 'a payment needs an extension');
   const manual = await pair.admin('/sales', { requestId: rid(), tenantId: 'other-demo', day: new Date().toISOString().slice(0, 10), months: 1, net: 1000 * TL, vatRate: 20, method: 'cash', status: 'unpaid', invoiceNo: 'A-2' });
@@ -278,7 +361,7 @@ test('Satışlarım: the ledger from an extension and by hand, edits keep histor
   assert.equal(sales.entries.length, 2);
   // MRR: the yearly Kafe Standart counts as a twelfth of its yearly price; the other demo business (old plan) too.
   const other = (await pair.admin('/state')).data.businesses.find((x: any) => x.tenantId === 'other-demo');
-  assert.equal(sales.kpis.mrr.total, Math.round(16250 * TL / 12) + Math.round(other.services.price.yearly / 12)); assert.equal(sales.kpis.mrr.count, 2);
+  assert.equal(sales.kpis.mrr.total, Math.round(19500 * TL / 12) + Math.round(other.services.price.yearly / 12)); assert.equal(sales.kpis.mrr.count, 2);
   assert.equal(sales.kpis.pending.count, 1); assert.equal(sales.kpis.pending.gross, 1200 * TL);
   assert.equal(sales.kpis.collected, 16250 * TL * 1.2);
   // KDV: 20% of both.

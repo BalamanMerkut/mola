@@ -39,7 +39,8 @@ test('web sitesi formu: a café owner asks for a call; Mola Yönetim shows it as
   await expect(form.locator('[data-field="email"] .error')).toHaveText('E-posta adresinizi yazın.');
   await form.getByLabel('E-posta *').fill('mehmet@example.com');
   await expect(form.getByLabel('Şehir')).toHaveValue('Elazığ');
-  await form.getByLabel(/Masa sayısı/).fill('24');
+  // "Masa sayısı" is no longer asked (15 Ekim).
+  await expect(form.getByLabel(/Masa sayısı/)).toHaveCount(0);
   await form.getByText('Çay bahçesi', { exact: true }).click();
   await form.getByLabel(/Mesajınız/).fill('Hafta içi öğleden sonra arayabilirsiniz.');
   await form.getByRole('button', { name: /Gönder/ }).click();
@@ -62,7 +63,8 @@ test('web sitesi formu: a café owner asks for a call; Mola Yönetim shows it as
   const card = vendor.getByRole('listitem', { name: 'Harput Çay Bahçesi Deneme · web sitesi talebi' });
   await expect(card).toContainText('Web sitesi talebi');
   await expect(card).toContainText('Yeni');
-  await expect(card).toContainText('Çay bahçesi · Elazığ · 24 masa');
+  await expect(card).toContainText('Çay bahçesi · Elazığ · Gönderim:');
+  await expect(card).not.toContainText(/\d+ masa/);
   await expect(card).toContainText('Mehmet Demir');
   await expect(card.getByRole('link', { name: '+90 532 765 43 21' })).toHaveAttribute('href', 'tel:+905327654321');
   await expect(card).toContainText('mehmet@example.com');

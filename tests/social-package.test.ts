@@ -19,7 +19,7 @@ import { guestSocial } from '../packages/domain/social-links.js';
 import { client, licensed, MERKEZ_PASSWORD, merkezPair, temp, testLicense, TEST_PUBLIC_KEY } from './merkez-fixture.js';
 
 /*
- * "Sosyal medya ve QR kartları" (`social`, owner's decision 6 Ekim): a paid service (₺75/ay), in Restoran Pro, on the old
+ * "Sosyal medya ve QR kartları" (`social`, owner's decision 6 Ekim): a paid service (₺20/ay since 15 Ekim), in Restoran Pro, on the old
  * plans and in the trial; sold as an add-on to the others. Without it the café keeps the Google review row (core) and the
  * after-payment Google button, refuses the other platforms and the QR cards, hides the follow icons from guests; Merkez's
  * short addresses show "kullanılamıyor"; nothing is deleted. A licence from a Merkez that does not decide `social` yet keeps
@@ -29,13 +29,13 @@ const TL = 100, rid = () => randomUUID().replace(/-/g, '');
 const WITHOUT_SOCIAL = sellableFeatures().filter(id => id !== 'social');
 const strip = (ids: readonly FeatureId[]) => ids.filter(id => id !== 'social');
 
-test('the catalogue: ₺75/ay in Ekler, yearly ×10; Restoran Pro 2.450 TL/ay with it (and Bulutta şifreli yedek); Kafe Standart and Çay bahçesi without; old plans and the trial hold it', () => {
+test('the catalogue: ₺20/ay in Ekler, yearly ×10; Restoran Pro 2.600 TL/ay with it (and Bulutta şifreli yedek); Kafe Standart and Çay bahçesi without; old plans and the trial hold it', () => {
   const f = featureById.get('social')!;
-  assert.equal(f.name, 'Sosyal medya ve QR kartları'); assert.equal(f.group, 'Ekler'); assert.equal(f.monthly, 75 * TL); assert.ok(!f.soon && !f.required);
-  assert.equal(yearlyFromMonthly(f.monthly), 750 * TL);
+  assert.equal(f.name, 'Sosyal medya ve QR kartları'); assert.equal(f.group, 'Ekler'); assert.equal(f.monthly, 20 * TL); assert.ok(!f.soon && !f.required);
+  assert.equal(yearlyFromMonthly(f.monthly), 200 * TL);
   const pkg = (id: string) => defaultPackages.find(p => p.id === id)!.features;
   assert.ok(pkg('restoran-pro').includes('social'));
-  assert.equal(monthlyTotal(pkg('restoran-pro')), 2450 * TL);
+  assert.equal(monthlyTotal(pkg('restoran-pro')), 2600 * TL);
   assert.equal(pkg('kafe-standart').includes('social'), false); assert.equal(pkg('cay-bahcesi').includes('social'), false);
   assert.ok(legacyFeatures('full').includes('social')); assert.ok(legacyFeatures('menu').includes('social'));
   assert.ok(licenseFeatures({ kind: 'trial' }).includes('social'));
@@ -150,7 +150,9 @@ test('Merkez update: the old plans get "social", their businesses and trials are
   assert.equal(d.catalog!.version, CATALOG_VERSION);
   const stored = (id: string) => d.catalog!.packages.find(p => p.id === id)!.features;
   assert.deepEqual(stored(LEGACY_FULL), legacyFeatures('full')); assert.deepEqual(stored(LEGACY_MENU), legacyFeatures('menu'));
-  assert.equal(stored('restoran-pro').includes('social'), false, 'a stored package is the vendor’s: not rewritten');
+  // Step 2 leaves a stored package alone (the vendor's); step 4 (15 Ekim, the owner's 2026-10 list) then gives the three starting
+  // packages their starting contents once: Restoran Pro holds it from there, Kafe Standart does not.
+  assert.equal(stored('restoran-pro').includes('social'), true);
   assert.equal(stored('kafe-standart').includes('social'), false);
   // Old plans and the trial: signed again (step 2, serial + 1) with `social`, then step 3 (11 Ekim) signs every connected
   // business once more as its one licence with the list (serial + 1): no copy without features any more.
@@ -161,8 +163,10 @@ test('Merkez update: the old plans get "social", their businesses and trials are
   }
   assert.deepEqual(one('tam').services!.features, legacyFeatures('full'));
   assert.deepEqual(verifyLicense(one('menu').signed, pub).features, legacyFeatures('menu'));
-  // Packages without it: step 2 had nothing to sign; step 3 signs them with their list, still without `social`.
-  assert.equal(one('standart').serial, 8); assert.equal(one('pro').serial, 8);
+  // Packages without it: step 2 had nothing to sign; step 3 signs them with their list, still without `social`; step 4 gives
+  // Restoran Pro its starting contents (with `social`): its business follows and is signed once more.
+  assert.equal(one('standart').serial, 8); assert.equal(one('pro').serial, 9);
+  assert.ok(verifyLicense(one('pro').signed, pub).features!.includes('social'));
   assert.equal(verifyLicense(one('standart').signed, pub).features!.includes('social'), false);
   const line = d.audit.filter(a => a.action === 'catalog.service_added');
   assert.equal(line.length, 1); assert.match(line[0].detail!, /Eski planlara eklendi \(2 işletme\); 3 işletmenin lisansı yeniden imzalandı/);

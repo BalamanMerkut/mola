@@ -4,6 +4,7 @@
  *   npm.cmd run site:dev       build, serve on http://127.0.0.1:5180 and rebuild on every change (scripts/site-dev.ts)
  * Sources: site/src/layout.html (head, header, footer), site/src/pages/*.html (one page each, a `<!--page …-->` block on
  * top), site/src/assets (CSS, JS, videos and stills from `npm run site:videos`), site/config.json (phone, WhatsApp, e-mail…).
+ * Mola Yardım (the "Yardım" button): site/src/assets/yardim.json → assets/yardim.js (scripts/site-yardim.ts; no AI, no request).
  * The service and package lists come from packages/domain/features.ts (names, "Yakında", what each package holds; never a
  * price), the form's limits and KVKK text version from packages/domain/site-lead.ts. Icons are lucide (the app's own set),
  * drawn into the HTML at build time: the site loads no script, font or style from anywhere else and sets no cookie.
@@ -18,6 +19,7 @@ import * as lucide from 'lucide-react';
 import sharp from 'sharp';
 import { defaultPackages, featureById, features, type FeatureId } from '../packages/domain/features.js';
 import { SITE_CONSENT_VERSION, SITE_LEAD_LIMITS, SITE_LEAD_TYPE_NAMES, SITE_LEAD_TYPES } from '../packages/domain/site-lead.js';
+import { yardimScript } from './site-yardim.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const SITE = join(ROOT, 'site'), SRC = join(SITE, 'src'), DIST = join(SITE, 'dist');
@@ -34,7 +36,8 @@ export type DownloadFile = { file: string; size: number; sha256: string };
 export type Downloads = { enabled: boolean; version: string; builtAt?: string; files: Partial<Record<Platform, DownloadFile>> };
 type Config = { siteUrl: string; phone: string; whatsapp: string; email: string; address: string; hours: string; company: string; legalDraft: boolean; legalUpdated: string; downloads?: Downloads };
 type Video = { name: string; caption: string; kind: 'phone' | 'desktop'; seconds?: number; kb?: number };
-type PageMeta = { path: string; title: string; description: string; nav?: string; robots?: string; file: string; body: string };
+/** help: "off" leaves out the round "Yardım" button (the home page: it is for people who already use Mola). */
+type PageMeta = { path: string; title: string; description: string; nav?: string; robots?: string; help?: string; file: string; body: string };
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
@@ -67,7 +70,7 @@ const SERVICE_COPY: Record<FeatureId, { icon: string; text: string }> = {
   reservations: { icon: 'CalendarDays', text: 'Masa ayırma ve kapora, “Geldi mi?” hatırlatması. Maç ve özel günler için geçici masalarla etkinlik ve ayrı etkinlik raporu.' },
   shifts: { icon: 'Clock', text: 'Kasadaki tek kullanımlık kodla vardiya başlangıcı ve bitişi; çalışma saati, geç kalma, saat başı satış ve bahşiş paylaşımı.' },
   social: { icon: 'Share2', text: 'Instagram, WhatsApp, Google ve diğer bağlantılarınız menünün altında; masaya koyacağınız kalıcı QR kartları.' },
-  'remote-reports': { icon: 'ChartLine', text: 'İşletmede değilken bugünün satışı, kasa ve raporlar telefonunuzda. Uçtan uca şifreli: aradaki sunucu içini göremez.' },
+  'remote-reports': { icon: 'ChartLine', text: 'Telefonunuzdan ya da laptopunuzdan her yerden: satışlar ve raporlar; kasa açıkken menü, ayarlar ve bütün ekranlar. Uçtan uca şifreli, kasa kapalıyken son durum.' },
   'remote-admin': { icon: 'KeyRound', text: 'Eşleştirdiğiniz telefondan kafenizin ekranlarını sahip olarak açın; şifre ve doğrulama koduyla.' },
   'email-reports': { icon: 'Mail', text: 'Gün, hafta, ay ve yıl sonu raporu PDF ekiyle e-postanıza gelir.' },
   'split-screen': { icon: 'Columns2', text: 'Kasa bilgisayarında ekranı ikiye bölün; iki hesap yan yana çalışsın.' },
@@ -82,7 +85,8 @@ const PACKAGE_COPY: Record<string, string> = {
 function servicesHtml() {
   const missing = features.filter(f => !SERVICE_COPY[f.id]).map(f => f.id);
   if (missing.length) throw new Error(`site-build: bu hizmetlerin site metni yok (SERVICE_COPY): ${missing.join(', ')}`);
-  const cards = features.map(f => {
+  // Uzaktan yönetim is part of Uzaktan erişim (15 Ekim): one card, one line in the packages.
+  const cards = features.filter(f => !f.partOf).map(f => {
     const copy = SERVICE_COPY[f.id], chips: string[] = [];
     if (f.required) chips.push('<span class="chip chip-core">Her pakette</span>');
     if (f.soon) chips.push('<span class="chip chip-soon">Yakında</span>');
@@ -93,7 +97,7 @@ function servicesHtml() {
 }
 function packagesHtml() {
   return `<div class="packages">${defaultPackages.map(p => {
-    const list = p.features.map(id => featureById.get(id)).filter(f => f && !f.soon).map(f => `<li>${icon('Check', 18)}${esc(f!.name)}</li>`).join('');
+    const list = p.features.map(id => featureById.get(id)).filter(f => f && !f.soon && !f.partOf).map(f => `<li>${icon('Check', 18)}${esc(f!.name)}</li>`).join('');
     return `<article class="package reveal${p.id === 'kafe-standart' ? ' featured' : ''}" data-paket="${esc(p.id)}"><h3>${esc(p.name)}</h3><p>${esc(PACKAGE_COPY[p.id] ?? '')}</p><ul>${list}</ul><a class="btn ${p.id === 'kafe-standart' ? 'btn-primary' : 'btn-ghost'}" href="/iletisim/#form">Bu paketi soralım</a></article>`;
   }).join('\n')}</div>`;
 }
@@ -156,14 +160,22 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
     for (const entry of readdirSync(from)) {
       const a = join(from, entry), b = join(to, entry);
       if (statSync(a).isDirectory()) { mkdirSync(b, { recursive: true }); copyTree(a, b); }
-      else if (!['videolar.json', 'site.css', 'site.js'].includes(entry)) copyFileSync(a, b);
+      else if (!['videolar.json', 'site.css', 'site.js', 'yardim.json', 'yardim.js'].includes(entry)) copyFileSync(a, b);
     }
   };
   copyTree(join(SRC, 'assets'), join(dist, 'assets'));
   const css = readFileSync(join(SRC, 'assets', 'site.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').replace(/\s*([{};,>])\s*/g, '$1').replace(/;}/g, '}').trim();
   const js = readFileSync(join(SRC, 'assets', 'site.js'), 'utf8');
   writeFileSync(join(dist, 'assets', 'site.css'), css); writeFileSync(join(dist, 'assets', 'site.js'), js);
-  const version = (s: string) => createHash('sha256').update(s).digest('hex').slice(0, 10);
+  const version = (s: string | Buffer) => createHash('sha256').update(s).digest('hex').slice(0, 10);
+  // Mola Yardım: the questions (site/src/assets/yardim.json) inside assets/yardim.js; site.js loads it on first open. Its
+  // picture (brand/merkut-studios/yardimci, copied to site/src/assets/img) is versioned: /assets is cached for a week.
+  const avatarFiles = ['yardimci-96.png', 'yardimci-256.png'].map(f => join(SRC, 'assets', 'img', f));
+  for (const f of avatarFiles) if (!existsSync(f)) throw new Error(`Mola Yardım resmi yok: ${relative(ROOT, f)}`);
+  const avatarVersion = version(Buffer.concat(avatarFiles.map(f => readFileSync(f))));
+  const avatar = { src: `/assets/img/yardimci-96.png?v=${avatarVersion}`, srcset: `/assets/img/yardimci-96.png?v=${avatarVersion} 1x, /assets/img/yardimci-256.png?v=${avatarVersion} 2x` };
+  const yardim = yardimScript(SRC, avatar);
+  writeFileSync(join(dist, 'assets', 'yardim.js'), yardim);
 
   // Icons from the Mola mark (the same drawing as the app and the Android icon).
   const mark = readFileSync(join(ROOT, 'scripts', 'desktop', 'mola-icon.svg'));
@@ -193,6 +205,8 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
     switch (name) {
       case 'icon': return icon(arg!);
       case 'year': return year;
+      // The Mola Yardım picture on the Destek ve İletişim card (decoration: the card's title names it).
+      case 'yardimAvatar': return `<img class="yardim-kart-avatar" src="${avatar.src}" srcset="${avatar.srcset}" width="64" height="64" alt="" loading="lazy" decoding="async">`;
       case 'siteUrl': return config.siteUrl;
       case 'email': return esc(config.email);
       case 'address': return esc(config.address);
@@ -236,14 +250,15 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
   const layout = readFileSync(join(SRC, 'layout.html'), 'utf8');
   const pages = readdirSync(join(SRC, 'pages')).filter(f => f.endsWith('.html')).map(file => parsePage(file, readFileSync(join(SRC, 'pages', file), 'utf8')));
   const footerContact = [`<li data-iletisim="phone"${phoneHref ? '' : ' hidden'}><a href="${phoneHref || '#'}">Telefon</a></li>`, `<li data-iletisim="whatsapp"${waHref ? '' : ' hidden'}><a href="${esc(waHref || '#')}" rel="noopener">WhatsApp</a></li>`, `<li data-iletisim="email"><a href="${mailHref}">${esc(config.email)}</a></li>`].join('');
-  const cssVersion = version(css), jsVersion = version(js);
+  const cssVersion = version(css), jsVersion = version(js), yardimVersion = version(yardim);
+  const helpButton = `<button class="yardim-fab" type="button" data-yardim-ac hidden title="Mola Yardım"><img src="${avatar.src}" srcset="${avatar.srcset}" width="60" height="60" alt="Mola Yardım" decoding="async"></button>`;
   for (const page of pages) {
     const content = fill(page.body, page);
     const canonical = `${config.siteUrl}${page.path === '404' ? '/' : page.path}`;
     const structured = page.path === '/' ? `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'Mola', applicationCategory: 'BusinessApplication', operatingSystem: 'Windows, Android, iOS (web)', description: page.description, url: config.siteUrl, inLanguage: 'tr', publisher: { '@type': 'Organization', name: config.company, email: config.email, address: { '@type': 'PostalAddress', addressLocality: config.address, addressCountry: 'TR' } } })}</script>` : '';
     let html = layout.replace('{{content}}', () => content).replace('{{structuredData}}', () => structured)
       .replace(/\{\{current:([a-z]+)\}\}/g, (_m, nav: string) => nav === page.nav ? 'aria-current="page"' : '')
-      .replace(/\{\{(pageTitle|description|canonical|robots|cssVersion|jsVersion|footerContact)\}\}/g, (_m, k: string) => ({ pageTitle: esc(page.title), description: esc(page.description), canonical: esc(canonical), robots: page.robots ?? 'index, follow', cssVersion, jsVersion, footerContact } as Record<string, string>)[k]);
+      .replace(/\{\{(pageTitle|description|canonical|robots|cssVersion|jsVersion|yardimVersion|helpButton|footerContact)\}\}/g, (_m, k: string) => ({ pageTitle: esc(page.title), description: esc(page.description), canonical: esc(canonical), robots: page.robots ?? 'index, follow', cssVersion, jsVersion, yardimVersion, helpButton: page.help === 'off' ? '' : helpButton, footerContact } as Record<string, string>)[k]);
     html = fill(html, page);
     const out = page.path === '404' ? join(dist, '404.html') : join(dist, page.path, 'index.html');
     mkdirSync(dirname(out), { recursive: true });
@@ -278,7 +293,7 @@ function parsePage(file: string, text: string): PageMeta {
   const meta: Record<string, string> = {};
   for (const line of m[1].split('\n')) { const i = line.indexOf(':'); if (i > 0) meta[line.slice(0, i).trim()] = line.slice(i + 1).trim(); }
   if (!meta.path || !meta.title || !meta.description) throw new Error(`${file}: path, title ve description gerekli.`);
-  return { path: meta.path, title: meta.title, description: meta.description, nav: meta.nav, robots: meta.robots, file, body: text.slice(m[0].length) };
+  return { path: meta.path, title: meta.title, description: meta.description, nav: meta.nav, robots: meta.robots, help: meta.help, file, body: text.slice(m[0].length) };
 }
 
 /** The Open Graph picture (1200 × 630): the green Mola panel, the promise and the guest menu on a phone. */

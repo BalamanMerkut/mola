@@ -94,10 +94,12 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await yonetimPackages(page, 'Paketler');
   const list = page.getByRole('region', { name: 'Paketler' });
   for (const name of ['Çay bahçesi', 'Kafe Standart', 'Restoran Pro']) await expect(list.getByRole('article', { name })).toBeVisible();
-  await expect(list.getByRole('article', { name: 'Kafe Standart' })).toContainText('₺1.625');
-  // 6 Ekim: Restoran Pro without Bulutta şifreli yedek (sold apart) and without a separate Müdür rolü (in the core), with
-  // Sosyal medya ve QR kartları (₺75) and Bulutta şifreli yedek (₺100, 14 Ekim): 2.450 TL/ay.
-  await expect(list.getByRole('article', { name: 'Restoran Pro' })).toContainText('₺2.450');
+  // 15 Ekim (owner's prices): Kafe Standart ₺2.060 − ₺110 = ₺1.950/ay with "Uzaktan erişim" (one chip: Uzaktan yönetim is inside it).
+  const standart = list.getByRole('article', { name: 'Kafe Standart' });
+  await expect(standart).toContainText('₺1.950'); await expect(standart).toContainText('₺110/ay indirim');
+  await expect(standart.getByRole('list', { name: 'Hizmetler' })).toContainText('Uzaktan erişim'); await expect(standart).not.toContainText('Uzaktan yönetim');
+  // Restoran Pro without a separate Müdür rolü (in the core), with Sosyal medya ve QR kartları and Bulutta şifreli yedek: 2.600 TL/ay.
+  await expect(list.getByRole('article', { name: 'Restoran Pro' })).toContainText('₺2.600');
   await expect(page.locator('main')).not.toContainText('Müdür rolü');
   await expect(list.getByRole('region', { name: 'Eski planlar' })).toContainText('Tam sistem (eski plan)');
   await list.getByRole('button', { name: 'Yeni paket' }).first().click();
@@ -111,12 +113,16 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await expect(builder.locator('.feature-note')).toContainText('QR menü de eklendi');
   await builder.getByText('Rezervasyon ve etkinlik', { exact: true }).click();
   await expect(builder.getByRole('checkbox', { name: /Paket servis platformları/ })).toBeDisabled();
-  // 750 + 200 + 150 + 150 = 1.250 TL/ay; 10% off → 1.125 TL/ay, 11.250 TL/yıl.
+  // "Uzaktan erişim" is one service: one card, no separate "Uzaktan yönetim" to tick (15 Ekim).
+  const uzak = builder.locator('section.feature-group[aria-label="Uzaktan"]');
+  await expect(uzak.getByRole('checkbox')).toHaveCount(2); await expect(uzak).toContainText('Uzaktan erişim'); await expect(uzak).not.toContainText('Uzaktan yönetim');
+  await expect(uzak.locator('.feature-card').filter({ hasText: 'Uzaktan erişim' })).toContainText('₺130');
+  // 750 + 200 + 300 + 50 = 1.300 TL/ay; 10% off → 1.170 TL/ay, 11.700 TL/yıl.
   const total = builder.getByLabel('Paket toplamı');
-  await expect(total).toContainText('₺1.250');
+  await expect(total).toContainText('₺1.300');
   await builder.getByRole('radio', { name: '%' }).click();
   await builder.getByLabel('İndirim yüzdesi').fill('10');
-  await expect(total).toContainText('₺1.125'); await expect(total).toContainText('₺11.250');
+  await expect(total).toContainText('₺1.170'); await expect(total).toContainText('₺11.700');
   await yonetimShot(page, 'paket-olustur.png', info.outputPath('paket-olustur.png'));
   for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `paket oluştur ${width}`).toBe('ok'); }
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -125,7 +131,7 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await confirmStepUp(page, 'Paketi oluştur');
   await expect(list.getByText('“Bahçe Plus” paketi oluşturuldu.')).toBeVisible();
   const card = list.getByRole('article', { name: 'Bahçe Plus' });
-  await expect(card).toContainText('₺1.125'); await expect(card).toContainText('%10 indirim');
+  await expect(card).toContainText('₺1.170'); await expect(card).toContainText('%10 indirim');
   await yonetimShot(page, 'paketler.png', info.outputPath('paketler.png'));
   for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `paketler ${width}`).toBe('ok'); }
   // Hizmet fiyatları: QR menü 250 TL; yearly follows (×10) unless typed; recorded in İşlem kayıtları. Within the
@@ -168,7 +174,7 @@ test('İşletme → Hizmet: Özel with a discount (confirmed), Lisans → "Ödem
   // Start from the Çay bahçesi-like core + QR menü: untick what is not needed, tick Stok.
   const picker = detail.getByRole('group', { name: 'Bu işletmenin hizmetleri' });
   await expect(picker).not.toContainText('Müdür rolü');
-  for (const name of ['QR menü', 'Gelişmiş raporlar', 'Rezervasyon ve etkinlik', 'Vardiya, bahşiş ve personel raporu', 'Uzaktan raporlar', 'İki ekran', 'Bulutta şifreli yedek']) {
+  for (const name of ['QR menü', 'Gelişmiş raporlar', 'Rezervasyon ve etkinlik', 'Vardiya, bahşiş ve personel raporu', 'Uzaktan erişim', 'İki ekran', 'Bulutta şifreli yedek']) {
     const box = picker.getByRole('checkbox', { name: new RegExp(`^${name.replace(/[()]/g, '\\$&')}`) });
     if (await box.isChecked()) await picker.getByText(name, { exact: true }).click();
   }

@@ -29,6 +29,8 @@ import type { MerkezData, MerkezStore } from './store.js';
  */
 export type SiteLeadStatus = 'new' | 'called' | 'closed';
 export type SiteLead = Omit<SiteLeadInput, 'consent' | 'consentVersion'> & {
+  /** "Masa sayısı": only on leads sent before 15 Ekim (the form no longer asks it); kept and shown as it was. */
+  tables?: number;
   id: string; createdAt: string; status: SiteLeadStatus; statusAt?: string;
   /** The KVKK Aydınlatma Metni tick: when, and which text version the page showed. */
   consent: { at: string; version: string };
@@ -156,8 +158,8 @@ export function siteLeadRoutes(app: Express, o: Deps) {
     o.store.mutate(d => {
       book.purge(o.now());
       book.put(lead);
-      addAlert(d, time, 'site.lead', `Web sitesinden yeni bir talep geldi: ${SITE_LEAD_TYPE_NAMES[lead.type]} · ${lead.city}${lead.tables ? ` · ${lead.tables} masa` : ''}. Başvurular → Web sitesi talepleri.`, { key: `site:${lead.id}` });
-      d.audit.push({ action: 'site.lead_received', target: 'merkez', at: time, by: 'system', detail: `${leadRef(lead)}${lead.tables ? ` · ${lead.tables} masa` : ''} · KVKK onayı ${lead.consent.version}` });
+      addAlert(d, time, 'site.lead', `Web sitesinden yeni bir talep geldi: ${SITE_LEAD_TYPE_NAMES[lead.type]} · ${lead.city}. Başvurular → Web sitesi talepleri.`, { key: `site:${lead.id}` });
+      d.audit.push({ action: 'site.lead_received', target: 'merkez', at: time, by: 'system', detail: `${leadRef(lead)} · KVKK onayı ${lead.consent.version}` });
     });
     over(saved, ip, LEAD_LIMITS.perAddressHour, 3600_000); over(daily, 'all', LEAD_LIMITS.perDay, DAY);
     used.set(nonce, { id: lead.id, until: issued + FORM_KEY_HOURS * 3600_000 });

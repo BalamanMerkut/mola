@@ -7,7 +7,7 @@ import { sameBusinessName, showPhone } from '../packages/domain/invoice';
 import { AGREEMENT_VERSION } from '../packages/domain/agreement';
 import { api, money, moneyError, moneyInput, parseMoney, requestId } from './api';
 import { periodPrice } from '../packages/domain/service-pricing';
-import type { CatalogView } from './platformCatalog';
+import { serviceCount, type CatalogView } from './platformCatalog';
 import { Notice } from './components';
 import { LicenseFreeze } from './LicenseFreeze';
 import { BusinessProgress, PlatformAudit, type AuditEntry } from './PlatformBusiness';
@@ -101,7 +101,7 @@ export function BusinessDetail({ business: l, catalog, tickets, audit, tab, onTa
   const packageName = l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem';
   const facts: [string, string, string?, Tone?][] = applying ? [] : [
     ['Son bağlantı', l.activation === 'pending' ? 'Etkinleştirilmedi' : seenAgo(l.lastSeenAt), l.lastSeenAt ? dateTime(l.lastSeenAt) : undefined, offline(l) && !l.suspended ? 'bad' : undefined],
-    ['Paket', packageName, l.services ? `${l.services.features.length} hizmet` : undefined],
+    ['Paket', packageName, l.services ? `${serviceCount(l.services.features)} hizmet` : undefined],
     ['Lisans', l.endsAt ? (l.active ? `${l.daysRemaining} gün kaldı` : 'Süresi doldu') : 'Başlamadı', l.endsAt ? `Bitiş ${shortDate(l.endsAt)}` : planText(l), l.endsAt && !l.active ? 'bad' : expiresSoon(l) ? 'warn' : undefined],
   ];
   const phone = l.invoice?.phone;
@@ -162,7 +162,7 @@ function Summary({ l, onTab, disabled, mutate, onOpen }: { l: Business; onTab: (
   const licence: Line[] = [
     { label: 'Durum', value: status.label, tone: status.tone },
     { label: 'Lisans bitişi', value: l.endsAt ? shortDate(l.endsAt) : 'Başlamadı', sub: l.endsAt ? (l.active ? `${l.daysRemaining} gün kaldı` : 'Süresi doldu') : planText(l), tone: l.endsAt && !l.active ? 'bad' : expiresSoon(l) ? 'warn' : undefined },
-    { label: 'Paket', value: l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem', sub: l.services ? `${l.services.features.length} hizmet${l.services.chosen ? ` · ${money(l.services.price.monthly)}/ay` : ''}` : undefined },
+    { label: 'Paket', value: l.services ? l.services.packageName : l.service === 'menu' ? 'Sadece QR menü' : 'Tam sistem', sub: l.services ? `${serviceCount(l.services.features)} hizmet${l.services.chosen ? ` · ${money(l.services.price.monthly)}/ay` : ''}` : undefined },
     { label: 'Sözleşme', ...agreementFact(l) },
   ];
   const link: Line[] = [
@@ -275,7 +275,7 @@ function License({ l, vatRate, disabled, mutate, onReload, onNewCode, onTab }: {
     {/* Files changed is urgent: right under the term. Otherwise the check is a small card beside the agreement. */}
     {filesChanged(l) && <IntegritySection l={l} />}
     {open && <DCard title={l.kind === 'trial' ? 'Ücretli aboneliğe geçir' : 'Süreyi uzat'} icon={<CalendarPlus size={20} />} className="platform-license-section" tip={`Uzatma bitiş tarihine (bitmişse bugüne) eklenir. Her değişiklik işletmenin bilgisayarına en geç 10 dakikada ulaşır.${l.kind === 'trial' ? ' Kalan deneme süresi korunur.' : ''} Ödeme açıksa tutar uzatmayla birlikte Satışlarım’a kaydedilir.`}>
-      {l.kind === 'trial' && l.services && <p className="section-note">Aboneliğe geçince “{l.services.packageName}” geçerli olur ({l.services.features.length} hizmet).{!l.services.chosen && ' Paket seçilmedi: bütün hizmetler açık kalır.'} <button type="button" className="text-btn inline-link" onClick={() => onTab('service')}>Hizmet bölümünde değiştir</button></p>}
+      {l.kind === 'trial' && l.services && <p className="section-note">Aboneliğe geçince “{l.services.packageName}” geçerli olur ({serviceCount(l.services.features)} hizmet).{!l.services.chosen && ' Paket seçilmedi: bütün hizmetler açık kalır.'} <button type="button" className="text-btn inline-link" onClick={() => onTab('service')}>Hizmet bölümünde değiştir</button></p>}
       <PaymentCard pay={pay} onPay={setPay} months={months} suggested={suggested} packageName={l.services?.packageName} vatRate={vatRate} problem={payProblem} disabled={disabled} />
       <div className="license-actions">{[1, 6, 12].map(n => <button className={`btn ${confirming === `paid-${n}` ? 'primary' : 'secondary'}`} disabled={disabled} key={n} onClick={() => paid(n)}>{paidLabel(n)}</button>)}</div>
       <p className="section-note">{l.kind === 'trial' ? 'Kalan deneme süresi korunur.' : `Uzatma yalnız süre ekler; plan (${planText(l).toLocaleLowerCase('tr-TR')}) ve dondurma hakkı değişmez.`}</p>

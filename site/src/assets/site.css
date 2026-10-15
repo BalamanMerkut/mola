@@ -378,3 +378,62 @@ a.contact-item:hover { border-color: var(--green-500); background: var(--paper);
 .dl-warn { margin-top: 18px; padding: 18px 22px; border-radius: var(--radius); background: var(--gold-soft); color: var(--gold-ink); display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
 .dl-warn p { margin: 0; color: inherit; font-size: 15.5px; }
 .dl-warn b { color: inherit; }
+
+/* Mola Yardım (assets/yardim.js): the round avatar button bottom right (not on the home page), the card on Destek ve
+ * İletişim and the panel. Fixed in place: nothing on the page moves when they appear. Same light palette as the site. */
+.yardim-fab { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 45; width: 60px; height: 60px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; box-shadow: 0 8px 22px -8px rgba(22,51,40,.55), 0 2px 6px rgba(22,51,40,.14); transition: transform .2s, box-shadow .2s; }
+.yardim-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -8px rgba(22,51,40,.6), 0 2px 6px rgba(22,51,40,.16); }
+.yardim-fab:active { transform: translateY(0); }
+.yardim-fab:focus-visible { outline-offset: 4px; border-radius: 50%; }
+.yardim-fab img { width: 60px; height: 60px; border-radius: 50%; }
+.yardim-fab[hidden], .yardim-panel[hidden], .yardim-katman[hidden], .yardim-panel [hidden] { display: none !important; }
+@media (max-width: 560px) { .yardim-fab { width: 56px; height: 56px; } .yardim-fab img { width: 56px; height: 56px; } .site-footer { padding-bottom: 92px; } }
+.yardim-acik .yardim-fab { visibility: hidden; }
+.yardim-kart { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px 22px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(20px, 3vw, 28px); box-shadow: var(--shadow); }
+.yardim-kart-avatar { width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 6px 16px -8px rgba(22,51,40,.5); }
+.yardim-kart h2 { font-size: clamp(24px, 3vw, 30px); margin-bottom: 6px; }
+.yardim-kart p { margin: 0; color: var(--muted); font-size: 16px; }
+@media (max-width: 760px) { .yardim-kart { grid-template-columns: auto minmax(0, 1fr); } .yardim-kart .btn { grid-column: 1 / -1; white-space: normal; } }
+.yardim-katman { position: fixed; inset: 0; z-index: 79; background: rgba(22,51,40,.28); }
+.yardim-panel { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 80; width: min(430px, calc(100vw - 32px)); height: min(680px, calc(100vh - 32px)); height: min(680px, calc(100dvh - 32px)); display: flex; flex-direction: column; background: var(--paper); color: var(--body); border: 1px solid var(--line-strong); border-radius: 24px; box-shadow: var(--shadow-lg); overflow: hidden; font-size: 16px; line-height: 1.55; }
+@media (max-width: 560px) { .yardim-panel { inset: 8px; width: auto; height: auto; border-radius: 20px; } }
+.yardim-ust { display: flex; align-items: center; gap: 12px; padding: 16px 16px 10px 18px; }
+.yardim-avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; }
+.yardim-basliklar { flex: 1 1 auto; min-width: 0; }
+.yardim-ust h2 { font-size: 26px; margin: 0; }
+.yardim-ust p { margin: 2px 0 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.yardim-kapat { flex: none; width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--field); color: var(--green); display: grid; place-items: center; cursor: pointer; }
+.yardim-kapat:hover { background: var(--cream); }
+.yardim-ara { position: relative; padding: 4px 18px 10px; }
+.yardim-ara svg { position: absolute; left: 32px; top: 19px; color: var(--muted); pointer-events: none; }
+.yardim-ara input { width: 100%; min-height: 50px; padding: 12px 14px 12px 44px; font: 16px/1.4 var(--sans); color: var(--ink); background: var(--field); border: 1px solid var(--line-strong); border-radius: 14px; -webkit-appearance: none; appearance: none; }
+.yardim-ara input:focus { outline: none; border-color: var(--green-500); background: var(--paper); box-shadow: 0 0 0 4px rgba(79,133,102,.18); }
+.yardim-konular { display: flex; gap: 6px; overflow-x: auto; padding: 2px 18px 12px; scrollbar-width: thin; border-bottom: 1px solid var(--line); flex: none; }
+.yardim-konu { flex: none; min-height: 36px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--field); color: var(--body); font: 600 14px/1 var(--sans); cursor: pointer; white-space: nowrap; }
+.yardim-konu:hover { border-color: var(--green-500); color: var(--green); }
+.yardim-konu[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; }
+.yardim-govde { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 18px 16px; }
+.yardim-cevap { background: var(--bg); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; margin-bottom: 16px; }
+.yardim-cevap:focus { outline: none; }
+.yardim-cevap:focus-visible { outline: 3px solid var(--green-500); outline-offset: 2px; }
+.yardim-cevap .chip { margin-bottom: 10px; font-size: 12.5px; padding: 4px 10px; }
+.yardim-cevap h3 { font-size: 18px; margin: 0 0 8px; }
+.yardim-cevap p { margin: 0 0 .7em; }
+.yardim-cevap ol { margin: 0 0 .7em; padding-left: 22px; }
+.yardim-cevap li { margin: 4px 0; }
+.yardim-cevap > :last-child { margin-bottom: 0; }
+.yardim-ilgili { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding-top: 10px; border-top: 1px dashed var(--line-strong); font-size: 14px; color: var(--muted); }
+.yardim-ilgili button { border: 0; background: none; padding: 4px 0; color: var(--green); font: 600 14px/1.35 var(--sans); text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.yardim-liste-baslik { font: 700 12.5px/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--green-700); margin: 4px 0 8px; }
+.yardim-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.yardim-soru { width: 100%; display: grid; gap: 2px; text-align: left; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--field); color: var(--ink); font: 600 15px/1.4 var(--sans); cursor: pointer; }
+.yardim-soru:hover { border-color: var(--green-500); background: var(--paper); }
+.yardim-soru small { color: var(--muted); font-weight: 500; font-size: 13px; }
+.yardim-yok { background: var(--gold-soft); color: var(--gold-ink); border-radius: 18px; padding: 16px 18px; margin-bottom: 16px; }
+.yardim-yok p { margin: 10px 0 0; font-size: 15px; }
+.yardim-yok .yardim-yok-baslik { margin: 0 0 12px; font-weight: 700; font-size: 16px; }
+.yardim-yollar { display: flex; flex-wrap: wrap; gap: 8px; }
+.yardim-yok .btn { min-height: 44px; padding: 0 18px; font-size: 15px; }
+.yardim-yok .yardim-eposta { white-space: normal; overflow-wrap: anywhere; }
+.yardim-aranan { overflow-wrap: anywhere; opacity: .85; }
+.yardim-not { flex: none; margin: 0; padding: 10px 18px 12px; border-top: 1px solid var(--line); background: var(--field); color: var(--muted); font-size: 13px; line-height: 1.4; }

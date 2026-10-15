@@ -1,4 +1,4 @@
-import { defaultPackages, featureById, featureIds, isFeatureId, type FeatureId } from './features.js';
+import { defaultPackages, featureById, featureIds, isFeatureId, isPartFeature, partsOf, withRequirements, type FeatureId } from './features.js';
 
 /*
  * Hizmet paketi, café side: which of Mola's services (packages/domain/features.ts) this business may use, from the signed
@@ -12,10 +12,13 @@ import { defaultPackages, featureById, featureIds, isFeatureId, type FeatureId }
  *   - "Sosyal medya ve QR kartları" ('social', paid since 6 Ekim; free core before): a licence WITH `features` signed by a Merkez
  *     that does not know the service yet (its heartbeat `accepts` lacks FEATURES_SOCIAL) keeps it on, as it was; an updated
  *     Merkez signs every licence again at its first start (server/merkez/catalog.ts ensureCatalog), see server/kafe-link.ts.
+ *   - "Uzaktan erişim" (15 Ekim, one service): a licence with 'remote-reports' turns 'remote-admin' on too, even one signed
+ *     before (a business that had only Uzaktan raporlar gets the management part with this version). The owner still switches
+ *     Uzaktan yönetim on at the café (server/remote-admin.ts), as before.
  */
 /** Listed in Merkez's heartbeat `accepts` (server/sync-protocol.ts MERKEZ_ACCEPTS) once its licences decide 'social'. */
 export const FEATURES_SOCIAL = 'features.social';
-export { featureById, featureIds, features, isFeatureId, type Feature, type FeatureId } from './features.js';
+export { featureById, featureIds, features, isFeatureId, isPartFeature, shownFeatures, type Feature, type FeatureId } from './features.js';
 export const FEATURE_NOT_IN_PACKAGE = 'FEATURE_NOT_IN_PACKAGE';
 
 /**
@@ -26,6 +29,8 @@ export const FEATURE_NOT_IN_PACKAGE = 'FEATURE_NOT_IN_PACKAGE';
 export function enabledFeatures(raw?: readonly unknown[] | null): FeatureId[] {
   if (!Array.isArray(raw)) return [...featureIds];
   const chosen = new Set<FeatureId>(['core', ...raw.filter(isFeatureId)]);
+  // A service brings the parts sold inside it (Uzaktan erişim → Uzaktan yönetim).
+  for (const id of [...chosen]) for (const part of partsOf(id)) chosen.add(part);
   for (let changed = true; changed;) {
     changed = false;
     for (const id of [...chosen]) if ((featureById.get(id)?.requires ?? []).some(need => !chosen.has(need))) { chosen.delete(id); changed = true; }
@@ -33,14 +38,16 @@ export function enabledFeatures(raw?: readonly unknown[] | null): FeatureId[] {
   return featureIds.filter(id => chosen.has(id));
 }
 export const hasFeature = (enabled: readonly FeatureId[] | undefined, id: FeatureId) => !enabled || id === 'core' || enabled.includes(id);
-/** Services that can be off (everything but the core), in the catalogue's order. */
-export const optionalFeatures: FeatureId[] = featureIds.filter(id => id !== 'core');
+/** Services that can be off and are shown on their own (everything but the core and the parts), in the catalogue's order. */
+export const optionalFeatures: FeatureId[] = featureIds.filter(id => id !== 'core' && !isPartFeature(id));
 export const featureName = (id: FeatureId) => featureById.get(id)?.name ?? id;
+/** The service a refusal names: a part is sold inside its service ("Uzaktan yönetim" → "Uzaktan erişim"). */
+const soldAs = (id: FeatureId): FeatureId => featureById.get(id)?.partOf ?? id;
 
 /** The plain sentence a refused request carries (staff and guests alike; guests get their own words below). */
 export function notInPackage(id: FeatureId, who: 'staff' | 'guest' = 'staff') {
   if (who === 'guest') return id === 'qr-order' ? 'Bu işletmede menüden sipariş verilemiyor. Siparişinizi personele iletebilirsiniz.' : 'Bu işletmenin QR menüsü şu anda kullanılmıyor. Lütfen personelle görüşün.';
-  return `“${featureName(id)}” işletmenizin Mola paketinde yok. Paketinize eklemek için işletme sahibi Destek'ten Mola ekibine yazabilir.`;
+  return `“${featureName(soldAs(id))}” işletmenizin Mola paketinde yok. Paketinize eklemek için işletme sahibi Destek'ten Mola ekibine yazabilir.`;
 }
 
 /**
@@ -87,12 +94,12 @@ export function packageName(enabled: readonly FeatureId[], options: { trial?: bo
   if (options.menuOnly) return 'Sadece QR menü';
   if (!options.listed) return 'Tam paket';
   const sellable = enabled.filter(id => !featureById.get(id)?.soon);
-  const same = defaultPackages.find(p => p.features.length === sellable.length && p.features.every(id => sellable.includes(id)));
-  return same?.name ?? 'Size özel paket';
+  const same = defaultPackages.map(p => withRequirements(p.features)).findIndex(list => list.length === sellable.length && list.every(id => sellable.includes(id)));
+  return same >= 0 ? defaultPackages[same].name : 'Size özel paket';
 }
-/** The services that closed when the licence changed (trial → package): sellable ones only, never the core. */
+/** The services that closed when the licence changed (trial → package): sellable ones only, never the core nor a part. */
 export function closedFeatures(before: readonly FeatureId[], after: readonly FeatureId[]): FeatureId[] {
-  return before.filter(id => id !== 'core' && !featureById.get(id)?.soon && !after.includes(id));
+  return before.filter(id => id !== 'core' && !featureById.get(id)?.soon && !isPartFeature(id) && !after.includes(id));
 }
 
 /**

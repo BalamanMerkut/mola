@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { Express, Request } from 'express';
 import { z } from 'zod';
 import { DomainError } from '../../packages/domain/engine.js';
-import { featureById, featureIds, features, type FeatureId } from '../../packages/domain/features.js';
+import { defaultPackages, featureById, featureIds, features, isPartFeature, shownFeatures, type FeatureId } from '../../packages/domain/features.js';
 import {
   DEFAULT_VAT_RATE, LEGACY_FULL, LEGACY_MENU, discountText, lira, monthlyRevenue, normalFeatures, priceFor, priceOf, serviceOf, startingPackages,
   type Discount, type Price, type ServicePackage,
@@ -38,7 +38,8 @@ const discountSchema = z.object({ kind: z.enum(['amount', 'percent']), value: z.
 export const catalogOf = (d: MerkezData): Catalog => d.catalog ?? { prices: {}, packages: startingPackages(new Date(0).toISOString()), vatRate: DEFAULT_VAT_RATE, createdAt: '', updatedAt: '' };
 export const vatRateOf = (d: MerkezData) => catalogOf(d).vatRate ?? DEFAULT_VAT_RATE;
 const packageOf = (d: MerkezData, packageId: string | null | undefined) => packageId ? catalogOf(d).packages.find(p => p.id === packageId) : undefined;
-const featureNames = (ids: readonly FeatureId[]) => ids.map(f => featureById.get(f)?.name ?? f).join(', ');
+/** Names for the history; a part sold inside another service is named only when nothing else changed ("eklenen: Uzaktan yönetim"). */
+const featureNames = (ids: readonly FeatureId[]) => (shownFeatures(ids).length ? shownFeatures(ids) : ids).map(f => featureById.get(f)?.name ?? f).join(', ');
 const servicesName = (d: MerkezData, s: BusinessServices | undefined) => !s ? 'Paket seçilmedi' : s.packageId ? packageOf(d, s.packageId)?.name ?? 'Silinmiş paket' : 'Özel';
 
 /**
@@ -53,6 +54,7 @@ export function ensureCatalog(store: MerkezStore, now: Date) {
       const from = d.catalog.version ?? 1;
       if (from < 2) addSocial(store, d, now);
       if (from < 3) singleLicence(store, d, now);
+      if (from < 4) prices2026(store, d, now);
       d.catalog.version = CATALOG_VERSION; return;
     }
     const at = now.toISOString();
@@ -77,8 +79,48 @@ export function ensureCatalog(store: MerkezStore, now: Date) {
  * first start of the version that brings it, and only adds:
  *   2 (6 Ekim): "Sosyal medya ve QR kartları" (`social`) became a paid service (free core before).
  *   3 (11 Ekim, güvenlik denetimi O6): one licence per business, always with `features`; the copy without them is gone.
+ *   4 (15 Ekim, owner): the 2026-10 price list and "Uzaktan erişim" as one service (prices2026 below). Not only additive: the
+ *     owner asked for it, once; prices or packages he changes afterwards are never touched again.
  */
-export const CATALOG_VERSION = 3;
+export const CATALOG_VERSION = 4;
+/**
+ * Step 4. The owner's 2026-10 list (packages/domain/features.ts, KDV hariç): every sellable service's price goes back to the
+ * starting price, which is now that list (a typed yearly price too: yearly = monthly × 10); the stored price of 'remote-admin'
+ * (sold inside "Uzaktan erişim" now, never priced on its own) is dropped. The three starting packages, found by their ids, get
+ * their starting services and discount (Çay bahçesi ₺980, Kafe Standart ₺1.950, Restoran Pro ₺2.600 a month); their names,
+ * "Arşivde" and every other package (the vendor's own and the two old plans) stay as they are. A business on one of the three
+ * follows its package (licence signed again when what it may use changed: Kafe Standart now holds Uzaktan yönetim); businesses'
+ * own discounts and "Özel" lists are not touched. "Paket servis platformları" (Yakında) keeps its price.
+ */
+function prices2026(store: MerkezStore, d: MerkezData, now: Date) {
+  const at = now.toISOString(), c = d.catalog!, changes: JournalChange[] = [];
+  const text = (x: { monthly: number; yearly: number; yearlyTyped: boolean }) => `${lira(x.monthly)}/ay · ${lira(x.yearly)}/yıl${x.yearlyTyped ? '' : ' (×10)'}`;
+  for (const f of features) {
+    if (f.soon || !c.prices[f.id]) continue;
+    if (f.partOf) { changes.push({ field: f.name, from: text(priceOf(f.id, c.prices)), to: `${featureById.get(f.partOf)!.name} içinde` }); delete c.prices[f.id]; continue; }
+    const old = text(priceOf(f.id, c.prices)); delete c.prices[f.id];
+    if (old !== text(priceOf(f.id, c.prices))) changes.push({ field: f.name, from: old, to: text(priceOf(f.id, c.prices)) });
+  }
+  let moved = 0, signed = 0;
+  for (const start of defaultPackages) {
+    const pkg = c.packages.find(p => p.id === start.id && !p.legacy);
+    if (!pkg) continue;
+    const list = normalFeatures(start.features), discount = start.discount ? { ...start.discount } : undefined;
+    const added = list.filter(x => !pkg.features.includes(x)), removed = pkg.features.filter(x => !list.includes(x));
+    if (added.length || removed.length) changes.push({ field: `${pkg.name} hizmetleri`, from: removed.length ? `çıkan: ${featureNames(removed)}` : '—', to: added.length ? `eklenen: ${featureNames(added)}` : '—' });
+    if (discountText(pkg.discount) !== discountText(discount)) changes.push({ field: `${pkg.name} paket indirimi`, from: discountText(pkg.discount) || 'yok', to: discountText(discount) || 'yok' });
+    if (!added.length && !removed.length && discountText(pkg.discount) === discountText(discount)) continue;
+    pkg.features = list; if (discount) pkg.discount = discount; else delete pkg.discount; pkg.updatedAt = at;
+    if (added.length || removed.length) for (const b of d.businesses.filter(x => x.services?.packageId === pkg.id)) {
+      const before = licenseFeatures(b);
+      b.services = { ...b.services!, features: [...list], updatedAt: at }; b.service = serviceOf(list); moved++;
+      if (b.installId && licenseFeatures(b).join() !== before.join()) { store.issue(b, now); signed++; }
+    }
+  }
+  c.updatedAt = at;
+  const totals = defaultPackages.map(s => c.packages.find(p => p.id === s.id && !p.legacy)).filter(p => !!p).map(p => `${p!.name} ${lira(priceFor(p!.features, c.prices, p!.discount).monthly)}`).join(', ');
+  d.audit.push({ action: 'catalog.prices_2026_10', target: 'merkez', at, by: 'system', detail: `Fiyatlar 2026-10 listesine güncellendi (KDV hariç, aylık): ${totals || 'başlangıç paketi yok'}. “Uzaktan raporlar” ve “Uzaktan yönetim” tek hizmet: “Uzaktan erişim”.${moved ? ` ${moved} işletme paketini izledi, ${signed} lisans yeniden imzalandı.` : ''} İşletmelerin kendi indirimlerine dokunulmadı.`, ...(changes.length ? { changes } : {}) });
+}
 /**
  * Step 3. Every connected business is signed again (serial + 1) with its list only: its café takes the new licence with the
  * next heartbeat (a higher serial), keeps exactly the services it has now, and from then on treats any copy without a list as
@@ -142,7 +184,8 @@ export function catalogView(d: MerkezData) {
   const c = catalogOf(d);
   return {
     vatRate: c.vatRate ?? DEFAULT_VAT_RATE, updatedAt: c.updatedAt,
-    features: features.map(f => ({ id: f.id, name: f.name, description: f.description, group: f.group, required: !!f.required, requires: f.requires ?? [], soon: !!f.soon, defaultMonthly: f.monthly, ...priceOf(f.id, c.prices) })),
+    // A part sold inside another service ('remote-admin') is neither listed nor priced on its own.
+    features: features.filter(f => !isPartFeature(f.id)).map(f => ({ id: f.id, name: f.name, description: f.description, group: f.group, required: !!f.required, requires: f.requires ?? [], soon: !!f.soon, defaultMonthly: f.monthly, ...priceOf(f.id, c.prices) })),
     packages: c.packages.map(p => ({ ...p, price: priceFor(p.features, c.prices, p.discount), businesses: d.businesses.filter(b => b.services?.packageId === p.id).length })),
   };
 }

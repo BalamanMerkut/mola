@@ -97,9 +97,11 @@ test('owner: Stok faded → blurred page with the card → "Mola ekibine yaz" pr
   await expect(card.getByTestId('package-name')).toHaveText('Size özel paket');
   await expect(card.getByTestId('package-status')).toHaveText('Aktif');
   const included = card.getByRole('list', { name: 'Paketteki hizmetler' });
-  // Core (with the Müdür account) + the 9 sellable services left on.
-  await expect(card.locator('.pk-summary')).toContainText('10 hizmet açık');
-  await expect(included.locator('.pk-service.on')).toHaveCount(10);
+  // Core (with the Müdür account) + the 8 sellable services left on (15 Ekim: Uzaktan yönetim is inside Uzaktan erişim, no card of its own).
+  await expect(card.locator('.pk-summary')).toContainText('9 hizmet açık');
+  await expect(included.locator('.pk-service.on')).toHaveCount(9);
+  await expect(included.locator('[data-feature="remote-reports"]')).toContainText('Uzaktan erişim');
+  await expect(card.locator('[data-feature="remote-admin"]')).toHaveCount(0);
   await expect(included.locator('[data-feature="core"]')).toContainText('müdür hesabı');
   await expect(included.locator('[data-feature="qr-menu"]')).toContainText('QR menü');
   await expect(included.locator('[data-feature="qr-menu"] .pk-service-check')).toBeVisible();

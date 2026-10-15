@@ -100,6 +100,26 @@ Not: Adisyo QR menü ekinin yıllık fiyatı sayfada yok. GoPOS sayfasındaki "T
 
 ## E. Fiyat önerisi
 
+> **Sahibin son kararı (15 Ekim 2026, uygulamada).** "Uzaktan raporlar" ve "Uzaktan yönetim" tek hizmet olarak satılır: **Uzaktan erişim** (55 + 75 = 130 TL/ay). Hizmet fiyatları, KDV hariç, TL/ay:
+>
+> | Hizmet | TL/ay | Hizmet | TL/ay |
+> |---|---|---|---|
+> | Adisyon çekirdeği | 750 | Gelişmiş raporlar | 100 |
+> | QR menü | 200 | Rezervasyon ve etkinlik | 50 |
+> | QR sipariş ve garson çağırma | 300 | Sosyal medya ve QR kartları | 20 |
+> | Stok, reçete ve kârlılık | 650 | Vardiya, bahşiş ve personel raporu | 20 |
+> | **Uzaktan erişim** (raporlar + yönetim) | **130** | İki ekran | 50 |
+> | E-posta raporları | 30 | Bulutta şifreli yedek | 300 |
+> | | | Paket servis platformları (yakında) | 125 |
+>
+> | Paket | Hizmet toplamı | Paket indirimi | Aylık hariç | Aylık dahil | Yıllık hariç |
+> |---|---|---|---|---|---|
+> | Çay bahçesi | 980 | yok | **980** | 1.176 | 9.800 |
+> | Kafe Standart (Uzaktan erişim dahil) | 2.060 | 110 | **1.950** | 2.340 | 19.500 |
+> | Restoran Pro | 2.600 | yok | **2.600** | 3.120 | 26.000 |
+>
+> Kodda başlangıç fiyatları bunlar (`packages/domain/features.ts`); canlı Merkez ilk açılışta bir kez bu listeye geçer (katalog adımı 4). Aşağıdaki seçenekler bu karardan önceki çalışmadır.
+
 Kurallar: KDV hariç fiyat esas, yazılım hizmetinde KDV %20. Yıllık = 10 ay (kodla aynı). Yıllık sözleşmede "her yıl TÜFE oranında güncellenir" maddesi. Mola Yönetim'de hem hizmet fiyatı hem paket indirimi ayarlanabiliyor; aşağıdaki iki seçenek de kod değişikliği istemez.
 
 ### Seçenek 1: Düşük giriş

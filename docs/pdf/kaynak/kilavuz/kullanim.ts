@@ -9,7 +9,8 @@ import { adimlar, bolum, h2, h3, hizmet, liste, not, p, sekil, serit, sss, tablo
 const ok = '<b style="color:#1f5135">✓</b>', yok = '<span style="color:#a3a8a3">–</span>';
 
 function tanitim() {
-  const satilan = features.filter(f => !f.soon);
+  // "Uzaktan yönetim" is sold inside "Uzaktan erişim" (15 Ekim): one row.
+  const satilan = features.filter(f => !f.soon && !f.partOf);
   return [
     bolum('Mola\'yı tanıyın', 'Mola, kafenizin adisyon programı ve QR menüsüdür. Sipariş, mutfak, kasa, menü ve raporlar tek yerde durur. Verileriniz kafenizdeki bilgisayarda, şifreli olarak saklanır.'),
     h2('Kim neyi kullanır?'),
@@ -349,7 +350,7 @@ function uzaktan() {
   return [
     bolum('Uzaktan takip ve destek'),
     h2('Kafemi yönet: raporlar her yerden'),
-    hizmet('remote-reports', 'Kafede olmasanız da bugünün satışını ve kasayı telefonunuzdan ya da laptopunuzdan görürsünüz.'),
+    hizmet('remote-reports', 'Kafede olmasanız da bugünün satışını ve kasayı telefonunuzdan ya da laptopunuzdan görürsünüz; kasa açıkken kafeyi oradan yönetirsiniz.'),
     sekil('t-raporlarim', { genislik: 220, yan: true, aciklamalar: ['Bugünün satışı: nakit, kart, sipariş sayısı.'] }),
     p('Kasada bir kez: <b>Ayarlar → Uzaktan erişim</b>. Sonra her yerden tek adres: <b>merkez.molayazilim.com.tr/yonet</b>.'),
     adimlar([
@@ -362,7 +363,7 @@ function uzaktan() {
     p('En fazla 3 cihaz. Kaybolan telefonu kasada <b>4 · Eşleşmiş cihazlar</b>\'dan kaldırın: şifreniz sorulur, telefon kodu sorulmaz.'),
     p('<b>Çıkış</b> cihazı kilitler. Yeniden girmek için e-posta ve şifreniz yeter; kasa kapalıyken de son durumu görürsünüz. Cihazı tamamen silmek için Çıkış penceresinde <b>Bu cihazı tamamen kaldır</b>.'),
     h2('Uzaktan yönetim'),
-    hizmet('remote-admin', 'Kafeye gitmeden fiyat değiştirir, kampanya açar, çalışan hesabı kapatırsınız.'),
+    p('<b>Uzaktan erişim</b> hizmetine dahildir; bir kez kafede açılır. Kafeye gitmeden fiyat değiştirir, kampanya açar, çalışan hesabı kapatırsınız.'),
     adimlar([
       '<b>5 · Uzaktan yönetim</b>\'de <b>Aç</b>: şifre ve 6 haneli kod. Bu adım yalnız kafede yapılır.',
       'Aynı adres, <b>merkez.molayazilim.com.tr/yonet</b>: kasa açıkken girişten sonra kafenin bütün ekranları doğrudan açılır, ikinci kez sorulmaz.',

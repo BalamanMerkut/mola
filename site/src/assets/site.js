@@ -93,6 +93,32 @@
       })['catch'](function () { /* the build's own contact stays */ });
   }
 
+  // ---- Mola Yardım: hazır soru-cevaplar (assets/yardim.js). Yalnız ilk açılışta, bu sitenin kendi dosyası olarak yüklenir;
+  // yardımcı hiçbir istek yapmaz, yazılan soru tarayıcıdan çıkmaz. Yüklenemezse Sık sorulan sorular açılır. ----
+  var helpSrc = document.body.getAttribute('data-yardim') || '';
+  var helpOpeners = document.querySelectorAll('[data-yardim-ac]');
+  if (/^\/assets\/yardim\.js\?v=[0-9a-f]{6,20}$/.test(helpSrc) && helpOpeners.length) {
+    var helpScript = null;
+    var openHelp = function (from) {
+      if (window.MolaYardim && window.MolaYardim.open) { window.MolaYardim.open(from); return; }
+      if (helpScript) return;
+      helpScript = document.createElement('script'); helpScript.src = helpSrc; helpScript.async = true;
+      helpScript.onload = function () { if (window.MolaYardim && window.MolaYardim.open) window.MolaYardim.open(from); };
+      helpScript.onerror = function () { helpScript.parentNode.removeChild(helpScript); helpScript = null; location.href = '/iletisim/#sss'; };
+      document.head.appendChild(helpScript);
+    };
+    Array.prototype.forEach.call(helpOpeners, function (b) {
+      if (b.tagName === 'BUTTON') { b.setAttribute('aria-haspopup', 'dialog'); b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', 'mola-yardim'); }
+      b.hidden = false;
+      b.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (window.MolaYardim && window.MolaYardim.isOpen && window.MolaYardim.isOpen()) window.MolaYardim.close(); else openHelp(b);
+      });
+    });
+    // /iletisim/#yardim (Destek sayfasındaki kart, dışarıdan bir bağlantı): açık gelir.
+    if (location.hash === '#yardim') openHelp(document.querySelector('#yardim [data-yardim-ac]') || helpOpeners[0]);
+  }
+
   // ---- Contact form → Mola Merkez (same address: /api/site/*) ----
   var form = document.getElementById('talep-formu');
   if (!form) return;
@@ -128,7 +154,7 @@
     var data = new FormData(form);
     var body = {
       business: data.get('business'), person: data.get('person'), phone: data.get('phone'), email: data.get('email'),
-      city: data.get('city'), tables: data.get('tables') || undefined, type: data.get('type') || '', message: data.get('message') || undefined,
+      city: data.get('city'), type: data.get('type') || '', message: data.get('message') || undefined,
       consent: data.get('consent') === 'evet', consentVersion: form.getAttribute('data-consent-version'), website: data.get('website') || '',
     };
     // The browser's own checks first (required fields), in the same words as the server.

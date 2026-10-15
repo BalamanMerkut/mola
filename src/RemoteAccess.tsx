@@ -4,7 +4,6 @@ import { CheckCircle2, Copy, Globe2, KeyRound, Laptop, ListChecks, Mail, Monitor
 import { deviceKindOf, type DeviceKind } from '../packages/domain/remote-crypto';
 import { api, ApiError } from './api';
 import { Notice } from './components';
-import { LockedRow, usePackage } from './FeatureLock';
 import { copyText, onCafeComputer } from './PermanentLink';
 import { RemoteAdminSettings } from './RemoteAdminSettings';
 import { remoteMode } from './remoteTransport';
@@ -23,7 +22,8 @@ import './remote-support.css';
  *   3 Cihaz eşleştirme   the Kafemi yönet address (<Merkez>/yonet) in big letters, Kopyala, a small QR of it: every device
  *                        signs in there with the e-mail, the password and the phone code (src/ReportsPhone.tsx).
  *   4 Eşleşmiş cihazlar  kind icon, name, last report; "Kaldır" asks the password (not the code: the lost phone may hold the app).
- *   5 Uzaktan yönetim    src/RemoteAdminSettings.tsx ('remote-admin'; else the faded row).
+ *   5 Uzaktan yönetim    src/RemoteAdminSettings.tsx. Part of "Uzaktan erişim" since 15 Ekim (one service): whoever sees this
+ *                        page has it (packages/domain/feature-gate.ts enabledFeatures); the owner still switches it on here.
  * A remote session ("Kafeyi yönet") cannot set the code up or remove a device: the server refuses, the page says so.
  */
 type Phone = { id: string; name: string; ownerName: string; pairedAt: string; lastSeenAt: string | null; kind: DeviceKind | null };
@@ -37,7 +37,6 @@ const KIND_ICON: Record<DeviceKind | 'unknown', ReactNode> = { unknown: <Monitor
 const KIND_NAME: Record<DeviceKind | 'unknown', string> = { unknown: 'Cihaz', phone: 'Telefon', tablet: 'Tablet', computer: 'Bilgisayar' };
 
 export function RemoteAccess() {
-  const pk = usePackage();
   const [view, setView] = useState<View | null>(null), [error, setError] = useState(''), [ownerOnly, setOwnerOnly] = useState(false);
   const [email, setEmail] = useState<Email | null | undefined>(undefined);
   const cafe = onCafeComputer(), remote = remoteMode();
@@ -70,7 +69,7 @@ export function RemoteAccess() {
     </Card>
 
     {/* Drawn again once the phone code is set up above (its "Aç" needs the code). */}
-    {pk.has('remote-admin') ? <RemoteAdminSettings key={view.code ? 'kod' : 'kodsuz'} title="5 · Uzaktan yönetim" address={view.address} /> : <LockedRow feature="remote-admin" title="5 · Uzaktan yönetim" />}
+    <RemoteAdminSettings key={view.code ? 'kod' : 'kodsuz'} title="5 · Uzaktan yönetim" address={view.address} />
     {error && <Notice tone="error">{error}</Notice>}
   </div>;
 }

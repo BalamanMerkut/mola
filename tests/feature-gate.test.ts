@@ -8,7 +8,7 @@ import { createApp, DEMO_PASSWORD } from '../server/app.js';
 import { LEGACY_LICENCE_UNTIL, MerkezLink } from '../server/kafe-link.js';
 import { publicKeyFrom, type License } from '../server/license.js';
 import { withoutComparison } from '../server/feature-guard.js';
-import { closedFeatures, enabledFeatures, FEATURE_NOT_IN_PACKAGE, featureIds, missingForRoute, packageName, routeFeatures, type FeatureId } from '../packages/domain/feature-gate.js';
+import { closedFeatures, enabledFeatures, FEATURE_NOT_IN_PACKAGE, featureIds, missingForRoute, notInPackage, optionalFeatures, packageName, routeFeatures, type FeatureId } from '../packages/domain/feature-gate.js';
 import { licensed, temp, testLicense, TEST_PUBLIC_KEY } from './merkez-fixture.js';
 
 /*
@@ -69,14 +69,38 @@ test('the rules: no features = everything, requirements, route map, names, what 
   assert.deepEqual(routeFeatures('/staff/agenda'), []);
   assert.deepEqual(routeFeatures('/staff/reports/accountant.xlsx'), ['reports-advanced']);
   assert.equal(missingForRoute('/staff/remote-admin', ['core', 'remote-reports']), 'remote-admin');
+  assert.equal(missingForRoute('/staff/remote-admin', enabledFeatures(['core', 'remote-reports'])), undefined, 'Uzaktan erişim holds Uzaktan yönetim');
   assert.equal(missingForRoute('/staff/remote-admin', undefined), undefined);
   assert.equal(packageName(['core', 'qr-menu', 'email-reports'], { listed: true }), 'Çay bahçesi');
   assert.equal(packageName(['core', 'stock'], { listed: true }), 'Size özel paket');
   assert.equal(packageName([...featureIds], { trial: true }), 'Deneme');
   assert.equal(packageName([...featureIds], {}), 'Tam paket');
-  assert.deepEqual(closedFeatures([...featureIds], ['core', 'qr-menu']), featureIds.filter(id => !['core', 'qr-menu', 'integrations'].includes(id)));
+  // "Uzaktan yönetim" is inside "Uzaktan erişim" (15 Ekim): never listed as closed on its own.
+  assert.deepEqual(closedFeatures([...featureIds], ['core', 'qr-menu']), featureIds.filter(id => !['core', 'qr-menu', 'integrations', 'remote-admin'].includes(id)));
   assert.equal(withoutComparison('Bugün 142 sipariş, ₺8.540 satış — dünün aynı saatine göre %12 fazla. En çok kazandıran: Latte (₺2.660).'), 'Bugün 142 sipariş, ₺8.540 satış. En çok kazandıran: Latte (₺2.660).');
   assert.equal(withoutComparison('2026 yılında bugüne kadar 9 sipariş, ₺900 satış — geçen yılın aynı dönemine göre %12 fazla. En çok kazandıran: Latte (₺300).'), '2026 yılında bugüne kadar 9 sipariş, ₺900 satış. En çok kazandıran: Latte (₺300).');
+});
+
+test('Uzaktan erişim (15 Ekim, one service): a licence with only remote-reports grants remote-admin; no separate lock', async t => {
+  // The rules: the part comes with its service, is never offered or listed on its own, and a refusal names the service sold.
+  assert.deepEqual(enabledFeatures(['remote-reports']), ['core', 'remote-reports', 'remote-admin']);
+  assert.ok(!optionalFeatures.includes('remote-admin'), 'not a card of its own on Paketiniz');
+  assert.match(notInPackage('remote-admin'), /“Uzaktan erişim” işletmenizin Mola paketinde yok/);
+  // A business that had Kafe Standart before (signed without remote-admin) is still recognised as Kafe Standart.
+  assert.equal(packageName(enabledFeatures(['core', 'qr-menu', 'qr-order', 'stock', 'remote-reports', 'email-reports']), { listed: true }), 'Kafe Standart');
+  // On the café: a licence signed before the change, holding only 'remote-reports', opens the management part too.
+  const c = await cafe(t);
+  c.license({ features: ['core', 'remote-reports'] });
+  assert.equal(c.link.has('mola-demo', 'remote-admin'), true);
+  allowed(await c.owner('/staff/remote-reports'), 'remote-reports');
+  const admin = await c.owner('/staff/remote-admin');
+  assert.equal(admin.status, 200, JSON.stringify(admin.data)); assert.equal(admin.data.on, false, 'still off until the owner turns it on at the café');
+  assert.deepEqual((await c.owner('/staff/state')).data.pkg.enabled, ['core', 'remote-reports', 'remote-admin']);
+  // Without Uzaktan erişim neither part answers, and the sentence names the service that is sold.
+  c.license({ features: ['core'] });
+  const off = await c.owner('/staff/remote-admin');
+  refused(off, 'remote-admin'); assert.match(off.data.message, /Uzaktan erişim/);
+  refused(await c.owner('/staff/remote-reports'), 'remote-reports');
 });
 
 test('every service: refused while off, answered when on; a licence without features after one with them: the core only', async t => {

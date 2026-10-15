@@ -35,7 +35,7 @@ async function merkez(name: string) {
     async close() { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); (app.locals.relayHub as { close(): void } | undefined)?.close(); store.close(); },
   };
 }
-const form = () => ({ business: 'Çınaraltı Kafe', person: 'Ayşe Yılmaz', phone: '0532 123 45 67', email: 'ayse@example.com', city: 'Elazığ', tables: '16', type: 'kafe', message: 'Öğleden sonra arayabilirsiniz.', consent: true, consentVersion: SITE_CONSENT_VERSION, website: '' });
+const form = () => ({ business: 'Çınaraltı Kafe', person: 'Ayşe Yılmaz', phone: '0532 123 45 67', email: 'ayse@example.com', city: 'Elazığ', type: 'kafe', message: 'Öğleden sonra arayabilirsiniz.', consent: true, consentVersion: SITE_CONSENT_VERSION, website: '' });
 
 test('site form rules: phones, required fields, consent and its text version', () => {
   assert.equal(siteLeadPhone('0532 123 45 67'), '+905321234567');
@@ -45,9 +45,11 @@ test('site form rules: phones, required fields, consent and its text version', (
   assert.equal(siteLeadPhone('+49 30 1234567'), '+49301234567');
   for (const bad of ['12345', 'beni ara', '0532 123 45', '+90 123 456 78 90']) assert.equal(siteLeadPhone(bad), undefined, bad);
   const ok = checkSiteLead(form());
-  assert.ok(ok.ok); if (ok.ok) { assert.equal(ok.value.tables, 16); assert.equal(ok.value.phone, '+905321234567'); }
+  assert.ok(ok.ok); if (ok.ok) { assert.ok(!('tables' in ok.value)); assert.equal(ok.value.phone, '+905321234567'); }
   const city = checkSiteLead({ ...form(), city: '' }); assert.ok(city.ok && city.value.city === 'Elazığ', 'Şehir defaults to Elazığ');
-  const bare = checkSiteLead({ ...form(), tables: '', message: '' }); assert.ok(bare.ok && bare.value.email === 'ayse@example.com' && !('tables' in bare.value) && !('message' in bare.value));
+  const bare = checkSiteLead({ ...form(), message: '' }); assert.ok(bare.ok && bare.value.email === 'ayse@example.com' && !('message' in bare.value));
+  // "Masa sayısı" is no longer asked (15 Ekim): a page still open from before may send it; it is ignored, never refused.
+  for (const tables of ['16', '0', '2.5', 'çok', 24]) { const old = checkSiteLead({ ...form(), tables }); assert.ok(old.ok && !('tables' in old.value), String(tables)); }
   const fieldOf = (b: object) => { const r = checkSiteLead(b); return r.ok ? 'ok' : r.problem.field; };
   // The e-mail is required (13 Ekim): sign-ins and codes go there.
   assert.equal(fieldOf({ ...form(), email: '' }), 'email'); assert.equal(fieldOf({ ...form(), email: undefined }), 'email');
@@ -55,8 +57,6 @@ test('site form rules: phones, required fields, consent and its text version', (
   assert.equal(fieldOf({ ...form(), person: 'A' }), 'person');
   assert.equal(fieldOf({ ...form(), phone: 'x' }), 'phone');
   assert.equal(fieldOf({ ...form(), email: 'ayse@' }), 'email');
-  assert.equal(fieldOf({ ...form(), tables: '0' }), 'tables');
-  assert.equal(fieldOf({ ...form(), tables: '2.5' }), 'tables');
   assert.equal(fieldOf({ ...form(), type: 'bar' }), 'type');
   assert.equal(fieldOf({ ...form(), message: 'x'.repeat(1501) }), 'message');
   assert.equal(fieldOf({ ...form(), consent: false }), 'consent');
@@ -76,7 +76,7 @@ test('web sitesi talebi: stored sealed with the KVKK tick, shown to the vendor a
   assert.equal(list.leads.length, 1); assert.deepEqual(list.counts, { new: 1, called: 0, closed: 0, open: 1, total: 1 });
   const lead = list.leads[0];
   assert.equal(lead.business, 'Çınaraltı Kafe'); assert.equal(lead.person, 'Ayşe Yılmaz'); assert.equal(lead.phone, '+905321234567'); assert.equal(lead.email, 'ayse@example.com');
-  assert.equal(lead.city, 'Elazığ'); assert.equal(lead.tables, 16); assert.equal(lead.type, 'kafe'); assert.equal(lead.typeName, 'Kafe'); assert.equal(lead.status, 'new'); assert.equal(lead.statusName, 'Yeni');
+  assert.equal(lead.city, 'Elazığ'); assert.equal(lead.tables, undefined); assert.equal(lead.type, 'kafe'); assert.equal(lead.typeName, 'Kafe'); assert.equal(lead.status, 'new'); assert.equal(lead.statusName, 'Yeni');
   assert.deepEqual(lead.consent, { at: '2026-10-07T09:00:06.000Z', version: SITE_CONSENT_VERSION });
   // Sealed in its own table: the phone and the name are not readable in the database file.
   const raw = m.store.db.prepare('SELECT payload FROM site_talepleri').get() as { payload: Uint8Array };
@@ -84,7 +84,7 @@ test('web sitesi talebi: stored sealed with the KVKK tick, shown to the vendor a
   // Bell: a "Web sitesi talebi" with type and city only (it may go out by e-mail).
   const state = (await m.admin('/state')).data;
   const alert = state.alerts.find((a: { kind: string }) => a.kind === 'site.lead');
-  assert.ok(alert); assert.equal(alert.title, 'Web sitesi talebi'); assert.match(alert.text, /Kafe · Elazığ · 16 masa/);
+  assert.ok(alert); assert.equal(alert.title, 'Web sitesi talebi'); assert.match(alert.text, /Kafe · Elazığ\. Başvurular/);
   assert.ok(!/Ayşe|5321234567|example|Çınaraltı/.test(alert.text)); assert.equal(state.unread, 1);
   // İşlem kayıtları: the line, with the consent version, without the person.
   const line = state.audit.find((a: { action: string }) => a.action === 'site.lead_received');

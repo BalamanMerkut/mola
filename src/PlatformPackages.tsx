@@ -4,7 +4,7 @@ import type { FeatureId } from '../packages/domain/features';
 import { addedFor, normalFeatures, type Discount } from '../packages/domain/service-pricing';
 import { api, money, requestId } from './api';
 import { Notice } from './components';
-import { DiscountField, FeatureChips, FeaturePicker, PriceBlock, discountText, featureName, livePrice, type CatalogView, type PackageView } from './platformCatalog';
+import { DiscountField, FeatureChips, FeaturePicker, PriceBlock, discountText, featureName, livePrice, serviceCount, type CatalogView, type PackageView } from './platformCatalog';
 import { ADMIN } from './platformStatus';
 import { withStepUp } from './platformStepUp';
 
@@ -91,7 +91,7 @@ function PackageBuilder({ catalog, draft, onDraft, busy, asking, error, onSave, 
         {nameProblem && draft.name && <small className="field-problem">{nameProblem}</small>}
         <DiscountField label="Paket indirimi (isteğe bağlı)" value={draft.discount} disabled={busy} max={list.listMonthly} onChange={(discount, ok) => onDraft({ ...draft, discount, discountOk: ok })} />
         <div className="builder-total">
-          <span className="builder-count">{draft.features.length} hizmet</span>
+          <span className="builder-count">{serviceCount(draft.features)} hizmet</span>
           <PriceBlock price={price} label="Paket toplamı" />
           {price.listMonthly !== price.monthly && <small className="muted">Liste fiyatı {money(price.listMonthly)}/ay · {discountText(draft.discount)}</small>}
           <small className="muted">KDV hariç. Yıllık = 10 ay.</small>

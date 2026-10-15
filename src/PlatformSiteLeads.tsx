@@ -13,7 +13,7 @@ import './platform-site-leads.css';
  */
 export type SiteLead = {
   id: string; createdAt: string; status: 'new' | 'called' | 'closed'; statusAt?: string; statusName: string;
-  business: string; person: string; phone: string; email?: string; city: string; tables?: number; type: SiteLeadType; typeName: string; message?: string;
+  business: string; person: string; phone: string; email?: string; city: string; /** Only leads sent before 15 Ekim (the form no longer asks). */ tables?: number; type: SiteLeadType; typeName: string; message?: string;
   consent: { at: string; version: string }; notes: { at: string; text: string }[]; tenantId?: string;
 };
 export type SiteLeadCounts = { new: number; called: number; closed: number; open: number; total: number };

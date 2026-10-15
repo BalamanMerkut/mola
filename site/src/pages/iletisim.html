@@ -16,15 +16,13 @@ nav: contact
   <div class="wrap contact-grid">
     <div class="panel" id="form">
       <h2>Bilgi ve deneme talebi</h2>
-      <p class="muted">Kısa bir form. Yıldızlı alanlar gerekli; gerisini görüşmede konuşuruz.</p>
       <form id="talep-formu" novalidate data-consent-version="{{consentVersion}}" aria-describedby="form-status">
         <div class="form-grid">
-          <div class="field" data-field="business"><label for="f-business">İşletme adı *</label><input id="f-business" name="business" autocomplete="organization" required maxlength="{{max:business}}" placeholder="Örn. Çınaraltı Kafe"><p class="error" role="alert"></p></div>
+          <div class="field full" data-field="business"><label for="f-business">İşletme adı *</label><input id="f-business" name="business" autocomplete="organization" required maxlength="{{max:business}}" placeholder="Örn. Çınaraltı Kafe"><p class="error" role="alert"></p></div>
           <div class="field" data-field="person"><label for="f-person">İlgili kişi *</label><input id="f-person" name="person" autocomplete="name" required maxlength="{{max:person}}" placeholder="Adınız ve soyadınız"><p class="error" role="alert"></p></div>
           <div class="field" data-field="phone"><label for="f-phone">Telefon *</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="{{max:phone}}" placeholder="0532 123 45 67"><p class="error" role="alert"></p></div>
           <div class="field" data-field="email"><label for="f-email">E-posta *</label><input id="f-email" name="email" type="email" autocomplete="email" required maxlength="{{max:email}}" placeholder="ornek@eposta.com"><p class="error" role="alert"></p></div>
           <div class="field" data-field="city"><label for="f-city">Şehir</label><input id="f-city" name="city" autocomplete="address-level2" maxlength="{{max:city}}" value="Elazığ"><p class="error" role="alert"></p></div>
-          <div class="field" data-field="tables"><label for="f-tables">Masa sayısı <small>(isteğe bağlı)</small></label><input id="f-tables" name="tables" type="number" inputmode="numeric" min="1" max="500" placeholder="Örn. 16"><p class="error" role="alert"></p></div>
           <div class="field full" data-field="type"><fieldset class="types"><legend class="label">İşletme türü *</legend>{{typeOptions}}</fieldset><p class="error" role="alert"></p></div>
           <div class="field full" data-field="message"><label for="f-message">Mesajınız <small>(isteğe bağlı)</small></label><textarea id="f-message" name="message" maxlength="{{max:message}}" placeholder="Örn. Hafta içi öğleden sonra arayabilirsiniz. Şu an kâğıt adisyon kullanıyoruz."></textarea><p class="error" role="alert"></p></div>
           <div class="trap" aria-hidden="true"><label for="f-website">Web siteniz (boş bırakın)</label><input id="f-website" name="website" tabindex="-1" autocomplete="off"></div>
@@ -53,6 +51,19 @@ nav: contact
       </div>
       <p class="hours">{{icon:Clock}}<span>Çalışma saatleri: {{hours}}</span></p>
     </aside>
+  </div>
+</section>
+
+<section class="section-tight" id="yardim" aria-labelledby="yardim-kart-baslik">
+  <div class="wrap">
+    <div class="yardim-kart">
+      {{yardimAvatar}}
+      <div>
+        <h2 id="yardim-kart-baslik">Mola’yı kullanırken takıldınız mı?</h2>
+        <p>Mola Yardım; sipariş, kasa ve gün sonu, yazıcı, QR menü, kafe içi cihazlar, Kafemi yönet ve yedek için hazır cevaplar verir. Yapay zekâ değildir; yazdıklarınız hiçbir yere gönderilmez.</p>
+      </div>
+      <button class="btn btn-primary" type="button" data-yardim-ac>Mola Yardım’ı açın</button>
+    </div>
   </div>
 </section>
 

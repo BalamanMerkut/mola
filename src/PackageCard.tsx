@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { Check, Info, Lock, MessageCircle, Package2, Plus, Sparkles } from 'lucide-react';
-import { featureById, optionalFeatures, type FeatureId, type PackageView } from '../packages/domain/feature-gate';
+import { featureById, isPartFeature, optionalFeatures, type FeatureId, type PackageView } from '../packages/domain/feature-gate';
 import { api } from './api';
 import { Card } from './SettingsKit';
 import { Modal, Notice } from './components';
@@ -16,7 +16,8 @@ import { ContactButtons } from './MolaContact';
  * ekibine yaz" opens Destek with a prefilled ticket; the team's phone, WhatsApp and e-mail when known).
  * Also the one-time "Deneme süreniz bitti" window listing the services that closed. Both read StaffSnapshot.pkg.
  */
-const sellable = (pkg: PackageView) => pkg.enabled.filter(id => id !== 'core' && !featureById.get(id)?.soon && !(pkg.menuOnly && !pkg.listed && id === 'qr-order'));
+// "Uzaktan yönetim" is inside "Uzaktan erişim" (one service since 15 Ekim): never a card of its own.
+const sellable = (pkg: PackageView) => pkg.enabled.filter(id => id !== 'core' && !featureById.get(id)?.soon && !isPartFeature(id) && !(pkg.menuOnly && !pkg.listed && id === 'qr-order'));
 const longDate = (iso: string) => new Date(iso).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' });
 const planName = (months?: number) => months === 12 ? 'Yıllık plan' : months === 6 ? '6 aylık plan' : months === 1 ? 'Aylık plan' : '';
 

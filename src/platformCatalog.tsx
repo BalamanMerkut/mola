@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { Check, Lock, Sparkles } from 'lucide-react';
-import { featureById, type FeatureGroup, type FeatureId } from '../packages/domain/features';
+import { featureById, shownFeatures, type FeatureGroup, type FeatureId } from '../packages/domain/features';
 import { addedFor, discountText, normalFeatures, priceFor, withoutFeature, type Discount, type Price, type ServicePackage, type ServicePrices } from '../packages/domain/service-pricing';
 import { money, moneyError, moneyInput, parseMoney } from './api';
 import './platform-sales.css';
@@ -16,6 +16,8 @@ export type CatalogView = { vatRate: number; updatedAt: string; features: Featur
 export type ServicesView = { packageId?: string | null; packageName: string; chosen: boolean; legacy?: 'full' | 'menu'; features: FeatureId[]; licenseFeatures: FeatureId[]; discount?: Discount; price: Price; packagePrice: Price; updatedAt?: string };
 export const GROUPS: FeatureGroup[] = ['Sipariş ve servis', 'Raporlar', 'Ekler', 'Uzaktan', 'Cihaz ve güvenlik', 'Yakında'];
 export const featureName = (id: FeatureId) => featureById.get(id)?.name ?? id;
+/** How many services a list holds as people count them ("Uzaktan yönetim" is inside "Uzaktan erişim"). */
+export const serviceCount = (ids: readonly FeatureId[]) => shownFeatures(ids).length;
 /** The vendor's current prices as the pricing rules want them. */
 export const pricesOf = (c: CatalogView): ServicePrices => Object.fromEntries(c.features.map(f => [f.id, { monthly: f.monthly, ...(f.yearlyTyped ? { yearly: f.yearly } : {}) }]));
 export const livePrice = (c: CatalogView, ids: FeatureId[], ...discounts: (Discount | undefined)[]) => priceFor(ids, pricesOf(c), ...discounts);
@@ -24,7 +26,7 @@ export const offeredPackages = (c: CatalogView) => c.packages.filter(p => !p.arc
 
 /** Services as small chips ("Adisyon çekirdeği", "QR menü" …), `max` of them and "+N". */
 export function FeatureChips({ ids, max = 99, tone = '' }: { ids: FeatureId[]; max?: number; tone?: '' | 'off' | 'on' }) {
-  const shown = ids.slice(0, max), rest = ids.length - shown.length;
+  const visible = shownFeatures(ids), shown = visible.slice(0, max), rest = visible.length - shown.length;
   return <ul className={`feature-chips ${tone}`} aria-label="Hizmetler">{shown.map(id => <li key={id}>{featureName(id)}</li>)}{rest > 0 && <li className="more">+{rest}</li>}</ul>;
 }
 
@@ -37,11 +39,11 @@ export function FeaturePicker({ catalog, chosen, onChange, disabled, label = 'Hi
   const [note, setNote] = useState('');
   const toggle = (id: FeatureId) => {
     if (chosen.includes(id)) {
-      const next = withoutFeature(chosen, id), gone = chosen.filter(x => x !== id && !next.includes(x));
+      const next = withoutFeature(chosen, id), gone = shownFeatures(chosen.filter(x => x !== id && !next.includes(x)));
       setNote(gone.length ? `${gone.map(featureName).join(', ')} da çıkarıldı (${featureName(id)} gerektirir).` : '');
       onChange(next);
     } else {
-      const next = normalFeatures([...chosen, id]), brought = next.filter(x => x !== id && !chosen.includes(x));
+      const next = normalFeatures([...chosen, id]), brought = shownFeatures(next.filter(x => x !== id && !chosen.includes(x)));
       setNote(brought.length ? `${featureName(id)} için ${brought.map(featureName).join(', ')} de eklendi.` : '');
       onChange(next);
     }

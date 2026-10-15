@@ -15,14 +15,14 @@ export const SITE_LEAD_SECTOR: Record<SiteLeadType, 'cafe' | 'restaurant' | 'des
 export const SITE_CONSENT_VERSION = 'kvkk-aydinlatma-2026-10-14';
 export const SITE_LEAD_LIMITS = {
   business: { min: 2, max: 80 }, person: { min: 2, max: 80 }, phone: { max: 20 }, email: { max: 120 },
-  city: { min: 2, max: 40 }, tables: { min: 1, max: 500 }, message: { max: 1500 },
+  city: { min: 2, max: 40 }, message: { max: 1500 },
 } as const;
 /** A person fills the form in seconds at the very least; a bot right away. Seconds between opening the form and sending. */
 export const SITE_LEAD_MIN_SECONDS = 4;
 
 export type SiteLeadInput = {
   /** email: required by checkSiteLead since 13 Ekim; leads kept from before may have none. */
-  business: string; person: string; phone: string; email?: string; city: string; tables?: number; type: SiteLeadType; message?: string;
+  business: string; person: string; phone: string; email?: string; city: string; type: SiteLeadType; message?: string;
   consent: true; consentVersion: string;
 };
 export type SiteLeadProblem = { field: keyof SiteLeadInput | 'form'; message: string };
@@ -62,15 +62,10 @@ export function checkSiteLead(body: unknown): { ok: true; value: SiteLeadInput }
   if (!email) return fail('email', 'E-posta adresinizi yazın.');
   if (email.length > L.email.max || !EMAIL.test(email)) return fail('email', 'E-posta adresi geçersiz. Örnek: ayse@ornekkafe.com');
   if (city.length < L.city.min || city.length > L.city.max || /[<>{}]/.test(city)) return fail('city', 'Şehri yazın.');
-  let tables: number | undefined;
-  if (b.tables !== undefined && b.tables !== null && b.tables !== '') {
-    const n = typeof b.tables === 'number' ? b.tables : Number(String(b.tables).trim());
-    if (!Number.isInteger(n) || n < L.tables.min || n > L.tables.max) return fail('tables', `Masa sayısı ${L.tables.min} ile ${L.tables.max} arasında olmalı. Boş da bırakabilirsiniz.`);
-    tables = n;
-  }
+  // "Masa sayısı" is no longer asked (15 Ekim). A page still open from before may send it: ignored, never a reason to refuse.
   if (typeof b.type !== 'string' || !(SITE_LEAD_TYPES as readonly string[]).includes(b.type)) return fail('type', 'İşletme türünü seçin.');
   if (message.length > L.message.max) return fail('message', `Mesaj en çok ${L.message.max} harf olabilir.`);
   if (b.consent !== true) return fail('consent', 'Devam etmek için KVKK Aydınlatma Metni’ni okuduğunuzu onaylayın.');
   if (b.consentVersion !== SITE_CONSENT_VERSION) return fail('consentVersion', 'Sayfa eski kalmış. Lütfen sayfayı yenileyip yeniden gönderin.');
-  return { ok: true, value: { business, person, phone, email, city, ...(tables ? { tables } : {}), type: b.type as SiteLeadType, ...(message ? { message } : {}), consent: true, consentVersion: SITE_CONSENT_VERSION } };
+  return { ok: true, value: { business, person, phone, email, city, type: b.type as SiteLeadType, ...(message ? { message } : {}), consent: true, consentVersion: SITE_CONSENT_VERSION } };
 }

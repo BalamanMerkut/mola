@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Clock3, Lock, PauseCircle, Settings2, ShieldCheck } from 'lucide-react';
-import type { FeatureId } from '../packages/domain/features';
+import { shownFeatures, type FeatureId } from '../packages/domain/features';
 import { discountText, sellableFeatures, type Discount } from '../packages/domain/service-pricing';
 import { money } from './api';
 import { DemoSection } from './PlatformDemo';
-import { DiscountField, FeatureChips, FeaturePicker, PriceBlock, featureName, livePrice, offeredPackages, type CatalogView } from './platformCatalog';
+import { DiscountField, FeatureChips, FeaturePicker, PriceBlock, featureName, livePrice, offeredPackages, serviceCount, type CatalogView } from './platformCatalog';
 import { ADMIN, type Business } from './platformStatus';
 import './platform-service-bar.css';
 
@@ -46,9 +46,10 @@ function ServiceChoice({ l, s, catalog, disabled, mutate }: { l: Business; s: No
   const trial = l.kind === 'trial', running = !!l.endsAt && l.active;
   const sameDiscount = (discountText(discount) || '') === (discountText(s.discount) || '');
   const dirty = !!choice && (choice !== currentChoice || (choice === CUSTOM && custom.join() !== s.features.join()) || !sameDiscount);
-  const all = useMemo(() => sellableFeatures(), []);
-  const stays = features, closes = all.filter(f => !features.includes(f));
-  const removed = s.features.filter(f => !features.includes(f)), added = features.filter(f => !s.features.includes(f));
+  // As people count them: "Uzaktan yönetim" is inside "Uzaktan erişim" (packages/domain/features.ts partOf).
+  const all = useMemo(() => shownFeatures(sellableFeatures()), []);
+  const stays = shownFeatures(features), closes = all.filter(f => !features.includes(f));
+  const removed = shownFeatures(s.features.filter(f => !features.includes(f))), added = shownFeatures(features.filter(f => !s.features.includes(f)));
   const choiceName = choice === CUSTOM ? 'Özel' : pkg?.name ?? 'Paket seçilmedi';
   // One press: the bar already says what changes, and the Authenticator code (src/platformStepUp.tsx) is the confirmation
   // (docs/KULLANICI_TESTI_RAPORU.md K-V; there is no extra "Emin misiniz?" step).
@@ -64,8 +65,8 @@ function ServiceChoice({ l, s, catalog, disabled, mutate }: { l: Business; s: No
       <div className={`service-state ${l.suspended ? 'bad' : trial ? 'info' : 'ok'}`}>
         <span className="service-state-icon" aria-hidden="true">{l.suspended ? <PauseCircle size={22} /> : trial ? <Clock3 size={22} /> : <ShieldCheck size={22} />}</span>
         <div>
-          <strong>{l.suspended ? 'Hizmet askıda · müşteri menüsü ve yeni sipariş kapalı' : trial ? (running ? `Deneme: ${l.daysRemaining} gün kaldı · şu an her şey açık` : 'Deneme · şu an her şey açık') : `Şu an açık: ${s.packageName} · ${s.licenseFeatures.length} hizmet`}</strong>
-          <p>{trial ? `Deneme bitince ${s.chosen ? `“${s.packageName}”` : 'seçilen paket'} geçerli olur: ${s.features.length} hizmet açık kalır${sellableFeatures().length - s.features.length ? `, ${sellableFeatures().length - s.features.length} hizmet kapanır (veriler saklanır)` : ''}.` : `Aylık ${money(nowPrice.monthly)} · yıllık ${money(nowPrice.yearly)} (KDV hariç)${s.discount ? ` · işletme indirimi: ${discountText(s.discount)}` : ''}.`}</p>
+          <strong>{l.suspended ? 'Hizmet askıda · müşteri menüsü ve yeni sipariş kapalı' : trial ? (running ? `Deneme: ${l.daysRemaining} gün kaldı · şu an her şey açık` : 'Deneme · şu an her şey açık') : `Şu an açık: ${s.packageName} · ${serviceCount(s.licenseFeatures)} hizmet`}</strong>
+          <p>{trial ? `Deneme bitince ${s.chosen ? `“${s.packageName}”` : 'seçilen paket'} geçerli olur: ${serviceCount(s.features)} hizmet açık kalır${all.length - serviceCount(s.features) ? `, ${all.length - serviceCount(s.features)} hizmet kapanır (veriler saklanır)` : ''}.` : `Aylık ${money(nowPrice.monthly)} · yıllık ${money(nowPrice.yearly)} (KDV hariç)${s.discount ? ` · işletme indirimi: ${discountText(s.discount)}` : ''}.`}</p>
         </div>
       </div>
       {!s.chosen && <p className="service-warn" role="status">Bu işletmeye henüz paket seçilmedi: ücretli aboneliğe geçince bütün hizmetler açık kalır. Aşağıdan bir paket seçin.</p>}
@@ -81,7 +82,7 @@ function ServiceChoice({ l, s, catalog, disabled, mutate }: { l: Business; s: No
             <span className="service-card-head"><strong>{p.name}</strong>{now ? <span className="status-chip ok">Şu anki</span> : p.legacy ? <span className="status-chip idle">Eski plan</span> : p.archived ? <span className="status-chip idle">Arşivde</span> : null}</span>
             <span className="service-card-price"><b>{money(p.price.monthly)}</b>/ay <small>· {money(p.price.yearly)}/yıl</small></span>
             <FeatureChips ids={p.features} max={5} />
-            <span className="service-foot">{selected ? <><CheckCircle2 size={15} aria-hidden="true" />Seçili</> : `${p.features.length} hizmet`}</span>
+            <span className="service-foot">{selected ? <><CheckCircle2 size={15} aria-hidden="true" />Seçili</> : `${serviceCount(p.features)} hizmet`}</span>
           </button>;
         })}
         <button type="button" role="radio" aria-checked={choice === CUSTOM} disabled={disabled} className={`service-card custom${choice === CUSTOM ? ' selected' : ''}`} onClick={() => setChoice(CUSTOM)}>
