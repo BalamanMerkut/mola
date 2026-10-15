@@ -1,4 +1,6 @@
-# Hazır şablon görselleri (Gemini Gem ile)
+# Hazır şablon görselleri (Gemini ile)
+
+> **15 Ekim:** Gem kuralları karıştırdığı için önerilen yol aşağıdaki **"B. Gem olmadan"** bölümüdür. Üstteki Gem adımları yedek olarak duruyor.
 
 Yeni kurulumda gelen üç hazır menünün (kafe, tatlıcı, restoran) 47 ürünü için ürün görselleri. Hepsi "Mola Görsel Stüdyosu" Gem'inde, **tek bir sohbette**, STÜDYO tarzında, kırık beyaz zeminde ve varsayılan **Adaçayı** paletinde üretilir. Böylece hepsi aynı ışık ve zeminde olur.
 
@@ -108,6 +110,345 @@ Her mesajın sonuna aynı cümle eklenmiştir: "Ekleme yapma; yalnız yazdıklar
 | 45 | Su | `r-su.png` | Stüdyo çekimi: 500 ml su. Kap: etiketsiz, şeffaf, sade plastik su şişesi, kapağı kapalı. Görünüş: şişe dolu, üzerinde hafif soğuk buğusu. Yanında: hiçbir şey. Süsleme: yok. Etikette ve kapakta hiçbir yazı ya da marka olmasın. Ekleme yapma; yalnız yazdıklarımı kullan. |
 | 46 | Çay | `r-cay.png` | Stüdyo çekimi: demleme çay. Kap: K4. Görünüş: bardak 4/5 dolu, berrak koyu amber. Yanında: tabakta 2 küp şeker ve ince çay kaşığı. Süsleme: yok. Ekleme yapma; yalnız yazdıklarımı kullan. |
 | 47 | Türk Kahvesi | `r-turk-kahvesi.png` | Stüdyo çekimi: Türk kahvesi. Kap: K3. Görünüş: üstü yoğun köpüklü. Yanında: küçük bir bardak su, tabakta bir adet lokum. Süsleme: yok. Ekleme yapma; yalnız yazdıklarımı kullan. |
+
+
+## B. Gem olmadan: tek mesajlık komutlar (önerilen)
+
+Gem bazen kuralları karıştırıyor ya da resim çizmeden "hazırladım" diyor. Bu yüzden her ürün için **kendi başına yeterli** bir komut hazırladım: stil kuralları ve kap tarifi komutun içinde. Gem kullanmadan, normal bir Gemini sohbetinde kullanın.
+
+- **Hepsini aynı sohbette** üretin: ışık ve zemin birbirini tutar.
+- Her seferinde **bir** komut yapıştırın; resim ekranda görünmüyorsa "Resmi çiz" yazın. Resimsiz kontrol listelerine güvenmeyin.
+- **Model:** Bütün görselleri aynı modelle üretin. "Hızlı" modelin günlük resim hakkı daha fazladır.
+- Görseli kontrol edin (yazı, marka, el yok; komuttaki her şey var; ekleme yok), sonra okun yanındaki adla kaydedin.
+
+**1. Caffè Latte** → `latte.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: Caffè Latte. Kap: beyaz porselen latte fincanı ve tabağı. Görünüş: fincan dolu, üstte yoğun ve pürüzsüz süt köpüğü, ortada sade bir yaprak latte art. Yanında: tabakta küçük bir kahve kaşığı. Süsleme: yok.
+```
+
+**2. Americano** → `americano.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: Americano. Kap: beyaz porselen kupa. Görünüş: kupa 4/5 dolu, koyu kahve, üstte ince açık kahverengi krema halkası. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**3. Türk Kahvesi** → `turkish.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: Türk kahvesi. Kap: beyaz porselen Türk kahvesi fincanı ve küçük tabağı. Görünüş: üstü yoğun köpüklü. Yanında: küçük bir bardak su. Süsleme: yok.
+```
+
+**4. Demleme Çay** → `tea.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: demleme çay. Kap: ince belli şeffaf çay bardağı ve beyaz küçük tabağı. Görünüş: bardak 4/5 dolu, berrak koyu amber. Yanında: tabakta 2 küp şeker ve ince çay kaşığı. Süsleme: yok.
+```
+
+**5. Ihlamur** → `herbal.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: ıhlamur. Kap: şeffaf cam kupa. Görünüş: kupa 4/5 dolu, açık altın sarısı berrak çay, içinde birkaç kuru ıhlamur yaprağı ve çiçeği. Yanında: kupanın yanında ince bir limon dilimi. Süsleme: yok.
+```
+
+**6. Ev Yapımı Limonata** → `lemonade.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: ev yapımı limonata. Kap: uzun şeffaf cam bardak. Görünüş: bardak 4/5 dolu, açık sarı, içinde 3–4 buz, bardağın yüzeyinde hafif buğu ve su damlaları. Yanında: hiçbir şey. Süsleme: kenarda ince limon dilimi, bir dal taze nane, pipet yok.
+```
+
+**7. San Sebastian** → `cheesecake.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: San Sebastian cheesecake. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: tek dilim, üstü koyu karamelize, kesit yüzü yumuşak ve kremamsı, üzerine akıtılmış çikolata sosu. Yanında: tatlı çatalı. Süsleme: yok.
+```
+
+**8. Çikolatalı Brownie** → `brownie.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: çikolatalı brownie. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: kare bir dilim, yoğun bitter çikolatalı, nemli iç, kesitte görünen iri ceviz parçaları. Yanında: tatlı çatalı. Süsleme: üstte birkaç ceviz içi.
+```
+
+**9. Fıstıklı Baklava** → `d-fistikli.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: fıstıklı baklava (kiloyla satılır). Kap: yuvarlak bakır tepsi. Görünüş: tepside düzgün kare dilimler, ince kat kat yufka, aralarda ve üstte bol yeşil Antep fıstığı, şerbetten parlak. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**10. Cevizli Baklava** → `d-cevizli.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: cevizli baklava (kiloyla satılır). Kap: yuvarlak bakır tepsi. Görünüş: tepside düzgün kare dilimler, ince yufka, kesitte iri ceviz içi, şerbetten parlak. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**11. Şöbiyet** → `d-sobiyet.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: şöbiyet (kiloyla satılır). Kap: yuvarlak bakır tepsi. Görünüş: üçgen dilimler, içinde beyaz kaymak ve fıstık, şerbetten parlak. Yanında: hiçbir şey. Süsleme: üstte çekilmiş fıstık.
+```
+
+**12. Fıstıklı Baklava (porsiyon)** → `d-porsiyon.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: fıstıklı baklava porsiyonu. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: tabakta dört dilim fıstıklı baklava, kat kat yufka, bol fıstık. Yanında: tatlı çatalı. Süsleme: yok.
+```
+
+**13. Kazandibi** → `d-kazandibi.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: kazandibi. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: dikdörtgen bir porsiyon, altı koyu karamelize görünecek şekilde rulo değil düz dilim, beyaz sütlü gövde. Yanında: tatlı kaşığı. Süsleme: üstte hafif tarçın.
+```
+
+**14. Fırın Sütlaç** → `d-sutlac.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: fırın sütlaç. Kap: küçük kahverengi toprak güveç kabı. Görünüş: kap dolu, üstü fırında kızarmış açık kahverengi lekeli kabuk. Yanında: tatlı kaşığı. Süsleme: yok.
+```
+
+**15. Profiterol** → `d-profiterol.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: profiterol. Kap: beyaz yuvarlak tatlı tabağı (derince). Görünüş: 5–6 küçük kremalı top hamur, üzeri bol parlak çikolata sosla kaplı. Yanında: tatlı kaşığı. Süsleme: yok.
+```
+
+**16. Çikolatalı Dilim Pasta** → `d-dilim-pasta.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: çikolatalı dilim pasta. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: üçgen dilim, katmanlı ıslak çikolatalı kek, üstü ve yanları parlak ganaj kaplı. Yanında: tatlı çatalı. Süsleme: yok.
+```
+
+**17. Frambuazlı Cheesecake** → `d-cheesecake.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: frambuazlı cheesecake. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: tek dilim fırında cheesecake, bisküvi tabanlı, üstte parlak frambuaz sosu. Yanında: tatlı çatalı. Süsleme: üstte 2–3 taze frambuaz.
+```
+
+**18. Yaş Pasta (8 kişilik)** → `d-yas-pasta.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: bütün yaş pasta, 8 kişilik. Kap: beyaz yuvarlak pasta altlığı. Görünüş: beyaz kremalı yuvarlak pasta, yanları düz, üstte sade krema süslemesi; üstünde yazı yok. Yanında: hiçbir şey. Süsleme: üstte birkaç taze çilek.
+```
+
+**19. Tuzlu Kurabiye** → `d-tuzlu-kurabiye.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: tuzlu kurabiye. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: 6–8 adet altın renkli tuzlu kurabiye, bir kısmının üstünde çörek otu, bir kısmının üstünde susam. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**20. Un Kurabiyesi** → `d-un-kurabiyesi.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: un kurabiyesi. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: 6–8 adet yuvarlak, ufalanan dokulu un kurabiyesi, üzeri pudra şekerli. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**21. Acıbadem Kurabiyesi** → `d-acibadem.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: acıbadem kurabiyesi. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: 6–8 adet çatlak yüzeyli açık kahverengi kurabiye, her birinin ortasında bir badem. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**22. Güllü Lokum** → `d-gullu-lokum.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: güllü lokum. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: 8–10 küp açık pembe lokum, üzeri pudra şekerli. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**23. Fıstıklı Lokum** → `d-fistikli-lokum.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: fıstıklı lokum. Kap: beyaz yuvarlak tatlı tabağı. Görünüş: 8–10 dilim lokum, kesitte bol yeşil Antep fıstığı görünüyor, üzeri hafif pudralı. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**24. Çay** → `d-cay.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: çay. Kap: ince belli şeffaf çay bardağı ve beyaz küçük tabağı. Görünüş: bardak 4/5 dolu, berrak koyu amber. Yanında: tabakta 2 küp şeker ve ince çay kaşığı. Süsleme: yok.
+```
+
+**25. Türk Kahvesi** → `d-turk-kahvesi.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: Türk kahvesi. Kap: beyaz porselen Türk kahvesi fincanı ve küçük tabağı. Görünüş: üstü yoğun köpüklü. Yanında: küçük bir bardak su, tabakta bir adet lokum. Süsleme: yok.
+```
+
+**26. Limonata** → `d-limonata.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: ev yapımı limonata. Kap: uzun şeffaf cam bardak. Görünüş: bardak 4/5 dolu, açık sarı, içinde 3–4 buz, yüzeyde hafif buğu. Yanında: hiçbir şey. Süsleme: kenarda ince limon dilimi ve bir dal taze nane, pipet yok.
+```
+
+**27. Su** → `d-su.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: 500 ml su. Kap: etiketsiz, şeffaf, sade plastik su şişesi, kapağı kapalı. Görünüş: şişe dolu, üzerinde hafif soğuk buğusu. Yanında: hiçbir şey. Süsleme: yok. Etikette ve kapakta hiçbir yazı ya da marka olmasın.
+```
+
+**28. Mercimek Çorbası** → `r-mercimek.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: mercimek çorbası. Kap: beyaz derin çorba kâsesi. Görünüş: kâse dolu, pürüzsüz turuncu-sarı çorba, üstte birkaç damla kırmızı biberli tereyağı. Yanında: bir dilim limon ve küçük bir kâsede kıtır ekmek küpleri. Süsleme: yok.
+```
+
+**29. Ezogelin Çorbası** → `r-ezogelin.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: ezogelin çorbası. Kap: beyaz derin çorba kâsesi. Görünüş: kâse dolu, kırmızımsı turuncu, içinde görünen bulgur taneleri. Yanında: bir dilim limon. Süsleme: üstte kuru nane serpintisi.
+```
+
+**30. Tavuk Suyu Çorbası** → `r-tavuk-suyu.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: şehriyeli tavuk suyu çorbası. Kap: beyaz derin çorba kâsesi. Görünüş: kâse dolu, açık sarı berrak et suyu, içinde tel şehriye ve didilmiş tavuk parçaları. Yanında: bir dilim limon. Süsleme: üstte birkaç kıyılmış maydanoz.
+```
+
+**31. Adana Kebap** → `r-adana.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: Adana kebap. Kap: beyaz geniş yemek tabağı. Görünüş: tabakta iki şiş uzunluğunda, şişten çıkarılmış, ızgara izli kıyma kebap, altında ince lavaş. Yanında: tabakta közlenmiş sivri biber ve közlenmiş domates. Süsleme: biraz sumaklı soğan.
+```
+
+**32. Izgara Köfte** → `r-kofte.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: ızgara köfte. Kap: beyaz geniş yemek tabağı. Görünüş: tabakta 6–8 adet ızgara izli dana köfte. Yanında: tabakta közlenmiş biber ve küçük bir kâsede piyaz. Süsleme: yok.
+```
+
+**33. Tavuk Şiş** → `r-tavuk-sis.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: tavuk şiş. Kap: beyaz geniş yemek tabağı. Görünüş: tabakta şişten çıkarılmış, yoğurtlu marinasyonla açık kızarmış, ızgara izli tavuk küpleri. Yanında: tabakta közlenmiş biber ve domates. Süsleme: yok.
+```
+
+**34. Tavuk Sote** → `r-tavuk-sote.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: tavuk sote. Kap: beyaz geniş yemek tabağı (derince). Görünüş: soslu tavuk parçaları, dilimlenmiş mantar, renkli biber ve domates. Yanında: hiçbir şey. Süsleme: üstte biraz kıyılmış maydanoz.
+```
+
+**35. Kuru Fasulye** → `r-kuru-fasulye.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: kuru fasulye. Kap: küçük kahverengi toprak güveç kabı. Görünüş: kap dolu, salçalı kırmızı sos içinde beyaz fasulye, üstte parlak tereyağı. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**36. Klasik Burger** → `r-burger.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: klasik burger. Kap: açık renk ahşap servis tahtası. Görünüş: susamlı ekmek, kalın dana köfte, marul, domates dilimi ve turşu görünüyor. Yanında: tahtada bir porsiyon patates kızartması. Süsleme: yok.
+```
+
+**37. Cheeseburger** → `r-cheeseburger.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: cheeseburger. Kap: açık renk ahşap servis tahtası. Görünüş: susamlı ekmek, köfte üzerinde erimiş çift kat cheddar, karamelize soğan. Yanında: tahtada bir porsiyon patates kızartması. Süsleme: yok.
+```
+
+**38. Tavuk Burger** → `r-tavuk-burger.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: tavuk burger. Kap: açık renk ahşap servis tahtası. Görünüş: susamlı ekmek, çıtır kaplamalı tavuk göğsü, üzerinde coleslaw salatası. Yanında: tahtada bir porsiyon patates kızartması. Süsleme: yok.
+```
+
+**39. Çoban Salata** → `r-coban.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: çoban salata. Kap: beyaz geniş salata kâsesi. Görünüş: küp doğranmış domates, salatalık, yeşil biber ve kırmızı soğan, üzerinde nar ekşisi. Yanında: hiçbir şey. Süsleme: üstte birkaç maydanoz yaprağı.
+```
+
+**40. Sezar Salata** → `r-sezar.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: Sezar salata. Kap: beyaz geniş salata kâsesi. Görünüş: doğranmış göbek marul, rendelenmiş parmesan, kızarmış kruton, üzerinde kremamsı sezar sos. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**41. Fırın Sütlaç** → `r-sutlac.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: fırın sütlaç. Kap: küçük kahverengi toprak güveç kabı. Görünüş: kap dolu, üstü fırında kızarmış açık kahverengi lekeli kabuk. Yanında: tatlı kaşığı. Süsleme: yok.
+```
+
+**42. Künefe** → `r-kunefe.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: künefe. Kap: küçük bakır künefe tavası. Görünüş: sıcak, altın renkli kadayıf, ortasından uzayan erimiş peynir, şerbetten parlak. Yanında: hiçbir şey. Süsleme: üstte çekilmiş Antep fıstığı.
+```
+
+**43. Ayran** → `r-ayran.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: yayık ayranı. Kap: uzun şeffaf cam bardak. Görünüş: bardak dolu, beyaz ayran, üstte kalın köpük. Yanında: hiçbir şey. Süsleme: yok.
+```
+
+**44. Kola** → `r-kola.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: kola. Kap: uzun şeffaf cam bardak. Görünüş: bardak 4/5 dolu, koyu kola, içinde 3–4 buz, üstte hafif köpük, bardak yüzeyinde buğu. Yanında: hiçbir şey. Süsleme: yok. Kutu ya da şişe yok, hiçbir marka ya da logo yok.
+```
+
+**45. Su** → `r-su.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: 500 ml su. Kap: etiketsiz, şeffaf, sade plastik su şişesi, kapağı kapalı. Görünüş: şişe dolu, üzerinde hafif soğuk buğusu. Yanında: hiçbir şey. Süsleme: yok. Etikette ve kapakta hiçbir yazı ya da marka olmasın.
+```
+
+**46. Çay** → `r-cay.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: demleme çay. Kap: ince belli şeffaf çay bardağı ve beyaz küçük tabağı. Görünüş: bardak 4/5 dolu, berrak koyu amber. Yanında: tabakta 2 küp şeker ve ince çay kaşığı. Süsleme: yok.
+```
+
+**47. Türk Kahvesi** → `r-turk-kahvesi.png`
+
+```
+Profesyonel stüdyo ürün fotoğrafı çiz. Kare (1:1). Zemin: kırık beyaz, kesintisiz sonsuz fon, desensiz. Işık: yumuşak, gün ışığı gibi, soldan hafif; yumuşak doğal gölge. Açı: 30–35 derece yukarıdan. Ürün karenin tam ortasında, karenin yaklaşık yüzde 60'ını kaplasın; üstte ve altta eşit boşluk kalsın. Gerçekçi, iştah açıcı, keskin odak. Kaplar sade ve desensiz. Yazı, logo, marka, etiket, filigran, el ya da insan olmasın. Sahnede yalnız aşağıda yazdıklarım olsun, başka hiçbir şey ekleme.
+Ürün: Türk kahvesi. Kap: beyaz porselen Türk kahvesi fincanı ve küçük tabağı. Görünüş: üstü yoğun köpüklü. Yanında: küçük bir bardak su, tabakta bir adet lokum. Süsleme: yok.
+```
 
 ## 4. Aynı görseli tekrar kullanabileceğiniz yerler
 
