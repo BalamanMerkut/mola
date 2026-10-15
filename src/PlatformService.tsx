@@ -4,7 +4,7 @@ import { shownFeatures, type FeatureId } from '../packages/domain/features';
 import { discountText, sellableFeatures, type Discount } from '../packages/domain/service-pricing';
 import { money } from './api';
 import { DemoSection } from './PlatformDemo';
-import { DiscountField, FeatureChips, FeaturePicker, PriceBlock, featureName, livePrice, offeredPackages, serviceCount, type CatalogView } from './platformCatalog';
+import { DiscountField, FeatureChips, FeaturePicker, ListPrice, NowLabel, PriceBlock, discountSize, featureName, livePrice, offeredPackages, serviceCount, type CatalogView } from './platformCatalog';
 import { ADMIN, type Business } from './platformStatus';
 import './platform-service-bar.css';
 
@@ -77,10 +77,10 @@ function ServiceChoice({ l, s, catalog, disabled, mutate }: { l: Business; s: No
       <p className="section-lead">Bir paket seçin ya da “Özel” ile hizmetleri tek tek işaretleyin. Paketten çıkan hizmetin verileri silinmez, yalnız gizlenir; geri eklenince kaldığı yerden döner.</p>
       <div className="service-packages" role="radiogroup" aria-label="Hizmet paketi">
         {cards.map(p => {
-          const selected = choice === p.id, now = currentChoice === p.id;
+          const selected = choice === p.id, now = currentChoice === p.id, off = p.price.listMonthly !== p.price.monthly;
           return <button type="button" role="radio" key={p.id} aria-checked={selected} disabled={disabled} className={`service-card${selected ? ' selected' : ''}${p.legacy ? ' legacy' : ''}`} onClick={() => setChoice(p.id)}>
             <span className="service-card-head"><strong>{p.name}</strong>{now ? <span className="status-chip ok">Şu anki</span> : p.legacy ? <span className="status-chip idle">Eski plan</span> : p.archived ? <span className="status-chip idle">Arşivde</span> : null}</span>
-            <span className="service-card-price"><b>{money(p.price.monthly)}</b>/ay <small>· {money(p.price.yearly)}/yıl</small></span>
+            <span className="service-card-price">{off && <ListPrice amount={p.price.listMonthly} />}<b>{off && <NowLabel text="Paket fiyatı" />}{money(p.price.monthly)}</b>/ay <small>· {money(p.price.yearly)}/yıl</small></span>
             <FeatureChips ids={p.features} max={5} />
             <span className="service-foot">{selected ? <><CheckCircle2 size={15} aria-hidden="true" />Seçili</> : `${serviceCount(p.features)} hizmet`}</span>
           </button>;
@@ -102,8 +102,8 @@ function ServiceChoice({ l, s, catalog, disabled, mutate }: { l: Business; s: No
           <PriceBlock price={price} label="Bu işletmenin fiyatı" />
           <dl className="price-steps">
             <div><dt>Liste fiyatı</dt><dd>{money(price.listMonthly)}/ay</dd></div>
-            {pkg?.discount && <div><dt>Paket indirimi</dt><dd>{discountText(pkg.discount)}</dd></div>}
-            {discount && discount.value > 0 && <div><dt>İşletme indirimi</dt><dd>{discountText(discount)}</dd></div>}
+            {pkg?.discount && <div><dt>Paket indirimi</dt><dd>{discountSize(pkg.discount)}</dd></div>}
+            {discount && discount.value > 0 && <div><dt>İşletme indirimi</dt><dd>{discountSize(discount)}</dd></div>}
           </dl>
         </div>
       </div>

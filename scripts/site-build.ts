@@ -5,8 +5,9 @@
  * Sources: site/src/layout.html (head, header, footer), site/src/pages/*.html (one page each, a `<!--page …-->` block on
  * top), site/src/assets (CSS, JS, videos and stills from `npm run site:videos`), site/config.json (phone, WhatsApp, e-mail…).
  * Mola Yardım (the "Yardım" button): site/src/assets/yardim.json → assets/yardim.js (scripts/site-yardim.ts; no AI, no request).
- * The service and package lists come from packages/domain/features.ts (names, "Yakında", what each package holds; never a
- * price), the form's limits and KVKK text version from packages/domain/site-lead.ts. Icons are lucide (the app's own set),
+ * The service and package lists come from packages/domain/features.ts (names, "Yakında", what each package holds, and the
+ * three packages' prices from the code's defaults: see packagesHtml), the form's limits and KVKK text version from
+ * packages/domain/site-lead.ts. Icons are lucide (the app's own set),
  * drawn into the HTML at build time: the site loads no script, font or style from anywhere else and sets no cookie.
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -18,6 +19,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as lucide from 'lucide-react';
 import sharp from 'sharp';
 import { defaultPackages, featureById, features, type FeatureId } from '../packages/domain/features.js';
+import { lira, priceFor } from '../packages/domain/service-pricing.js';
 import { SITE_CONSENT_VERSION, SITE_LEAD_LIMITS, SITE_LEAD_TYPE_NAMES, SITE_LEAD_TYPES } from '../packages/domain/site-lead.js';
 import { yardimScript } from './site-yardim.js';
 
@@ -95,11 +97,27 @@ function servicesHtml() {
   });
   return `<div class="cards services">${cards.join('\n')}</div>`;
 }
+/*
+ * Prices: the site shows the CODE's starting prices (packages/domain/features.ts: each service's `monthly` and the
+ * defaultPackages' discount), worked out the way Mola Merkez does it (service-pricing.ts priceFor; yearly = 10 months), never
+ * typed here. Mola Yönetim → Paketler / Hizmet fiyatları changes only Mola Merkez's own copy: when the owner changes a price
+ * or a package there, the defaults in features.ts must be changed too (and the site built again), or the site keeps showing
+ * the old price. Always without KDV, "+ KDV" beside every price; no pilot or launch discount here.
+ */
+function packagePriceHtml(p: typeof defaultPackages[number]) {
+  const price = priceFor(p.features, {}, p.discount), off = price.listMonthly !== price.monthly;
+  // Without a discount the struck line's place stays empty, so the three prices line up side by side.
+  const was = off ? `<s class="was"><span class="visually-hidden">Liste fiyatı </span>${lira(price.listMonthly)}</s>` : '<span class="was" aria-hidden="true"></span>';
+  return `<div class="package-price">${was}<p class="now">${off ? '<span class="visually-hidden">Paket fiyatı </span>' : ''}<b>${lira(price.monthly)}</b> <span class="per">/ay + KDV</span></p><p class="year">Yıllık ödemede 2 ay bedava: <span class="nowrap">${lira(price.yearly)} + KDV</span></p></div>`;
+}
 function packagesHtml() {
-  return `<div class="packages">${defaultPackages.map(p => {
+  const cards = defaultPackages.map(p => {
     const list = p.features.map(id => featureById.get(id)).filter(f => f && !f.soon && !f.partOf).map(f => `<li>${icon('Check', 18)}${esc(f!.name)}</li>`).join('');
-    return `<article class="package reveal${p.id === 'kafe-standart' ? ' featured' : ''}" data-paket="${esc(p.id)}"><h3>${esc(p.name)}</h3><p>${esc(PACKAGE_COPY[p.id] ?? '')}</p><ul>${list}</ul><a class="btn ${p.id === 'kafe-standart' ? 'btn-primary' : 'btn-ghost'}" href="/iletisim/#form">Bu paketi soralım</a></article>`;
-  }).join('\n')}</div>`;
+    return `<article class="package reveal${p.id === 'kafe-standart' ? ' featured' : ''}" data-paket="${esc(p.id)}"><h3>${esc(p.name)}</h3>${packagePriceHtml(p)}<p>${esc(PACKAGE_COPY[p.id] ?? '')}</p><ul>${list}</ul><a class="btn ${p.id === 'kafe-standart' ? 'btn-primary' : 'btn-ghost'}" href="/iletisim/#form">Bu paketi soralım</a></article>`;
+  });
+  // Özel: services chosen one by one, together; no per-service prices on the site.
+  cards.push(`<article class="package package-custom reveal" data-paket="ozel"><div><h3>Özel paket</h3><p>İhtiyacınız olan hizmetleri birlikte seçelim.</p></div><a class="btn btn-ghost" href="/iletisim/#form">İletişime geçin ${icon('ArrowRight', 18)}</a></article>`);
+  return `<p class="package-offer reveal">${icon('Gift', 20)}<span><b>İlk 30 gün ücretsiz</b> · <b>Kurulum ücretsiz</b></span></p><div class="packages">${cards.join('\n')}</div>`;
 }
 
 // ---------- Uygulamayı indir (/indir/) ----------

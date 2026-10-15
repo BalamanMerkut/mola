@@ -10,7 +10,6 @@
 .yonetim .feature-chips.off li { background:var(--idle-bg); color:var(--idle-fg); text-decoration:line-through; text-decoration-color:#bbb7b1; }
 .yonetim .feature-tag { font-style:normal; font-size:11.5px; font-weight:600; padding:1px 8px; border-radius:999px; background:#efe2c9; color:var(--green); white-space:nowrap; }
 .yonetim .feature-tag.soon { background:var(--warn-bg); color:var(--warn-fg); }
-.yonetim .discount-chip { align-self:flex-start; font-size:12.5px; font-weight:600; color:#7a4b12; background:#fdf1dc; border-radius:999px; padding:3px 10px; }
 .yonetim .field-problem { color:var(--bad-fg); font-size:13px; }
 .yonetim .affix { color:var(--y-muted); font-weight:600; padding:0 0 0 12px; }
 .yonetim .money-input { display:flex; align-items:center; border:1px solid #e1dbd1; border-radius:10px; background:var(--y-field,#fff); min-width:0; }
@@ -58,7 +57,10 @@
 .yonetim .price-block>div { display:flex; flex-direction:column; gap:2px; padding:12px 14px; border-radius:14px; background:var(--y-soft,#f1f5ee); min-width:0; }
 .yonetim .price-block span { font-size:12.5px; color:var(--y-muted); font-weight:600; }
 .yonetim .price-block strong { font-size:24px; font-weight:700; letter-spacing:-.5px; line-height:1.15; color:var(--green); overflow-wrap:anywhere; }
-.yonetim .price-block s, .yonetim .price-block small { font-size:12.5px; color:var(--y-faint); }
+.yonetim .price-block small { font-size:12.5px; color:var(--y-faint); }
+/* A list price struck through (platformCatalog ListPrice): small and muted, above the price a discount gave. */
+.yonetim .list-price { font-size:13.5px; font-weight:600; color:var(--y-muted); text-decoration-thickness:1.5px; text-decoration-color:#9aa29b; white-space:nowrap; }
+.yonetim .price-block .list-price { font-size:12.5px; }
 
 /* ---------- Ayarlar → Hizmet fiyatları ---------- */
 .yonetim .platform-settings-wide { max-width:980px; }
@@ -96,10 +98,15 @@
 .yonetim .package-card:hover { box-shadow:var(--y-shadow); border-color:#d6cdbc; }
 .yonetim .package-card header { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
 .yonetim .package-card h3 { font-size:19px; font-weight:650; letter-spacing:-.2px; overflow-wrap:anywhere; }
-.yonetim .package-price { display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 6px; }
+.yonetim .package-price { display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; }
+.yonetim .package-price > .list-price { font-size:15px; }
+.yonetim .package-now { display:flex; align-items:baseline; gap:6px; }
 .yonetim .package-price strong { font-size:30px; font-weight:700; letter-spacing:-.8px; color:var(--green); line-height:1.1; }
-.yonetim .package-price span { color:var(--y-muted); font-weight:600; }
-.yonetim .package-price small { flex-basis:100%; color:var(--y-muted); font-size:13.5px; }
+.yonetim .package-now > span { color:var(--y-muted); font-weight:600; }
+.yonetim .package-price small { color:var(--y-muted); font-size:13.5px; overflow-wrap:anywhere; }
+.yonetim .package-price small .list-price { font-size:inherit; font-weight:500; }
+.yonetim .price-arrow { color:var(--y-faint); }
+.yonetim .package-price .package-discount { font-size:13px; }
 .yonetim .package-card footer { margin-top:auto; padding-top:12px; border-top:1px solid var(--y-line-soft); display:flex; flex-direction:column; gap:10px; }
 .yonetim .package-use { display:flex; align-items:center; gap:6px; color:var(--y-muted); font-size:13.5px; }
 .yonetim .package-actions { display:flex; flex-wrap:wrap; gap:8px; }
@@ -142,6 +149,7 @@
 .yonetim .service-state p { margin:4px 0 0; color:inherit; opacity:.9; font-size:14px; }
 .yonetim .service-warn { margin:0; padding:10px 14px; border-radius:12px; background:var(--warn-bg); color:var(--warn-fg); font-size:14px; }
 .yonetim .service-card-price { font-size:14px; color:var(--y-muted); }
+.yonetim .service-card-price .list-price { display:block; margin-bottom:1px; }
 .yonetim .service-card-price b { font-size:24px; font-weight:700; letter-spacing:-.5px; color:var(--green); }
 .yonetim .service-card .feature-chips li { font-size:12px; }
 .yonetim .service-card .service-foot { display:flex; align-items:center; gap:6px; }

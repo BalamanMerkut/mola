@@ -253,10 +253,26 @@ section { position: relative; }
 .package li .icon { color: var(--green-500); width: 18px; height: 18px; margin-top: 2px; }
 .package ul { margin-bottom: 24px; }
 .package .btn { margin-top: auto; }
+/* Price (scripts/site-build.ts packagePriceHtml): a package discount's list price small and struck above, "+ KDV" always beside. */
+.package-price { margin: 4px 0 14px; }
+.package-price .was { display: block; min-height: 1.45em; font: 600 16px/1.45 var(--sans); color: var(--muted); text-decoration-thickness: 1.5px; text-decoration-color: rgba(90,106,97,.75); }
+.package-price .now { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; color: var(--ink); }
+.package-price .now b { font: 700 40px/1.05 var(--sans); letter-spacing: -.02em; color: var(--green); }
+.package-price .per { font-size: 16px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.package-price .year { margin: 6px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--muted); }
+.nowrap { white-space: nowrap; }
+.package-offer { display: flex; align-items: center; justify-content: center; gap: 10px; width: fit-content; max-width: 100%; margin: 0 auto 30px; padding: 10px 20px; border-radius: 999px; background: var(--green-100); color: var(--green-900); font-size: 16.5px; line-height: 1.4; text-align: center; }
+.package-offer .icon { flex: none; color: var(--green); }
+.package-offer b { font-weight: 700; white-space: nowrap; }
+.package.package-custom { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap; padding: 22px 28px; background: transparent; border: 1.5px dashed var(--line-strong); box-shadow: none; }
+.package.package-custom h3 { font-size: 24px; }
+.package.package-custom p { margin: 0; color: var(--muted); font-size: 15.5px; }
+.package.package-custom .btn { margin-top: 0; }
 .package-note { display: flex; gap: 14px; align-items: flex-start; background: var(--paper); border: 1px dashed var(--line-strong); border-radius: 20px; padding: 20px 22px; margin-top: 18px; }
 .package-note .icon { color: var(--green); width: 24px; height: 24px; margin-top: 2px; }
 .package-note p { margin: 0; color: var(--body); }
-@media (max-width: 1000px) { .packages { grid-template-columns: 1fr; max-width: 620px; margin: 0 auto; } }
+@media (max-width: 1000px) { .packages { grid-template-columns: 1fr; max-width: 620px; margin: 0 auto; } .package-price span.was { display: none; } }
+@media (max-width: 520px) { .package { padding: 24px 20px; } .package-price .now b { font-size: 36px; } .package.package-custom { padding: 20px; } .package.package-custom .btn { flex: 1 1 100%; } .package-offer { width: 100%; justify-content: flex-start; text-align: left; border-radius: 18px; padding: 12px 16px; } }
 
 /* ---------- Contact ---------- */
 .contact-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 22px; align-items: start; }

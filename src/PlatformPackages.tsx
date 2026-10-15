@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Archive, ArchiveRestore, ArrowLeft, Copy, Package, PackagePlus, Pencil, Store } from 'lucide-react';
 import type { FeatureId } from '../packages/domain/features';
 import { addedFor, normalFeatures, type Discount } from '../packages/domain/service-pricing';
-import { api, money, requestId } from './api';
+import { api, requestId } from './api';
 import { Notice } from './components';
-import { DiscountField, FeatureChips, FeaturePicker, PriceBlock, discountText, featureName, livePrice, serviceCount, type CatalogView, type PackageView } from './platformCatalog';
+import { DiscountField, FeatureChips, FeaturePicker, PackagePrice, PriceBlock, discountSize, featureName, livePrice, serviceCount, type CatalogView, type PackageView } from './platformCatalog';
 import { ADMIN } from './platformStatus';
 import { withStepUp } from './platformStepUp';
 
@@ -46,8 +46,7 @@ export function PlatformPackages({ onChanged }: { onChanged?: () => void }) {
   const live = catalog.packages.filter(p => !p.archived && !p.legacy), archived = catalog.packages.filter(p => p.archived && !p.legacy), legacy = catalog.packages.filter(p => p.legacy);
   const card = (p: PackageView) => <article key={p.id} className={`package-card${p.archived ? ' archived' : ''}${p.legacy ? ' legacy' : ''}`} aria-label={p.name}>
     <header><h3>{p.name}</h3>{p.legacy ? <span className="status-chip idle">Eski plan</span> : p.archived ? <span className="status-chip idle">Arşivde</span> : null}</header>
-    <div className="package-price"><strong>{money(p.price.monthly)}</strong><span>/ay</span><small>{money(p.price.yearly)} / yıl</small></div>
-    {p.discount && <span className="discount-chip">{discountText(p.discount)}</span>}
+    <PackagePrice price={p.price} discount={p.discount} />
     <FeatureChips ids={p.features} max={7} />
     <footer>
       <span className="package-use"><Store size={14} aria-hidden="true" />{p.businesses ? `${p.businesses} işletmede` : 'Henüz kullanılmıyor'}</span>
@@ -93,7 +92,7 @@ function PackageBuilder({ catalog, draft, onDraft, busy, asking, error, onSave, 
         <div className="builder-total">
           <span className="builder-count">{serviceCount(draft.features)} hizmet</span>
           <PriceBlock price={price} label="Paket toplamı" />
-          {price.listMonthly !== price.monthly && <small className="muted">Liste fiyatı {money(price.listMonthly)}/ay · {discountText(draft.discount)}</small>}
+          {price.listMonthly !== price.monthly && <small className="muted">Paket indirimi {discountSize(draft.discount)}</small>}
           <small className="muted">KDV hariç. Yıllık = 10 ay.</small>
         </div>
         {brought.length > 0 && <ul className="builder-notes">{brought.map(([need, by]) => <li key={need}>{featureName(by)} için {featureName(need)} de eklendi.</li>)}</ul>}

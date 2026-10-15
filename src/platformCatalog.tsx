@@ -99,12 +99,33 @@ export function DiscountField({ value, onChange, disabled, label = 'İndirim', m
   </div>;
 }
 
-/** Monthly and yearly side by side, with the list price struck through when a discount applies. */
+/** A discount's size for "Paket indirimi ₺110/ay" / "%10" (the label says "indirim"; "₺110/ay indirim" beside ₺1.950 read as 110 off 1.950). */
+export const discountSize = (d?: Discount) => !d || !d.value ? '' : d.kind === 'percent' ? `%${d.value}` : `${money(d.value)}/ay`;
+/** The list price, struck through and read out as "Liste fiyatı ₺2.060" (screen readers say nothing for <s> by itself). */
+export const ListPrice = ({ amount }: { amount: number }) => <s className="list-price"><span className="visually-hidden">Liste fiyatı </span>{money(amount)}</s>;
+/** Before the price a discount gave: read out as "… paket fiyatı ₺1.950". */
+export const NowLabel = ({ text = 'İndirimli fiyat' }: { text?: string }) => <span className="visually-hidden">{text} </span>;
+
+/**
+ * A package's price on its card. With a package discount: the list price small and struck through above, the price big, the
+ * yearly line with its struck list price, then "Paket indirimi ₺110/ay". Without one: the price and the yearly line only.
+ */
+export function PackagePrice({ price, discount }: { price: Price; discount?: Discount }) {
+  const off = price.listMonthly !== price.monthly, offYear = price.listYearly !== price.yearly, size = off ? discountSize(discount) : '';
+  return <div className={`package-price${off ? ' discounted' : ''}`}>
+    {off && <ListPrice amount={price.listMonthly} />}
+    <span className="package-now">{off && <NowLabel text="Paket fiyatı" />}<strong>{money(price.monthly)}</strong><span>/ay</span></span>
+    <small>{offYear && <><ListPrice amount={price.listYearly} /> <span className="price-arrow" aria-hidden="true">→</span> </>}{money(price.yearly)} / yıl</small>
+    {size && <small className="package-discount">Paket indirimi {size}</small>}
+  </div>;
+}
+
+/** Monthly and yearly side by side; with a discount the list price small and struck through above each. */
 export function PriceBlock({ price, label = 'Fiyat', compact = false }: { price: Price; label?: string; compact?: boolean }) {
   const off = price.listMonthly !== price.monthly || price.listYearly !== price.yearly;
   return <div className={`price-block${compact ? ' compact' : ''}`} aria-label={label}>
-    <div><span>Aylık</span><strong>{money(price.monthly)}</strong>{off && <s>{money(price.listMonthly)}</s>}</div>
-    <div><span>Yıllık</span><strong>{money(price.yearly)}</strong>{off ? <s>{money(price.listYearly)}</s> : <small>2 ay bedava</small>}</div>
+    <div><span>Aylık</span>{off && <ListPrice amount={price.listMonthly} />}<strong>{off && <NowLabel />}{money(price.monthly)}</strong></div>
+    <div><span>Yıllık</span>{off && <ListPrice amount={price.listYearly} />}<strong>{off && <NowLabel />}{money(price.yearly)}</strong>{!off && <small>2 ay bedava</small>}</div>
   </div>;
 }
 export { discountText };

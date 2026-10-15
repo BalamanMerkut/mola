@@ -95,8 +95,21 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   const list = page.getByRole('region', { name: 'Paketler' });
   for (const name of ['Çay bahçesi', 'Kafe Standart', 'Restoran Pro']) await expect(list.getByRole('article', { name })).toBeVisible();
   // 15 Ekim (owner's prices): Kafe Standart ₺2.060 − ₺110 = ₺1.950/ay with "Uzaktan erişim" (one chip: Uzaktan yönetim is inside it).
-  const standart = list.getByRole('article', { name: 'Kafe Standart' });
-  await expect(standart).toContainText('₺1.950'); await expect(standart).toContainText('₺110/ay indirim');
+  // The list price small and struck through ABOVE the price (read out as "Liste fiyatı"), the yearly line with its struck list
+  // price, and "Paket indirimi ₺110/ay" under it: no "₺110/ay indirim" chip beside ₺1.950 (it read as 110 off 1.950).
+  const standart = list.getByRole('article', { name: 'Kafe Standart' }), standartPrice = standart.locator('.package-price');
+  const struck = standartPrice.locator(':scope > s.list-price'), now = standartPrice.locator('.package-now');
+  await expect(struck).toHaveText('Liste fiyatı ₺2.060'); await expect(struck.locator('.visually-hidden')).toHaveText('Liste fiyatı ');
+  await expect(now).toHaveText('Paket fiyatı ₺1.950/ay'); await expect(now.locator('strong')).toHaveText('₺1.950');
+  expect(await struck.evaluate(e => getComputedStyle(e).textDecorationLine)).toBe('line-through');
+  const [wasBox, nowBox] = [await struck.boundingBox(), await now.boundingBox()];
+  expect(wasBox!.y + wasBox!.height).toBeLessThanOrEqual(nowBox!.y + 1);
+  await expect(standartPrice.locator('small').first()).toHaveText('Liste fiyatı ₺20.600 → ₺19.500 / yıl');
+  await expect(standartPrice.locator('.package-discount')).toHaveText('Paket indirimi ₺110/ay');
+  await expect(standart).not.toContainText('₺110/ay indirim'); await expect(standart.locator('.discount-chip')).toHaveCount(0);
+  // Without a package discount the card is as before: the price and the yearly line, nothing struck.
+  const cay = list.getByRole('article', { name: 'Çay bahçesi' });
+  await expect(cay.locator('.package-price')).toHaveText('₺980/ay₺9.800 / yıl'); await expect(cay.locator('s')).toHaveCount(0);
   await expect(standart.getByRole('list', { name: 'Hizmetler' })).toContainText('Uzaktan erişim'); await expect(standart).not.toContainText('Uzaktan yönetim');
   // Restoran Pro without a separate Müdür rolü (in the core), with Sosyal medya ve QR kartları and Bulutta şifreli yedek: 2.600 TL/ay.
   await expect(list.getByRole('article', { name: 'Restoran Pro' })).toContainText('₺2.600');
@@ -123,6 +136,9 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await builder.getByRole('radio', { name: '%' }).click();
   await builder.getByLabel('İndirim yüzdesi').fill('10');
   await expect(total).toContainText('₺1.170'); await expect(total).toContainText('₺11.700');
+  // The live total shows the list prices struck above (₺1.300 / ₺13.000) and "Paket indirimi %10" under it.
+  await expect(total.locator('s.list-price')).toHaveText(['Liste fiyatı ₺1.300', 'Liste fiyatı ₺13.000']);
+  await expect(builder.locator('.builder-total')).toContainText('Paket indirimi %10'); await expect(builder.locator('.builder-total')).not.toContainText('%10 indirim');
   await yonetimShot(page, 'paket-olustur.png', info.outputPath('paket-olustur.png'));
   for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `paket oluştur ${width}`).toBe('ok'); }
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -131,9 +147,10 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await confirmStepUp(page, 'Paketi oluştur');
   await expect(list.getByText('“Bahçe Plus” paketi oluşturuldu.')).toBeVisible();
   const card = list.getByRole('article', { name: 'Bahçe Plus' });
-  await expect(card).toContainText('₺1.170'); await expect(card).toContainText('%10 indirim');
+  await expect(card.locator('.package-now strong')).toHaveText('₺1.170'); await expect(card.locator('.package-price > s')).toHaveText('Liste fiyatı ₺1.300');
+  await expect(card.locator('.package-discount')).toHaveText('Paket indirimi %10');
   await yonetimShot(page, 'paketler.png', info.outputPath('paketler.png'));
-  for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `paketler ${width}`).toBe('ok'); }
+  for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `paketler ${width}`).toBe('ok'); if (width === 360) await page.screenshot({ path: info.outputPath('paketler-360.png'), fullPage: true }); }
   // Hizmet fiyatları: QR menü 250 TL; yearly follows (×10) unless typed; recorded in İşlem kayıtları. Within the
   // 10 minutes of that code no second code is asked.
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -170,7 +187,11 @@ test('İşletme → Hizmet: Özel with a discount (confirmed), Lisans → "Ödem
   const detail = await openBusiness(page, demo.name);
   await detailTab(detail, 'Hizmet').click();
   await expect(detail.getByRole('region', { name: 'Hizmet durumu' })).toContainText('Şu an açık');
-  await detail.getByRole('radiogroup', { name: 'Hizmet paketi' }).getByRole('radio', { name: /^Özel/ }).click();
+  // The package cards: Kafe Standart (a package discount) with its list price struck above; Çay bahçesi without.
+  const choices = detail.getByRole('radiogroup', { name: 'Hizmet paketi' });
+  await expect(choices.getByRole('radio', { name: /^Kafe Standart/ }).locator('.service-card-price')).toContainText(/^Liste fiyatı ₺[\d.]+Paket fiyatı ₺[\d.]+\/ay/);
+  await expect(choices.getByRole('radio', { name: /^Çay bahçesi/ }).locator('s')).toHaveCount(0);
+  await choices.getByRole('radio', { name: /^Özel/ }).click();
   // Start from the Çay bahçesi-like core + QR menü: untick what is not needed, tick Stok.
   const picker = detail.getByRole('group', { name: 'Bu işletmenin hizmetleri' });
   await expect(picker).not.toContainText('Müdür rolü');
