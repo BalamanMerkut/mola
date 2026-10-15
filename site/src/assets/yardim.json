@@ -1,27 +1,94 @@
 {
-  "_aciklama": "Mola Yardım (sitedeki “Yardım” düğmesi): yalnız Mola’yı kullanan kafe sahibi ve çalışanları için hazır sorular ve cevaplar. Kaynak: Kullanım kılavuzu (docs/pdf/kaynak/kilavuz/kullanim.ts) ve sitenin Destek sayfası. Yapay zekâ yok, ağ isteği yok: bu dosya derlemede assets/yardim.js içine gömülür (scripts/site-yardim.ts). Düz metin yazın (< ve > olmaz). cevap: her metin bir paragraf, köşeli parantez içindeki liste numaralı adımlar. anahtar: ziyaretçinin yazabileceği kelimeler; Türkçe harfsiz yazımı (odeme, gun sonu) ayrıca yazmanız gerekmez, arama kendisi sadeleştirir. Mola Yönetim, sunucu, fiyat ya da iç belgeler buraya yazılmaz.",
+  "_aciklama": "Mola Yardım: sitedeki “Yardım” düğmesi ve programın içindeki “?” (Destek → Yardım) aynı soruları kullanır. Yapay zekâ yok, ağ isteği yok: site için derlemede assets/yardim.js içine gömülür (scripts/site-yardim.ts), program kendi dosyalarına katar (src/HelpPanel.tsx). kitle: soruyu kim görür: site (web sitesi), owner (işletme sahibi), manager (müdür), cashier (kasiyer), waiter (garson), kitchen (mutfak); en az biri. Kısa yazın: 1-3 kısa cümle ya da en çok 4 adım; menü yolları tam. Düz metin (< ve > olmaz). cevap: her metin bir paragraf, köşeli parantez içindeki liste numaralı adımlar. anahtar: insanların yazabileceği kelimeler; Türkçe harfsiz yazım ayrıca gerekmez. Programın iç işleyişi, sunucu, Mola Yönetim, fiyat rakamı yazılmaz.",
   "konular": [
+    { "id": "tanisma", "ad": "Mola hakkında" },
     { "id": "kurulum", "ad": "Kurulum" },
     { "id": "siparis", "ad": "Masa ve sipariş" },
     { "id": "mutfak", "ad": "Mutfak ve fiş" },
     { "id": "kasa", "ad": "Kasa ve ödeme" },
     { "id": "menu", "ad": "Menü ve QR" },
-    { "id": "personel", "ad": "Personel ve stok" },
+    { "id": "personel", "ad": "Personel ve vardiya" },
     { "id": "cihaz", "ad": "Cihazlar ve yazıcı" },
     { "id": "uzaktan", "ad": "Kafemi yönet" },
     { "id": "yedek", "ad": "Yedek ve güncelleme" },
     { "id": "sorun", "ad": "Sorunlar" }
   ],
-  "sikSorulanlar": ["ilk-gun", "siparis-al", "odeme-al", "gun-sonu", "yazici", "qr-bas", "kafe-ici-cihazlar", "kafemi-yonet-kur", "internet-kesildi"],
+  "sikSorulanlar": ["mola-nedir", "fiyat", "deneme", "internetsiz", "ilk-gun", "siparis-al", "odeme-al", "gun-sonu", "yazici", "qr-bas", "mutfak-ekran", "fis-modu", "garson-cagri", "qr-onay", "vardiya-kodu", "tablet-giris", "iade-garson", "kafe-ici-cihazlar", "kafemi-yonet-kur", "internet-kesildi", "sifre-unuttum"],
   "sorular": [
+    {
+      "id": "mola-nedir",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Mola ne işe yarar?",
+      "cevap": ["Mola, kafe ve restoranlar için adisyon ve QR menü programıdır. Masadaki QR menüden mutfağa, kasadan rapora kadar işi tek yerde toplar."],
+      "anahtar": ["mola nedir", "ne işe yarar", "adisyon", "adisyon programı", "pos", "kafe programı", "restoran programı", "neler yapar", "özellikler"]
+    },
+    {
+      "id": "fiyat",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Fiyatlar ne kadar?",
+      "cevap": ["Paketleri ve fiyatları Özellikler sayfasındaki Paketler bölümünde görürsünüz. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
+      "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı"]
+    },
+    {
+      "id": "deneme",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Ücretsiz deneme nasıl başlar?",
+      "cevap": ["Destek ve İletişim’deki kısa formu doldurun ya da programı indirip kurun. Başvurunuz onaylanınca 30 günlük ücretsiz deneme başlar."],
+      "anahtar": ["deneme", "ücretsiz", "ücretsiz deneme", "30 gün", "denemek", "demo", "başvuru", "nasıl başlarım", "deneme süresi"],
+      "ilgili": ["kurulum-kim", "kurulum-indir"]
+    },
+    {
+      "id": "internetsiz",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "İnternet olmazsa çalışır mı?",
+      "cevap": ["Evet. Mola kafenizin kendi bilgisayarında çalışır; internet kesilse de sipariş, mutfak, kasa ve yazıcı çalışır. QR’dan sipariş ve telefondan uzaktan bakmak internet gelince devam eder."],
+      "anahtar": ["internet", "internetsiz", "internet olmazsa", "internet kesilirse", "çevrimdışı", "offline", "bağlantı", "wifi"]
+    },
+    {
+      "id": "veriler",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Verilerim nerede durur?",
+      "cevap": ["Verileriniz kafenizdeki bilgisayarda durur. Yedekler aynı bilgisayarda ve isterseniz bir USB bellekte saklanır; bulut yedek hizmetinde de uçtan uca şifreli bir kopya tutulur."],
+      "anahtar": ["veri", "veriler", "verilerim", "nerede durur", "bulut", "güvenlik", "kvkk", "gizlilik", "kim görür", "şifreli"]
+    },
+    {
+      "id": "kurulum-kim",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Kurulumu kim yapar?",
+      "cevap": ["Kurulumu birkaç dakikada kendiniz yapabilirsiniz. İsterseniz Mola ekibi kurulumda yanınızda olur; Elazığ’da yerinde destek veriyoruz."],
+      "anahtar": ["kurulumu kim yapar", "kurulum", "kurulum desteği", "yerinde destek", "teknik servis", "elazığ", "kim kuracak", "eğitim"]
+    },
+    {
+      "id": "cihazlar",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Hangi cihazlarla çalışır?",
+      "cevap": ["Kasada bir Windows bilgisayar yeter (Mac ve Linux da olur). Garson ve mutfak Android telefon ya da tablet, iPhone ya da iPad kullanabilir. Ağ ya da USB bağlantılı fiş yazıcılarıyla çalışır."],
+      "anahtar": ["hangi cihaz", "cihazlar", "donanım", "bilgisayar", "tablet", "telefon", "android", "iphone", "ipad", "mac", "linux", "windows", "gereksinim"]
+    },
+    {
+      "id": "yazar-kasa-site",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Yazar kasanın yerine geçer mi?",
+      "cevap": ["Hayır. Mola bir adisyon programıdır; mali belge kesmez ve yazar kasanın yerine geçmez. Yasal fişi yazar kasanız keser; Mola her ödemede yazar kasaya girilecek tutarı gösterebilir."],
+      "anahtar": ["yazar kasa", "yazarkasa", "ökc", "e-adisyon", "mali fiş", "yasal fiş", "fatura", "fiş keser mi", "yerine geçer mi"]
+    },
+
     {
       "id": "kurulum-indir",
       "konu": "kurulum",
+      "kitle": ["site", "owner"],
       "soru": "Mola’yı bilgisayara nasıl kurarım?",
       "cevap": [
-        "Mola kasadaki bilgisayara kurulur; telefonlar, tabletler ve QR menü bu bilgisayara bağlanır.",
-        ["molayazilim.com.tr/indir/ sayfasından bilgisayarınıza uygun dosyayı indirin.", "Windows’ta ZIP dosyasını açın (sağ tık → Tümünü ayıkla), içindeki “Mola Kurulum.exe”ye çift tıklayın, “Kur”a basın.", "Mac ve Linux’ta dosyayı açın, “Mola” klasöründeki BENIOKU.txt’yi izleyin."],
-        "Kurulum internet istemez ve birkaç dakika sürer. Masaüstüne Mola simgesi gelir."
+        ["molayazilim.com.tr/indir/ sayfasından dosyayı indirin.", "Windows’ta ZIP’i açın (sağ tık → Tümünü ayıkla) ve “Mola Kurulum.exe”ye çift tıklayın.", "“Kur”a basın; masaüstüne Mola simgesi gelir."],
+        "Mac ve Linux’ta klasördeki BENIOKU.txt’yi izleyin."
       ],
       "anahtar": ["kurulum", "kur", "kurmak", "yükleme", "yüklemek", "yukle", "indir", "indirme", "setup", "install", "exe", "zip", "windows", "mac", "linux", "program kurma", "bilgisayara kurma"],
       "ilgili": ["smartscreen", "etkinlestirme", "ilk-gun"]
@@ -29,30 +96,26 @@
     {
       "id": "smartscreen",
       "konu": "kurulum",
-      "soru": "Windows “Bilgisayarınız korundu” diyor, ne yapmalıyım?",
-      "cevap": [
-        "Mola henüz kod imzalı olmadığı için Windows SmartScreen bu uyarıyı gösterebilir.",
-        "Dosyayı molayazilim.com.tr/indir/ sayfasından indirdiyseniz “Ek bilgi” yazısına, sonra “Yine de çalıştır” düğmesine tıklayın. Emin olamazsanız bize ulaşın; kurulumu birlikte yapalım."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "Windows “Bilgisayarınız korundu” diyor.",
+      "cevap": ["Dosyayı molayazilim.com.tr/indir/ sayfasından indirdiyseniz “Ek bilgi”ye, sonra “Yine de çalıştır”a tıklayın. Emin değilseniz bize ulaşın."],
       "anahtar": ["bilgisayarınız korundu", "smartscreen", "smart screen", "windows uyarı", "yine de çalıştır", "ek bilgi", "virüs", "güvenlik uyarısı", "kurulum açılmıyor", "engellendi"]
     },
     {
       "id": "etkinlestirme",
       "konu": "kurulum",
-      "soru": "İlk açılışta “Mola’yı etkinleştir” ekranı geldi, ne yapmalıyım?",
-      "cevap": [
-        "Mola ekibi size bir kod verdiyse “Etkinleştirme kodum var”ı seçip kodu yazın.",
-        "Kodunuz yoksa “Kodum yok, başvuru yapacağım” deyin ve kısa formu doldurun. Mola ekibi başvurunuzu kontrol eder, gerekirse sizi arar; onaylanınca ekran kendiliğinden ilerler ve 30 günlük deneme başlar."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "İlk açılışta “Mola’yı etkinleştir” ekranı geldi.",
+      "cevap": ["Mola ekibi kod verdiyse “Etkinleştirme kodum var”ı seçip kodu yazın. Kodunuz yoksa “Kodum yok, başvuru yapacağım” deyin ve formu doldurun; onaylanınca deneme başlar."],
       "anahtar": ["etkinleştir", "etkinleştirme", "etkinlestirme kodu", "aktivasyon", "aktive", "lisans kodu", "kod", "başvuru", "basvuru", "ilk açılış", "kodum yok", "deneme başlat"]
     },
     {
       "id": "ilk-gun",
       "konu": "kurulum",
-      "soru": "Kurulumdan sonra ilk gün sırayla ne yapmalıyım?",
+      "kitle": ["site", "owner"],
+      "soru": "Kurulumdan sonra ilk gün ne yapmalıyım?",
       "cevap": [
-        "Hepsi bir saatten kısa sürer:",
-        ["Kendi sahip hesabınızı açın, Lisans Sözleşmesi’ni okuyup kabul edin.", "Ekrana gelen kurtarma kodunu kâğıda yazıp saklayın.", "Menü yönetimi’nde ürünleri ve fiyatları düzeltin.", "Ayarlar → İşletme → Görünüm’de ad, logo ve rengi seçin.", "Personel → Çalışanlar’da herkese ayrı hesap açın.", "Ayarlar → Cihazlar’da yazıcıları ve kafe içi cihazları bağlayın.", "Kasa bilgisayarının şeridinden Yedekle → bir USB bellek seçin.", "Ayarlar → Masalar ve QR’da “Bağlı” yazınca QR kodlarını basın.", "Kendi telefonunuzla bir masadan deneme siparişi verin, mutfakta hazırlayın, kasada kapatın."]
+        ["Sahip hesabınızı açın, kurtarma kodunu kâğıda yazın.", "Menü yönetimi’nde ürünleri ve fiyatları düzeltin; Personel → Çalışanlar’da herkese hesap açın.", "Ayarlar → Cihazlar’da yazıcıları ve kafe içi cihazları bağlayın.", "Ayarlar → Masalar ve QR’dan QR kodlarını basın ve bir deneme siparişi verin."]
       ],
       "anahtar": ["ilk gün", "ilk adımlar", "ilk açılış", "başlangıç", "baslarken", "yeni kurdum", "nereden başlamalı", "kurulumdan sonra", "sırayla", "yapılacaklar", "ilk kurulum"],
       "ilgili": ["kurtarma-kodu", "urun-ekle", "qr-bas"]
@@ -60,425 +123,517 @@
     {
       "id": "kurtarma-kodu",
       "konu": "kurulum",
+      "kitle": ["site", "owner"],
       "soru": "Kurtarma kodu nedir, nerede saklamalıyım?",
-      "cevap": [
-        "Kurtarma kodu verilerinizin anahtarıdır; kurulumda bir kez gösterilir. Bilgisayar bozulursa ya da şifrenizi unutursanız verileriniz bu kodla açılır.",
-        "Kâğıda yazın, bilgisayardan uzakta saklayın. Yedekle aynı USB belleğe ya da aynı e-postaya koymayın. Mola ekibi sizden asla şifrenizi ya da kurtarma kodunuzu istemez."
-      ],
+      "cevap": ["Kurtarma kodu verilerinizin anahtarıdır; kurulumda bir kez gösterilir. Kâğıda yazıp bilgisayardan ve yedek belleğinden ayrı saklayın. Mola ekibi bu kodu ya da şifrenizi asla istemez."],
       "anahtar": ["kurtarma kodu", "kurtarma", "recovery", "anahtar", "kod kaybettim", "kodu sakla", "veri anahtarı", "kurtarma kodunu kaybettim"],
-      "ilgili": ["yeni-bilgisayar", "sifre-unuttum"]
+      "ilgili": ["yeni-bilgisayar", "sahip-sifre"]
     },
     {
       "id": "gorunum",
       "konu": "kurulum",
+      "kitle": ["site", "owner"],
       "soru": "Kafemin adını, logosunu ve rengini nasıl değiştiririm?",
-      "cevap": [
-        "Ayarlar → İşletme → Görünüm’e girin. Buradan işletme adını, logoyu, renk paletini ve karşılama yazısını değiştirirsiniz.",
-        "Seçtiğiniz renk müşterinin QR menüsünü ve bütün işletme ekranlarını boyar; kaydedince hemen güncellenir. Masa durumu ve uyarı renkleri değişmez."
-      ],
+      "cevap": ["Ayarlar → İşletme → Görünüm’den adı, logoyu ve rengi değiştirin. Kaydedince QR menüye ve ekranlara hemen gelir."],
       "anahtar": ["görünüm", "logo", "renk", "renk paleti", "tema", "işletme adı", "kafe adı", "isim değiştir", "karşılama yazısı", "renkler", "marka"]
     },
     {
       "id": "pakette-yok",
       "konu": "kurulum",
+      "kitle": ["site", "owner", "manager"],
       "soru": "Bir bölüm soluk görünüyor ve “Pakette yok” yazıyor.",
-      "cevap": [
-        "O hizmet paketinizde yok demektir. Bölüme dokunup “Mola ekibine yaz” deyin; ekibimiz sizinle görüşür.",
-        "Paketinizi ve kalan gününüzü Ayarlar → İşletme → Paket ve lisans’ta görürsünüz. Kapanan bir hizmetin verisi silinmez."
-      ],
+      "cevap": ["Bu hizmet paketinizde yok. İşletme sahibi bölüme dokunup “Mola ekibine yaz” diyebilir; paket Ayarlar → İşletme → Paket ve lisans’ta görünür."],
       "anahtar": ["pakette yok", "soluk", "kilitli", "açılmıyor bölüm", "paket", "lisans", "hizmet ekle", "kalan gün", "deneme süresi", "paket ve lisans"]
     },
 
     {
       "id": "siparis-al",
       "konu": "siparis",
-      "soru": "Garson sipariş nasıl alır?",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter"],
+      "soru": "Sipariş nasıl alınır?",
       "cevap": [
-        ["Telefonda alttaki “Sipariş al”a dokunun, üstten masayı seçin.", "Ürünün yanındaki +’ya basın. Seçenekli üründe (boy, süt) küçük bir pencere açılır.", "İsterseniz sepeti açıp not yazın (“az şekerli”) ya da “Paket yapılsın” deyin.", "“Gönder”e basın; sipariş mutfağa gider."],
-        "Mutfak “Hazır” deyince garsonun telefonu haber verir; servis edince “Teslim edildi”ye basın."
+        ["“Sipariş al”a dokunun, üstten masayı seçin.", "Ürünün yanındaki +’ya basın.", "İsterseniz sepete not yazın (“az şekerli”).", "“Gönder”e basın; sipariş mutfağa gider."]
       ],
       "anahtar": ["sipariş", "sipariş al", "sipariş alma", "sparis", "siparis girme", "adisyon", "garson", "masaya sipariş", "ürün ekle sepete", "not ekle", "az şekerli", "paket yapılsın", "gönder"],
-      "ilgili": ["siparis-degistir", "garson-uyarilari", "masasiz"]
+      "ilgili": ["siparis-degistir", "masasiz"]
     },
     {
       "id": "siparis-degistir",
       "konu": "siparis",
-      "soru": "Müşteri fikrini değiştirdi; siparişi nasıl değiştirir ya da iptal ederim?",
-      "cevap": [
-        "Masaya dokunun, siparişin altındaki “Değiştir”e basın, düzeltip “Değişikliği kaydet” deyin. Mutfak ekranında o üründe turuncu “Değişti” satırı çıkar.",
-        "Mutfak hazırlamaya başladıysa ürünü “İptal et” ile çıkarıp yenisini girin; mutfakta kırmızı “İPTAL” şeridi görünür."
-      ],
+      "kitle": ["site", "owner", "manager", "waiter"],
+      "soru": "Siparişi nasıl değiştirir ya da iptal ederim?",
+      "cevap": ["Masaya dokunun, siparişin altındaki “Değiştir”e basın ve “Değişikliği kaydet” deyin. Mutfak başladıysa ürünü “İptal et” ile çıkarıp yenisini girin."],
       "anahtar": ["iptal", "sipariş iptal", "değiştir", "degistir", "fikrini değiştirdi", "yanlış sipariş", "ürün çıkar", "siparişi sil", "düzelt", "vazgeçti"]
+    },
+    {
+      "id": "iptal-kasiyer",
+      "konu": "siparis",
+      "kitle": ["cashier"],
+      "soru": "Yanlış girilen siparişi nasıl iptal ederim?",
+      "cevap": ["Siparişi garson, müdür ya da işletme sahibi iptal eder. Hangi masa ve ürün olduğunu onlara söyleyin."],
+      "anahtar": ["iptal", "sipariş iptal", "yanlış sipariş", "ürün çıkar", "siparişi sil", "değiştir", "vazgeçti"]
     },
     {
       "id": "masa-tasi",
       "konu": "siparis",
-      "soru": "Masayı nasıl taşırım ya da iki masayı birleştiririm?",
-      "cevap": [
-        "Masaya dokunun, açılan pencerede “Taşı / birleştir”e basın ve diğer masayı seçin.",
-        "Kalabalık bir grup iki masaya oturduysa “Hesapları birleştir” deyin; iki masanın hesabı tek hesap olur."
-      ],
+      "kitle": ["site", "owner", "manager", "cashier", "waiter"],
+      "soru": "Masayı nasıl taşırım ya da birleştiririm?",
+      "cevap": ["Masaya dokunun, “Taşı / birleştir”e basın ve yeni masayı seçin. İki masanın hesabını tek yapmak için “Hesapları birleştir” deyin."],
       "anahtar": ["masa taşı", "taşıma", "tasi", "birleştir", "masa birleştirme", "hesap birleştir", "masa değiştir", "başka masaya geçti", "iki masa"]
     },
     {
       "id": "masasiz",
       "konu": "siparis",
-      "soru": "Al götür (masasız) satış nasıl yapılır?",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter"],
+      "soru": "Al götür (masasız) sipariş nasıl alınır?",
       "cevap": [
-        ["Sipariş al’da ilk seçenek olan “Masasız sipariş”i seçin, müşterinin adını yazın.", "Ürünleri ekleyip gönderin. Ödeme penceresi açılır; müşteri sonra ödeyecekse “Sonra öde” deyin.", "Sipariş Masalar’daki “Masasız siparişler” şeridinde durur. Verince “Teslim edildi”ye basın."]
+        ["Sipariş al’da “Masasız sipariş”i seçin, müşterinin adını yazın.", "Ürünleri ekleyip gönderin.", "Siparişi verince “Teslim edildi”ye basın."]
       ],
       "anahtar": ["al götür", "al gotur", "masasız", "masasiz", "paket", "gel al", "takeaway", "tezgah", "masa yok", "dışarı satış", "sonra öde"]
     },
     {
       "id": "qr-onay",
       "konu": "siparis",
+      "kitle": ["site", "owner", "manager", "waiter", "kitchen"],
       "soru": "QR siparişi onay bekliyor, ne yapmalıyım?",
-      "cevap": [
-        "Müşterinin QR’dan gönderdiği sipariş, ayarınıza göre önce garsonun onayına düşer.",
-        "Sipariş doğruysa “Onayla ve mutfağa gönder”e, yanlış ya da şakaysa “Reddet”e basın. Onay istemiyorsanız Ayarlar → Sipariş ve mutfak’tan QR siparişlerini otomatik onaya alabilirsiniz."
-      ],
-      "anahtar": ["onay", "onay bekliyor", "qr siparişi", "qr onay", "onayla", "reddet", "müşteri siparişi", "otomatik onay", "garson onayı"],
-      "ilgili": ["qr-durdur", "qr-musteri"]
+      "cevap": ["Sipariş doğruysa “Onayla ve mutfağa gönder”e, yanlışsa “Reddet”e basın."],
+      "anahtar": ["onay", "onay bekliyor", "qr siparişi", "qr onay", "onayla", "reddet", "müşteri siparişi", "garson onayı"],
+      "ilgili": ["qr-otomatik-onay"]
+    },
+    {
+      "id": "qr-otomatik-onay",
+      "konu": "siparis",
+      "kitle": ["site", "owner"],
+      "soru": "QR siparişleri onaysız mutfağa gitsin istiyorum.",
+      "cevap": ["Ayarlar → Sipariş ve mutfak’tan QR siparişlerini otomatik onaya alın."],
+      "anahtar": ["otomatik onay", "onaysız", "onay istemiyorum", "qr onay kapat", "doğrudan mutfağa", "sipariş ve onay"]
+    },
+    {
+      "id": "garson-cagri",
+      "konu": "siparis",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter"],
+      "soru": "Müşteri garson çağırdı ya da hesabı istedi.",
+      "cevap": ["Üstte “Masa 15 · Garson çağırıyor” ya da “Hesap istiyor” şeridi çıkar. Masaya gidin ve “Tamam”a basın."],
+      "anahtar": ["garson çağır", "garson çağırıyor", "çağrı", "çağırdı", "hesap istiyor", "hesabı iste", "şerit", "zil", "tamam"]
     },
     {
       "id": "garson-uyarilari",
       "konu": "siparis",
-      "soru": "Garsonun telefonunda çıkan uyarılar ne demek?",
+      "kitle": ["site", "owner", "manager", "waiter"],
+      "soru": "Telefonumda çıkan uyarılar ne demek?",
       "cevap": [
-        "“Masa 3 · #5 hazır”: sipariş mutfakta hazır; götürün ve “Teslim edildi”ye basın.",
-        "“Masa 15 · Garson çağırıyor”: müşteri menüden sizi çağırdı; masaya gidip “Tamam”a basın.",
-        "“Masa 5: 45 dakikadır yeni sipariş yok”: masaya uğrayın, “Gittim”e basın. Sarı “QR siparişleri kapalı” satırı görürseniz siparişi siz alın; açmak için kasiyere ya da müdüre söyleyin."
+        ["“Masa 3 · #5 hazır”: siparişi götürün, “Teslim edildi”ye basın.", "“45 dakikadır yeni sipariş yok”: masaya uğrayın, “Gittim”e basın.", "“QR siparişleri kapalı”: siparişi siz alın."]
       ],
-      "anahtar": ["uyarı", "bildirim", "hazır", "garson çağırıyor", "çağır", "titredi", "telefon titriyor", "45 dakika", "teslim edildi", "gittim", "servise hazır"]
+      "anahtar": ["uyarı", "bildirim", "hazır", "titredi", "telefon titriyor", "45 dakika", "teslim edildi", "gittim", "servise hazır", "qr kapalı"]
+    },
+    {
+      "id": "servise-hazir",
+      "konu": "siparis",
+      "kitle": ["waiter"],
+      "soru": "Hazır siparişleri nerede görürüm?",
+      "cevap": ["Alttaki “Servise hazır”da size ait hazır siparişler durur. Masaya götürünce “Teslim edildi”ye basın."],
+      "anahtar": ["servise hazır", "hazır sipariş", "hazır", "teslim", "teslim edildi", "götür", "servis"]
+    },
+    {
+      "id": "qr-kapali-garson",
+      "konu": "siparis",
+      "kitle": ["waiter", "kitchen"],
+      "soru": "“QR siparişleri kapalı” yazıyor.",
+      "cevap": ["Bu sürede müşterinin siparişini garson alır. Yeniden açmak için kasiyere, müdüre ya da işletme sahibine söyleyin."],
+      "anahtar": ["qr kapalı", "qr siparişleri kapalı", "sipariş almıyoruz", "qr durdu", "siparişleri aç", "sarı satır"]
     },
     {
       "id": "oturum-kapandi",
       "konu": "siparis",
-      "soru": "Sabah bütün telefonların oturumu kapanmış, neden?",
-      "cevap": [
-        "Oturumlar her gün 05:00’te, iş günü dönerken kendiliğinden kapanır. Sabah herkes kendi kullanıcı adı ve şifresiyle yeniden girer.",
-        "Sepette bekleyen ürünler kaybolmaz."
-      ],
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "Sabah oturumum kapanmış, neden?",
+      "cevap": ["Oturumlar her gün 05:00’te kapanır. Kendi kullanıcı adınız ve şifrenizle yeniden girin; sepetteki ürünler kaybolmaz."],
       "anahtar": ["oturum kapandı", "çıkış yaptı", "giriş istiyor", "sabah giriş", "05:00", "oturum", "atıldım", "yeniden giriş", "login"]
     },
     {
       "id": "masa-ekle",
       "konu": "siparis",
+      "kitle": ["site", "owner"],
       "soru": "Masa nasıl eklenir ya da çıkarılır?",
-      "cevap": [
-        "Masaları işletme sahibi ekler: Ayarlar → Masalar ve QR’dan masa ekleyip bölümlere (İç, Bahçe gibi) ayırırsınız. Masalar ekranındaki “Masa ekle” ve “Masa çıkar” da aynı işi yapar.",
-        "Yeni masanın QR kodunu basmayı unutmayın. Maç ve özel geceler için Ajanda → Etkinlikler geçici masalar (D1, D2…) açar."
-      ],
+      "cevap": ["Masalar ekranındaki “Masa ekle” ve “Masa çıkar”ı kullanın; bölümleri (İç, Bahçe) Ayarlar → Masalar ve QR’da düzenleyin. Yeni masanın QR kodunu basmayı unutmayın."],
       "anahtar": ["masa ekle", "masa ekleme", "masa çıkar", "masa sil", "yeni masa", "bölüm", "bahçe", "salon", "masa sayısı", "geçici masa", "etkinlik"]
     },
 
     {
       "id": "mutfak-ekran",
       "konu": "mutfak",
+      "kitle": ["site", "owner", "manager", "kitchen"],
       "soru": "Mutfak ekranı nasıl kullanılır?",
       "cevap": [
-        "Her kart bir siparişdir: masa, kaç dakikadır beklediği, ürünler ve notlar.",
-        ["Hazırlamaya başlayınca “Hazırlamaya başla”ya basın.", "Bitince “Hazır olarak işaretle”; garsonun telefonu o anda haber alır.", "Yanlış bastıysanız 5 saniye içinde “Geri al”."],
-        "10 dakikayı geçen kart turuncu, 20 dakikayı geçen kırmızı olur. İptal edilen siparişte kırmızı “İPTAL” şeridi, değişen üründe turuncu “Değişti” satırı çıkar."
+        ["Yeni siparişte “Hazırlamaya başla”ya basın.", "Bitince “Hazır olarak işaretle”; garson o anda haber alır.", "Yanlış bastıysanız 5 saniye içinde “Geri al”."],
+        "10 dakikayı geçen kart turuncu, 20 dakikayı geçen kırmızı olur."
       ],
-      "anahtar": ["mutfak", "mutfak ekranı", "mutfak tableti", "hazır", "hazırla", "hazırlamaya başla", "geri al", "kart", "turuncu", "kırmızı", "bekleyen sipariş", "aşçı"],
-      "ilgili": ["mutfak-fis", "mutfak-ses"]
+      "anahtar": ["mutfak", "mutfak ekranı", "mutfak tableti", "hazır", "hazırla", "hazırlamaya başla", "geri al", "kart", "turuncu", "kırmızı", "bekleyen sipariş", "aşçı", "servis"],
+      "ilgili": ["mutfak-iptal", "mutfak-ses"]
+    },
+    {
+      "id": "mutfak-iptal",
+      "konu": "mutfak",
+      "kitle": ["site", "owner", "manager", "kitchen"],
+      "soru": "Mutfakta iptal ve değişiklik nasıl görünür?",
+      "cevap": ["İptal edilen siparişte kırmızı “İPTAL”, değişen üründe turuncu “Değişti” satırı çıkar. Müşteri iptal isterse kartta “İptali onayla” çıkar; kartın altındaki “İptal et” ile siz de iptal edebilirsiniz."],
+      "anahtar": ["iptal", "mutfak iptal", "iptal şeridi", "değişti", "değişiklik", "iptali onayla", "iptal talebi", "müşteri iptal istiyor", "iptal et"]
+    },
+    {
+      "id": "fis-modu",
+      "konu": "mutfak",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "Fiş modunda nasıl çalışılır?",
+      "cevap": ["Siparişler mutfak yazıcısından fiş olarak çıkar; değişiklikte “DEĞİŞİKLİK” fişi gelir. Ekranda “Hazır” denmez: garson siparişi götürünce masada “Teslim edildi”ye basar."],
+      "anahtar": ["fiş modu", "mutfak fişi", "fiş", "fis", "kağıt fiş", "değişiklik fişi", "ekransız", "yazıcıdan sipariş"],
+      "ilgili": ["fis-cikmiyor"]
     },
     {
       "id": "mutfak-fis",
       "konu": "mutfak",
+      "kitle": ["site", "owner"],
       "soru": "Mutfak ekran yerine fişle çalışsın istiyorum.",
       "cevap": [
-        ["Önce Ayarlar → Cihazlar → Yazıcılar’da mutfaktaki yazıcıyı “Mutfak fişleri” için seçin.", "Sonra Ayarlar → Sipariş ve mutfak → Mutfak’ta “Fiş”i seçin."],
-        "Siparişler mutfak yazıcısından fiş olarak çıkar. Bir sipariş değişirse “DEĞİŞİKLİK” fişi gelir."
+        ["Ayarlar → Cihazlar → Yazıcılar’da mutfak yazıcısını “Mutfak fişleri” için seçin.", "Ayarlar → Sipariş ve mutfak → Mutfak’ta “Fiş”i seçin."]
       ],
-      "anahtar": ["mutfak fişi", "fiş modu", "mutfak yazıcısı", "ekransız", "kağıt fiş", "fis", "mutfağa fiş", "değişiklik fişi", "tablet yok"],
-      "ilgili": ["yazici", "fis-cikmiyor"]
+      "anahtar": ["mutfak fişi", "fiş modu", "mutfak yazıcısı", "ekransız", "kağıt fiş", "fis", "mutfağa fiş", "tablet yok", "fişe geç"],
+      "ilgili": ["fis-modu", "yazici"]
     },
     {
       "id": "mutfak-ses",
       "konu": "mutfak",
+      "kitle": ["site", "owner", "manager", "kitchen"],
       "soru": "Mutfak tabletinde ses gelmiyor ya da ekran kararıyor.",
-      "cevap": [
-        "Tarayıcılar sesi ancak ekrana bir kez dokunulunca açar: “Ses kapalı · açmak için dokunun” yazısına dokunun ve tabletin kendi sesini açın.",
-        "Ekran kararıyorsa mutfak ekranında “Ekranı açık tut”u açın ve tableti şarjda tutun."
-      ],
+      "cevap": ["“Ses kapalı · açmak için dokunun” yazısına dokunun ve tabletin kendi sesini açın. Ekran kararıyorsa “Ekranı açık tut”u açın ve tableti şarjda tutun."],
       "anahtar": ["ses", "ses yok", "ses gelmiyor", "sessiz", "zil sesi", "kararıyor", "ekran kapanıyor", "uyku", "ekranı açık tut", "şarj", "bildirim sesi"]
     },
     {
       "id": "fis-cikmiyor",
       "konu": "mutfak",
-      "soru": "“Fiş basılamadı” uyarısı çıkıyor, fiş çıkmıyor.",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "“Fiş basılamadı” uyarısı çıkıyor.",
       "cevap": [
-        "Uyarı nedenini yazar (örneğin “Yazıcıda kâğıt yok · Mutfak”); kasada ve garson telefonlarında görünür.",
-        ["Kâğıdı, kabloyu ve yazıcının açık olduğunu kontrol edin.", "Ağ yazıcısında, yazıcının IP adresi Ayarlar → Cihazlar → Yazıcılar’dakiyle aynı mı bakın.", "Sorunu giderince “Tekrar bas”a basın."],
-        "Bazı USB yazıcılar bu uyarıyı veremez; yazıcının kendi sürücüsünü kurun ya da ağ kablosuyla bağlayın."
+        ["Uyarıdaki nedene bakın (örneğin “Yazıcıda kâğıt yok”).", "Kâğıdı, kabloyu ve yazıcının açık olduğunu kontrol edin.", "Uyarıdaki “Tekrar bas”a basın; siparişi elle ilettiyseniz “Elle iletildi” deyin."]
       ],
-      "anahtar": ["fiş basılamadı", "fiş çıkmıyor", "fis cikmiyor", "yazdırmıyor", "kağıt yok", "kâğıt bitti", "rulo", "tekrar bas", "yazıcı çalışmıyor", "yazici calismiyor", "basmıyor"],
+      "anahtar": ["fiş basılamadı", "fiş çıkmıyor", "fis cikmiyor", "yazdırmıyor", "kağıt yok", "kâğıt bitti", "rulo", "tekrar bas", "yazıcı çalışmıyor", "yazici calismiyor", "basmıyor", "elle iletildi"],
       "ilgili": ["yazici"]
     },
 
     {
       "id": "kasa-acilis",
       "konu": "kasa",
+      "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "Kasa açılışı nasıl yapılır?",
-      "cevap": [
-        "Sabah ilk girişte “Kasa açılışı” kutusu çıkar. Kasadaki nakdi sayın, tutarı yazın ve “Açılışı kaydet”e basın.",
-        "Vardiya değişiminde aynı kutu “Vardiya devrini al” diye çıkar; devralan kişi de sayar."
-      ],
+      "cevap": ["Sabah ilk girişte “Kasa açılışı” çıkar: kasadaki nakdi sayın, yazın ve “Açılışı kaydet”e basın. Vardiya değişiminde devralan kişi “Vardiya devrini al” ile sayar."],
       "anahtar": ["kasa açılışı", "kasa aç", "kasa acma", "açılış", "sabah", "kasa sayımı", "devir", "vardiya devri", "nakit sayımı", "açılışı kaydet"],
-      "ilgili": ["gun-sonu", "kasa-guvenligi"]
+      "ilgili": ["gun-sonu"]
     },
     {
       "id": "odeme-al",
       "konu": "kasa",
+      "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "Ödeme nasıl alınır?",
       "cevap": [
-        ["Masaya dokunun, “Ödeme al”a basın.", "Ne kadar ödeneceğini seçin: tamamı, bir kısmı ya da ürün seçerek.", "“Nakit” ya da “Kart” seçin. Nakitte alınan parayı yazın; para üstü büyük yazıyla görünür.", "Bahşiş varsa “+ Bahşiş ekle” (satışa sayılmaz).", "“Ödemeyi kaydet”e basın. Hesap bittiyse masa kapanır."],
-        "Müşteri QR menüden “Hesabı iste” derse kasada “Masa 05 · Hesap istiyor” uyarısı çıkar."
+        ["Masaya dokunun, “Ödeme al”a basın.", "Tamamını, bir kısmını ya da ürün seçerek ödemeyi seçin.", "“Nakit” ya da “Kart”ı seçin; nakitte para üstü görünür.", "“Ödemeyi kaydet”e basın."]
       ],
-      "anahtar": ["ödeme", "ödeme al", "ödeme alma", "odeme", "hesap", "hesap kapat", "hesap kapatma", "nakit", "kart", "kredi kartı", "para üstü", "bahşiş", "hesabı iste", "tahsilat", "hesap öde"],
-      "ilgili": ["hesap-bol", "odeme-turu-duzelt", "iade"]
+      "anahtar": ["ödeme", "ödeme al", "ödeme alma", "odeme", "hesap", "hesap kapat", "hesap kapatma", "nakit", "kart", "kredi kartı", "para üstü", "bahşiş", "tahsilat", "hesap öde"],
+      "ilgili": ["hesap-bol", "iade"]
+    },
+    {
+      "id": "odeme-garson",
+      "konu": "kasa",
+      "kitle": ["waiter", "kitchen"],
+      "soru": "Müşteri ödemek istiyor.",
+      "cevap": ["Ödemeyi kasiyer alır. Müşteriyi kasaya yönlendirin ya da kasiyere hangi masa olduğunu söyleyin."],
+      "anahtar": ["ödeme", "ödeme al", "hesap", "hesap kapat", "nakit", "kart", "tahsilat", "para"]
     },
     {
       "id": "hesap-bol",
       "konu": "kasa",
-      "soru": "Hesabı nasıl bölerim? Herkes kendi payını ödemek istiyor.",
-      "cevap": [
-        "Masada “Ödeme al”a basın ve “ne kadar ödenecek” bölümünde tamamı yerine bir kısmını ya da ürün seçerek ödemeyi seçin.",
-        "Her kişinin payını ayrı ödeme olarak kaydedin; nakit ve kart karışık olabilir. Son ödeme de alınınca masa kendiliğinden kapanır."
-      ],
+      "kitle": ["site", "owner", "manager", "cashier"],
+      "soru": "Hesabı nasıl bölerim?",
+      "cevap": ["“Ödeme al”da tamamı yerine bir kısmını ya da ürün seçerek ödemeyi seçin. Her kişinin payını ayrı kaydedin; son ödemede masa kapanır."],
       "anahtar": ["hesap böl", "hesap bölme", "hesabi bol", "ayrı ödeme", "bölünmüş", "kişi başı", "parçalı ödeme", "yarısı nakit", "ürün seçerek", "alman usulü"]
     },
     {
       "id": "gun-sonu",
       "konu": "kasa",
+      "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "Gün sonu nasıl yapılır?",
       "cevap": [
-        ["Kasa çipinden “Gün sonu”na basın. Açık hesap ya da bitmemiş sipariş varsa Mola söyler.", "Kasadaki nakdi sayıp yazın, “Sayımı kaydet” deyin. Beklenen tutarı ve farkı yalnız işletme sahibi görür.", "Yazar kasa yardımcısı açıksa Z raporu toplamını yazın.", "“Kapanışı tamamla”ya basın."],
-        "Kapanıştan bir dakika sonra kendiliğinden yedek alınır. Gün sonundan sonra QR siparişleri durur; satışa devam edecekseniz “Siparişleri aç” deyin."
+        ["Kasa çipinden “Gün sonu”na basın.", "Kasadaki nakdi sayıp “Sayımı kaydet” deyin.", "Yazar kasa yardımcısı açıksa Z raporu toplamını yazın.", "“Kapanışı tamamla”ya basın."]
       ],
       "anahtar": ["gün sonu", "gunsonu", "gün sonu al", "kasa kapat", "kasa kapanışı", "kapanış", "z raporu", "akşam", "günü kapat", "kapanışı tamamla", "sayım", "end of day"],
-      "ilgili": ["kasa-acilis", "kasa-guvenligi", "qr-durdur"]
+      "ilgili": ["kasa-acilis", "qr-durdur"]
     },
     {
       "id": "iade",
       "konu": "kasa",
+      "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "Müşteriye iade nasıl yapılır?",
-      "cevap": [
-        "Kasa çipinden “İade”ye basın, bugünkü ödemelerden birini seçin, iade edilecek ürünleri ve nedeni işaretleyin.",
-        "Kasiyerin bir iade sınırı vardır; sınırı aşan iade işletme sahibine sorulur ve zil bildirimiyle gelir. Bütün iadeler Kasa ve giderler → İadeler’de listelenir."
-      ],
+      "cevap": ["Kasa çipinden “İade”ye basın, ödemeyi seçin, ürünleri ve nedeni işaretleyin. Kasiyerin sınırını aşan iade işletme sahibine sorulur."],
       "anahtar": ["iade", "para iadesi", "geri ödeme", "iade et", "iade sınırı", "refund", "ürün iadesi", "müşteri geri istedi"],
       "ilgili": ["odeme-turu-duzelt"]
     },
     {
+      "id": "iade-garson",
+      "konu": "kasa",
+      "kitle": ["waiter", "kitchen"],
+      "soru": "Müşteri para iadesi istiyor.",
+      "cevap": ["İadeyi kasiyer ya da işletme sahibi yapar. Müşteriyi kasaya yönlendirin ya da kasiyere söyleyin."],
+      "anahtar": ["iade", "para iadesi", "geri ödeme", "iade et", "refund", "ürün iadesi", "müşteri geri istedi", "para geri"]
+    },
+    {
       "id": "odeme-turu-duzelt",
       "konu": "kasa",
-      "soru": "Kart yerine nakit seçtim, ödeme türünü nasıl düzeltirim?",
-      "cevap": [
-        "Kasa ve giderler → İadeler’de yanlış seçilen ödeme türünü düzeltebilirsiniz.",
-        "Kasa ayarlarında “Ödeme türü değişince bildir” açıksa nakit ve kart arasındaki her değişiklik işletme sahibine bildirilir."
-      ],
+      "kitle": ["site", "owner", "manager"],
+      "soru": "Ödeme türünü yanlış seçtim, nasıl düzeltirim?",
+      "cevap": ["Kasa ve giderler → İadeler’de ödemeyi bulun ve ödeme türünü düzeltin."],
       "anahtar": ["yanlış ödeme", "ödeme türü", "kart yerine nakit", "nakit yerine kart", "ödeme düzelt", "yanlış seçtim", "odeme turu degistir"]
+    },
+    {
+      "id": "odeme-turu-kasiyer",
+      "konu": "kasa",
+      "kitle": ["cashier"],
+      "soru": "Kart yerine nakit seçtim.",
+      "cevap": ["Ödeme türünü müdür ya da işletme sahibi düzeltir. Hangi masa ve saat olduğunu onlara söyleyin."],
+      "anahtar": ["yanlış ödeme", "ödeme türü", "kart yerine nakit", "nakit yerine kart", "ödeme düzelt", "yanlış seçtim"]
     },
     {
       "id": "gider",
       "konu": "kasa",
+      "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "Ekmek, süt gibi bir gideri nasıl kaydederim?",
-      "cevap": [
-        "Kasa çipinden “Gider kaydet”e basın, tutarı yazın ve paranın kasadan mı yoksa kasa dışından mı çıktığını seçin.",
-        "Kasaya para koymak ya da almak için “Kasa hareketi”, bozuk para için “Para bozdurma” kullanılır (toplam değişmez). Kira ve maaş gibi düzenli giderler için Kasa ve giderler → Giderler’de otomatik gider tanımlayın."
-      ],
-      "anahtar": ["gider", "gider kaydet", "masraf", "harcama", "ekmek", "süt", "kasadan para", "kasa hareketi", "para bozdurma", "otomatik gider", "kira", "maaş", "bankaya"]
+      "cevap": ["Kasa çipinden “Gider kaydet”e basın, tutarı yazın ve paranın kasadan çıkıp çıkmadığını seçin."],
+      "anahtar": ["gider", "gider kaydet", "masraf", "harcama", "ekmek", "süt", "kasadan para", "fatura öde", "tedarikçi"],
+      "ilgili": ["kasa-hareketi"]
+    },
+    {
+      "id": "kasa-hareketi",
+      "konu": "kasa",
+      "kitle": ["site", "owner", "manager", "cashier"],
+      "soru": "Kasaya para koyup almak ya da bozdurmak nasıl kaydedilir?",
+      "cevap": ["Kasa çipinden “Kasa hareketi”ni seçin. Bozuk para için “Para bozdurma”yı kullanın; toplam değişmez."],
+      "anahtar": ["kasa hareketi", "para bozdurma", "bozuk para", "kasaya para koy", "kasadan para al", "bankaya", "para çek"]
+    },
+    {
+      "id": "duzenli-gider",
+      "konu": "kasa",
+      "kitle": ["site", "owner"],
+      "soru": "Kira, maaş gibi düzenli giderleri nasıl girerim?",
+      "cevap": ["Kasa ve giderler → Giderler’de otomatik gider tanımlayın."],
+      "anahtar": ["kira", "maaş", "düzenli gider", "otomatik gider", "aylık gider", "sabit gider", "fatura"]
     },
     {
       "id": "kasa-guvenligi",
       "konu": "kasa",
-      "soru": "Kasa farkını kim görür? Sayımı nasıl sıkılaştırırım?",
-      "cevap": [
-        "Gün sonundaki beklenen tutarı ve kasa farkını yalnız işletme sahibi görür; müdür ve kasiyer görmez. Her kapanış Kasa ve giderler → Kapanışlar’da durur.",
-        "Kasa ayarları → Kasa güvenliği’nde kör sayım, POS toplamı zorunlu gibi altı önlem vardır. Hepsi kapalı gelir; “Önerilenleri aç” altısını birden açar."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "Kasa farkını kim görür?",
+      "cevap": ["Beklenen tutarı ve kasa farkını yalnız işletme sahibi görür. Kör sayım gibi önlemleri Kasa ayarları → Kasa güvenliği’nde “Önerilenleri aç” ile açabilirsiniz."],
       "anahtar": ["kasa farkı", "kasa açığı", "fark", "eksik para", "kör sayım", "kasa güvenliği", "pos toplamı", "kapanışlar", "beklenen tutar", "sayım farkı"]
     },
     {
       "id": "yazar-kasa",
       "konu": "kasa",
+      "kitle": ["owner", "manager", "cashier"],
       "soru": "Mola yazar kasaya bağlanıyor mu?",
-      "cevap": [
-        "Hayır. Mola yazar kasaya (ÖKC) doğrudan bağlanmaz ve e-Adisyon sistemi değildir; Mola’nın bastığı fiş bilgi fişidir, yasal fiş yazar kasadan kesilir.",
-        "Kasa ayarları’nda “Yazar kasa yardımcısı”nı açarsanız her ödemeden sonra köşede yazar kasaya girilecek tutar ve KDV bölümü çıkar; girince “Girildi” deyin. Gün sonunda Z raporu toplamını yazarsınız."
-      ],
-      "anahtar": ["yazar kasa", "yazarkasa", "ökc", "okc", "e-adisyon", "eadisyon", "yasal fiş", "z raporu", "kdv departmanı", "fatura", "mali fiş"]
+      "cevap": ["Hayır; yasal fişi yazar kasa keser. “Yazar kasa yardımcısı” açıksa her ödemeden sonra yazar kasaya girilecek tutar çıkar; girince “Girildi” deyin."],
+      "anahtar": ["yazar kasa", "yazarkasa", "ökc", "okc", "e-adisyon", "eadisyon", "yasal fiş", "z raporu", "kdv departmanı", "fatura", "mali fiş", "girildi"]
     },
     {
       "id": "raporlar",
       "konu": "kasa",
+      "kitle": ["site", "owner", "manager"],
       "soru": "Günün satışını ve raporları nereden görürüm?",
-      "cevap": [
-        "Satış ve Raporlar’da dönemi seçin (Bugün, 7 gün, 30 gün, Yıl, Tarih seç); günün özeti tek cümleyle yazar. “Detaylı göster” ürünleri, kârlılığı, kampanyaları, çalışan başına satışı ve KDV dökümünü açar.",
-        "“Elde kalan” satıştan giderler, iadeler ve kart komisyonu düşülerek bulunur. Muhasebeciniz için Yazdır ve paylaş → “Muhasebeci için indir” ayın bilgisini tek Excel dosyasında verir.",
-        "“Bugün” 05:00’ten 05:00’e kadardır: gece 01:30’daki satış o gecenin gününe yazılır."
-      ],
+      "cevap": ["Satış ve Raporlar’da dönemi seçin; “Detaylı göster” ürünleri, kârlılığı ve KDV’yi açar. Muhasebeciniz için Yazdır ve paylaş → “Muhasebeci için indir”. “Bugün” 05:00’ten 05:00’e kadardır."],
       "anahtar": ["rapor", "raporlar", "satış raporu", "gece yarısı", "iş günü", "hangi gün", "ciro", "günün satışı", "kârlılık", "muhasebeci", "muhasebe", "excel", "kdv dökümü", "elde kalan", "detaylı göster", "yazdır"]
     },
     {
       "id": "eposta-rapor",
       "konu": "kasa",
+      "kitle": ["site", "owner"],
       "soru": "Raporlar e-postama gelsin istiyorum.",
       "cevap": [
-        ["Satış ve Raporlar → Yazdır ve paylaş → “Raporları gönder”e girin.", "Kendi e-posta hesabınızı yazın. Gmail’de “uygulama şifresi” denen 16 harflik özel şifre gerekir.", "En fazla 5 alıcı ekleyin ve “Deneme e-postası gönder” ile deneyin."],
-        "Gün sonu, haftalık ve aylık rapor PDF ekiyle gelir. Bu hizmet paketinizde yoksa bölüm soluk görünür."
+        ["Satış ve Raporlar → Yazdır ve paylaş → “Raporları gönder”e girin.", "E-posta hesabınızı yazın (Gmail’de “uygulama şifresi” gerekir).", "Alıcıları ekleyip “Deneme e-postası gönder”e basın."]
       ],
       "anahtar": ["e-posta rapor", "eposta", "mail", "email", "rapor gönder", "gmail", "uygulama şifresi", "günlük rapor mail", "pdf rapor"]
     },
     {
       "id": "qr-durdur",
       "konu": "kasa",
-      "soru": "QR siparişlerini nasıl durdurur ya da yeniden açarım?",
-      "cevap": [
-        "Sol menünün üstündeki kart QR siparişlerinin durumunu yazar. Mutfak yetişemiyorsa “Durdur”a basın.",
-        "Kapalıyken kart sarıdır ve nedenini yazar. “Gün sonu yapıldı” ya da “Elle durduruldu” ise “Siparişleri aç” deyin (sabah kasa açılınca ya da 05:00’te kendiliğinden de açılır). “Personel ekranı bağlı değil” diyorsa mutfak, garson ya da kasa ekranından birinde giriş yapın."
-      ],
+      "kitle": ["site", "owner", "manager", "cashier"],
+      "soru": "QR siparişlerini nasıl durdurur ya da açarım?",
+      "cevap": ["Sol menünün üstündeki QR siparişleri kartında “Durdur”a basın. Açmak için “Siparişleri aç” deyin; sabah kasa açılınca kendiliğinden açılır."],
       "anahtar": ["qr durdur", "siparişleri aç", "siparişleri durdur", "qr kapalı", "qr siparişleri kapalı", "sipariş almıyoruz", "mutfak yetişemiyor", "yoğunluk", "elle durduruldu"]
     },
 
     {
       "id": "urun-ekle",
       "konu": "menu",
+      "kitle": ["site", "owner", "manager"],
       "soru": "Menüye ürün nasıl eklenir, fiyat nasıl değiştirilir?",
-      "cevap": [
-        "Menü yönetimi → Ürünler’de “Ürün ekle”ye basın ya da var olan ürüne dokunun: ad, fiyat, KDV, kategori, fotoğraf ve seçenekler (boy, süt).",
-        "Kutu ve şişe gibi mutfakta hazırlanmayanlara “Hazır ürün” deyin. Değişiklik müşteri menüsüne hemen gider; QR kodları aynı kalır. Kategorilerin sırasını aynı ekranda değiştirirsiniz."
-      ],
-      "anahtar": ["ürün ekle", "urun ekle", "yeni ürün", "fiyat", "fiyat değiştir", "fiyat güncelle", "zam", "menü", "menu", "kategori", "fotoğraf", "seçenek", "kdv", "hazır ürün", "menü yönetimi", "qr yeniden bas", "qr değişir mi"],
-      "ilgili": ["tukendi", "qr-bas", "kampanya"]
+      "cevap": ["Menü yönetimi → Ürünler’de “Ürün ekle”ye basın ya da ürüne dokunup fiyatı değiştirin. Değişiklik müşteri menüsüne hemen gider; QR kodları aynı kalır."],
+      "anahtar": ["ürün ekle", "urun ekle", "yeni ürün", "fiyat", "fiyat değiştir", "fiyat güncelle", "zam", "menü", "menu", "kategori", "fotoğraf", "seçenek", "kdv", "hazır ürün", "menü yönetimi", "qr değişir mi"],
+      "ilgili": ["tukendi", "kampanya"]
     },
     {
       "id": "tukendi",
       "konu": "menu",
+      "kitle": ["site", "owner", "manager"],
       "soru": "Biten bir ürünü menüde nasıl kapatırım?",
-      "cevap": [
-        "Menü yönetimi’nde ürüne “Tükendi” deyin. Ürün müşteri menüsünde soluk görünür ve sipariş edilemez.",
-        "Ürün yeniden gelince aynı yerden açın."
-      ],
+      "cevap": ["Menü yönetimi’nde ürüne “Tükendi” deyin; müşteri menüsünde soluk görünür. Ürün gelince aynı yerden açın."],
       "anahtar": ["tükendi", "tukendi", "bitti", "kalmadı", "stokta yok", "ürün kapat", "ürünü gizle", "satışa kapat", "geçici kapat"]
+    },
+    {
+      "id": "tukendi-calisan",
+      "konu": "menu",
+      "kitle": ["cashier", "waiter", "kitchen"],
+      "soru": "Bir ürün bitti, menüden nasıl kalkar?",
+      "cevap": ["Ürünü müdür ya da işletme sahibi “Tükendi” yapar. Hangi ürünün bittiğini onlara söyleyin."],
+      "anahtar": ["tükendi", "tukendi", "bitti", "kalmadı", "stokta yok", "ürün kapat", "ürün bitti"]
     },
     {
       "id": "kampanya",
       "konu": "menu",
+      "kitle": ["site", "owner", "manager"],
       "soru": "Kampanya (indirim, happy hour) nasıl kurulur?",
       "cevap": [
-        ["Menü yönetimi → Kampanyalar → “Kampanya ekle”.", "İndirimi yüzde ya da TL olarak yazın, ürünleri seçin.", "Ne zaman geçerli: tarih aralığı, haftanın belli gün ve saatleri ya da ayın bir günü.", "İsterseniz adet koşulu ekleyin (“4 çay ve üzeri”), sonra kaydedin."],
-        "Kampanya kendiliğinden başlar ve biter; bitince sonucu bir pencerede görürsünüz. “Kampanyayı yinele” aynısını yeni tarihle açar."
+        ["Menü yönetimi → Kampanyalar → “Kampanya ekle”.", "İndirimi ve ürünleri seçin.", "Geçerli olduğu günleri ve saatleri seçip kaydedin."]
       ],
       "anahtar": ["kampanya", "indirim", "happy hour", "promosyon", "fırsat", "iskonto", "öğrenci indirimi", "kampanya ekle", "yüzde indirim"]
     },
     {
       "id": "qr-bas",
       "konu": "menu",
+      "kitle": ["site", "owner"],
       "soru": "Masa QR kodlarını nasıl basarım?",
       "cevap": [
-        ["Ayarlar → Masalar ve QR’da “Bağlı” yazdığını görün (yeni kafede 10-20 dakika sürebilir). QR’ın adresi “İnternet adresi: her ağdan açılır” olsun.", "Önce bir masanın kartını basıp iki telefonla deneyin: biri Wi-Fi’de, biri yalnız mobil veride.", "Sonra “QR kodlarını yazdır” ile hepsini basın: A4’e 6 ya da 12 QR, ya da A6 masa standı."],
-        "Mat kâğıt ya da mat laminasyon kullanın; parlak yüzeyi kamera okuyamaz. QR’ı kesmeyin, katlamayın ve bir takım yedek basıp kasada saklayın."
+        ["Ayarlar → Masalar ve QR’da “Bağlı” yazdığını görün.", "Bir masanın kartını basıp telefonla deneyin.", "“QR kodlarını yazdır” ile hepsini basın."],
+        "Mat kâğıt kullanın; parlak yüzeyi kamera zor okur."
       ],
       "anahtar": ["qr", "qr kod", "karekod", "qr bas", "qr yazdır", "qr çıktı", "masa qr", "masa standı", "a6", "qr kodları", "baskı", "laminasyon"],
-      "ilgili": ["qr-kayboldu", "qr-musteri", "urun-ekle"]
+      "ilgili": ["qr-kayboldu", "qr-musteri"]
     },
     {
       "id": "qr-kayboldu",
       "konu": "menu",
-      "soru": "Bir masanın QR kartı kayboldu ya da çalındı.",
-      "cevap": [
-        "Masaya dokunun, masa penceresinde “QR yenile”ye basın ve o masanın yeni kartını basın. Eski kart artık açılmaz.",
-        "Kötü niyetli sipariş gönderen bir telefonu Ayarlar → Masalar ve QR → Engellenen telefonlar’dan da yönetebilirsiniz."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "Bir masanın QR kartı kayboldu.",
+      "cevap": ["Masa penceresinde “QR yenile”ye basın ve yeni kartı basın; eski kart artık açılmaz."],
       "anahtar": ["qr kayboldu", "qr çalındı", "qr yenile", "kart kayboldu", "eski qr", "qr iptal", "engelle", "engellenen telefonlar", "şaka sipariş"]
     },
     {
       "id": "qr-musteri",
       "konu": "menu",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
       "soru": "Müşteri QR’dan nasıl sipariş verir?",
-      "cevap": [
-        "Müşteri masadaki QR kodu telefon kamerasıyla okutur; uygulama indirmez, Wi-Fi şifresi de gerekmez (kendi mobil verisiyle açılır).",
-        ["Menüden ürünü seçer, seçenekleri ve adedi belirleyip “Sepete ekle” der.", "“Siparişi gönder”e basar. Sipariş ayarınıza göre garson onayına ya da doğrudan mutfağa gider.", "İsterse “Garson çağır” ya da “Hesabı iste”ye basar."],
-        "Ödeme kaydedilince müşterinin telefonunda “Hesabınız kapandı” çıkar."
-      ],
+      "cevap": ["Müşteri masadaki QR’ı telefon kamerasıyla okutur; uygulama ya da Wi-Fi şifresi gerekmez. Ürünleri seçip “Siparişi gönder”e basar; isterse garson çağırır ya da hesabı ister."],
       "anahtar": ["müşteri sipariş", "qr menü", "qr sipariş", "dijital menü", "menü açılıyor", "müşteri telefonu", "garson çağır", "sepete ekle", "uygulama indirmeden"]
     },
 
     {
       "id": "calisan-ekle",
       "konu": "personel",
+      "kitle": ["site", "owner"],
       "soru": "Çalışan hesabı nasıl açılır?",
-      "cevap": [
-        "Personel → Çalışanlar → “Çalışan ekle”ye basın: ad, kullanıcı adı, görev (garson, kasiyer, mutfak, müdür) ve şifre.",
-        "Herkese ayrı hesap açın, ortak şifre kullanmayın; kim ne yaptı böylece belli olur. Şifreyi unutan çalışan için aynı yerde “Şifreyi yenile”."
-      ],
-      "anahtar": ["çalışan ekle", "calisan ekle", "personel", "personel ekle", "garson ekle", "kasiyer ekle", "kullanıcı", "kullanıcı ekle", "hesap aç", "rol", "görev", "yetki", "eleman"],
+      "cevap": ["Personel → Çalışanlar → “Çalışan ekle”: ad, kullanıcı adı, görev ve şifre. Herkese ayrı hesap açın; şifreyi unutan için aynı yerde “Şifreyi yenile”."],
+      "anahtar": ["çalışan ekle", "calisan ekle", "personel", "personel ekle", "garson ekle", "kasiyer ekle", "kullanıcı", "kullanıcı ekle", "hesap aç", "rol", "görev", "yetki", "eleman", "şifreyi yenile"],
       "ilgili": ["mudur", "calisan-ayrildi"]
     },
     {
       "id": "mudur",
       "konu": "personel",
-      "soru": "Müdür hesabı ne işe yarar, neyi yapamaz?",
-      "cevap": [
-        "Müdür, siz kafede değilken günü yönetir; şifrenizi paylaşmanıza gerek kalmaz. Açmak için: Personel → Çalışanlar → Çalışan ekle → Görevi: Müdür.",
-        "Müdür sipariş, ödeme, iptal, iade, QR onayı, stok, ürün ve kampanyaları, raporları yapar. Ayarlar, çalışan hesapları, kasa farkı, masa ekleme, yedek ve güncelleme yalnız sizdedir."
-      ],
+      "kitle": ["site", "owner", "manager"],
+      "soru": "Müdür neleri yapabilir?",
+      "cevap": ["Müdür sipariş, ödeme, iade, stok, menü, kampanya ve raporlarla günü yönetir. Ayarlar, çalışan hesapları, kasa farkı, yedek ve destek işletme sahibindedir."],
       "anahtar": ["müdür", "mudur", "yönetici", "sorumlu", "müdür yetkisi", "yetki", "şifremi paylaşmadan", "patron yokken"]
     },
     {
       "id": "calisan-ayrildi",
       "konu": "personel",
-      "soru": "Çalışan ayrıldı ya da telefonu kayboldu, ne yapmalıyım?",
-      "cevap": [
-        "Ayrılan çalışan için Personel → Çalışanlar’da “Hesabı kapat” deyin; geçmişi silinmez.",
-        "Kaybolan bir telefonda açık kalan oturumu aynı bölümdeki “Açık oturumlar”dan kapatın."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "Çalışan ayrıldı ya da telefonu kayboldu.",
+      "cevap": ["Personel → Çalışanlar’da “Hesabı kapat” deyin; geçmişi silinmez. Kaybolan telefondaki oturumu aynı yerdeki “Açık oturumlar”dan kapatın."],
       "anahtar": ["işten ayrıldı", "ayrıldı", "hesabı kapat", "çalışan sil", "personel çıkar", "telefon kayboldu", "açık oturumlar", "oturumu kapat", "çalındı"]
     },
     {
       "id": "sifre-unuttum",
       "konu": "personel",
+      "kitle": ["site", "manager", "cashier", "waiter", "kitchen"],
       "soru": "Şifremi unuttum.",
+      "cevap": ["İşletme sahibinden şifrenizi yenilemesini isteyin (Personel → Çalışanlar → “Şifreyi yenile”)."],
+      "anahtar": ["şifre", "şifremi unuttum", "sifremi unuttum", "parola", "şifre sıfırla", "giriş yapamıyorum", "şifre yenile", "password"]
+    },
+    {
+      "id": "sahip-sifre",
+      "konu": "personel",
+      "kitle": ["site", "owner"],
+      "soru": "İşletme sahibi şifremi unuttum.",
+      "cevap": ["Kasa bilgisayarındaki sol şeritten Güvenlik → “İşletme sahibi şifresini unuttum”a basın; kurtarma kodunuz gerekir."],
+      "anahtar": ["şifre", "şifremi unuttum", "sifremi unuttum", "parola", "sahip şifresi", "giriş yapamıyorum", "şifre sıfırla", "password"],
+      "ilgili": ["kurtarma-kodu"]
+    },
+    {
+      "id": "sifre-degistir",
+      "konu": "personel",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "Şifremi nasıl değiştiririm?",
+      "cevap": ["Hesabım’a girin, yeni şifrenizi yazıp kaydedin."],
+      "anahtar": ["şifre değiştir", "şifremi değiştir", "yeni şifre", "parola değiştir", "hesabım", "çıkış yap"]
+    },
+    {
+      "id": "vardiya-kodu",
+      "konu": "personel",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "Vardiyayı nasıl başlatır ve bitiririm?",
       "cevap": [
-        "Çalışan şifresini işletme sahibi verir: Personel → Çalışanlar → “Şifreyi yenile”.",
-        "İşletme sahibi şifrenizi unuttuysanız kasa bilgisayarındaki sol şeritten Güvenlik → “İşletme sahibi şifresini unuttum”a basın; kurtarma kodunuz gerekir. Mola ekibi sizden asla şifrenizi istemez."
+        ["Girişten sonra “Vardiyayı başlat” ekranı çıkar.", "Kasadaki “Vardiya kodu”nda görünen 6 haneli kodu yazın ya da QR’ı okutun.", "Bitirirken üstteki vardiya çipinden kasadaki güncel kodu yeniden yazın."]
       ],
-      "anahtar": ["şifre", "şifremi unuttum", "sifremi unuttum", "parola", "şifre sıfırla", "giriş yapamıyorum", "şifre yenile", "sahip şifresi", "password"],
-      "ilgili": ["kurtarma-kodu", "ekran-kilit"]
+      "anahtar": ["vardiya", "vardiya kodu", "vardiya başlat", "vardiyayı bitir", "mesai", "6 haneli kod", "giriş çıkış", "kod", "puantaj"]
     },
     {
       "id": "vardiya",
       "konu": "personel",
-      "soru": "Vardiya, çalışma saati ve bahşiş nereden görülür?",
-      "cevap": [
-        "Personel → Vardiya ve bahşiş’te kimin kaç saat çalıştığını, kimin geç kaldığını ve bahşiş paylarını görürsünüz.",
-        "Kuralları Personel → Personel ayarları’ndan seçersiniz. Bu bölüm paketinizde yoksa soluk görünür."
-      ],
-      "anahtar": ["vardiya", "mesai", "çalışma saati", "bahşiş", "bahsis", "bahşiş paylaşımı", "geç kalma", "puantaj", "giriş çıkış"]
+      "kitle": ["site", "owner", "manager"],
+      "soru": "Çalışma saatlerini ve bahşişi nereden görürüm?",
+      "cevap": ["Personel → Vardiya ve bahşiş’te kimin kaç saat çalıştığını ve bahşiş paylarını görürsünüz. Vardiya takibini işletme sahibi Personel → Personel ayarları → Vardiya’dan açar."],
+      "anahtar": ["vardiya", "mesai", "çalışma saati", "bahşiş", "bahsis", "bahşiş paylaşımı", "geç kalma", "puantaj", "vardiya takibi"]
     },
     {
       "id": "stok",
       "konu": "personel",
+      "kitle": ["site", "owner", "manager"],
       "soru": "Stok ve reçete nasıl çalışır?",
       "cevap": [
-        ["Stok → Malzemeler’de kahve, süt gibi malzemeleri ve uyarı sınırını girin; sınırın altına düşünce bildirim gelir.", "Reçetelerde bir ürünün içini yazın (bir latte = 18 g kahve + 200 ml süt); satıldıkça stoktan kendiliğinden düşer.", "Alış, sayım ve fireyi kaydedin. Alışta “Para nereden çıktı?” sorulur ve gider kendiliğinden yazılır."],
-        "Yanlış kaydı satırın sonundaki üç nokta → “Bu kaydı geri al” ile düzeltin (yalnız bugünün kayıtları). Hangi ürünün ne kazandırdığı Satış ve Raporlar → Kârlılık’ta."
+        ["Stok → Malzemeler’de malzemeleri ve uyarı sınırını girin.", "Reçetede ürünün içini yazın; satıldıkça stoktan düşer.", "Alış, sayım ve fireyi kaydedin."]
       ],
-      "anahtar": ["stok", "malzeme", "reçete", "recete", "fire", "sayım", "alış", "envanter", "depo", "azalan stok", "kârlılık", "maliyet", "geri al"]
+      "anahtar": ["stok", "malzeme", "reçete", "recete", "fire", "sayım", "alış", "envanter", "depo", "azalan stok", "kârlılık", "maliyet"]
+    },
+    {
+      "id": "stok-mutfak",
+      "konu": "personel",
+      "kitle": ["kitchen"],
+      "soru": "Mutfakta sayım ve fire nasıl girilir?",
+      "cevap": ["Üstteki “Stok”a basın; sayımı ve fireyi oradan kaydedin. Panoya “Mutfak panosu” ile dönersiniz."],
+      "anahtar": ["stok", "sayım", "fire", "malzeme", "döküldü", "bozuldu", "envanter"]
     },
 
     {
+      "id": "tablet-giris",
+      "konu": "cihaz",
+      "kitle": ["site", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "Telefona ya da tablete nasıl giriş yaparım?",
+      "cevap": ["Mola uygulamasını açın ve kendi kullanıcı adınızla şifrenizi yazın. Cihazda Mola yoksa işletme sahibinden bağlamasını isteyin."],
+      "anahtar": ["giriş", "giris", "tablet", "telefon", "giriş yap", "kullanıcı adı", "uygulama", "login", "oturum aç", "tabletten giriş"]
+    },
+    {
       "id": "yazici",
       "konu": "cihaz",
+      "kitle": ["site", "owner"],
       "soru": "Fiş yazıcısını nasıl bağlarım?",
       "cevap": [
-        "Mola ağ (Ethernet ya da Wi-Fi) ve USB bağlantılı ESC/POS fiş yazıcılarıyla çalışır; ofis tipi A4 yazıcı için ayrı bir yazdırma modu vardır.",
-        ["Ayarlar → Cihazlar → Yazıcılar’da yazıcıyı ekleyin (ağ yazıcısında IP adresini yazın).", "Hangi fişin (mutfak, hesap, kasa) hangi yazıcıdan çıkacağını seçin.", "Bir deneme fişi basın."],
-        "Yazıcı almadan önce modelini bize sorun; kurulumda birlikte deneyelim."
+        ["Ayarlar → Cihazlar → Yazıcılar’da yazıcıyı ekleyin (ağ yazıcısında IP adresini yazın).", "Hangi fişin hangi yazıcıdan çıkacağını seçin.", "Bir deneme fişi basın."],
+        "Mola ağ ve USB bağlantılı ESC/POS fiş yazıcılarıyla çalışır."
       ],
       "anahtar": ["yazıcı", "yazici", "yazıcı bağla", "yazıcı ekle", "fiş yazıcısı", "termal", "esc/pos", "escpos", "usb yazıcı", "ağ yazıcısı", "ethernet", "ip adresi", "a4", "printer", "fiş"],
       "ilgili": ["fis-cikmiyor", "mutfak-fis"]
@@ -486,22 +641,20 @@
     {
       "id": "kafe-ici-cihazlar",
       "konu": "cihaz",
+      "kitle": ["site", "owner"],
       "soru": "Garson telefonuna ya da mutfak tabletine Mola’yı nasıl kurarım?",
       "cevap": [
-        ["Kasa bilgisayarındaki Mola penceresinin sol şeridinde “Kafe içi cihazlar”a basın (ya da Ayarlar → Cihazlar → Kafe içi cihazlar).", "Telefon ya da tablet kafenin Wi-Fi’sindeyken ekrandaki QR kodu kamerayla okutun.", "Android’de Mola uygulamasını (APK) indirin; “Bilinmeyen uygulamalara izin ver”i onaylayıp kurun.", "Uygulama açılınca çalışan kendi kullanıcı adı ve şifresiyle girer."],
-        "Aynı Android uygulaması molayazilim.com.tr/indir/ sayfasında da var. iPhone ve iPad’de uygulama gerekmez: aynı QR’ı okutup sayfayı Safari’de açın, Paylaş → “Ana Ekrana Ekle”ye dokunun."
+        ["Kasa bilgisayarında Ayarlar → Cihazlar → Kafe içi cihazlar’ı açın.", "Telefon kafenin Wi-Fi’sindeyken ekrandaki QR’ı okutun.", "Android’de Mola uygulamasını kurun; iPhone ve iPad’de Safari’de Paylaş → “Ana Ekrana Ekle”.", "Çalışan kendi kullanıcı adıyla girer."]
       ],
       "anahtar": ["kafe içi cihazlar", "kafe ici cihazlar", "tablet", "telefon", "android", "apk", "uygulama", "garson telefonu", "mutfak tableti", "cihaz bağla", "cihaz ekle", "bilinmeyen uygulamalar", "telefon bağlama", "iphone", "ipad", "ios", "safari", "ana ekrana ekle"],
-      "ilgili": ["kalici-baglanti", "baglanti-yok", "yazici"]
+      "ilgili": ["kalici-baglanti", "baglanti-yok"]
     },
     {
       "id": "kalici-baglanti",
       "konu": "cihaz",
-      "soru": "Kalıcı bağlantı nedir? Kafedeki laptoptan kasaya nasıl bağlanırım?",
-      "cevap": [
-        "Kalıcı bağlantı, kafedeki laptop ve telefonlar için değişmeyen bir adrestir; modemin verdiği adres değişse de kasa bilgisayarını açar.",
-        "Ayarlar → Cihazlar → Kafe içi cihazlar’dan açın; laptopta “Bu cihaza kısayol ekle” deyin. Kalıcı bağlantı yalnız kafede çalışır; kafe dışından Kafemi yönet kullanılır."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "Kafedeki laptoptan kasaya nasıl bağlanırım?",
+      "cevap": ["Ayarlar → Cihazlar → Kafe içi cihazlar’dan kalıcı bağlantıyı açın ve laptopta “Bu cihaza kısayol ekle” deyin. Modemin adresi değişse de bağlanır; yalnız kafede çalışır."],
       "anahtar": ["kalıcı bağlantı", "kalici baglanti", "laptop", "dizüstü", "kısayol", "kısayol ekle", "adres değişti", "ip değişti", "modem", "sabit adres", "ikinci bilgisayar"],
       "ilgili": ["kafemi-yonet-kur"]
     },
@@ -509,11 +662,10 @@
     {
       "id": "kafemi-yonet-kur",
       "konu": "uzaktan",
+      "kitle": ["site", "owner"],
       "soru": "Kafemi yönet’i (telefondan uzaktan rapor) nasıl kurarım?",
       "cevap": [
-        "Kasada bir kez Ayarlar → Uzaktan erişim’e girin (yalnız işletme sahibi görür):",
-        ["1 · Telefon kodu: telefonunuza ücretsiz bir doğrulama uygulaması kurun, ekrandaki QR kodu okutun, uygulamadaki 6 haneli kodu yazın. Kurtarma kodlarını kâğıda yazın.", "2 · E-posta: adresinizi yazın, gelen 6 haneli kodu girin.", "Sonra telefonunuzda ya da laptopunuzda merkez.molayazilim.com.tr/yonet adresini açıp girin."],
-        "Kafede olmasanız da bugünün satışını ve kasayı görürsünüz."
+        ["Kasada Ayarlar → Uzaktan erişim’e girin.", "“1 · Telefon kodu”: doğrulama uygulamasıyla QR’ı okutup 6 haneli kodu yazın.", "“2 · E-posta”: adresinize gelen kodu yazın.", "Telefonunuzda merkez.molayazilim.com.tr/yonet adresini açıp girin."]
       ],
       "anahtar": ["kafemi yönet", "kafemi yonet", "uzaktan", "uzaktan erişim", "uzaktan rapor", "telefondan rapor", "evden bakmak", "telefon kodu", "doğrulama uygulaması", "authenticator", "google authenticator", "raporlarım", "yonet"],
       "ilgili": ["kafemi-yonet-giris", "kasa-kapali-son-durum"]
@@ -521,10 +673,11 @@
     {
       "id": "kafemi-yonet-giris",
       "konu": "uzaktan",
+      "kitle": ["site", "owner"],
       "soru": "merkez.molayazilim.com.tr/yonet adresine nasıl girerim?",
       "cevap": [
-        ["Telefonunuzda ya da laptopunuzda merkez.molayazilim.com.tr/yonet adresini açın.", "E-posta adresinizi ve şifrenizi yazıp “Devam”a basın.", "Doğrulama uygulamasındaki 6 haneli kodu yazıp “Giriş yap”a basın."],
-        "Cihaz kendine bir ad verir (örneğin “iPhone · 15 Ekim”) ve hatırlanır; en fazla 3 cihaz eşleşir. Yeni bir cihaz ilk kez girerken kasa bilgisayarı açık olmalı."
+        ["merkez.molayazilim.com.tr/yonet adresini açın.", "E-posta adresinizi ve şifrenizi yazıp “Devam”a basın.", "Doğrulama uygulamasındaki 6 haneli kodu yazıp “Giriş yap”a basın."],
+        "En fazla 3 cihaz eşleşir. Yeni cihaz ilk kez girerken kasa bilgisayarı açık olmalı."
       ],
       "anahtar": ["giriş", "giris", "yönet giriş", "merkez", "merkez.molayazilim.com.tr", "yonet adresi", "uzaktan giriş", "telefon kodu", "6 haneli kod", "doğrulama kodu", "devam"],
       "ilgili": ["kafemi-yonet-giremiyorum"]
@@ -532,41 +685,35 @@
     {
       "id": "kasa-kapali-son-durum",
       "konu": "uzaktan",
+      "kitle": ["site", "owner"],
       "soru": "Kasa bilgisayarı kapalıyken telefondan ne görürüm?",
-      "cevap": [
-        "Kasa kapalıyken Kafemi yönet sayfası “Kasa bilgisayarı kapalı · Son durum” yazar ve kasanın gönderdiği son raporu gösterir.",
-        "Kasa yeniden açılınca güncel bilgiler gelir; uzaktan yönetim açıksa “Kafeyi yönet”e basarak ekranlara dönersiniz."
-      ],
+      "cevap": ["Kafemi yönet “Kasa bilgisayarı kapalı · Son durum” yazar ve son raporu gösterir. Kasa açılınca güncel bilgiler gelir."],
       "anahtar": ["kasa kapalı", "son durum", "bilgisayar kapalı", "kapalıyken", "son rapor", "kasa bilgisayarı kapalı", "güncel değil", "eski rapor"]
     },
     {
       "id": "cihaz-kaldir",
       "konu": "uzaktan",
-      "soru": "Kafemi yönet’e girdiğim telefon kayboldu; nasıl kaldırırım?",
-      "cevap": [
-        "Kasada Ayarlar → Uzaktan erişim → “4 · Eşleşmiş cihazlar”dan o telefonu kaldırın; şifreniz sorulur, telefon kodu sorulmaz.",
-        "Elinizdeki bir cihazda “Çıkış” cihazı kilitler; yeniden girmek için e-posta ve şifreniz yeter. Cihazı tamamen silmek için Çıkış penceresinde “Bu cihazı tamamen kaldır” deyin."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "Kafemi yönet’e girdiğim telefon kayboldu.",
+      "cevap": ["Kasada Ayarlar → Uzaktan erişim → “4 · Eşleşmiş cihazlar”dan o telefonu kaldırın; şifreniz sorulur."],
       "anahtar": ["cihaz kaldır", "eşleşmiş cihazlar", "telefon kayboldu", "telefon çalındı", "cihaz sil", "çıkış", "cikis", "3 cihaz", "yeni telefon", "cihazı kaldır"]
     },
     {
       "id": "uzaktan-yonetim",
       "konu": "uzaktan",
-      "soru": "Kafeye gitmeden fiyat değiştirebilir miyim? (Uzaktan yönetim)",
-      "cevap": [
-        "Evet. Kafede bir kez Ayarlar → Uzaktan erişim → “5 · Uzaktan yönetim”de “Aç”a basın; şifre ve 6 haneli kod sorulur.",
-        "Sonra merkez.molayazilim.com.tr/yonet’e girince, kasa açıkken kafenin ekranları doğrudan açılır: fiyat değiştirir, kampanya açar, çalışan hesabı kapatırsınız. Her uzaktan giriş size bildirilir; yedekten geri yükleme ve güncelleme kurma yalnız kafede yapılır."
-      ],
+      "kitle": ["site", "owner"],
+      "soru": "Kafeye gitmeden fiyat değiştirebilir miyim?",
+      "cevap": ["Evet. Kafede bir kez Ayarlar → Uzaktan erişim → “5 · Uzaktan yönetim”i açın. Sonra Kafemi yönet’ten, kasa açıkken kafenin ekranlarını kullanırsınız; her uzaktan giriş size bildirilir."],
       "anahtar": ["uzaktan yönetim", "uzaktan yonetim", "evden fiyat", "uzaktan fiyat", "kafeyi yönet", "uzaktan ayar", "kafeye gitmeden", "dışarıdan yönetmek"]
     },
     {
       "id": "kafemi-yonet-giremiyorum",
       "konu": "uzaktan",
+      "kitle": ["site", "owner"],
       "soru": "Kafemi yönet’e giremiyorum.",
       "cevap": [
-        "Sayfa nedenini yazar; ona göre ilerleyin.",
-        ["Kasada Ayarlar → Uzaktan erişim’de “1 · Telefon kodu” ve “2 · E-posta” tamamlanmış olmalı.", "Yeni bir cihaz ilk kez girerken kasa bilgisayarı açık ve internette olmalı.", "Kodu, Mola için kurduğunuz doğrulama uygulamasından yazın; e-postayla gelen kod giriş için değil, e-postanızı doğrulamak içindir."],
-        "Çözülmezse Mola’nın içinden Destek → Talepler’den yazın."
+        ["Sayfadaki uyarıyı okuyun; nedeni yazar.", "Ayarlar → Uzaktan erişim’de 1 ve 2. adımlar tamamlanmış olmalı.", "Kodu doğrulama uygulamasından yazın; e-postayla gelen kod giriş için değildir."],
+        "Çözülmezse Destek → Talepler’den yazın."
       ],
       "anahtar": ["giremiyorum", "giriş olmuyor", "kod yanlış", "kod hatalı", "kafemi yönet açılmıyor", "uzaktan giriş olmuyor", "yonet hata", "doğrulama kodu yanlış"]
     },
@@ -574,104 +721,108 @@
     {
       "id": "yedek",
       "konu": "yedek",
+      "kitle": ["site", "owner"],
       "soru": "Yedek ne zaman alınır, nerede durur?",
-      "cevap": [
-        "Mola verilerinizi kendiliğinden yedekler: gün sonundan 1 dakika sonra ve o gün değişiklik olduysa gece 03:30’da. İstediğiniz an kasa bilgisayarının şeridinden Yedekle → “Şimdi yedekle”.",
-        "Ayarlar → Güvenlik ve yedek → “Yedekleriniz nerede?” son yedeklerin zamanını gösterir. Bulut yedek hizmetiniz varsa yedeğin şifreli bir kopyası Mola sunucusunda da durur.",
-        "“Yedek hatası” uyarısı alırsanız USB bellek takılı mı ve diskte yer var mı bakın, sonra “Şimdi yedekle” ile yeniden deneyin. Çözülmezse Destek → Talepler’den yazın."
-      ],
+      "cevap": ["Mola her gün sonundan sonra ve gece kendiliğinden yedek alır; istediğiniz an kasa bilgisayarının şeridinden Yedekle → “Şimdi yedekle”. Son yedekleri Ayarlar → Güvenlik ve yedek’te görürsünüz."],
       "anahtar": ["yedek", "yedekleme", "backup", "yedek al", "yedek hatası", "yedek alınamadı", "disk dolu", "şimdi yedekle", "yedekler nerede", "otomatik yedek", "bulut yedek", "gece yedeği"],
       "ilgili": ["usb-yedek", "yeni-bilgisayar"]
     },
     {
       "id": "usb-yedek",
       "konu": "yedek",
+      "kitle": ["site", "owner"],
       "soru": "USB belleğe ikinci yedek nasıl ayarlanır?",
-      "cevap": [
-        "Kasa bilgisayarının sol şeridinden Yedekle’ye basın ve ikinci yedek yeri olarak bir USB bellek seçin. Bundan sonra her yedeğin bir kopyası oraya da gider.",
-        "Kurtarma kodunu bu belleğe koymayın; kâğıtta, ayrı bir yerde saklayın."
-      ],
+      "cevap": ["Kasa bilgisayarının şeridinden Yedekle’ye basın ve ikinci yer olarak USB belleği seçin. Kurtarma kodunu bu belleğe koymayın."],
       "anahtar": ["usb", "usb bellek", "flash bellek", "flaş", "ikinci yedek", "harici disk", "yedek yeri", "kopya"]
     },
     {
       "id": "yeni-bilgisayar",
       "konu": "yedek",
+      "kitle": ["site", "owner"],
       "soru": "Bilgisayarım bozuldu; yeni bilgisayara nasıl geçerim?",
-      "cevap": [
-        "Şifrenizi biliyorsanız: yeni bilgisayara Mola’yı kurun → “İşletmem var” → e-posta, kullanıcı adı ve şifre → e-postanıza gelen kod → “İndir ve geri yükle”.",
-        "Şifreyi unuttuysanız ama kurtarma kodu kâğıttaysa: Mola ekibini arayıp taşıma kodu alın; ilk ekranda “Mola Merkez’den geri yükle”ye taşıma kodunu ve kurtarma kodunu yazın.",
-        "Önceden hazırlık: Ayarlar → Güvenlik ve yedek → Yedek’teki “Yeni bilgisayar için e-posta” kartı “İşletmem var hazır” demeli; demiyorsa e-postanızı doğrulayıp “Hazırla”ya basın. Şifre de kurtarma kodu da yoksa veriler açılamaz; Mola ekibi de açamaz."
-      ],
+      "cevap": ["Yeni bilgisayara Mola’yı kurun ve “İşletmem var” ile e-posta, kullanıcı adı ve şifrenizle verilerinizi geri yükleyin. Şifrenizi unuttuysanız Mola ekibini arayın; taşıma kodu ve kurtarma kodunuzla geri yüklenir."],
       "anahtar": ["bilgisayar bozuldu", "yeni bilgisayar", "taşıma", "taşımak", "geri yükle", "geri yükleme", "restore", "işletmem var", "format", "disk bozuldu", "bilgisayar değiştir", "taşıma kodu"],
       "ilgili": ["kurtarma-kodu", "yedek"]
     },
     {
       "id": "guncelleme",
       "konu": "yedek",
+      "kitle": ["site", "owner"],
       "soru": "Mola nasıl güncellenir?",
-      "cevap": [
-        "Yeni sürüm kendiliğinden indirilir ve hazır olunca bir pencere açılır:",
-        ["“Şimdi güncelle”: önce verileriniz yedeklenir, Mola kısa bir süre kapanıp açılır. Bu sırada pencereyi ve bilgisayarı kapatmayın.", "“1 saat sonra hatırlat”: pencere bir saat sonra yeniden gelir.", "“Kapanışta kur”: gün sonunda ya da yarın açılışta yedek alınarak kurulur."],
-        "Açık masa ya da bitmemiş sipariş varken “Şimdi güncelle” kapalıdır; erteleseniz de Masalar’ın üstünde “Yeni sürüm hazır” yazar ve “Şimdi kur” pencereyi yeniden açar. Yeni sürüm açılmazsa Mola önceki sürüme kendiliğinden döner, verileriniz yerinde kalır."
-      ],
+      "cevap": ["Yeni sürüm hazır olunca pencere açılır: “Şimdi güncelle” deyin ya da “Kapanışta kur”u seçin. Önce yedek alınır; güncelleme sırasında bilgisayarı kapatmayın."],
       "anahtar": ["güncelleme", "guncelleme", "güncelle", "update", "yeni sürüm", "sürüm", "versiyon", "şimdi güncelle", "kapanışta kur", "yükseltme", "şimdi güncelle kapalı", "güncelleyemiyorum", "yeni sürüm hazır"],
       "ilgili": ["yedek"]
     },
     {
+      "id": "ekran-yenilendi",
+      "konu": "yedek",
+      "kitle": ["manager", "cashier", "waiter", "kitchen"],
+      "soru": "Ekran kendiliğinden yenilendi.",
+      "cevap": ["Mola güncellenince ekranlar sakin bir anda kendiliğinden yenilenir. Yazdığınız sepet bu cihazda kalır."],
+      "anahtar": ["yenilendi", "ekran yenilendi", "kendiliğinden yenilendi", "güncelleme", "sayfa yenilendi", "yeni sürüm", "kapandı açıldı"]
+    },
+    {
       "id": "ekran-kilit",
       "konu": "yedek",
+      "kitle": ["site", "owner"],
       "soru": "Ekran kendiliğinden kilitlendi.",
-      "cevap": [
-        "Bu, sahip ekranının otomatik kilididir; siz yokken başkasının ayarlara girmesini önler. Şifrenizi yazıp “Kilidi aç”a basın.",
-        "Kilit süresini Ayarlar → Güvenlik ve yedek → Kilit ve güncelleme’den değiştirirsiniz."
-      ],
+      "cevap": ["Sahip ekranının otomatik kilidi; şifrenizi yazıp “Kilidi aç”a basın. Süresini Ayarlar → Güvenlik ve yedek → Kilit ve güncelleme’den değiştirin."],
       "anahtar": ["kilit", "kilitlendi", "ekran kilidi", "kilidi aç", "otomatik kilit", "kilitleniyor", "kilit süresi"]
     },
 
     {
       "id": "internet-kesildi",
       "konu": "sorun",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
       "soru": "İnternet kesilirse ne olur?",
-      "cevap": [
-        "Mola kafenizin kendi bilgisayarında çalışır. Modem ve Wi-Fi açık oldukça garson, kasa, mutfak ve yazıcı internetsiz de çalışır: sipariş alınır, mutfağa düşer, hesap kapanır.",
-        "Müşterinin QR menüsü görünür ama sipariş verilemez; siparişi garson alır. Kafemi yönet, e-posta raporları, destek ve bulut yedek internet gelince devam eder. Mola lisansını internetsiz 14 güne kadar kullanır.",
-        "İnternet uzun süre gelmeyecekse kasa bilgisayarını telefonunuzun internet paylaşımına (hotspot) bağlayın."
-      ],
-      "anahtar": ["internet", "internet kesildi", "internet yok", "internetsiz", "çevrimdışı", "offline", "bağlantı koptu", "modem", "wifi", "wi-fi", "hotspot", "elektrik", "14 gün"],
-      "ilgili": ["baglanti-yok", "qr-siparis-olmuyor"]
+      "cevap": ["Modem ve Wi-Fi açık oldukça sipariş, mutfak, kasa ve yazıcı çalışmaya devam eder. Müşteri QR’dan sipariş veremez; siparişi garson alır."],
+      "anahtar": ["internet", "internet kesildi", "internet yok", "internetsiz", "çevrimdışı", "offline", "bağlantı koptu", "modem", "wifi", "wi-fi", "hotspot", "elektrik"],
+      "ilgili": ["baglanti-yok"]
     },
     {
       "id": "baglanti-yok",
       "konu": "sorun",
-      "soru": "Tablet ya da telefon “bağlantı yok” diyor, kasaya bağlanamıyor.",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "Tablet ya da telefon “Bağlantı kesildi” diyor.",
       "cevap": [
-        ["Kasa bilgisayarı açık ve Mola çalışıyor mu bakın; kasa kapalıyken hiçbir ekran çalışmaz.", "Cihaz kafenin Wi-Fi’sinde mi bakın (misafir ağında değil).", "Windows’ta Ayarlar → Ağ ve İnternet → bağlantınız → Ağ profili türü “Özel ağ” olmalı."],
-        "Kafedeki laptop ve telefonlarda kalıcı bağlantıyı kullanın (Ayarlar → Cihazlar → Kafe içi cihazlar); modem adresi değişse de bağlanır."
+        ["Kasa bilgisayarı açık ve Mola çalışıyor mu bakın.", "Cihaz kafenin Wi-Fi’sinde mi bakın (misafir ağında değil).", "Düzelmezse işletme sahibine söyleyin."]
       ],
-      "anahtar": ["bağlantı yok", "baglanti yok", "bağlanamıyor", "bağlanmıyor", "tablet bağlanmıyor", "telefon bağlanmıyor", "özel ağ", "ağ profili", "sunucuya ulaşılamıyor", "açılmıyor", "kopuyor"],
-      "ilgili": ["kalici-baglanti", "internet-kesildi"]
+      "anahtar": ["bağlantı yok", "baglanti yok", "bağlantı kesildi", "bağlanamıyor", "bağlanmıyor", "tablet bağlanmıyor", "telefon bağlanmıyor", "özel ağ", "ağ profili", "açılmıyor", "kopuyor"],
+      "ilgili": ["internet-kesildi"]
+    },
+    {
+      "id": "ag-profili",
+      "konu": "sorun",
+      "kitle": ["site", "owner"],
+      "soru": "Hiçbir telefon kasaya bağlanmıyor.",
+      "cevap": ["Kasa bilgisayarında Windows Ayarlar → Ağ ve İnternet → bağlantınız → Ağ profili türü “Özel ağ” olmalı. Laptop ve telefonlarda kalıcı bağlantıyı kullanın."],
+      "anahtar": ["özel ağ", "ağ profili", "hiçbir telefon", "bağlanmıyor", "bağlanamıyor", "güvenlik duvarı", "firewall", "modem"],
+      "ilgili": ["kalici-baglanti"]
     },
     {
       "id": "qr-siparis-olmuyor",
       "konu": "sorun",
-      "soru": "QR menü açılmıyor ya da müşteri sipariş veremiyor.",
-      "cevap": [
-        "QR menü hiç açılmıyorsa: Ayarlar → Masalar ve QR’da “Bağlı” yazıyor mu, kasa bilgisayarı açık ve internette mi bakın.",
-        "Müşteri “Şu an sipariş almıyoruz” görüyorsa QR siparişleri kapalıdır: sol menüdeki QR siparişleri kartından “Siparişleri aç” deyin ya da bir personel ekranında giriş yapın.",
-        "“Şu an sipariş alınamıyor” görüyorsa kafenin interneti ya da kasa bilgisayarı kapalıdır."
-      ],
+      "kitle": ["site", "owner", "manager", "cashier", "waiter"],
+      "soru": "Müşteri QR’dan sipariş veremiyor.",
+      "cevap": ["“Şu an sipariş almıyoruz” görünüyorsa QR siparişleri kapalıdır; kasada “Siparişleri aç” denir. “Şu an sipariş alınamıyor” görünüyorsa kafenin interneti ya da kasa bilgisayarı kapalıdır."],
       "anahtar": ["qr açılmıyor", "qr menü açılmıyor", "qr calismiyor", "sipariş almıyoruz", "sipariş alınamıyor", "müşteri sipariş veremiyor", "menü açılmıyor", "qr bozuk", "bağlı değil"],
-      "ilgili": ["qr-durdur", "internet-kesildi"]
+      "ilgili": ["qr-durdur"]
     },
     {
       "id": "mola-destek",
       "konu": "sorun",
-      "soru": "Mola ekibine nasıl ulaşırım, uzaktan nasıl yardım eder?",
-      "cevap": [
-        "En hızlı yol Mola’nın içinden Destek → Talepler → “Yeni talep”: sorunu yazın, isterseniz ekran fotoğrafı ekleyin; yanıt aynı yazışmaya gelir. Telefon, WhatsApp ve e-posta bilgileri Ayarlar → İşletme → Paket ve lisans’ta ve bu sitenin Destek ve İletişim sayfasında.",
-        "Ekranınıza bakmamız gerekirse Destek → Mola desteği’nde “Mola ekibi bağlanabilsin”i siz açarsınız; siz kapatana kadar açık kalır. Bu sırada ekibimiz satışlarınızı, ödemeleri, kasa kapanışlarını ve şifreleri göremez."
-      ],
-      "anahtar": ["destek", "yardım", "iletişim", "mola ekibi", "talep", "destek talebi", "uzaktan destek", "mola desteği", "bağlanabilsin", "ekibe yaz", "whatsapp", "zil", "bildirim", "duyuru"]
+      "kitle": ["site", "owner"],
+      "soru": "Mola ekibine nasıl ulaşırım?",
+      "cevap": ["Programın içinden Destek → Talepler → “Yeni talep” ile yazın; yanıt aynı yere gelir. Ekranınıza bakmamız gerekirse izni Destek → Mola desteği’nde siz açarsınız."],
+      "anahtar": ["destek", "yardım", "iletişim", "mola ekibi", "talep", "destek talebi", "uzaktan destek", "mola desteği", "bağlanabilsin", "ekibe yaz", "whatsapp", "telefon"]
+    },
+    {
+      "id": "destek-calisan",
+      "konu": "sorun",
+      "kitle": ["manager", "cashier", "waiter", "kitchen"],
+      "soru": "Bir sorun var, kime söylemeliyim?",
+      "cevap": ["Mola ekibine destek talebini işletme sahibi açar. Sorunu ve hangi ekranda olduğunu ona söyleyin."],
+      "anahtar": ["destek", "yardım", "sorun", "hata", "mola ekibi", "talep", "destek talebi", "kime sorayım", "çalışmıyor"]
     }
   ]
 }

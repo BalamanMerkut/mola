@@ -1,17 +1,19 @@
 import { ArrowLeft } from 'lucide-react';
 import { NEW_TICKET, TicketChat } from './TicketChat';
 import { AttachButton, filesFrom, UploadList, useUploads } from './TicketFiles';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { License, Ticket } from '../server/license';
 import { api, ApiError, requestId } from './api';
 import { Notice } from './components';
 import { MolaContact } from './MolaContact';
 import { PillTabs } from './PillTabs';
-import { Megaphone, MessagesSquare, MonitorSmartphone } from 'lucide-react';
+import { CircleHelp, Megaphone, MessagesSquare, MonitorSmartphone } from 'lucide-react';
 import { PlaceLink } from './Moved';
 import { AnnouncementList } from './Announcements';
 import { RemoteAccess } from './RemoteSupport';
 import './support.css';
+// Destek → Yardım: Mola Yardım's hazır cevaplar (src/HelpPanel.tsx; its own chunk, loaded when the tab opens).
+const HelpBody = lazy(() => import('./HelpPanel').then(module => ({ default: module.HelpBody })));
 
 /** A message the café wrote but Mola Merkez has not confirmed yet (no internet, Merkez down): it is sent automatically later. */
 type Message = Ticket['messages'][number] & { queued?: boolean };
@@ -21,16 +23,22 @@ const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { day: 'nume
  * The owner's Destek: tickets are written on this computer, sent to the Mola support team over the internet and answered
  * there; answers come back here. While this screen is open it looks for answers every few seconds.
  */
-export type SupportTab = 'tickets' | 'notifications' | 'announcements' | 'remote';
+export type SupportTab = 'tickets' | 'notifications' | 'announcements' | 'remote' | 'help';
 /**
  * Destek is only about talking to Mola (10 Ekim düzeni): "Talepler" (support tickets and contact), "Duyurular" (the Mola
  * team's announcements, src/Announcements.tsx; red dot while unread) and "Mola desteği" (the Mola team's remote support
- * permission and who connected when, src/RemoteSupport.tsx). Bildirimler are on the bell of the top bar, the licence in
+ * permission and who connected when, src/RemoteSupport.tsx), then "Yardım" (15 Ekim: Mola Yardım's hazır cevaplar, the same
+ * as the top bar's "?"; nothing found → "Destek talebi aç" opens Talepler with the question written in). Bildirimler are on the bell of the top bar, the licence in
  * Ayarlar → İşletme → Paket ve lisans, the owner's devices in Ayarlar → Uzaktan erişim. An old
  * 'notifications' tab opens Talepler.
  */
 /** draft: a new ticket already written ("Mola ekibine yaz" on a service not in the package, src/FeatureLock.tsx). */
 export type TicketDraft = { subject: string; text: string };
+/** Mola Yardım found nothing → "Destek talebi aç": a new ticket with the question as its subject and text (src/HelpPanel.tsx). */
+export function helpTicketDraft(question: string): TicketDraft {
+  const q = question.replace(/\s+/g, ' ').trim();
+  return q.length >= 3 ? { subject: q.slice(0, 120), text: q } : { subject: 'Mola Yardım’da bulamadım', text: '' };
+}
 export function Support({ tab = 'tickets', onTab, announcements = 0, onWrite, draft }: { tab?: SupportTab; onTab?: (tab: SupportTab) => void; announcements?: number;
   /** "Bu konuda Mola ekibine yaz" under an announcement: a new ticket with it filled in. */
   onWrite?: (draft: TicketDraft) => void; draft?: TicketDraft }) {
@@ -38,8 +46,9 @@ export function Support({ tab = 'tickets', onTab, announcements = 0, onWrite, dr
   const asked = onTab ? tab : own, current = asked === 'notifications' ? 'tickets' : asked, choose = (t: SupportTab) => { if (onTab) onTab(t); else setOwn(t); };
   const tabs = <PillTabs kind="tabs" label="Destek bölümleri" wrapClassName="support-pill-tabs" idPrefix="support-tab" panelId={id => `support-panel-${id}`} value={current} onChange={choose}
     items={[{ id: 'tickets' as const, label: 'Talepler', icon: MessagesSquare },
-      { id: 'announcements' as const, label: 'Duyurular', icon: Megaphone, extra: announcements > 0 ? <span className="red-dot" title={`${announcements} okunmamış duyuru`} aria-hidden="true" /> : undefined }, { id: 'remote' as const, label: 'Mola desteği', icon: MonitorSmartphone }]} />;
+      { id: 'announcements' as const, label: 'Duyurular', icon: Megaphone, extra: announcements > 0 ? <span className="red-dot" title={`${announcements} okunmamış duyuru`} aria-hidden="true" /> : undefined }, { id: 'remote' as const, label: 'Mola desteği', icon: MonitorSmartphone }, { id: 'help' as const, label: 'Yardım', icon: CircleHelp }]} />;
   if (current === 'announcements') return <>{tabs}<div role="tabpanel" id="support-panel-announcements" aria-labelledby="support-tab-announcements"><AnnouncementList owner onWrite={d => { if (onWrite) onWrite(d); else { setOwnDraft(d); choose('tickets'); } }} /></div></>;
+  if (current === 'help') return <>{tabs}<div role="tabpanel" id="support-panel-help" aria-labelledby="support-tab-help" className="support-help"><Suspense fallback={null}><HelpBody role="owner" view="support" onTicket={question => { const d = helpTicketDraft(question); if (onWrite) onWrite(d); else { setOwnDraft(d); choose('tickets'); } }} /></Suspense></div></>;
   if (current === 'remote') return <>{tabs}<div role="tabpanel" id="support-panel-remote" aria-labelledby="support-tab-remote"><RemoteAccess /></div></>;
   return <>{tabs}<div role="tabpanel" id="support-panel-tickets" aria-labelledby="support-tab-tickets"><SupportTickets key={ownDraft?.subject} draft={ownDraft} /></div></>;
 }

@@ -1,6 +1,6 @@
-/* Mola Yardım: Mola'yı kullanan kafeler için hazır sorular ve cevaplar. Yapay zekâ yok, sunucu yok.
- * Sorular derlemede site/src/assets/yardim.json'dan buraya gömülür (scripts/site-yardim.ts); site.js bu dosyayı yalnız
- * yardımcı ilk açılınca yükler. Bu dosya hiçbir ağ isteği yapmaz, çerez ve tarayıcı deposu kullanmaz; yazılan soru
+/* Mola Yardım: Mola'yı kullanan ve tanımak isteyen kafeler için hazır sorular ve cevaplar. Yapay zekâ yok, sunucu yok.
+ * Sorular derlemede site/src/assets/yardim.json'dan buraya gömülür (scripts/site-yardim.ts; yalnız kitlesi "site" olanlar);
+ * site.js bu dosyayı yalnız yardımcı ilk açılınca yükler. Arama packages/domain/yardim.ts ile aynıdır (programın "?"ı). Bu dosya hiçbir ağ isteği yapmaz, çerez ve tarayıcı deposu kullanmaz; yazılan soru
  * tarayıcıdan çıkmaz. Her şey DOM ile ve textContent ile çizilir (innerHTML yok, eval yok, kullanıcıdan düzenli ifade yok). */
 (function (root) {
   'use strict';
@@ -109,14 +109,13 @@
   function create() {
     backdrop = el('div', { 'class': 'yardim-katman', hidden: '' });
     backdrop.addEventListener('click', close);
-    panel = el('section', { 'class': 'yardim-panel', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'yardim-baslik', 'aria-describedby': 'yardim-alt', id: 'mola-yardim', hidden: '' });
+    panel = el('section', { 'class': 'yardim-panel', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'yardim-baslik', id: 'mola-yardim', hidden: '' });
 
     var head = el('header', { 'class': 'yardim-ust' });
     // The avatar beside the title is decoration (the title already says "Mola Yardım").
     if (AVATAR) head.appendChild(el('img', { 'class': 'yardim-avatar', src: AVATAR.src, srcset: AVATAR.srcset, width: '44', height: '44', alt: '', decoding: 'async' }));
     var titles = el('div', { 'class': 'yardim-basliklar' });
     titles.appendChild(el('h2', { id: 'yardim-baslik' }, 'Mola Yardım'));
-    titles.appendChild(el('p', { id: 'yardim-alt' }, 'Mola’yı kullanırken takıldığınız yer için hazır cevaplar'));
     var x = el('button', { type: 'button', 'class': 'yardim-kapat', 'aria-label': 'Yardımı kapat' });
     x.appendChild(icon(['M18 6 6 18', 'm6 6 12 12']));
     x.addEventListener('click', close);
@@ -154,13 +153,12 @@
     var mail = doc.querySelector('.site-footer [data-iletisim="email"] a[href^="mailto:"]'), address = mail ? mail.getAttribute('href').slice(7) : '';
     if (/^[^\s@<>"]{1,64}@[^\s@<>"]{1,180}\.[a-z]{2,}$/i.test(address)) ways.appendChild(el('a', { 'class': 'btn btn-ghost yardim-eposta', href: 'mailto:' + address }, address));
     notFound.appendChild(ways);
-    notFound.appendChild(el('p', null, 'Mola’yı kullanıyorsanız programın içinden de yazabilirsiniz: Destek → Talepler. Başka kelimelerle de aratabilirsiniz.'));
+    notFound.appendChild(el('p', null, 'Başka kelimelerle de deneyin. Mola’yı kullanıyorsanız programdan da yazabilirsiniz: Destek → Talepler.'));
     searched = el('p', { 'class': 'yardim-aranan' });
     notFound.appendChild(searched);
     bodyEl.appendChild(live); bodyEl.appendChild(answer); bodyEl.appendChild(notFound); bodyEl.appendChild(listTitle); bodyEl.appendChild(list);
 
-    var foot = el('p', { 'class': 'yardim-not' }, 'Bu yardımcı yalnız hazır cevaplar gösterir; yazdıklarınız hiçbir yere gönderilmez.');
-    panel.appendChild(head); panel.appendChild(box); panel.appendChild(chips); panel.appendChild(bodyEl); panel.appendChild(foot);
+    panel.appendChild(head); panel.appendChild(box); panel.appendChild(chips); panel.appendChild(bodyEl);
     panel.addEventListener('keydown', onKey);
     // A link inside (Destek ve İletişim) closes the panel first: the page underneath is where it goes.
     panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a) close(true); });

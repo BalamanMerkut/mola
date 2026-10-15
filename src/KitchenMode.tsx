@@ -35,7 +35,7 @@ export const LATE_MINUTES = 10, VERY_LATE_MINUTES = 20;
 export const lateness = (o: PublicOrder, now: number) => o.status !== 'new' && o.status !== 'preparing' ? '' : waitedMinutes(o.createdAt, now) >= VERY_LATE_MINUTES ? 'very-late' : waitedMinutes(o.createdAt, now) >= LATE_MINUTES ? 'late' : '';
 
 export type KitchenView = 'kitchen' | 'stock' | 'password';
-export function KitchenMode({ data, view, onView, connected, error, onError, onToast, load, onPrint, onCancel, onLogout, loggingOut, notice, shiftChip, children }: {
+export function KitchenMode({ data, view, onView, connected, error, onError, onToast, load, onPrint, onCancel, onLogout, loggingOut, notice, shiftChip, help, children }: {
   data: StaffSnapshot; view: string; onView: (view: KitchenView) => void; connected: boolean;
   error: string; onError: (message: string) => void; onToast: (message: string) => void; load: () => Promise<void>;
   /** "Fişi yeniden yazdır" on a card. */
@@ -46,6 +46,8 @@ export function KitchenMode({ data, view, onView, connected, error, onError, onT
   /** A notice for everyone on staff (the sign-in ending at 05:00). */
   notice?: ReactNode;
   shiftChip?: ReactNode; children?: ReactNode;
+  /** Mola Yardım's small "?" (src/HelpPanel.tsx): only this icon on the kitchen's bar, nothing that pops up by itself. */
+  help?: ReactNode;
 }) {
   const board = view === 'kitchen';
   // Hizmet paketi: no "Stok" in the package, no Stok button (the kitchen never sees closed services).
@@ -100,6 +102,7 @@ export function KitchenMode({ data, view, onView, connected, error, onError, onT
         {shiftChip}
         {board ? stockOn && <button type="button" className="kitchen-bar-btn" onClick={() => onView('stock')}><Package size={18} aria-hidden="true" />Stok</button>
           : <button type="button" className="kitchen-bar-btn primary" onClick={() => onView('kitchen')}><ArrowLeft size={18} aria-hidden="true" />Mutfak panosu</button>}
+        {help}
         {view !== 'password' && <button type="button" className="kitchen-bar-btn" onClick={() => onView('password')}><UserRound size={18} aria-hidden="true" />Hesabım</button>}
         <button type="button" className="kitchen-bar-btn" aria-label="Çıkış yap" disabled={loggingOut} onClick={onLogout}><LogOut size={18} aria-hidden="true" />Çıkış</button>
       </div>

@@ -98,8 +98,9 @@
   var helpSrc = document.body.getAttribute('data-yardim') || '';
   var helpOpeners = document.querySelectorAll('[data-yardim-ac]');
   if (/^\/assets\/yardim\.js\?v=[0-9a-f]{6,20}$/.test(helpSrc) && helpOpeners.length) {
-    var helpScript = null;
+    var helpScript = null, helpUsed = false, hideBubble = function () {};
     var openHelp = function (from) {
+      helpUsed = true; hideBubble();
       if (window.MolaYardim && window.MolaYardim.open) { window.MolaYardim.open(from); return; }
       if (helpScript) return;
       helpScript = document.createElement('script'); helpScript.src = helpSrc; helpScript.async = true;
@@ -117,6 +118,38 @@
     });
     // /iletisim/#yardim (Destek sayfasındaki kart, dışarıdan bir bağlantı): açık gelir.
     if (location.hash === '#yardim') openHelp(document.querySelector('#yardim [data-yardim-ac]') || helpOpeners[0]);
+
+    // A small speech bubble from the button, at most once a visit: after 20 s on the page, never once the panel was opened,
+    // never while someone fills the İletişim form; it closes by itself after 6 s or with ×. Remembered for this browser
+    // session only (sessionStorage; nothing when it cannot be used). Plain text, no request.
+    var fab = document.querySelector('.yardim-fab'), talep = document.getElementById('talep-formu'), formUsed = false;
+    var BUBBLE_KEY = 'mola-yardim-balon';
+    var bubbleSeen = function () { try { return sessionStorage.getItem(BUBBLE_KEY) === '1'; } catch (e) { return false; } };
+    if (talep) talep.addEventListener('focusin', function () { formUsed = true; hideBubble(); });
+    var typing = function () { var a = document.activeElement; return !!a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable); };
+    var showBubble = function () {
+      if (helpUsed || formUsed || bubbleSeen() || !fab || fab.hidden || !fab.getClientRects().length) return;
+      if (document.hidden) { document.addEventListener('visibilitychange', function again() { if (!document.hidden) { document.removeEventListener('visibilitychange', again); setTimeout(showBubble, 3000); } }); return; }
+      if (typing()) { setTimeout(showBubble, 5000); return; }
+      try { sessionStorage.setItem(BUBBLE_KEY, '1'); } catch (e) { /* once on this page then */ }
+      var bubble = document.createElement('div'); bubble.className = 'yardim-balon';
+      var say = document.createElement('button'); say.type = 'button'; say.className = 'yardim-balon-ac';
+      var title = document.createElement('strong'); title.textContent = 'Yardıma mı ihtiyacınız var?';
+      var line = document.createElement('span'); line.textContent = 'Sormak istediğiniz bir şey varsa buradan sorabilirsiniz.';
+      say.appendChild(title); say.appendChild(line);
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'yardim-balon-kapat'; x.setAttribute('aria-label', 'Baloncuğu kapat');
+      var mark = document.createElement('span'); mark.setAttribute('aria-hidden', 'true'); mark.textContent = '×'; x.appendChild(mark);
+      bubble.appendChild(say); bubble.appendChild(x);
+      var timer = 0;
+      hideBubble = function () { clearTimeout(timer); hideBubble = function () {}; if (bubble.parentNode) bubble.parentNode.removeChild(bubble); };
+      say.addEventListener('click', function () { openHelp(fab); });
+      x.addEventListener('click', function () { hideBubble(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideBubble(); });
+      document.body.appendChild(bubble);
+      requestAnimationFrame(function () { bubble.classList.add('acik'); });
+      timer = setTimeout(function () { hideBubble(); }, 6000);
+    };
+    if (fab && !bubbleSeen()) setTimeout(showBubble, 20000);
   }
 
   // ---- Contact form → Mola Merkez (same address: /api/site/*) ----

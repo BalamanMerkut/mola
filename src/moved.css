@@ -18,6 +18,12 @@
 .sidebar nav .nav-group-label:first-child{margin-top:0}
 .sidebar nav .nav-group-rule{display:block;height:1px;margin:6px 12px;background:var(--line)}
 @media(max-width:700px){.topbar-bell{width:36px;height:36px}}
+/* Mola Yardım's "?" beside the bell (every signed-in role; the kitchen's bar too): a small square, nothing pops up by itself. */
+.topbar-help{display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);color:var(--ink);cursor:pointer;flex:none;padding:0}
+.topbar-help:hover,.topbar-help[aria-expanded="true"]{background:var(--brand-soft,#e3eedd);color:var(--green)}
+@media(max-width:700px){.topbar-help{width:36px;height:36px}}
+.kitchen-bar .topbar-help{width:44px;height:44px}
+
 /* The homes (src/Homes.tsx, src/HomeBooks.tsx): level 1 icon tabs, level 2 the quieter row, then the page. */
 .home{display:grid;gap:16px;min-width:0}
 .home>.pill-tabs-wrap,.home .home-parts-wrap{min-width:0}

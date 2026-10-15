@@ -38,7 +38,7 @@ export type DownloadFile = { file: string; size: number; sha256: string };
 export type Downloads = { enabled: boolean; version: string; builtAt?: string; files: Partial<Record<Platform, DownloadFile>> };
 type Config = { siteUrl: string; phone: string; whatsapp: string; email: string; address: string; hours: string; company: string; legalDraft: boolean; legalUpdated: string; downloads?: Downloads };
 type Video = { name: string; caption: string; kind: 'phone' | 'desktop'; seconds?: number; kb?: number };
-/** help: "off" leaves out the round "Yardım" button (the home page: it is for people who already use Mola). */
+/** help: "off" leaves out the round "Yardım" button (no page uses it since 15 Ekim: the home page has it too). */
 type PageMeta = { path: string; title: string; description: string; nav?: string; robots?: string; help?: string; file: string; body: string };
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -269,7 +269,8 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
   const pages = readdirSync(join(SRC, 'pages')).filter(f => f.endsWith('.html')).map(file => parsePage(file, readFileSync(join(SRC, 'pages', file), 'utf8')));
   const footerContact = [`<li data-iletisim="phone"${phoneHref ? '' : ' hidden'}><a href="${phoneHref || '#'}">Telefon</a></li>`, `<li data-iletisim="whatsapp"${waHref ? '' : ' hidden'}><a href="${esc(waHref || '#')}" rel="noopener">WhatsApp</a></li>`, `<li data-iletisim="email"><a href="${mailHref}">${esc(config.email)}</a></li>`].join('');
   const cssVersion = version(css), jsVersion = version(js), yardimVersion = version(yardim);
-  const helpButton = `<button class="yardim-fab" type="button" data-yardim-ac hidden title="Mola Yardım"><img src="${avatar.src}" srcset="${avatar.srcset}" width="60" height="60" alt="Mola Yardım" decoding="async"></button>`;
+  // The round picture (68 px) with "Yardım" beside it on wider screens (≥ 768 px); its name is "Mola Yardım" (site.css).
+  const helpButton = `<button class="yardim-fab" type="button" data-yardim-ac hidden aria-label="Mola Yardım" title="Mola Yardım"><img src="${avatar.src}" srcset="${avatar.srcset}" width="68" height="68" alt="" decoding="async"><span class="yardim-fab-yazi" aria-hidden="true">Yardım</span></button>`;
   for (const page of pages) {
     const content = fill(page.body, page);
     const canonical = `${config.siteUrl}${page.path === '404' ? '/' : page.path}`;

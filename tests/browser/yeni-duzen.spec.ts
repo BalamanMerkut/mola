@@ -98,9 +98,9 @@ test('owner: grouped menu, the bell, Kasa ve giderler (two tab levels), Personel
   await expect(page.getByRole('region', { name: 'Para taşındı' })).toHaveCount(0);
   await expect(reportGroups(page).getByRole('button', { name: 'Para', exact: true })).toHaveCount(0);
 
-  // Destek: only talking to Mola; Bildirimler is the bell.
+  // Destek: talking to Mola and Mola Yardım's hazır cevaplar (15 Ekim); Bildirimler is the bell.
   await openView(page, 'Destek');
-  await expect(page.getByRole('tablist', { name: 'Destek bölümleri' }).getByRole('tab')).toHaveText(['Talepler', 'Duyurular', 'Mola desteği']);
+  await expect(page.getByRole('tablist', { name: 'Destek bölümleri' }).getByRole('tab')).toHaveText(['Talepler', 'Duyurular', 'Mola desteği', 'Yardım']);
   await expect(page.getByRole('button', { name: /^Bildirimler: üst çubuktaki zil/ })).toHaveCount(0);
   await bell(page).click();
   await expect(page.getByRole('region', { name: 'Bildirimler' })).toBeVisible();

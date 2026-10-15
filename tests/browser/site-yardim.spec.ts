@@ -6,7 +6,8 @@ import { MERKEZ } from './helpers';
 
 /*
  * molayazilim.com.tr → Mola Yardım (site/src/assets/yardim.js, questions from yardim.json): hazır cevaplar, no AI, no request
- * while asking, plain text only, keyboard and phone friendly. Also the "Bilgi ve deneme talebi" form without "Masa sayısı".
+ * while asking, plain text only, keyboard and phone friendly; the button on every page (the home page too) and its speech
+ * bubble once a visit (site.js; page.clock stands in for the 20 s). Also the "Bilgi ve deneme talebi" form without "Masa sayısı".
  * The site is built into a scratch folder (never site/dist) and served the way Caddy does it (scripts/site-dev.ts, same
  * CSP). Port: E2E_PORT + 43. Screenshots also go to $env:SITE_EKRAN when it is set (e.g. docs/ekran/site).
  */
@@ -49,7 +50,10 @@ test('Mola Yardım: answers "gün sonu" and ASCII "odeme", falls back to Destek,
   const fab = page.getByRole('button', { name: 'Mola Yardım' });
   await expect(fab).toBeVisible();
   await expect(fab).toHaveAttribute('aria-expanded', 'false');
-  await expect(fab.locator('img')).toHaveAttribute('alt', 'Mola Yardım');
+  // 68 px picture with "Yardım" beside it on a wide screen.
+  await expect(fab.locator('img')).toHaveAttribute('alt', '');
+  await expect(fab.locator('.yardim-fab-yazi')).toBeVisible();
+  expect(Math.round((await fab.locator('img').boundingBox())!.height)).toBe(68);
   await fab.click();
   const dialog = page.getByRole('dialog', { name: 'Mola Yardım' });
   await expect(dialog).toBeVisible();
@@ -60,7 +64,17 @@ test('Mola Yardım: answers "gün sonu" and ASCII "odeme", falls back to Destek,
   await expect(box).toBeFocused();
   await expect(box).toHaveAttribute('placeholder', 'Sorunuzu yazın…');
   await expect(dialog.getByRole('heading', { name: 'Sık sorulanlar' })).toBeVisible();
-  await expect(dialog).toContainText('Bu yardımcı yalnız hazır cevaplar gösterir; yazdıklarınız hiçbir yere gönderilmez.');
+  // A short head: the picture, "Mola Yardım" and ×; no line under the title, none at the bottom.
+  await expect(dialog).not.toContainText('hazır cevaplar');
+  await expect(dialog).not.toContainText('hiçbir yere gönderilmez');
+  await expect(dialog).not.toHaveAttribute('aria-describedby', /./);
+  await expect(dialog.locator('.yardim-ust p, .yardim-not')).toHaveCount(0);
+  // The topics swipe sideways without a scrollbar under them.
+  const chipRow = dialog.getByRole('group', { name: 'Konular' });
+  expect(await chipRow.evaluate(e => getComputedStyle(e).scrollbarWidth)).toBe('none');
+  expect(await chipRow.evaluate(e => { e.scrollLeft = 120; const moved = e.scrollLeft > 0; e.scrollLeft = 0; return moved; })).toBe(true);
+  // Before buying: the website's own questions are there (Fiyatlar, Deneme), never a role-only answer.
+  await expect(dialog.getByRole('button', { name: 'Fiyatlar ne kadar?' })).toBeVisible();
   // Everything the panel needs is here now (its picture too): from this point on, no request at all.
   await expect.poll(() => page.evaluate(() => (document.querySelector('.yardim-avatar') as HTMLImageElement | null)?.complete)).toBe(true);
   const requests: string[] = [];
@@ -145,17 +159,20 @@ test('Mola Yardım on a phone (360 px): the round button, the panel inside the s
   expect(problems).toEqual([]);
 });
 
-test('Mola Yardım: not on the home page (a footer link opens it there), open on /iletisim/#yardim and from the Destek card', async ({ page }) => {
+test('Mola Yardım: on the home page too (button and footer link), open on /iletisim/#yardim and from the Destek card', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   const problems = watch(page);
   await page.goto(`${SITE}/`);
-  await expect(page.locator('.yardim-fab')).toHaveCount(0);
+  await expect(page.locator('.yardim-fab')).toBeVisible();
   await page.locator('.site-footer').getByRole('link', { name: 'Mola Yardım' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mola Yardım' });
   await expect(dialog).toBeVisible();
   await expect(page).toHaveURL(`${SITE}/`);
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+  await page.locator('.yardim-fab').click();
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape');
 
   await page.goto(`${SITE}/iletisim/#yardim`);
   await expect(dialog).toBeVisible();
@@ -170,6 +187,91 @@ test('Mola Yardım: not on the home page (a footer link opens it there), open on
   await expect(dialog).toBeHidden();
   await expect(open).toBeFocused();
   expect(problems).toEqual([]);
+});
+
+const bubble = (page: Page) => page.locator('.yardim-balon');
+
+test('The speech bubble: once after 20 s on the home page, closes by itself after 6 s, not again in this browser session; no request', async ({ page }, info) => {
+  await page.clock.install();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const problems = watch(page);
+  await page.goto(`${SITE}/`);
+  const fab = page.getByRole('button', { name: 'Mola Yardım' });
+  await expect(fab).toBeVisible();
+  await page.evaluate(() => document.querySelectorAll('.reveal').forEach(e => e.classList.add('seen')));
+  const requests: string[] = [];
+  page.on('request', r => requests.push(r.url()));
+  await page.clock.runFor(19_000);
+  await expect(bubble(page)).toHaveCount(0);
+  await page.clock.runFor(1_500);
+  await expect(bubble(page)).toBeVisible();
+  await expect(bubble(page)).toContainText('Yardıma mı ihtiyacınız var?');
+  await expect(bubble(page)).toContainText('Sormak istediğiniz bir şey varsa buradan sorabilirsiniz.');
+  // Small, above the button, inside the screen.
+  const b = (await bubble(page).boundingBox())!, f = (await fab.boundingBox())!;
+  expect(b.y + b.height).toBeLessThanOrEqual(f.y);
+  expect(b.x + b.width).toBeLessThanOrEqual(1280); expect(b.width).toBeLessThanOrEqual(300);
+  await page.waitForTimeout(300);
+  await shot(page, info, 'yardim-balon-masaustu.png');
+  expect(await page.evaluate(() => sessionStorage.getItem('mola-yardim-balon'))).toBe('1');
+  await page.clock.runFor(6_500);
+  await expect(bubble(page)).toHaveCount(0);
+  expect(requests).toEqual([]);
+  // Same browser session: not again.
+  await page.reload();
+  await expect(fab).toBeVisible();
+  await page.clock.runFor(30_000);
+  await expect(bubble(page)).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test('The speech bubble on a phone (360 px): small, above the round button, × closes it; the bubble opens the panel', async ({ page }, info) => {
+  await page.clock.install();
+  await page.setViewportSize({ width: 360, height: 780 });
+  const problems = watch(page);
+  await page.goto(`${SITE}/`);
+  const fab = page.getByRole('button', { name: 'Mola Yardım' });
+  await expect(fab).toBeVisible();
+  await expect(fab.locator('.yardim-fab-yazi')).toBeHidden();
+  expect(Math.round((await fab.boundingBox())!.height)).toBe(64);
+  await page.evaluate(() => document.querySelectorAll('.reveal').forEach(e => e.classList.add('seen')));
+  await page.clock.runFor(20_500);
+  await expect(bubble(page)).toBeVisible();
+  const b = (await bubble(page).boundingBox())!, f = (await fab.boundingBox())!;
+  expect(b.x).toBeGreaterThanOrEqual(16); expect(b.x + b.width).toBeLessThanOrEqual(360 - 16 + 1);
+  expect(b.width).toBeLessThanOrEqual(260); expect(b.height).toBeLessThanOrEqual(110);
+  expect(b.y + b.height).toBeLessThanOrEqual(f.y);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.waitForTimeout(300);
+  await shot(page, info, 'yardim-balon-telefon.png');
+  await bubble(page).getByRole('button', { name: 'Baloncuğu kapat' }).click();
+  await expect(bubble(page)).toHaveCount(0);
+  // Another visit in a new session: the bubble's words open Mola Yardım.
+  await page.evaluate(() => sessionStorage.clear());
+  await page.goto(`${SITE}/ozellikler/`);
+  await page.clock.runFor(20_500);
+  await bubble(page).getByRole('button', { name: /Yardıma mı ihtiyacınız var/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Mola Yardım' })).toBeVisible();
+  await expect(bubble(page)).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test('No speech bubble once the panel was opened, nor while someone fills the İletişim form', async ({ page }) => {
+  await page.clock.install();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`${SITE}/indir/`);
+  await page.getByRole('button', { name: 'Mola Yardım' }).click();
+  await expect(page.getByRole('dialog', { name: 'Mola Yardım' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.clock.runFor(30_000);
+  await expect(bubble(page)).toHaveCount(0);
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0);
+
+  await page.goto(`${SITE}/iletisim/`);
+  await page.locator('#talep-formu [data-field="business"] input').focus();
+  await page.keyboard.type('Örnek');
+  await page.clock.runFor(30_000);
+  await expect(bubble(page)).toHaveCount(0);
 });
 
 test('Bilgi ve deneme talebi: no "Masa sayısı" and no intro sentence; Şehir sits beside E-posta (desktop), one column on a phone', async ({ page }, info) => {
