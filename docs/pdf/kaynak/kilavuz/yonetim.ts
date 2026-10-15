@@ -13,7 +13,7 @@ function genel() {
       ['Veri', 'Bütün işletme verisi, şifreli', 'İşletme kayıtları, lisanslar, destek talepleri, işlem kayıtları'],
       ['Bağlantı', 'Merkez\'e yalnız dışarıya doğru bağlanır', 'Kafeye bağlanmaz, yalnız yanıt verir'],
     ]),
-    not('Satış verisi Merkez\'e gelmez. Merkez yalnız sayıları (masa, ürün, çalışan), sürümü, yedek durumunu ve destek mesajlarını görür. Kafelerin bulut yedekleri Merkez\'de şifreli durur; Merkez bunları açamaz.', 'bilgi'),
+    not('Satış verisi Merkez\'e gelmez. Merkez yalnız sayıları (masa, ürün, çalışan), sürümü, yedek durumunu ve destek mesajlarını görür. Kafelerin bulut yedekleri Merkez\'de şifreli durur; Merkez bunları açamaz. Sahibin Kafemi yönet raporları ve uzaktan yönetimi Merkez\'den uçtan uca şifreli geçer.', 'bilgi'),
     h2('Menü'),
     tablo(['Bölüm', 'İşlev'], [
       ['<b>Bugün</b>', 'Günün yapılacakları, en acilden başlayarak.'],
@@ -246,7 +246,7 @@ function guncellemeler() {
       ['Şimdi güncelle', 'Önce yedek alınır; ilerleme yüzdeyle gösterilir; bitince sayfa kendiliğinden yenilenir. Açık masa ya da bitmemiş sipariş varken bu düğme kapalıdır.'],
       ['Ertelenirse', 'Kapanışta, sabah açılışta ya da boştayken, önce yedek alınarak kurulur.'],
       ['Hata', 'Yeni sürüm açılmazsa önceki sürüme kendiliğinden döner; olay Bildirim merkezine düşer.'],
-      ['Açık ekranlar', 'Tabletler ve diğer açık sayfalar sessiz bir anda kendiliğinden yenilenir.'],
+      ['Açık ekranlar', 'Tablet, telefon ve diğer açık sayfalar sessiz bir anda kendiliğinden yenilenir.'],
     ], 'kucuk'),
     h3('Diğer işlemler'),
     liste([
@@ -328,6 +328,8 @@ function sunucu() {
       ['https://molayazilim.com.tr/s/*', 'Sosyal medya QR kısa adresleri'],
       ['https://menu.molayazilim.com.tr/q/*', 'İnternetten menü (masa QR\'ları)'],
       ['https://merkez.molayazilim.com.tr', 'Mola Merkez, Mola Yönetim, kafe bağlantıları'],
+      ['https://merkez.molayazilim.com.tr/yonet', 'Kafemi yönet: işletme sahibinin raporları ve uzaktan yönetimi'],
+      ['https://merkez.molayazilim.com.tr/k/*', 'Kalıcı bağlantı: kafede kasa bilgisayarını, dışarıda Kafemi yönet\'i açar'],
     ], 'kucuk'),
     liste([
       'DNS Cloudflare\'dedir. Dört A kaydı (<b>@, www, merkez, menu</b>) sunucu IP\'sine gider; hepsi <b>DNS only</b> (gri bulut).',
@@ -373,6 +375,7 @@ function sorunlar() {
     bolum('Sorun giderme'),
     sss('Kafe "Mola Merkez\'e ulaşılamıyor" diyor.', 'Kafe nedeni gösterir: internet yok, Merkez yanıt vermiyor, adres yanlış ya da bilgisayar saati yanlış. Merkez\'in sağlık adresi kontrol edilir; sorun kafedeyse internet ve saat kontrol ettirilir. Kafe 14 güne kadar Merkez\'siz çalışır.'),
     sss('Müşteri QR\'dan sipariş veremiyor.', 'İşletme sayfası → Özet → <b>QR siparişleri</b> kutusundaki nedene bakılır (Bölüm 2).'),
+    sss('Sahip Kafemi yönet\'e giremiyor.', 'Sayfa nedeni yazar: e-posta kasada doğrulanmamış, telefon kodu kurulmamış, pakette Uzaktan raporlar yok ya da kasa bilgisayarı kapalı (yeni cihaz kasa açıkken girer). Sahip kasada Ayarlar → Uzaktan erişim\'i tamamlar; paket Hizmet sekmesinden açılır. Uzaktan yönetim için ayrıca pakette Uzaktan yönetim olmalı ve sahip onu kafede açmalıdır. Şifreyi ve kodu kafe denetler; Mola ekibi göremez.'),
     sss('Etkinleştirmede "kod geçersiz" çıkıyor.', 'Kafe başka bir Merkez adresiyle hazırlanmış paketle kurulmuştur. Mola "Verileri ve yedekleri de sil" işaretli kaldırılır, sitedeki paketle yeniden kurulur.'),
     sss('Kafe yeni bilgisayara geçiyor.', 'Sahip yeni bilgisayarda <b>İşletmem var</b> ile girer (Bölüm 3, "Veri erişimi"). "İki farklı bilgisayar" uyarısı işletme Özet\'inden "Eski bilgisayarı yeniden etkinleştir" ile çözülür.'),
     sss('Kafe güncellemeyi kurmadı.', 'Güncellemeler → İşletmelerin sürümleri: durum ve son bilgi. "Kurulamadı" ya da "geri alındı" ise Bildirim merkezindeki olaya bakılır. Açık masa varken kurulum kapanışa kalır.'),

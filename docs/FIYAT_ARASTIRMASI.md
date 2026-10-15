@@ -1,5 +1,7 @@
 # Fiyat araştırması ve öneri (5 Ekim 2026)
 
+> Güncel hâli: [FIYAT_VE_RAKIPLER_2026-10.md](FIYAT_VE_RAKIPLER_2026-10.md) (15 Ekim 2026). Bu belge geçmiş kaydı olarak duruyor.
+
 Rakip fiyatları resmî sayfalardan 05.10.2026'da alındı; belirtilmedikçe KDV hariçtir. Satış belgelerine girecek her rakamı bir kez tarayıcıda gözle kontrol edin. Bölüm B öneridir, kaynaklı bilgi değildir.
 
 ## A. Rakipler

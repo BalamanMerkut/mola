@@ -18,7 +18,7 @@ function tanitim() {
       ['<b>Kasiyer</b>', 'Kasa bilgisayarı ya da tablet', 'Kasayı açar, ödeme alır, gün sonunu yapar.'],
       ['<b>Mutfak</b>', 'Mutfaktaki tablet ya da fiş yazıcısı', 'Siparişleri hazırlar, "Hazır" der.'],
       ['<b>Müdür</b>', 'Her cihaz', 'Siz yokken günü yönetir.'],
-      ['<b>İşletme sahibi</b>', 'Her cihaz, telefondan uzaktan da', 'Her şeyi görür ve ayarlar.'],
+      ['<b>İşletme sahibi</b>', 'Her cihaz; telefon ya da laptoptan uzaktan da', 'Her şeyi görür ve ayarlar.'],
     ]),
     h2('Hizmetler ve paketler'),
     p('<b>Adisyon çekirdeği</b> her pakette vardır, diğer hizmetler ihtiyaca göre eklenir. Paketinizde olmayan bölüm soluk görünür ve <b>"Pakette yok"</b> yazar; dokunup <b>"Mola ekibine yaz"</b> deyin. Kapanan hizmetin verisi silinmez.'),
@@ -266,15 +266,15 @@ function sahip() {
 
 function ayarlar() {
   return [
-    bolum('Ayarlar', 'Bir kez kurulan ayarlar burada durur. Beş konu vardır; her konunun altında bölümleri sıralanır.'),
+    bolum('Ayarlar', 'Bir kez kurulan ayarlar burada durur. Altı konu vardır; her konunun altında bölümleri sıralanır.'),
     sekil('yeni-duzen-ayarlar', { genislik: 560, baslik: 'Ayarlar: konular üstte, bölümler altında.' }),
     tablo(['Konu', 'Bölümler ve işleri'], [
       ['<b>İşletme</b>', '<b>Görünüm</b> (ad, logo, renk paleti, karşılama yazısı) · <b>Sosyal medya</b> (hesaplarınız, Google değerlendirme bağlantısı) · <b>Paket ve lisans</b> (paketiniz, kalan gün, Mola ekibinin iletişim bilgileri)'],
       ['<b>Masalar ve QR</b>', 'Masa ekleme ve bölümler (İç, Bahçe) · <b>QR kodlarını yazdır</b> · Engellenen telefonlar'],
       ['<b>Sipariş ve mutfak</b>', 'QR siparişine garson onayı ya da otomatik onay, ödeme ne zaman alınır · Mutfak: Ekran ya da Fiş'],
-      ['<b>Cihazlar</b>', 'Yazıcılar · Sesler · Kafe içi cihazlar (personel tabletleri, laptop ve telefonlar)'],
+      ['<b>Cihazlar</b>', 'Yazıcılar · Sesler · Kafe içi cihazlar (personel tabletleri, kafedeki laptop ve telefonlar, kalıcı bağlantı)'],
       ['<b>Güvenlik ve yedek</b>', 'Yedek · Kilit ve güncelleme (sahip ekranının otomatik kilidi, raporlar için telefon kodu)'],
-      ['<b>Uzaktan erişim</b>', 'Telefon kodu, e-posta, cihaz girişi, uzaktan yönetim (yalnız işletme sahibi)'],
+      ['<b>Uzaktan erişim</b>', '1 Telefon kodu · 2 E-posta · 3 Cihaz eşleştirme (Kafemi yönet adresi) · 4 Eşleşmiş cihazlar · 5 Uzaktan yönetim. Yalnız işletme sahibi görür.'],
     ]),
     h2('Renk paleti'),
     p('Ayarlar → İşletme → Görünüm → <b>Renk paleti</b>. Seçtiğiniz renk müşterinin QR menüsünü ve bütün işletme ekranlarını boyar. Masa durumu ve uyarı renkleri değişmez, böylece "hazır" ya da "gecikti" her zaman aynı renkte görünür. Kaydedince menü ve ekranlar hemen güncellenir.'),
@@ -290,10 +290,11 @@ function ayarlar() {
       'Bir takım yedek basıp kasada saklayın.',
       'Kaybolan ya da çalınan QR: masa penceresinde <b>QR yenile</b>, yeni kartı basın. Eski kart açılmaz.',
     ]),
-    h2('Yazıcılar ve tabletler'),
+    h2('Yazıcılar ve kafe içi cihazlar'),
     liste([
       '<b>Yazıcılar:</b> yazıcıyı ekleyin, hangi fişin (mutfak, hesap, kasa) hangi yazıcıdan çıkacağını seçin.',
-      '<b>Kafe içi cihazlar:</b> cihaz bağlama ve bağlantı kontrolü. Android uygulaması molayazilim.com.tr/indir/ adresinde ya da kasa bilgisayarındaki <b>Kafe içi cihazlar</b> penceresinin QR kodundadır.',
+      '<b>Kafe içi cihazlar:</b> tablet ve telefonlar QR kodu okutup Mola\'yı kurar. Android uygulaması molayazilim.com.tr/indir/ adresinde ya da kasa bilgisayarındaki <b>Kafe içi cihazlar</b> penceresinin QR kodundadır.',
+      '<b>Kalıcı bağlantı:</b> kafedeki laptop ve telefonlar için değişmeyen adres; modem adresi değişse de kasa bilgisayarını açar. Laptopta <b>Bu cihaza kısayol ekle</b> deyin.',
     ]),
     not('Telefonlar bağlanamıyorsa: Windows Ayarları → Ağ ve İnternet → bağlantınız → Ağ profili türü: <b>Özel ağ</b>.', 'dikkat'),
   ].join('');
@@ -339,16 +340,16 @@ function yedekGuncelleme() {
       'Açık masa ya da bitmemiş sipariş varken <b>Şimdi güncelle</b> kapalıdır; hesaplar kapanınca güncelleyebilirsiniz.',
       'Erteleseniz de Masalar\'ın üstünde "Yeni sürüm hazır" yazar; <b>Şimdi kur</b> pencereyi yeniden açar.',
       'Yeni sürüm açılmazsa Mola önceki sürüme kendiliğinden döner, verileriniz yerinde kalır.',
-      'Tabletler ve diğer açık ekranlar boş bir anda kendiliğinden yenilenir.',
+      'Tablet, telefon ve diğer açık ekranlar boş bir anda kendiliğinden yenilenir.',
     ]),
   ].join('');
 }
 
 function uzaktan() {
   return [
-    bolum('Telefondan takip ve destek'),
-    h2('Kafemi yönet: raporlar telefonda'),
-    hizmet('remote-reports', 'Kafede olmasanız da bugünün satışını ve kasayı telefonunuzdan görürsünüz.'),
+    bolum('Uzaktan takip ve destek'),
+    h2('Kafemi yönet: raporlar her yerden'),
+    hizmet('remote-reports', 'Kafede olmasanız da bugünün satışını ve kasayı telefonunuzdan ya da laptopunuzdan görürsünüz.'),
     sekil('t-raporlarim', { genislik: 220, yan: true, aciklamalar: ['Bugünün satışı: nakit, kart, sipariş sayısı.'] }),
     p('Kasada bir kez: <b>Ayarlar → Uzaktan erişim</b>. Sonra her yerden tek adres: <b>merkez.molayazilim.com.tr/yonet</b>.'),
     adimlar([
@@ -358,7 +359,8 @@ function uzaktan() {
       'Sonraki ekranda doğrulama uygulamasındaki 6 haneli kodu yazıp <b>Giriş yap</b>\'a basın. Hangi cihazla önce girdiğiniz fark etmez.',
     ]),
     p('Cihaz kendine ad verir (ör. "iPhone · 15 Ekim") ve hatırlanır. Yeni cihaz girerken kasa bilgisayarı açık olmalı; kasa kapalıyken sayfa "Kasa bilgisayarı kapalı · Son durum" ile son raporu gösterir.'),
-    p('En fazla 3 cihaz. Kaybolan telefonu <b>4 · Eşleşmiş cihazlar</b>\'dan kaldırın: şifreniz sorulur, telefon kodu sorulmaz. Ortak bir laptopta işiniz bitince <b>Çıkış</b>\'a basın.'),
+    p('En fazla 3 cihaz. Kaybolan telefonu kasada <b>4 · Eşleşmiş cihazlar</b>\'dan kaldırın: şifreniz sorulur, telefon kodu sorulmaz.'),
+    p('<b>Çıkış</b> cihazı kilitler. Yeniden girmek için e-posta ve şifreniz yeter; kasa kapalıyken de son durumu görürsünüz. Cihazı tamamen silmek için Çıkış penceresinde <b>Bu cihazı tamamen kaldır</b>.'),
     h2('Uzaktan yönetim'),
     hizmet('remote-admin', 'Kafeye gitmeden fiyat değiştirir, kampanya açar, çalışan hesabı kapatırsınız.'),
     adimlar([
@@ -366,7 +368,7 @@ function uzaktan() {
       'Aynı adres, <b>merkez.molayazilim.com.tr/yonet</b>: kasa açıkken girişten sonra kafenin bütün ekranları doğrudan açılır, ikinci kez sorulmaz.',
       'Gün bitince (05:00) ya da oturumu kapatınca yalnız şifre ve telefon kodu sorulur. Kasa kapanırsa son rapor görünür; kasa açılınca <b>Kafeyi yönet</b>\'e basın.',
     ]),
-    p('Her uzaktan giriş size bildirilir.'),
+    p('Her uzaktan giriş size bildirilir. Yedekten geri yükleme, kurtarma kodu, cihaz kaldırma, telefon kodunu kurma ve güncelleme kurma yalnız kafede yapılır.'),
     h3('İki ekran'),
     hizmet('split-screen', 'Kasa bilgisayarında ekranı ikiye bölersiniz: solda kasa, sağda mutfak ya da ikinci kasiyer.'),
     p('Şeritten <b>İkiye böl</b>. Her yarıya ayrı hesapla girilir; <b>Tek ekran</b> ile geri dönersiniz.'),
@@ -389,7 +391,7 @@ function sorular() {
     tablo(['Ne', 'İnternet yokken'], [
       ['Garson, kasa, mutfak, yazıcı', '<b>Çalışır.</b> Hepsi kafenin Wi-Fi\'si üzerinden kasa bilgisayarına bağlıdır.'],
       ['Müşterinin QR menüsü', 'Menü görünür, <b>sipariş verilemez</b>. Siparişi garson alır.'],
-      ['Telefondan raporlar, e-posta, destek, bulut yedek', 'İnternet gelince devam eder.'],
+      ['Kafemi yönet, e-posta, destek, bulut yedek', 'İnternet gelince devam eder.'],
       ['Lisans', 'Mola 14 güne kadar internetsiz çalışır.'],
     ]),
     p('İnternet uzun süre gelmeyecekse kasa bilgisayarını telefonunuzun internet paylaşımına (hotspot) bağlayın. Kasa bilgisayarı kapalıysa hiçbir ekran çalışmaz; açılınca Mola kaldığı yerden devam eder.'),
@@ -397,11 +399,12 @@ function sorular() {
     sss('Şifremi unuttum.', 'Çalışan şifresini siz verirsiniz: Personel → Çalışanlar → <b>Şifreyi yenile</b>. Kendi şifreniz için kasa bilgisayarındaki şeritten Güvenlik → <b>İşletme sahibi şifresini unuttum</b>.'),
     sss('Ekran kendiliğinden kilitlendi.', 'Sahip ekranının otomatik kilidi. Şifrenizi yazıp <b>Kilidi aç</b>. Süre: Ayarlar → Güvenlik ve yedek → Kilit ve güncelleme.'),
     sss('Fiyat değiştirdim, QR\'ları yeniden basmalı mıyım?', 'Hayır. Değişiklik menüye hemen gider.'),
+    sss('Kafemi yönet\'e giremiyorum.', 'Sayfa nedenini yazar. Kasada Ayarlar → Uzaktan erişim\'de telefon kodu ve e-posta kurulu olmalı. Yeni cihaz kasa bilgisayarı açıkken girer.'),
     sss('Kart yerine nakit seçtim.', 'Kasa ve giderler → İadeler\'den ödemeyi düzeltin.'),
     sss('Muhasebecim hangi dosyayı istiyor?', 'Satış ve Raporlar → Yazdır ve paylaş → <b>Muhasebeci için indir</b>.'),
     h2('Sorun giderme'),
     tablo(['Ne oluyor', 'Ne yapın'], [
-      ['Tablet "bağlantı yok" diyor', 'Tablet kafenin Wi-Fi\'sinde mi, kasa bilgisayarı açık mı? Modemde kasa bilgisayarına sabit IP verin.'],
+      ['Tablet "bağlantı yok" diyor', 'Tablet kafenin Wi-Fi\'sinde mi, kasa bilgisayarı açık mı? Laptop ve telefonda kalıcı bağlantıyı kullanın (Ayarlar → Cihazlar → Kafe içi cihazlar).'],
       ['QR menü açılmıyor', 'Ayarlar → Masalar ve QR\'da "Bağlı" yazıyor mu? Kasa bilgisayarı açık ve internette mi?'],
       ['Müşteri "Şu an sipariş almıyoruz" görüyor', 'Sol menüdeki QR siparişleri kartına bakın ve <b>Siparişleri aç</b>; ya da bir personel ekranında giriş yapın.'],
       ['Müşteri "Şu an sipariş alınamıyor" görüyor', 'Kafenin interneti ya da kasa bilgisayarı kapalı.'],

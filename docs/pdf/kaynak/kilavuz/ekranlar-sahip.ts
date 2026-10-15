@@ -564,20 +564,20 @@ const sahipAyarlar: Grup = async (browser, { sahip }) => {
   await s.context().close();
 };
 
-// ---------------------------------------------------------------- Sahip: Destek, uzaktan erişim, Raporlarım
+// ---------------------------------------------------------------- Sahip: Destek, Mola desteği, Kafemi yönet
 const sahipDestek: Grup = async browser => {
   const s = await sahipSayfasi(browser, { yukseklik: 900 });
   await git(s, 'Destek');
   await dene('s-destek', () => cek(s, 's-destek', { isaretler: [
     { n: 1, loc: s.getByRole('tab', { name: /Talepler/ }), yon: 'alt' },
     { n: 2, loc: s.getByRole('tab', { name: /Duyurular/ }), yon: 'alt' },
-    { n: 3, loc: s.getByRole('tab', { name: /Uzaktan erişim/ }), yon: 'alt' },
+    { n: 3, loc: s.getByRole('tab', { name: /Mola desteği/ }), yon: 'alt' },
   ] }));
   // Bildirimler: the bell on the top bar (10 Ekim).
   await s.locator('header.topbar').getByRole('button', { name: /^Bildirimler/ }).click(); await sleep(900);
   await dene('s-bildirimler', () => cek(s, 's-bildirimler'));
   await git(s, 'Destek');
-  await s.getByRole('tab', { name: /Uzaktan erişim/ }).click(); await sleep(900);
+  await s.getByRole('tab', { name: /Mola desteği/ }).click(); await sleep(900);
   await dene('s-uzaktan-erisim', () => cek(s, 's-uzaktan-erisim'));
   // Kafemi yönet (0.1.23, /yonet): kasada telefon kodu ve e-posta (Ayarlar → Uzaktan erişim), sonra telefon tek adresten iki
   // adımda girer (e-posta + şifre, sonra kod). Kod
