@@ -101,7 +101,7 @@ test('Mola Yardım audiences: known names only, at least one each; every role ha
   for (const k of YARDIM_KITLELER) assert.ok(count(k) >= 15, `${k}: ${count(k)} soru`);
   // Before buying: the website only, five to eight, never in the app.
   const tanisma = data.sorular.filter(q => q.konu === 'tanisma');
-  assert.ok(tanisma.length >= 5 && tanisma.length <= 8);
+  assert.ok(tanisma.length >= 5 && tanisma.length <= 10);
   for (const q of tanisma) assert.deepEqual(q.kitle, ['site'], q.id);
   // Roles see their own work: the kitchen its board and fiş, the waiter orders and calls, the cashier the till.
   const ids = (k: YardimKitle) => new Set(data.sorular.filter(q => q.kitle.includes(k)).map(q => q.id));

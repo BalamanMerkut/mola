@@ -96,7 +96,7 @@ test('owner campaign applies to customer, preserves accepted price and hides fin
     // Switch the same campaign from percentage to TL; its previous order and report must survive.
     await openView(page, 'Kampanyalar');
     await campaignCard.getByRole('button', { name: 'Kampanyayı düzenle', exact: true }).click();
-    await dialog.getByLabel('İndirim türü').selectOption('fixed');
+    await dialog.getByLabel('Kampanya türü').selectOption('fixed');
     const amount = dialog.getByLabel('İndirim tutarı (TL)');
     for (const invalid of ['0', '-10', '1,234', '1000001']) {
       await amount.fill(invalid);

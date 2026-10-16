@@ -1,0 +1,547 @@
+{
+ "orders": [
+  {
+   "status": "new",
+   "total": 67900,
+   "lines": [
+    {
+     "productId": "latte",
+     "quantity": 2,
+     "unitPrice": 12000,
+     "total": 24000,
+     "originalUnitPrice": 14000,
+     "campaigns": [
+      "q2"
+     ]
+    },
+    {
+     "productId": "americano",
+     "quantity": 1,
+     "unitPrice": 12150,
+     "total": 12150,
+     "originalUnitPrice": 13500,
+     "campaigns": [
+      "p10"
+     ]
+    },
+    {
+     "productId": "tea",
+     "quantity": 2,
+     "unitPrice": 3000,
+     "total": 6000,
+     "originalUnitPrice": 3500,
+     "campaigns": [
+      "f5"
+     ]
+    },
+    {
+     "productId": "cheesecake",
+     "quantity": 1,
+     "unitPrice": 16150,
+     "total": 16150,
+     "originalUnitPrice": 19000,
+     "campaigns": [
+      "cat"
+     ]
+    },
+    {
+     "productId": "lemonade",
+     "quantity": 1,
+     "unitPrice": 9600,
+     "total": 9600,
+     "originalUnitPrice": 12000,
+     "campaigns": [
+      "sch"
+     ]
+    }
+   ],
+   "cancelled": [
+    [
+     "cheesecake",
+     1,
+     16150
+    ]
+   ]
+  },
+  {
+   "status": "new",
+   "total": 47000,
+   "lines": [
+    {
+     "productId": "latte",
+     "quantity": 1,
+     "unitPrice": 14850,
+     "total": 14850,
+     "originalUnitPrice": 16500,
+     "campaigns": [
+      "p10"
+     ]
+    },
+    {
+     "productId": "brownie",
+     "quantity": 1,
+     "unitPrice": 16000,
+     "total": 16000,
+     "originalUnitPrice": null,
+     "campaigns": []
+    },
+    {
+     "productId": "cheesecake",
+     "quantity": 1,
+     "unitPrice": 16150,
+     "total": 16150,
+     "originalUnitPrice": 19000,
+     "campaigns": [
+      "cat"
+     ]
+    }
+   ],
+   "cancelled": []
+  },
+  {
+   "status": "new",
+   "total": 30000,
+   "lines": [
+    {
+     "productId": "latte",
+     "quantity": 2,
+     "unitPrice": 12000,
+     "total": 24000,
+     "originalUnitPrice": 14000,
+     "campaigns": [
+      "q2"
+     ]
+    },
+    {
+     "productId": "tea",
+     "quantity": 2,
+     "unitPrice": 3000,
+     "total": 6000,
+     "originalUnitPrice": 3500,
+     "campaigns": [
+      "f5"
+     ]
+    }
+   ],
+   "cancelled": []
+  }
+ ],
+ "payments": [
+  [
+   12000,
+   12000
+  ],
+  [
+   132900,
+   116900
+  ]
+ ],
+ "bill": [
+  {
+   "text": "Mola Coffee House",
+   "align": "center",
+   "bold": true,
+   "large": true
+  },
+  {
+   "text": "BİLGİ FİŞİ",
+   "align": "center",
+   "bold": true
+  },
+  {
+   "text": "Masa 01 · 26 Eylül 15:00",
+   "align": "center"
+  },
+  {
+   "rule": true
+  },
+  {
+   "pair": [
+    "2 x Caffè Latte",
+    "240,00 TL"
+   ]
+  },
+  {
+   "text": "  Standart"
+  },
+  {
+   "pair": [
+    "1 x Americano",
+    "121,50 TL"
+   ]
+  },
+  {
+   "text": "  Büyük boy"
+  },
+  {
+   "pair": [
+    "2 x Demleme Çay",
+    "60,00 TL"
+   ]
+  },
+  {
+   "pair": [
+    "1 x San Sebastian",
+    "161,50 TL"
+   ]
+  },
+  {
+   "pair": [
+    "1 x Ev Yapımı Limonata",
+    "96,00 TL"
+   ]
+  },
+  {
+   "pair": [
+    "1 x Caffè Latte",
+    "148,50 TL"
+   ]
+  },
+  {
+   "text": "  Büyük boy"
+  },
+  {
+   "pair": [
+    "1 x Çikolatalı Brownie",
+    "160,00 TL"
+   ]
+  },
+  {
+   "pair": [
+    "1 x San Sebastian",
+    "161,50 TL"
+   ]
+  },
+  {
+   "pair": [
+    "2 x Caffè Latte",
+    "240,00 TL"
+   ]
+  },
+  {
+   "text": "  Standart"
+  },
+  {
+   "pair": [
+    "2 x Demleme Çay",
+    "60,00 TL"
+   ]
+  },
+  {
+   "rule": true
+  },
+  {
+   "pair": [
+    "Kampanya indirimi",
+    "-211,00 TL"
+   ]
+  },
+  {
+   "pair": [
+    "TOPLAM",
+    "1.449,00 TL"
+   ],
+   "bold": true
+  },
+  {
+   "pair": [
+    "Ödenen",
+    "120,00 TL"
+   ]
+  },
+  {
+   "pair": [
+    "KALAN",
+    "1.329,00 TL"
+   ],
+   "bold": true
+  },
+  {
+   "rule": true
+  },
+  {
+   "text": "KDV dahildir · %10: 131,73 TL",
+   "align": "center"
+  }
+ ],
+ "receipts": [
+  [
+   {
+    "text": "Mola Coffee House",
+    "align": "center",
+    "bold": true,
+    "large": true
+   },
+   {
+    "text": "BİLGİ FİŞİ",
+    "align": "center",
+    "bold": true
+   },
+   {
+    "text": "Masa 01 · 26 Eylül 15:00",
+    "align": "center"
+   },
+   {
+    "rule": true
+   },
+   {
+    "pair": [
+     "1 x Caffè Latte",
+     "120,00 TL"
+    ]
+   },
+   {
+    "text": "  Standart"
+   },
+   {
+    "rule": true
+   },
+   {
+    "pair": [
+     "ÖDENEN",
+     "120,00 TL"
+    ],
+    "bold": true
+   },
+   {
+    "pair": [
+     "Ödeme şekli",
+     "Kart"
+    ]
+   },
+   {
+    "pair": [
+     "Kalan hesap",
+     "1.329,00 TL"
+    ]
+   }
+  ],
+  [
+   {
+    "text": "Mola Coffee House",
+    "align": "center",
+    "bold": true,
+    "large": true
+   },
+   {
+    "text": "BİLGİ FİŞİ",
+    "align": "center",
+    "bold": true
+   },
+   {
+    "text": "Masa 01 · 26 Eylül 15:00",
+    "align": "center"
+   },
+   {
+    "rule": true
+   },
+   {
+    "text": "Hesap tutarından kısmi ödeme"
+   },
+   {
+    "rule": true
+   },
+   {
+    "pair": [
+     "ÖDENEN",
+     "1.329,00 TL"
+    ],
+    "bold": true
+   },
+   {
+    "pair": [
+     "Ödeme şekli",
+     "Nakit"
+    ]
+   },
+   {
+    "pair": [
+     "Alınan nakit",
+     "1.329,00 TL"
+    ]
+   },
+   {
+    "pair": [
+     "Para üstü",
+     "0,00 TL"
+    ]
+   },
+   {
+    "pair": [
+     "Kalan hesap",
+     "0,00 TL"
+    ]
+   }
+  ]
+ ],
+ "menu": [
+  [
+   "latte",
+   [
+    [
+     "p10",
+     "percent",
+     10,
+     null
+    ],
+    [
+     "q2",
+     "fixed",
+     2000,
+     null
+    ]
+   ]
+  ],
+  [
+   "americano",
+   [
+    [
+     "p10",
+     "percent",
+     10,
+     null
+    ]
+   ]
+  ],
+  [
+   "turkish",
+   []
+  ],
+  [
+   "tea",
+   [
+    [
+     "f5",
+     "fixed",
+     500,
+     null
+    ]
+   ]
+  ],
+  [
+   "herbal",
+   []
+  ],
+  [
+   "lemonade",
+   [
+    [
+     "sch",
+     "percent",
+     20,
+     null
+    ]
+   ]
+  ],
+  [
+   "cheesecake",
+   [
+    [
+     "cat",
+     "percent",
+     15,
+     1
+    ]
+   ]
+  ],
+  [
+   "brownie",
+   []
+  ]
+ ],
+ "report": [
+  [
+   "p10-v1",
+   2,
+   27000,
+   3000,
+   6,
+   [
+    [
+     "latte",
+     5,
+     1,
+     14850,
+     1650
+    ],
+    [
+     "americano",
+     1,
+     1,
+     12150,
+     1350
+    ]
+   ]
+  ],
+  [
+   "f5-v1",
+   4,
+   12000,
+   2000,
+   4,
+   [
+    [
+     "tea",
+     4,
+     4,
+     12000,
+     2000
+    ]
+   ]
+  ],
+  [
+   "q2-v1",
+   4,
+   48000,
+   8000,
+   5,
+   [
+    [
+     "latte",
+     5,
+     4,
+     48000,
+     8000
+    ]
+   ]
+  ],
+  [
+   "cat-v1",
+   2,
+   32300,
+   5700,
+   2,
+   [
+    [
+     "cheesecake",
+     2,
+     2,
+     32300,
+     5700
+    ]
+   ]
+  ],
+  [
+   "sch-v1",
+   1,
+   9600,
+   2400,
+   1,
+   [
+    [
+     "lemonade",
+     1,
+     1,
+     9600,
+     2400
+    ]
+   ]
+  ]
+ ],
+ "financial": [
+  128900,
+  21100,
+  16000,
+  144900
+ ]
+}

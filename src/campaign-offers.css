@@ -5,3 +5,11 @@
 .category-offer-strip li svg { flex-shrink:0; }
 .category-offer-strip li span { min-width:0; overflow-wrap:anywhere; }
 .category-offer-strip li small { font-weight:400; color:#4d6b5d; white-space:nowrap; }
+/* Account campaigns (packages/domain/deals.ts): the card badge, the waiter's gift hint and the lines' "2 al 1 öde · −₺35". */
+.deal-offer-badge { background:#fbefd9; color:#7a4a12; }
+.deal-hints { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+.deal-hint-chip { display:inline-flex; align-items:center; gap:7px; min-height:40px; padding:7px 8px 7px 12px; border:1px solid #e7c98f; border-radius:999px; background:#fbefd9; color:#6b410f; font:inherit; font-size:14px; font-weight:600; cursor:pointer; max-width:100%; text-align:left; }
+.deal-hint-chip strong { padding:4px 10px; border-radius:999px; background:#7a4a12; color:#fff; font-size:13px; }
+.deal-hint-chip:disabled { opacity:.6; cursor:default; }
+.deal-label { color:#7a4a12 !important; font-weight:600; }
+.total-line.deal-saving { color:#7a4a12; }

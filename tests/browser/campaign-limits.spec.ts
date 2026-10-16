@@ -10,7 +10,7 @@ test('campaign quota shows live usage, expires automatically and releases cancel
   await page.getByRole('button', { name: 'Kampanya ekle', exact: true }).click();
   const editor = page.getByRole('dialog');
   await editor.getByLabel('Kampanya adı').fill('Sınırlı çay');
-  await editor.getByLabel('İndirim türü').selectOption('fixed');
+  await editor.getByLabel('Kampanya türü').selectOption('fixed');
   await editor.getByLabel('İndirim tutarı (TL)').fill('10');
   await editor.getByRole('checkbox', { name: 'Toplam adet sınırı koy' }).check();
   await expect(editor.getByLabel('Kampanya kaç adetle sınırlı?')).toHaveValue('50');

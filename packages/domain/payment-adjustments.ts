@@ -59,7 +59,8 @@ export function refundableItems(paymentId: string, account: RefundAccount): (Ref
     return m;
   };
   const row = (orderId: string, l: OrderLine, paid: number, refunded: number) => ({ orderId, lineId: l.id, productId: l.productId, name: l.name, optionNames: l.optionNames, ...(l.grams ? { grams: l.grams } : {}), ...(l.note ? { note: l.note } : {}),
-    unit: l.grams ? l.total : l.unitPrice, paid, refunded, left: Math.max(0, paid - refunded), key: selectionKey(l.selections) });
+    // A line with free pieces (deals.ts): the average paid piece, rounded down, so a refund never gives back more than was paid.
+    unit: l.grams ? l.total : l.deals?.length ? Math.floor(l.total / l.quantity) : l.unitPrice, paid, refunded, left: Math.max(0, paid - refunded), key: selectionKey(l.selections) });
   if (p.selections?.length) {
     const refunded = refundsOf(new Set([p.id]));
     return p.selections.flatMap(sel => { const f = lines.get(sel.lineId); return f && f.order.id === sel.orderId ? [row(sel.orderId, f.line, sel.quantity, refunded.get(sel.lineId) ?? 0)] : []; });

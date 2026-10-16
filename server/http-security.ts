@@ -78,8 +78,12 @@ export function sessionCookie(req: Request, path = '/'): CookieOptions {
 // Café installs call these from their own server process: no browser, no cookie; /sync is HMAC-signed, the rest is anonymous
 // by design. A browser's Origin would mean nothing to them, so it is not required (HTTPS still is).
 const SERVER_TO_SERVER = /^\/merkez\/v1\//;
-/** `alsoHosts`: further names answered (Mola Merkez: the guest menu's own name, MERKEZ_MENU_ORIGIN, for /q/* only: merkez/menu-host.ts). */
-export function configureHttpSecurity(app: Express, config: HttpSecurity, alsoHosts: string[] = []) {
+/**
+ * `alsoHosts`: further names answered (Mola Merkez: the guest menu's own name, MERKEZ_MENU_ORIGIN, for /q/* only: merkez/menu-host.ts;
+ * Kafemi yönet's, MERKEZ_OWNER_ORIGIN: merkez/owner-host.ts). `ownOrigins`: origins whose pages call /api on their own name
+ * (Kafemi yönet): a request to that name must come from that origin, not from PUBLIC_ORIGIN.
+ */
+export function configureHttpSecurity(app: Express, config: HttpSecurity, alsoHosts: string[] = [], ownOrigins: string[] = []) {
   const origin = canonicalOrigin(config.publicOrigin);
   if (config.trustLocalProxy && !origin) throw new Error('Yerel proxy güveni için PUBLIC_ORIGIN gerekli.');
   // Only an explicitly enabled same-machine TLS proxy may supply forwarded protocol.
@@ -92,7 +96,8 @@ export function configureHttpSecurity(app: Express, config: HttpSecurity, alsoHo
   app.use('/api', (req, _res, next) => {
     if (origin && !req.secure) return next(new DomainError('HTTPS_REQUIRED', 'Güvenli bağlantı gerekli.', 403));
     const supplied = req.get('Origin');
-    const expected = origin ?? `${req.protocol}://${req.get('host')}`;
+    const name = hostName(req.headers.host), own = ownOrigins.find(o => new URL(o).hostname.toLowerCase() === name);
+    const expected = own ?? origin ?? `${req.protocol}://${req.get('host')}`;
     if (supplied && supplied !== expected) return next(new DomainError('ORIGIN_REJECTED', 'İstek kaynağı geçersiz.', 403));
     if (origin && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !supplied && !SERVER_TO_SERVER.test(req.path)) return next(new DomainError('ORIGIN_REQUIRED', 'İstek kaynağı gerekli.', 403));
     next();

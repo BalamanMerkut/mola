@@ -44,8 +44,9 @@ function publicOrder(s: State, o: Order, x: { hiddenMoney: boolean; paid: boolea
   const table = x.table, tableName = table?.name ?? 'Masa';
   // Option ids are never read by staff screens; pricing rules (quantity offers, per-kg price) stay for the money screens.
   const line = (l: OrderLine): OrderLine => {
-    const { selections: _s, quantityPricing, weightPricing, ...kept } = l;
-    return (x.hiddenMoney ? { ...kept, originalUnitPrice: undefined, unitPrice: 0, total: 0 } : { ...kept, ...(quantityPricing ? { quantityPricing } : {}), ...(weightPricing ? { weightPricing } : {}) }) as OrderLine;
+    // Account campaign offers (deals.ts) are the server's to price with; the screens read the menu's and the line's `deals`.
+    const { selections: _s, quantityPricing, weightPricing, dealOffers: _o, deals, ...kept } = l;
+    return (x.hiddenMoney ? { ...kept, originalUnitPrice: undefined, unitPrice: 0, total: 0 } : { ...kept, ...(deals ? { deals } : {}), ...(quantityPricing ? { quantityPricing } : {}), ...(weightPricing ? { weightPricing } : {}) }) as OrderLine;
   };
   const pieces = x.pieces && [...x.pieces].filter(([, n]) => n > 0);
   const limits = cancelLimits(s, o);

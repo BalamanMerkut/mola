@@ -6,6 +6,7 @@ import { depositCredit } from './reservations.js';
 import { commissionOf } from './commission.js';
 import { selectionKey } from './stock.js';
 import { productVat, vatSettings, type VatSettings } from './vat.js';
+import { applyBillDeals, billTotalWith, lineGross, settleDeals, unitsCost } from './deals.js';
 import { createHash, randomUUID } from 'node:crypto';
 import type { Account, Actor, CafeTable, CartLine, ChangeSide, Context, Order, OrderLine, OrderStatus, Product, State, StockQuestion } from './types.js';
 
@@ -116,7 +117,8 @@ export function quote(products: Product[], cart: CartLine[], ctx: Context, quant
     assertInt(unitPrice, 1, 100_000_000);
     const originalUnitPrice = unitPrice; const discount = discountedPrice(p, unitPrice, productQuantity(quantityContext, p.id)); unitPrice = discount.price;
     const quantityPricing = p.discounts?.some(c => (c.minQuantity ?? 1) > 1) ? { original: originalUnitPrice, offers: structuredClone(p.discounts) } : undefined;
-    return { quantityPricing, ...(discount.campaigns.length ? { originalUnitPrice, campaigns: discount.campaigns } : {}), ...base, id: ctx.id(), name: p.name, code: p.code, optionNames, unitPrice, total: unitPrice * line.quantity };
+    // Account campaigns (deals.ts) are stamped as they are now; the bill is priced with them once the order is on it.
+    return { quantityPricing, ...(p.deals?.length ? { dealOffers: structuredClone(p.deals) } : {}), ...(discount.campaigns.length ? { originalUnitPrice, campaigns: discount.campaigns } : {}), ...base, id: ctx.id(), name: p.name, code: p.code, optionNames, unitPrice, total: unitPrice * line.quantity };
   });
   if (vat) for (const l of lines) l.vatRate = productVat(products.find(p => p.id === l.productId), vat);
   return lines;
@@ -166,6 +168,7 @@ export function submitOrder(s: State, actor: Actor, input: { requestId: string; 
     // The change window is the guest's: staff orders go to the kitchen at once.
     if (order.source === 'qr') order.editableUntil = new Date(ctx.now.getTime() + s.changeSeconds * 1000).toISOString();
     s.orders.push(order); a.version++;
+    applyBillDeals(s, a.id);
     return { orderId: order.id, number: order.number, accountId: a.id };
   });
 }
@@ -263,7 +266,7 @@ function relined(s: State, o: Order, input: (CartLine & { existingId?: string })
         return withNote(repriceWeightLine(structuredClone(previous), l.grams), note);
       }
       if (l.quantity > previous.quantity && !available) throw new DomainError('ITEM_UNAVAILABLE', 'Tükenen ürünün adedi artırılamaz.', 409);
-      return withNote(repriceSavedLine(structuredClone(previous), l.quantity, productQuantity(input, l.productId)), note);
+      return withNote(settleDeals(repriceSavedLine(structuredClone(previous), l.quantity, productQuantity(input, l.productId)), previous), note);
     }
     return quote(saleProducts(s, ctx.now), [{ productId: l.productId, quantity: l.quantity, selections: l.selections, note: l.note, grams: l.grams }], ctx, input, vatSettings(s))[0];
   }
@@ -285,16 +288,18 @@ export function editOrder(s: State, actor: Actor, input: { requestId: string; or
     const packed = packedChoice(input.packed);
     const lines = relined(s, o, input.lines, ctx);
     checkCampaignLimits(s, lines, o.id);
+    // Screens price an edit before account campaigns (deals.ts): the bill is priced with them afterwards.
     const total = lines.reduce((n, l) => n + l.total, 0);
-    if (total !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Güncel toplamı kontrol edip tekrar deneyin.', 409);
+    if (lines.reduce((n, l) => n + lineGross(l), 0) !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Güncel toplamı kontrol edip tekrar deneyin.', 409);
     if (o.approvalRequired && !s.autoApproveQr) { o.status = 'awaiting_approval'; o.reviewedBy = undefined; }
     // Per item since 13 Ekim: the lines bring their own choice; an older edit (no line choices) keeps the order's as it was.
     const keepOld = packed === undefined && !input.lines.some(l => l.packed !== undefined);
     if (keepOld) { if (o.packed) for (const l of lines) l.packed = true; }
     applyPacking(o, lines, isTakeaway(table), packed === true ? true : undefined);
     o.lines = lines; o.total = total; o.version++; o.updatedAt = ctx.now.toISOString(); a.version++;
+    applyBillDeals(s, a.id);
     s.audit.push({ action: 'order.edited', actor: actor.id, target: o.id, at: o.updatedAt });
-    return { orderId: o.id, number: o.number, version: o.version, total };
+    return { orderId: o.id, number: o.number, version: o.version, total: o.total };
   });
 }
 export function cancelOrder(s: State, actor: Actor, input: { requestId: string; orderId: string; version: number }, ctx: Context) {
@@ -318,6 +323,7 @@ export function cancelOrder(s: State, actor: Actor, input: { requestId: string; 
     if (!automatic) { delete o.cancelDeclineReason; o.cancelRequested = true; o.version++; return { requested: true }; }
     const stockQuestion = askStock(o, o.status, o.lines, actor, ctx);
     o.status = 'cancelled'; delete o.cancelDeclineReason; o.cancelRequested = false; o.version++; a.version++;
+    applyBillDeals(s, a.id);
     if (actor.role === 'kitchen') s.audit.push({ action: 'order.cancel_approved', actor: actor.id, target: o.id, at: ctx.now.toISOString() });
     return { requested: false, ...(stockQuestion ? { stockQuestion } : {}) };
   });
@@ -388,10 +394,10 @@ export function cancelByStaff(s: State, actor: Actor, input: { requestId: string
     const refused: { lineId: string; quantity: number; name: string; reason: string; code: string }[] = [];
     if (!input.lines) {
       cut = new Map(asked.map(x => [x.lineId, x.quantity]));
-      const problem = cutProblem(o, cut, paid, before);
+      const problem = cutProblem(s, o, cut, paid, before);
       if (problem) throw new DomainError(problem.code, problem.message, 409);
     } else for (const { lineId, quantity } of asked) {
-      const trial = new Map(cut).set(lineId, quantity), problem = cutProblem(o, trial, paid, before);
+      const trial = new Map(cut).set(lineId, quantity), problem = cutProblem(s, o, trial, paid, before);
       if (problem) refused.push({ lineId, quantity, name: o.lines.find(l => l.id === lineId)!.name, reason: problem.message, code: problem.code });
       else cut = trial;
     }
@@ -402,14 +408,15 @@ export function cancelByStaff(s: State, actor: Actor, input: { requestId: string
     if (whole) {
       stockQuestion = askStock(o, o.status, o.lines, actor, ctx);
       o.status = 'cancelled'; o.cancelRequested = false; delete o.cancelDeclineReason; o.cancelReason = reason; o.cancelledBy = actor.id;
-      o.version++; a.version++;
+      o.version++; a.version++; applyBillDeals(s, a.id);
       s.audit.push({ action: 'order.cancelled_by_staff', actor: actor.id, target: o.id, at });
     } else {
       const { lines, total } = remainingAfterCut(o, cut);
-      const removed = o.lines.filter(l => cut.has(l.id)).map(l => ({ ...structuredClone(l), quantity: cut.get(l.id)!, total: l.grams !== undefined ? l.total : l.unitPrice * cut.get(l.id)! }));
+      // The cancelled part keeps its price before account campaigns (deals.ts): those belong to what stays on the bill.
+      const removed = o.lines.filter(l => cut.has(l.id)).map(l => { const { deals: _d, ...line } = structuredClone(l); return { ...line, quantity: cut.get(l.id)!, total: l.grams !== undefined ? l.total : l.unitPrice * cut.get(l.id)! }; });
       o.cancellations = [...(o.cancellations ?? []), { id: ctx.id(), at, by: actor.id, reason, lines: removed, ...(o.printedTo?.length ? { printTo: [...o.printedTo] } : {}) }];
       stockQuestion = askStock(o, o.status, removed, actor, ctx);
-      o.lines = lines; o.total = total; o.version++; a.version++;
+      o.lines = lines; o.total = total; o.version++; a.version++; applyBillDeals(s, a.id);
       s.audit.push({ action: 'order.items_cancelled', actor: actor.id, target: o.id, at });
     }
     // What is left may be paid already: the bill closes as after the last payment.
@@ -449,35 +456,38 @@ export function changeByStaff(s: State, actor: Actor, input: { requestId: string
     if (JSON.stringify(side(old)) === JSON.stringify(side(fresh))) throw new DomainError('NO_CHANGE', 'Bir değişiklik yapmadınız.');
     checkCampaignLimits(s, lines, o.id);
     const total = lines.reduce((n, l) => n + l.total, 0);
-    if (total !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Güncel tutarı kontrol edip tekrar deneyin.', 409);
-    const before = balances(s, a.id);
-    if (before.total - o.total + total < before.paid) throw new DomainError('PAID_ITEMS', 'Bu hesaba tutar olarak ödeme alındı; değişiklikle hesap ödenenin altına düşer. Önce işletme sahibi iadeyi yapmalı.', 409);
+    if (lines.reduce((n, l) => n + lineGross(l), 0) !== input.expectedTotal) throw new DomainError('PRICE_CHANGED', 'Fiyat değişti. Güncel tutarı kontrol edip tekrar deneyin.', 409);
+    // With account campaigns (deals.ts) the whole bill is priced again: another order's free tea may come or go.
+    const before = balances(s, a.id), after = billTotalWith(s, a.id, { orderId: o.id, lines }) ?? before.total - o.total + total;
+    if (after < before.paid) throw new DomainError('PAID_ITEMS', 'Bu hesaba tutar olarak ödeme alındı; değişiklikle hesap ödenenin altına düşer. Önce işletme sahibi iadeyi yapmalı.', 409);
     if ((o.changes?.length ?? 0) >= 30) throw new DomainError('TOO_MANY_CHANGES', 'Bu sipariş çok kez değişti. Ürünü iptal edip yeni sipariş girin.', 409);
     const at = ctx.now.toISOString();
     // A ready-made swap never involves the kitchen: no DEĞİŞİKLİK slip, no kitchen note.
-    const slip = !ready && !!o.printedTo?.length, delta = total - o.total;
+    const slip = !ready && !!o.printedTo?.length, delta = after - before.total;
     o.changes = [...(o.changes ?? []), { id: ctx.id(), at, by: actor.id, from: side(old), to: side(fresh), ...(slip ? { printTo: [...o.printedTo!] } : {}), ...(ready ? { ready: true } : {}), ...(delta ? { delta } : {}) }];
-    o.lines = lines; o.total = total; o.version++; a.version++;
+    o.lines = lines; o.total = total; o.version++; a.version++; applyBillDeals(s, a.id);
     s.audit.push({ action: ready ? 'order.ready_item_changed' : 'order.line_changed', actor: actor.id, target: `${o.id}:${old.name}->${fresh.name}:${delta}`, at });
-    return { orderId: o.id, number: o.number, version: o.version, total, delta, from: changeSideText(side(old)), to: changeSideText(side(fresh)), slip, ready };
+    return { orderId: o.id, number: o.number, version: o.version, total: o.total, delta, from: changeSideText(side(old)), to: changeSideText(side(fresh)), slip, ready };
   });
 }
 /** What stays on the order after `cut`: remaining items keep their saved price; quantity offers ("4 al 3 öde") are counted again on what is left, like a guest edit. */
 function remainingAfterCut(o: Order, cut: Map<string, number>) {
   const left = o.lines.flatMap(l => { const n = l.quantity - (cut.get(l.id) ?? 0); return n ? [{ ...l, quantity: n }] : []; });
   const touched = new Set(o.lines.filter(l => cut.has(l.id)).map(l => l.productId));
-  const lines = left.map(l => touched.has(l.productId) ? repriceSavedLine(structuredClone(l), l.quantity, productQuantity(left, l.productId)) : structuredClone(l));
+  const lines = left.map(l => touched.has(l.productId) ? settleDeals(repriceSavedLine(structuredClone(l), l.quantity, productQuantity(left, l.productId)), o.lines.find(x => x.id === l.id)) : structuredClone(l));
   return { lines, total: lines.reduce((n, l) => n + l.total, 0) };
 }
 const CAMPAIGN_HINT = 'Bu ürünün kampanya fiyatı ödenen ürüne bağlı; önce iadeyi işletme sahibi yapmalı.';
 const AMOUNT_HINT = 'Bu hesaba tutar olarak ödeme alındı; bu iptal hesabı ödenenin altına düşürür. Önce iadeyi işletme sahibi yapmalı.';
 /** Why taking `cut` off a live order would be refused (a paid item, a paid item's campaign price, money already taken), or null. */
-function cutProblem(o: Order, cut: Map<string, number>, paid: Map<string, number>, before: { total: number; paid: number }): { code: string; message: string } | null {
+function cutProblem(s: State, o: Order, cut: Map<string, number>, paid: Map<string, number>, before: { total: number; paid: number }): { code: string; message: string } | null {
   for (const l of o.lines) if ((cut.get(l.id) ?? 0) > l.quantity - (paid.get(l.id) ?? 0)) return { code: 'PAID_ITEMS', message: PAID_HINT };
-  if (o.lines.every(l => cut.get(l.id) === l.quantity)) return o.paidAt || before.total - o.total < before.paid ? { code: 'PAID_ITEMS', message: AMOUNT_HINT } : null;
+  // With account campaigns (deals.ts) the rest of the bill is priced again: a free tea elsewhere may become paid.
+  if (o.lines.every(l => cut.get(l.id) === l.quantity)) return o.paidAt || (billTotalWith(s, o.accountId, { orderId: o.id, lines: null }) ?? before.total - o.total) < before.paid ? { code: 'PAID_ITEMS', message: AMOUNT_HINT } : null;
   const { lines, total } = remainingAfterCut(o, cut);
-  if (lines.some(l => (paid.get(l.id) ?? 0) > 0 && l.unitPrice !== o.lines.find(x => x.id === l.id)!.unitPrice)) return { code: 'PAID_ITEMS', message: CAMPAIGN_HINT };
-  if (before.total - (o.total - total) < before.paid) return { code: 'PAID_ITEMS', message: AMOUNT_HINT };
+  // A paid line keeps its price: its unit price, and the free pieces of a line that has some (a cut would move them).
+  if (lines.some(l => { const old = o.lines.find(x => x.id === l.id)!; return (paid.get(l.id) ?? 0) > 0 && (l.unitPrice !== old.unitPrice || (!!old.deals?.length && l.quantity !== old.quantity)); })) return { code: 'PAID_ITEMS', message: CAMPAIGN_HINT };
+  if ((billTotalWith(s, o.accountId, { orderId: o.id, lines }) ?? before.total - (o.total - total)) < before.paid) return { code: 'PAID_ITEMS', message: AMOUNT_HINT };
   return null;
 }
 /**
@@ -493,7 +503,7 @@ export function cancelLimits(s: State, o: Order): Record<string, { max: number; 
     // Largest amount allowed on its own; usually the first try (all of it) already passes.
     let max = 0, reason = '';
     for (const q of l.grams !== undefined ? [l.quantity] : Array.from({ length: free }, (_, i) => free - i)) {
-      const problem = cutProblem(o, new Map([[l.id, q]]), paid, before);
+      const problem = cutProblem(s, o, new Map([[l.id, q]]), paid, before);
       if (!problem) { max = q; break; }
       reason ||= problem.message;
     }
@@ -523,7 +533,8 @@ export function recordPayment(s: State, actor: Actor, input: { selections?: impo
         seen.add(key);
         const already = paid.flatMap(p => p.selections ?? []).filter(p => p.orderId === sel.orderId && p.lineId === sel.lineId).reduce((n, p) => n + p.quantity, 0);
         if (sel.quantity + already > line.quantity) throw new DomainError('ITEM_ALREADY_PAID', 'Seçilen ürünün bu adedi zaten ödendi.', 409);
-        selectedTotal += line.unitPrice * sel.quantity;
+        // A line with free or cheaper pieces (deals.ts) charges its full-price pieces first.
+        selectedTotal += unitsCost(line, already, sel.quantity);
       }
       if (input.amount !== selectedTotal) throw new DomainError('INVALID_AMOUNT', 'Seçilen ürünlerin tutarı değişti.', 409);
     }
@@ -533,12 +544,13 @@ export function recordPayment(s: State, actor: Actor, input: { selections?: impo
     if (input.tendered < input.amount || (input.method === 'card' && input.tendered !== input.amount)) throw new DomainError('INVALID_TENDER', 'Alınan tutarı kontrol edin.');
     const payment = { id: ctx.id(), accountId: a.id, amount: input.amount, tendered: input.tendered, change: input.method === 'cash' ? input.tendered - input.amount : 0, method: input.method, createdAt: ctx.now.toISOString(), commission: input.method === 'card' ? commissionOf(input.amount, s.commissionBps) : null, by: actor.id };
     const accountOrders = s.orders.filter(o => o.accountId === a.id && !['cancelled', 'awaiting_approval'].includes(o.status));
-    const campaignTotal = accountOrders.flatMap(o => o.lines).filter(l => l.campaigns?.length).reduce((n, l) => n + l.total, 0);
+    const campaignTotal = accountOrders.flatMap(o => o.lines).filter(l => l.campaigns?.length || l.deals?.length).reduce((n, l) => n + l.total, 0);
     const previousPayments = s.payments.filter(p => p.accountId === a.id);
     let campaignAmount: number | null = null;
     if (input.selections) campaignAmount = input.selections.reduce((n, selected) => {
       const line = accountOrders.find(o => o.id === selected.orderId)!.lines.find(l => l.id === selected.lineId)!;
-      return n + (line.campaigns?.length ? line.unitPrice * selected.quantity : 0);
+      const earlier = previousPayments.flatMap(p => p.selections ?? []).filter(p => p.orderId === selected.orderId && p.lineId === selected.lineId).reduce((m, p) => m + p.quantity, 0);
+      return n + (line.campaigns?.length || line.deals?.length ? unitsCost(line, earlier, selected.quantity) : 0);
     }, 0);
     else if (campaignTotal === 0) campaignAmount = 0;
     else if (accountOrders.reduce((n, o) => n + o.total, 0) === campaignTotal) campaignAmount = input.amount;
@@ -610,7 +622,7 @@ export function settleGuest(s: State, a: Account, ctx: Context) {
   if (deposit && !deposit.paymentId && !deposit.settledAt) {
     const credit = depositCredit(s, a), r = s.reservations?.find(r => r.id === deposit.reservationId);
     if (credit > 0) {
-      const id = ctx.id(), campaigns = s.orders.some(o => o.accountId === a.id && o.status !== 'cancelled' && o.lines.some(l => l.campaigns?.length));
+      const id = ctx.id(), campaigns = s.orders.some(o => o.accountId === a.id && o.status !== 'cancelled' && o.lines.some(l => l.campaigns?.length || l.deals?.length));
       s.payments.push({ id, accountId: a.id, amount: credit, tendered: credit, change: 0, method: deposit.method, createdAt: at, commission: deposit.method === 'card' ? commissionOf(credit, s.commissionBps) : null, campaignAmount: campaigns ? null : 0, deposit: { reservationId: deposit.reservationId, takenAt: deposit.takenAt } });
       deposit.paymentId = id;
     }

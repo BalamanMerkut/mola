@@ -212,6 +212,12 @@ export function summarize(r: HistoryRecords, start: number, end: number) {
       const discount = ((l.originalUnitPrice ?? l.unitPrice) - l.unitPrice) * l.quantity;
       if (l.campaigns?.length) { t.campaignOrderAmount += l.total; t.campaignQuantity += l.quantity; t.campaignDiscount += discount; }
       for (const key of new Set(l.campaigns?.map(campaignKey))) { const v = t.applied(key, l.productId); v.quantity += l.quantity; v.amount += l.total; v.discount += discount; }
+      // Account campaigns (deals.ts): a campaign line like the others; per campaign the pieces made free or cheaper, what was
+      // charged for them and what they took off ("2 al 1 öde": 1 adet, 0 TL, 35 TL).
+      if (l.deals?.length) {
+        if (!l.campaigns?.length) { t.campaignOrderAmount += l.total; t.campaignQuantity += l.quantity; }
+        for (const d of l.deals) { t.campaignDiscount += d.units * d.off; const v = t.applied(campaignKey(d), l.productId); v.quantity += d.units; v.amount += d.units * (l.unitPrice - d.off); v.discount += d.units * d.off; }
+      }
       // A weighed line counts as one sale; its weight is summed apart so reports can say "12,5 kg".
       const p = t.product(l.productId, l.name); p.last = l.name; p.quantity += l.quantity; p.amount += l.total; p.grams += l.grams ?? 0;
       if (typeof l.vatRate === 'number') t.addRated(l.productId, l.vatRate, l.total);

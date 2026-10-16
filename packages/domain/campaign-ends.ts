@@ -24,7 +24,7 @@ export function campaignUses(s: Pick<State, 'orders' | 'archives' | 'archivedCam
   const orders = new Map((s.archives ?? []).flatMap(a => a.orders).map(o => [o.id, o]));
   for (const o of s.orders ?? []) orders.set(o.id, o);
   let n = 0;
-  for (const o of orders.values()) if (o.status !== 'cancelled' && o.lines.some(l => l.campaigns?.some(c => c.id === campaignId))) n++;
+  for (const o of orders.values()) if (o.status !== 'cancelled' && o.lines.some(l => l.campaigns?.some(c => c.id === campaignId) || l.deals?.some(d => d.id === campaignId))) n++;
   return n;
 }
 

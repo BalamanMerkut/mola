@@ -328,7 +328,7 @@ function sunucu() {
       ['https://molayazilim.com.tr/s/*', 'Sosyal medya QR kısa adresleri'],
       ['https://menu.molayazilim.com.tr/q/*', 'İnternetten menü (masa QR\'ları)'],
       ['https://merkez.molayazilim.com.tr', 'Mola Merkez, Mola Yönetim, kafe bağlantıları'],
-      ['https://merkez.molayazilim.com.tr/yonet', 'Kafemi yönet: işletme sahibinin raporları ve uzaktan yönetimi'],
+      ['https://kafem.molayazilim.com.tr', 'Kafemi yönet: işletme sahibinin raporları ve uzaktan yönetimi'],
       ['https://merkez.molayazilim.com.tr/k/*', 'Kalıcı bağlantı: kafede kasa bilgisayarını, dışarıda Kafemi yönet\'i açar'],
     ], 'kucuk'),
     liste([

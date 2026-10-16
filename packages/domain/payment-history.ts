@@ -3,6 +3,7 @@ import { paymentLedger } from './payment-adjustments.js';
 import { reportRange } from './reports.js';
 import { DomainError } from './engine.js';
 import { DAY_MS, dayStart } from './business-day.js';
+import { unitsCost } from './deals.js';
 
 // İade ve düzeltme: one statement of payments, newest first, like a bank statement. In memory (tests, tools) one State
 // holds everything; the server walks its per-day payment lists backwards and stops once a page is full
@@ -113,7 +114,10 @@ export function paymentDetail(s: State, paymentId: string, archived: () => Archi
   const orders = new Map<string, Order>();
   for (const o of live ? [...s.archives.flatMap(a => a.orders), ...s.orders] : account!.orders) if (o.accountId === p.accountId) orders.set(o.id, o);
   if (p.selections?.length) {
-    const items = p.selections.flatMap(sel => { const l = orders.get(sel.orderId)?.lines.find(l => l.id === sel.lineId); return l ? [{ name: l.name, optionNames: l.optionNames, quantity: sel.quantity, total: l.unitPrice * sel.quantity, ...extras(l) } as Item] : []; });
+    // A line with free pieces (deals.ts) charged its full-price pieces first: what earlier payments of the bill took counts.
+    const ledger = new Map((live ? [...s.archives.flatMap(a => a.payments), ...s.payments] : account!.payments).filter(x => x.accountId === p.accountId && x.createdAt < p.createdAt).map(x => [x.id, x]));
+    const earlier = [...ledger.values()].flatMap(x => x.selections ?? []);
+    const items = p.selections.flatMap(sel => { const l = orders.get(sel.orderId)?.lines.find(l => l.id === sel.lineId); return l ? [{ name: l.name, optionNames: l.optionNames, quantity: sel.quantity, total: unitsCost(l, earlier.filter(x => x.orderId === sel.orderId && x.lineId === sel.lineId).reduce((n, x) => n + x.quantity, 0), sel.quantity), ...extras(l) } as Item] : []; });
     return { id: p.id, itemsSelected: true, items };
   }
   const items = new Map<string, Item>();

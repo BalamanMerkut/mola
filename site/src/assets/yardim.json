@@ -28,8 +28,16 @@
       "konu": "tanisma",
       "kitle": ["site"],
       "soru": "Fiyatlar ne kadar?",
-      "cevap": ["Paketleri ve fiyatları Özellikler sayfasındaki Paketler bölümünde görürsünüz. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
+      "cevap": ["Üst menüdeki Fiyatlar’a tıklayın; paketler ve fiyatlar orada. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
       "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı"]
+    },
+    {
+      "id": "paket-karsilastirma",
+      "konu": "tanisma",
+      "kitle": ["site"],
+      "soru": "Hangi pakette ne var?",
+      "cevap": ["Fiyatlar bölümünde paket kartlarının altındaki “Hangi pakette ne var?” tablosuna bakın. Pakette olan hizmet ✓ ile, olmayan – ile gösterilir."],
+      "anahtar": ["hangi paket", "paket karşılaştırma", "karşılaştır", "fark", "paket farkı", "neler var", "içinde ne var", "restoran pro", "kafe standart", "çay bahçesi", "özel paket", "tablo"]
     },
     {
       "id": "deneme",
@@ -500,7 +508,31 @@
       "cevap": [
         ["Menü yönetimi → Kampanyalar → “Kampanya ekle”.", "İndirimi ve ürünleri seçin.", "Geçerli olduğu günleri ve saatleri seçip kaydedin."]
       ],
-      "anahtar": ["kampanya", "indirim", "happy hour", "promosyon", "fırsat", "iskonto", "öğrenci indirimi", "kampanya ekle", "yüzde indirim"]
+      "anahtar": ["kampanya", "indirim", "happy hour", "promosyon", "fırsat", "iskonto", "öğrenci indirimi", "kampanya ekle", "yüzde indirim"],
+      "ilgili": ["kampanya-x-al-y-ode", "kampanya-hediye"]
+    },
+    {
+      "id": "kampanya-x-al-y-ode",
+      "konu": "menu",
+      "kitle": ["site", "owner", "manager"],
+      "soru": "“2 al 1 öde” ya da “ikincisi yarı fiyat” kampanyası nasıl kurulur?",
+      "cevap": [
+        ["Menü yönetimi → Kampanyalar → “Kampanya ekle”.", "Kampanya türünde “X al Y öde” ya da “İkincisi indirimli”yi seçip adetleri yazın.", "Ürünleri ya da bölümü, sonra tarihleri seçip kaydedin."],
+        "Masanın hesabındaki bütün siparişler birlikte sayılır; bedava ya da indirimli olan, en ucuz üründür."
+      ],
+      "anahtar": ["2 al 1 öde", "3 al 2 öde", "x al y öde", "bir alana bir bedava", "ikincisi yarı fiyat", "ikincisi indirimli", "ikinci ürün indirimli", "ikinci kahve", "bedava ürün"],
+      "ilgili": ["kampanya", "kampanya-hediye"]
+    },
+    {
+      "id": "kampanya-hediye",
+      "konu": "menu",
+      "kitle": ["site", "owner", "manager"],
+      "soru": "“2 çay alana 1 kahve bedava” gibi hediye ürün kampanyası nasıl çalışır?",
+      "cevap": [
+        "Kampanya türünde “Hediye ürün”ü seçin, koşul ürünlerini ve menüden hediyeyi seçin. Hediye mutfağa kendiliğinden gitmez: koşul tutunca garson ekranında “Kampanya: … bedava · Ekle” çıkar. Eklenen hediye hesapta ücretsiz görünür."
+      ],
+      "anahtar": ["hediye ürün", "hediye", "ikram", "bedava kahve", "çay alana kahve", "alana bedava", "hediye kampanyası", "kampanya ekle"],
+      "ilgili": ["kampanya", "kampanya-x-al-y-ode"]
     },
     {
       "id": "qr-bas",
@@ -665,7 +697,7 @@
       "kitle": ["site", "owner"],
       "soru": "Kafemi yönet’i (telefondan uzaktan rapor) nasıl kurarım?",
       "cevap": [
-        ["Kasada Ayarlar → Uzaktan erişim’e girin.", "“1 · Telefon kodu”: doğrulama uygulamasıyla QR’ı okutup 6 haneli kodu yazın.", "“2 · E-posta”: adresinize gelen kodu yazın.", "Telefonunuzda merkez.molayazilim.com.tr/yonet adresini açıp girin."]
+        ["Kasada Ayarlar → Uzaktan erişim’e girin.", "“1 · Telefon kodu”: doğrulama uygulamasıyla QR’ı okutup 6 haneli kodu yazın.", "“2 · E-posta”: adresinize gelen kodu yazın.", "Telefonunuzda kafem.molayazilim.com.tr adresini açıp girin."]
       ],
       "anahtar": ["kafemi yönet", "kafemi yonet", "uzaktan", "uzaktan erişim", "uzaktan rapor", "telefondan rapor", "evden bakmak", "telefon kodu", "doğrulama uygulaması", "authenticator", "google authenticator", "raporlarım", "yonet"],
       "ilgili": ["kafemi-yonet-giris", "kasa-kapali-son-durum"]
@@ -674,9 +706,9 @@
       "id": "kafemi-yonet-giris",
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
-      "soru": "merkez.molayazilim.com.tr/yonet adresine nasıl girerim?",
+      "soru": "kafem.molayazilim.com.tr adresine nasıl girerim?",
       "cevap": [
-        ["merkez.molayazilim.com.tr/yonet adresini açın.", "E-posta adresinizi ve şifrenizi yazıp “Devam”a basın.", "Doğrulama uygulamasındaki 6 haneli kodu yazıp “Giriş yap”a basın."],
+        ["kafem.molayazilim.com.tr adresini açın.", "E-posta adresinizi ve şifrenizi yazıp “Devam”a basın.", "Doğrulama uygulamasındaki 6 haneli kodu yazıp “Giriş yap”a basın."],
         "En fazla 3 cihaz eşleşir. Yeni cihaz ilk kez girerken kasa bilgisayarı açık olmalı."
       ],
       "anahtar": ["giriş", "giris", "yönet giriş", "merkez", "merkez.molayazilim.com.tr", "yonet adresi", "uzaktan giriş", "telefon kodu", "6 haneli kod", "doğrulama kodu", "devam"],

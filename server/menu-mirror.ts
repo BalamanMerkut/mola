@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { campaignUsage } from '../packages/domain/campaigns.js';
+import { isDeal } from '../packages/domain/deals.js';
 import { menuCategories, menuNamesEn, menuSubcategories } from '../packages/domain/categories.js';
 import { MIRROR_FILE, MIRROR_TABLE_PREFIX, type MirrorHold, type MirrorMenu } from '../packages/domain/menu-mirror.js';
 import { holdUntil, reservationSettings } from '../packages/domain/reservations.js';
@@ -41,7 +42,9 @@ export function buildMirror(s: State, directory: string, o: { menuOnly: boolean;
   };
   const products = published.map(({ discounts: _discounts, ...p }) => ({ ...p, photo: photoOf(p.photo) }));
   const used = Object.fromEntries(campaignUsage(s));
-  const live = (s.campaigns ?? []).filter(c => c.enabled && (!c.endsAt || Date.parse(c.endsAt) > Date.now() - 86_400_000));
+  // Account campaigns (deals.ts) stay off the copy: an older Merkez would read "İkincisi %50" as a plain %50 price. The copy
+  // takes no orders, so the guest misses only their menu line while the café is unreachable.
+  const live = (s.campaigns ?? []).filter(c => c.enabled && !isDeal(c) && (!c.endsAt || Date.parse(c.endsAt) > Date.now() - 86_400_000));
   const menu: Omit<MirrorMenu, 'photos'> = {
     v: 1, name: s.name, sector: sectorOf(s), ...(s.logo && /^data:image\/webp;base64,[A-Za-z0-9+/=]+$/.test(s.logo) && s.logo.length <= 48_000 ? { logo: s.logo } : {}),
     ...(s.theme ? { theme: s.theme } : {}), ...(s.menuHero ? { menuHero: s.menuHero } : {}), ...(s.googleReviewUrl ? { googleReviewUrl: s.googleReviewUrl } : {}),

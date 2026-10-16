@@ -21,7 +21,8 @@ import { licenseFeatures, type Install, type MerkezBusiness, type MerkezData, ty
  *     between (0.1.21, the owner's own test: the old page led nowhere useful outside the café):
  *       on the café's network (heard from within FRESH_MS, the visitor from the same public address) → 302 to the café
  *       computer's first address, its usual sign-in;
- *       anywhere else, with Raporlarım in the licence ('remote-reports') → 302 to <Merkez>/yonet#k=<code> (Kafemi yönet; the last
+ *       anywhere else, with Raporlarım in the licence ('remote-reports') → 302 to <Merkez>/yonet#k=<code> (Kafemi yönet, on its
+ *       own name <kafem>/#k=<code> when MERKEZ_OWNER_ORIGIN is set: server/merkez/owner-host.ts; the last
  *       report shows even while the café computer is off; the page offers "Kafedeyim, kasayı aç" with the code it was given);
  *       without it → a small page: not in the package, the link opens the register at the café, how to reach the Mola team;
  *     `?kafe=1` ("Kafedeyim, kasayı aç": the phone reached Merkez over IPv6 while the café computer used IPv4, so the two
@@ -131,10 +132,11 @@ self.addEventListener('fetch', event => { if (event.request.method !== 'GET') re
 `;
 
 type Entry = { name: string; origin?: string; client?: string; at?: number; reports: boolean };
-export function lanLinkRoutes(app: Express, deps: { store: MerkezStore; now: () => Date; publicOrigin?: string; siteOrigin?: string }) {
+export function lanLinkRoutes(app: Express, deps: { store: MerkezStore; now: () => Date; publicOrigin?: string; siteOrigin?: string; ownerOrigin?: string }) {
   const { store, now } = deps;
-  // Kafemi yönet is on Merkez's own address (not the web site's); without PUBLIC_ORIGIN (development) on this same address.
-  const reportsUrl = `${deps.publicOrigin ?? ''}/yonet`;
+  // Kafemi yönet: on its own name (MERKEZ_OWNER_ORIGIN), else on Merkez's own address (not the web site's); without
+  // PUBLIC_ORIGIN (development) on this same address.
+  const reportsUrl = deps.ownerOrigin ? `${deps.ownerOrigin}/` : `${deps.publicOrigin ?? ''}/yonet`;
   // Per address, as /s/: 60 a minute is far more than anyone opening a saved link needs, and little for someone trying codes.
   type Counter = { count: number; until: number };
   const counters = new ExpiringStore<Counter>(v => v.until, () => now().getTime(), 20000, true);

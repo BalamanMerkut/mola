@@ -1,5 +1,6 @@
 import type { Actor, Context, State } from './types.js';
 import { DomainError, once, requireRole } from './engine.js';
+import { applyBillDeals } from './deals.js';
 
 // QR orders are approved by the floor and the kitchen (waiter, kitchen; the owner and Müdür as supervisors). The cashier only sees the state.
 export const APPROVERS = ['waiter', 'kitchen', 'owner', 'manager'] as const;
@@ -14,6 +15,8 @@ export function reviewOrder(s: State, actor: Actor, b: { requestId: string; orde
     const a = s.accounts.find(a => a.id === o.accountId && a.status === 'open');
     if (!a) throw new DomainError('ACCOUNT_CLOSED', 'Hesap kapandı.', 409);
     o.status = b.approve ? 'new' : 'cancelled'; o.version++; a.version++;
+    // A rejected order leaves the bill: its account campaigns (a free tea, a gift) are priced again (deals.ts).
+    if (!b.approve) applyBillDeals(s, a.id, true);
     o.reviewedBy = actor.id; o.reviewReason = b.approve ? undefined : b.reason!.trim();
     s.audit.push({ action: b.approve ? 'order.approved' : 'order.rejected', actor: actor.id, target: o.id, at: ctx.now.toISOString() });
     return { ok: true };

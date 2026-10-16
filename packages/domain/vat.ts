@@ -128,7 +128,7 @@ export type RateLine = { orderId: string; lineId: string; rate: number; total: n
 /** A payment of the bill, in the order it was taken; `selections` when it was paid by choosing items. */
 export type RatePayment = { id: string; amount: number; selections?: { orderId: string; lineId: string; quantity: number }[] };
 /**
- * Every payment of one bill per rate. Paid by choosing items: those items (unit price × quantity, so campaign prices are in),
+ * Every payment of one bill per rate. Paid by choosing items: those items (their share of the line's total, so campaign prices and free pieces are in),
  * scaled to what was actually paid. Paid as an amount ("Tamamı", "Bir kısmı", a kapora): what the bill still owes per rate,
  * in proportion, so a coffee already paid by item is never counted again. Payments go in order and use up what each rate owes.
  */
@@ -139,7 +139,7 @@ export function allocateBill(lines: RateLine[], payments: RatePayment[], fallbac
   const out = new Map<string, RateAmount[]>();
   for (const p of payments) {
     let weights: RateAmount[] = [];
-    if (p.selections?.length) weights = byRate(p.selections.flatMap(sel => { const l = lines.find(x => x.orderId === sel.orderId && x.lineId === sel.lineId); return l ? [{ rate: l.rate, amount: l.unitPrice * sel.quantity }] : []; }));
+    if (p.selections?.length) weights = byRate(p.selections.flatMap(sel => { const l = lines.find(x => x.orderId === sel.orderId && x.lineId === sel.lineId); return l ? [{ rate: l.rate, amount: l.total * sel.quantity / l.quantity }] : []; }));
     if (!weights.some(w => w.amount > 0)) weights = asRows(owed);
     if (!weights.some(w => w.amount > 0)) weights = asRows(bill);
     const rows = splitByRate(p.amount, weights, fallback);

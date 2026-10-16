@@ -1,5 +1,9 @@
 import type { CartLine, OrderLine, Product, State } from './types.js';
-export type CampaignDiscount = { kind?: 'percent'; percent: number; amount?: never } | { kind: 'fixed'; amount: number; percent?: never };
+import { dealRuleOf, isDeal, type DealOffer, type DealRule } from './deals.js';
+/** A price discount on each unit (every campaign made before the account campaigns of packages/domain/deals.ts). */
+export type PriceDiscount = { kind?: 'percent'; percent: number; amount?: never } | { kind: 'fixed'; amount: number; percent?: never };
+/** Price discounts, or one of the account campaigns ("2 al 1 öde", "İkincisi %50", "Hediye ürün"; packages/domain/deals.ts). */
+export type CampaignDiscount = PriceDiscount | DealRule;
 /**
  * A repeat inside [startsAt, endsAt), with an optional daily "HH:MM" window (start inclusive, end exclusive):
  *   weekly  `days`: ISO weekdays 1 (Pazartesi) … 7 (Pazar);
@@ -18,9 +22,13 @@ export type Campaign = { schedule?: CampaignSchedule; maxQuantity?: number | nul
 type Timing = Pick<Campaign, 'startsAt' | 'endsAt' | 'schedule'>;
 export type CampaignView = Campaign & { usedQuantity: number; remainingQuantity: number | null };
 /** `categories`: set on a category campaign's offer, so menus can say "Tatlılarda %10 indirim". */
-export type DiscountOffer = Pick<Campaign, 'id' | 'name' | 'combine' | 'reportId' | 'minQuantity' | 'categories'> & { remainingQuantity?: number } & CampaignDiscount;
+export type DiscountOffer = Pick<Campaign, 'id' | 'name' | 'combine' | 'reportId' | 'minQuantity' | 'categories'> & { remainingQuantity?: number } & PriceDiscount;
 const tl = (amount = 0) => `${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(amount / 100)} TL`;
-export function campaignDiscountLabel(discount: { kind?: string; amount?: number; percent?: number; minQuantity?: number }) {
+/** "%10", "20 TL indirim · 2 adet ve üzeri", "2 al 1 öde", "İkincisi %50 indirimli", "2 adet alana Americano bedava". */
+export function campaignDiscountLabel(discount: { kind?: string; amount?: number; percent?: number; minQuantity?: number; buy?: number; pay?: number; giftQuantity?: number; giftName?: string }) {
+  if (discount.kind === 'buyPay') return `${discount.buy} al ${discount.pay} öde`;
+  if (discount.kind === 'second') return `İkincisi %${discount.percent} indirimli`;
+  if (discount.kind === 'gift') return `${discount.buy} adet alana ${(discount.giftQuantity ?? 1) > 1 ? `${discount.giftQuantity} ` : ''}${discount.giftName ?? 'hediye ürün'} bedava`;
   const label = discount.kind === 'fixed' ? `${tl(discount.amount)} indirim` : `%${discount.percent}`;
   return (discount.minQuantity ?? 1) > 1 ? `${label} · ${discount.minQuantity} adet ve üzeri` : label;
 }
@@ -28,11 +36,12 @@ export function campaignDiscountLabel(discount: { kind?: string; amount?: number
  * The single rule for "does this campaign price this product" (saleProducts, the owner's screens, reports). A category
  * campaign with a quantity condition skips products sold by weight: quantity conditions count pieces.
  */
-export function campaignCovers(c: CampaignScope & Pick<Campaign, 'minQuantity'>, p: Pick<Product, 'id' | 'category' | 'unit'>) {
+export function campaignCovers(c: CampaignScope & Pick<Campaign, 'minQuantity'> & { kind?: string }, p: Pick<Product, 'id' | 'category' | 'unit'>) {
   if (!c.categories) return c.productIds.includes(p.id);
-  return c.categories.includes(p.category) && !c.excludedProductIds?.includes(p.id) && !((c.minQuantity ?? 1) > 1 && p.unit === 'kg');
+  // Account campaigns ("2 al 1 öde") count pieces too.
+  return c.categories.includes(p.category) && !c.excludedProductIds?.includes(p.id) && !(((c.minQuantity ?? 1) > 1 || isDeal(c)) && p.unit === 'kg');
 }
-export const campaignProducts = <P extends Pick<Product, 'id' | 'category' | 'unit'>>(c: CampaignScope & Pick<Campaign, 'minQuantity'>, products: readonly P[]) => products.filter(p => campaignCovers(c, p));
+export const campaignProducts = <P extends Pick<Product, 'id' | 'category' | 'unit'>>(c: CampaignScope & Pick<Campaign, 'minQuantity'> & { kind?: string }, products: readonly P[]) => products.filter(p => campaignCovers(c, p));
 const VOWELS = 'aıoueiöü', BACK = 'aıou', VOICELESS = 'fstkçşhp';
 /** Turkish "in": "Tatlılar" → "Tatlılarda", "Tost" → "Tostta", "Kekler" → "Keklerde"; a name that ends oddly ("Menü 2") → "Menü 2 bölümünde". */
 export function inCategory(name: string) {
@@ -65,6 +74,8 @@ type CampaignData = Pick<State, 'campaigns'> & Partial<Pick<State, 'orders' | 'a
 export function campaignQuantities(lines: OrderLine[]) {
   const result = new Map<string, number>();
   for (const line of lines) for (const id of new Set(line.campaigns?.map(c => c.id))) result.set(id, (result.get(id) ?? 0) + line.quantity);
+  // Account campaigns use up their quota by the units they made free or cheaper (deals.ts), not by the units that earned them.
+  for (const line of lines) for (const d of line.deals ?? []) result.set(d.id, (result.get(d.id) ?? 0) + d.units);
   return result;
 }
 export function campaignUsage(s: CampaignData, exceptOrderId?: string) {
@@ -86,10 +97,30 @@ export function saleProducts(s: Pick<State, 'products'> & CampaignData, now: Dat
   // The single place that decides whether a campaign prices anything: menus, orders, edits and limits all come from here.
   const active = views.filter(c => c.enabled && (c.remainingQuantity === null || c.remainingQuantity >= (c.minQuantity ?? 1)) && campaignActiveAt(c, +now));
   // Category campaigns are resolved here, at pricing time, from each product's current category (campaignCovers).
-  return s.products.map(p => ({ ...p, discounts: active.filter(c => campaignCovers(c, p)).map(c => ({ id: c.id, name: c.name, combine: c.combine, reportId: c.reportId, minQuantity: c.minQuantity, ...(c.categories ? { categories: c.categories } : {}), ...(c.remainingQuantity === null ? {} : { remainingQuantity: c.remainingQuantity }), ...(c.kind === 'fixed' ? { kind: 'fixed' as const, amount: c.amount } : { kind: 'percent' as const, percent: c.percent }) })) }));
+  // Account campaigns never become price discounts: they go to `deals` (only when there are any, so other menus stay as they were).
+  const priced = active.filter((c): c is typeof c & PriceDiscount => !isDeal(c)), deals = active.filter(c => isDeal(c));
+  return s.products.map(p => {
+    const offers = deals.length ? dealOffers(deals, p, s.products) : [];
+    return { ...p, discounts: priced.filter(c => campaignCovers(c, p)).map(c => ({ id: c.id, name: c.name, combine: c.combine, reportId: c.reportId, minQuantity: c.minQuantity, ...(c.categories ? { categories: c.categories } : {}), ...(c.remainingQuantity === null ? {} : { remainingQuantity: c.remainingQuantity }), ...(c.kind === 'fixed' ? { kind: 'fixed' as const, amount: c.amount } : { kind: 'percent' as const, percent: c.percent }) })), ...(offers.length ? { deals: offers } : {}) };
+  });
+}
+type Named = Pick<Product, 'id' | 'name' | 'nameEn' | 'category' | 'unit'>;
+/** The account campaigns a product takes part in: counted for the condition (`counts`), or as the gift (`gift`). Pieces only. */
+function dealOffers(deals: (Campaign & { remainingQuantity: number | null })[], p: Named, products: readonly Named[]): DealOffer[] {
+  if (p.unit === 'kg') return [];
+  const names = (x?: Named) => x ? { tr: x.name, en: x.nameEn || x.name } : undefined;
+  return deals.flatMap(c => {
+    const rule = dealRuleOf(c);
+    if (!rule) return [];
+    const counts = campaignCovers(c, p), gift = rule.kind === 'gift' && rule.giftProductId === p.id;
+    if (!counts && !gift) return [];
+    const one = !c.categories && c.productIds.length === 1 ? names(products.find(x => x.id === c.productIds[0])) : undefined;
+    const giftName = rule.kind === 'gift' ? names(products.find(x => x.id === rule.giftProductId)) : undefined;
+    return [{ id: c.id, name: c.name, ...(c.reportId ? { reportId: c.reportId } : {}), ...rule, ...(counts ? { counts: true as const } : {}), ...(gift ? { gift: true as const } : {}), ...(c.categories ? { categories: c.categories } : {}), ...(one ? { scopeName: one } : {}), ...(giftName ? { giftName } : {}), ...(c.remainingQuantity === null ? {} : { remainingQuantity: c.remainingQuantity }) }];
+  });
 }
 export function discountedPrice(product: Pick<Product, 'discounts'>, original: number, quantity = 1) {
-  const apply = (price: number, discount: CampaignDiscount) => Math.max(1, discount.kind === 'fixed' ? price - discount.amount : Math.round(price * (100 - discount.percent) / 100));
+  const apply = (price: number, discount: PriceDiscount) => Math.max(1, discount.kind === 'fixed' ? price - discount.amount : Math.round(price * (100 - discount.percent) / 100));
   let price = original; let campaigns: { id: string; name: string; reportId?: string }[] = [];
   const offers = [...(product.discounts ?? [])].filter(c => quantity >= (c.minQuantity ?? 1)).sort((a, b) => a.id.localeCompare(b.id));
   // Percentages precede fixed amounts; ID order keeps integer rounding deterministic.

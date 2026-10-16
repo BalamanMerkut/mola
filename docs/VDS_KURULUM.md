@@ -8,7 +8,7 @@ Bu belgedeki değerler:
 
 | Değer | Ne |
 |---|---|
-| `molayazilim.com.tr` | Alan adınız (Metunic'te kayıtlı, DNS'i ücretsiz Cloudflare'de). Site `molayazilim.com.tr`, Mola Yönetim `merkez.molayazilim.com.tr`, masa QR menüsü `menu.molayazilim.com.tr` |
+| `molayazilim.com.tr` | Alan adınız (Metunic'te kayıtlı, DNS'i ücretsiz Cloudflare'de). Site `molayazilim.com.tr`, Mola Yönetim `merkez.molayazilim.com.tr`, masa QR menüsü `menu.molayazilim.com.tr`, işletme sahiplerinin Kafemi yönet'i `kafem.molayazilim.com.tr` |
 | `203.0.113.10` | **Örnek** IP: sunucunuzun gerçek IP adresiyle değiştirin (VDS firması verir) |
 | `yonetici` | Sunucuda sizin kullanıcı adınız |
 
@@ -35,7 +35,7 @@ Her adımı yaptıkça kutusunu işaretleyin. Parola, kurtarma kodu ve anahtar p
 
 ### C. Kurulum, adım adım (bir akşam, 2 ile 3 saat)
 
-1. [ ] **DNS:** Cloudflare'de dört A kaydı (`@`, `www`, `merkez`, `menu` → sunucu IP'si, hepsi **DNS only**, gri bulut), Metunic'te ad sunucularını Cloudflare'inkilerle değiştirin. `nslookup merkez.molayazilim.com.tr` IP'yi gösterene kadar bekleyin (§5).
+1. [ ] **DNS:** Cloudflare'de beş A kaydı (`@`, `www`, `merkez`, `menu`, `kafem` → sunucu IP'si, hepsi **DNS only**, gri bulut), Metunic'te ad sunucularını Cloudflare'inkilerle değiştirin. `nslookup merkez.molayazilim.com.tr` IP'yi gösterene kadar bekleyin (§5).
 2. [ ] **İlk giriş ve kullanıcı:** `ssh root@<IP>`, `yonetici` kullanıcısını açın, anahtarla girişi deneyin, şifreyle ve root ile girişi `/etc/ssh/sshd_config.d/01-mola.conf` ile kapatın (§3).
 3. [ ] **Güncellemeler ve güvenlik duvarı:** yalnız 22, 80, 443 açık (§4).
 4. [ ] **Paket:** Windows'ta `npm.cmd run merkez:linux-paket` (§1), sunucuya kopyalayın, `sudo ./kur.sh` (§6).
@@ -44,6 +44,7 @@ Her adımı yaptıkça kutusunu işaretleyin. Parola, kurtarma kodu ve anahtar p
    PUBLIC_ORIGIN=https://merkez.molayazilim.com.tr
    TRUST_LOCAL_PROXY=1
    MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr
+   MERKEZ_OWNER_ORIGIN=https://kafem.molayazilim.com.tr
    MERKEZ_SITE_ORIGIN=https://molayazilim.com.tr
    MERKEZ_CALISMA_KLASORU=/var/lib/mola-merkez/calisma
    MERKEZ_KEY_PROTECTION=1
@@ -188,7 +189,7 @@ Merkez'in kendi portu (4000) dışarıya **açılmaz**; yalnız sunucunun içind
 Alan adı Metunic'te kayıtlıdır; DNS'i **ücretsiz Cloudflare** yönetir (ana yol):
 
 1. Cloudflare'de hesap açın → **Add a site** → `molayazilim.com.tr` → **Free** plan.
-2. DNS → Records'ta aşağıdaki dört **A kaydı**; her birinde **Proxy status: DNS only (gri bulut)**.
+2. DNS → Records'ta aşağıdaki beş **A kaydı**; her birinde **Proxy status: DNS only (gri bulut)**.
 3. Cloudflare'in verdiği iki ad sunucusunu (`….ns.cloudflare.com`) Metunic panelinde alan adının ad sunucuları (nameserver) bölümüne yazın. Cloudflare "Active" diyene kadar bekleyin (birkaç dakika ile 24 saat).
 
 | Ad (host) | Tür | Değer | Ne için |
@@ -197,12 +198,13 @@ Alan adı Metunic'te kayıtlıdır; DNS'i **ücretsiz Cloudflare** yönetir (ana
 | `www` | A | `203.0.113.10` | `www.molayazilim.com.tr` (siteye yönlenir) |
 | `merkez` | A | `203.0.113.10` | Mola Merkez ve Mola Yönetim |
 | `menu` | A | `203.0.113.10` | Misafirlerin QR menüsü, kendi adresinde (§13) |
+| `kafem` | A | `203.0.113.10` | İşletme sahiplerinin Kafemi yönet'i, kendi adresinde (§13; sonradan eklemek için `docs/KAFEM_ADRESI.md`) |
 
 > **Turuncu bulut (Proxied) kullanmayın.** Bütün istekler Cloudflare'in adresinden gelir: Merkez'in misafir başına sınırları herkesi tek misafir sayar ve Caddy'nin sertifikası bozulur. Aynı nedenle Cloudflare'in ya da başka bir rehberin **"Only allow Cloudflare IPs"** (güvenlik duvarında yalnız Cloudflare adreslerine izin) önerisini **uygulamayın**: kafeler, misafirler ve sertifika doğrudan sunucuya gelir, hepsi kesilir.
 
-**Alternatif (Metunic DNS):** ad sunucuları Metunic'te kalırsa aynı dört A kaydını Metunic panelinde ekleyin.
+**Alternatif (Metunic DNS):** ad sunucuları Metunic'te kalırsa aynı beş A kaydını Metunic panelinde ekleyin.
 
-Sunucunun IPv6 adresi varsa aynı dört ad için AAAA kaydı da eklenebilir (zorunlu değil). Windows'ta `nslookup merkez.molayazilim.com.tr` ve `nslookup menu.molayazilim.com.tr` sunucunun IP'sini göstermeli (Cloudflare adresi değil); HTTPS sertifikası ancak bundan sonra alınır.
+Sunucunun IPv6 adresi varsa aynı beş ad için AAAA kaydı da eklenebilir (zorunlu değil). Windows'ta `nslookup merkez.molayazilim.com.tr` ve `nslookup menu.molayazilim.com.tr` sunucunun IP'sini göstermeli (Cloudflare adresi değil); HTTPS sertifikası ancak bundan sonra alınır.
 
 ## 6. Mola Merkez'i kurun (systemd servisi)
 
@@ -238,11 +240,12 @@ sudo nano /etc/mola-merkez/ayarlar.env
 PUBLIC_ORIGIN=https://merkez.molayazilim.com.tr
 TRUST_LOCAL_PROXY=1
 MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr
+MERKEZ_OWNER_ORIGIN=https://kafem.molayazilim.com.tr
 MERKEZ_SITE_ORIGIN=https://molayazilim.com.tr
 MERKEZ_CALISMA_KLASORU=/var/lib/mola-merkez/calisma
 ```
 
-`PUBLIC_ORIGIN`: Merkez yalnız bu HTTPS adresine gelen istekleri kabul eder (başka ad, düz HTTP reddedilir). `TRUST_LOCAL_PROXY=1`: aynı sunucudaki Caddy'nin "bu istek HTTPS ile geldi" bilgisine güvenir. `MERKEZ_MENU_ORIGIN`: misafirlerin QR menüsünün **kendi adresi** (güvenlik, §13): masa QR'ları bu adresi taşır; Merkez menüyü (`/q/…`) yalnız bu adreste açar, bu adreste de menüden başka hiçbir şey açmaz. `MERKEZ_SITE_ORIGIN`: sosyal medya kartlarının kısa adresi (§13). `MERKEZ_CALISMA_KLASORU`: Mola çalışma klasörü sunucuda bu klasöre yazılır, `npm run vds:cek` her gün bilgisayarınıza çeker (§15). (Bu satır yoksa servis dosyası aynı değeri kendisi verir.)
+`PUBLIC_ORIGIN`: Merkez yalnız bu HTTPS adresine gelen istekleri kabul eder (başka ad, düz HTTP reddedilir). `TRUST_LOCAL_PROXY=1`: aynı sunucudaki Caddy'nin "bu istek HTTPS ile geldi" bilgisine güvenir. `MERKEZ_MENU_ORIGIN`: misafirlerin QR menüsünün **kendi adresi** (güvenlik, §13): masa QR'ları bu adresi taşır; Merkez menüyü (`/q/…`) yalnız bu adreste açar, bu adreste de menüden başka hiçbir şey açmaz. `MERKEZ_OWNER_ORIGIN`: işletme sahiplerinin **Kafemi yönet** sayfasının kendi adresi (sahipler "merkez" adını görmez): sayfa bu adresin kökündedir, `merkez.` adresinde Kafemi yönet açılmaz; bu adreste sayfadan ve onun çağrılarından başka hiçbir şey açılmaz (yoksa Kafemi yönet eskisi gibi `merkez.…/yonet`'tedir). `MERKEZ_SITE_ORIGIN`: sosyal medya kartlarının kısa adresi (§13). `MERKEZ_CALISMA_KLASORU`: Mola çalışma klasörü sunucuda bu klasöre yazılır, `npm run vds:cek` her gün bilgisayarınıza çeker (§15). (Bu satır yoksa servis dosyası aynı değeri kendisi verir.)
 
 ## 7. Caddy: otomatik HTTPS
 
@@ -256,7 +259,7 @@ sudo caddy validate --config /etc/caddy/Caddyfile
 sudo systemctl reload caddy
 ```
 
-Paketteki `Caddyfile.ornek` yalnız Merkez ve menü bölümlerini içerir; site de aynı sunucuda olacağı için §13'teki tam metni kullanın. Caddy sertifikayı (Let's Encrypt) kendisi alır ve yeniler; sizin bir şey yapmanız gerekmez.
+Paketteki `Caddyfile.ornek` yalnız Merkez, menü ve kafem bölümlerini içerir; site de aynı sunucuda olacağı için §13'teki tam metni kullanın. Caddy sertifikayı (Let's Encrypt) kendisi alır ve yeniler; sizin bir şey yapmanız gerekmez.
 
 ## 8. Mevcut Merkez'i taşıyın (yedekten) ya da boş başlatın
 
@@ -381,6 +384,8 @@ Tanıtım sitesi (Ana sayfa, Özellikler, Destek ve İletişim, yasal sayfalar) 
 | `https://menu.molayazilim.com.tr/q/*` | **İnternetten menü**: masa QR'ları (`/q/<kod>/<masa kodu>`) → Mola Merkez → kafenin kendi tüneli (aşağıda). Bu adreste menüden başka hiçbir şey yoktur (`MERKEZ_MENU_ORIGIN`) |
 | `https://merkez.molayazilim.com.tr` | Mola Merkez ve Mola Yönetim (§6 ile §9, `PUBLIC_ORIGIN`); kafelerin misafir tünelleri de buraya bağlanır (WebSocket, `/api/merkez/v1/tunnel`) |
 | `https://molayazilim.com.tr/q/*`, `https://merkez.molayazilim.com.tr/q/*` | Eski adresle basılmış QR'lar: `308` ile `menu.` adresine |
+| `https://kafem.molayazilim.com.tr` | **Kafemi yönet** (işletme sahiplerinin girişi, raporları ve uzaktan yönetimi), kendi adında (`MERKEZ_OWNER_ORIGIN`). Bu adreste sayfadan ve onun çağrılarından başka hiçbir şey yoktur |
+| `https://molayazilim.com.tr/yonet`, `/raporlarim`, `/kafemi-yonet` | Sahibin yazabileceği kısa adresler: sitenin küçük sayfaları `kafem.` adresine gönderir (`merkez.…/yonet` açılmaz: 404) |
 
 **Neden ayrı bir menü adresi (11 Ekim, güvenlik denetimi Y1, sahibin kararı):** misafir menüsünün sayfası ve dosyaları kafenin bilgisayarından gelir. Değiştirilmiş (ya da ele geçirilmiş) bir kafe kendi menü sayfasına istediği kodu koyabilir. Bu sayfa Mola Yönetim'in adresinde açılsaydı, Mola Yönetim'e girişliyken menüyü açan sizin adınıza işlem yapabilirdi; aynı telefonda "Raporlarım" ya da "Kafeyi yönet" kullanan bir işletme sahibinin cihaz anahtarlarına ulaşabilirdi. Tarayıcılar çerezleri ve yerel kayıtları adrese (ada) göre ayırır: `menu.` adresinde Mola Yönetim'in ya da sitenin hiçbir çerezi ve anahtarı yoktur. Misafir çerezi (`mola_browser`) yalnız `menu.` adına ve yalnız o işletmenin yoluna (`/q/<kod>/`) yazılır. Lisans ve güncelleme imzası VDS'te kalır (sahibin kararı; bu değişiklik ona dokunmaz).
 
@@ -388,7 +393,7 @@ Tanıtım sitesi (Ana sayfa, Özellikler, Destek ve İletişim, yasal sayfalar) 
 
 ### DNS
 
-§5'teki dört A kaydı (`@`, `www`, `merkez`, `menu` → sunucu IP'si; Cloudflare'de gri bulut).
+§5'teki beş A kaydı (`@`, `www`, `merkez`, `menu`, `kafem` → sunucu IP'si; Cloudflare'de gri bulut).
 
 ### Caddyfile (tamamı)
 
@@ -511,11 +516,29 @@ menu.molayazilim.com.tr {
 		respond 404
 	}
 }
+
+# Kafemi yönet: işletme sahiplerinin sayfası, kendi adında (MERKEZ_OWNER_ORIGIN). Host olduğu gibi gider: Merkez bu adla
+# yalnız sayfayı ("/"), dosyalarını ve sayfanın çağrılarını açar; gerisi 404. Kafeyi yönet'ten gönderilen bir ürün
+# fotoğrafı şifreli hâliyle en çok ~13 MB'tır. Sayfanın CSP'si Merkez'den gelir.
+kafem.molayazilim.com.tr {
+	encode zstd gzip
+	request_body {
+		max_size 16MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		X-Frame-Options "DENY"
+		-Server
+	}
+	reverse_proxy 127.0.0.1:4000
+}
 ```
 
-`sudo caddy validate --config /etc/caddy/Caddyfile` ile denetleyip `sudo systemctl reload caddy`. Caddy dört ad için de sertifikayı kendisi alır.
+`sudo caddy validate --config /etc/caddy/Caddyfile` ile denetleyip `sudo systemctl reload caddy`. Caddy beş ad için de sertifikayı kendisi alır.
 
-Merkez'in ayarlarında (`/etc/mola-merkez/ayarlar.env`) `PUBLIC_ORIGIN=https://merkez.molayazilim.com.tr`, `TRUST_LOCAL_PROXY=1` ve `MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr` olur; **PUBLIC_ORIGIN mantığı değişmedi**. Site üzerinden gelen istek Merkez'e `merkez.molayazilim.com.tr` adıyla ve HTTPS olarak ulaştığı için kabul edilir; Mola Yönetim'in kendisi yine yalnız `merkez.` adresinden açılır. `menu.` adıyla gelen istekte Merkez yalnız `/q/*`'yi açar, gerisine 404 der (Caddy'den geçmeyen bir istek de olsa); başka bir adla gelen `/q/*` isteğini kendisi de `308` ile `menu.` adresine yönlendirir.
+Merkez'in ayarlarında (`/etc/mola-merkez/ayarlar.env`) `PUBLIC_ORIGIN=https://merkez.molayazilim.com.tr`, `TRUST_LOCAL_PROXY=1` ve `MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr` olur; **PUBLIC_ORIGIN mantığı değişmedi**. Site üzerinden gelen istek Merkez'e `merkez.molayazilim.com.tr` adıyla ve HTTPS olarak ulaştığı için kabul edilir; Mola Yönetim'in kendisi yine yalnız `merkez.` adresinden açılır. `menu.` adıyla gelen istekte Merkez yalnız `/q/*`'yi açar, gerisine 404 der (Caddy'den geçmeyen bir istek de olsa); başka bir adla gelen `/q/*` isteğini kendisi de `308` ile `menu.` adresine yönlendirir. `MERKEZ_OWNER_ORIGIN=https://kafem.molayazilim.com.tr` ile `kafem.` adıyla gelen istekte Merkez yalnız Kafemi yönet sayfasını, dosyalarını ve sayfanın çağrılarını (`/api/merkez/v1/phone/…`) açar, gerisine 404 der; `merkez.` adıyla gelen `/yonet`, `/raporlarim` (ve yazım biçimleri) 404'tür (Merkez'in bilinmeyen adres sayfası; tek bağlantısı `kafem.` adresine).
 
 ### Siteyi yükleme ve güncelleme
 
@@ -615,7 +638,7 @@ Kurulumdan sonra bir kez, her maddeyi işaretleyerek geçin. Ayrıntılı gerek�
 
 **Mola Merkez servisi**
 - [ ] Paketteki `mola-merkez.service` yetkisiz `mola` kullanıcısıyla ve kum havuzunda çalışır (`NoNewPrivileges`, `ProtectSystem=strict`, `PrivateTmp`, `PrivateDevices`, yetki yok, yalnız ağ soketleri). Denetleyin: `systemd-analyze security mola-merkez` (puan 3 ile 4 civarı "OK" beklenir).
-- [ ] `/etc/mola-merkez/ayarlar.env`: `PUBLIC_ORIGIN=https://merkez.molayazilim.com.tr`, `TRUST_LOCAL_PROXY=1`, **`MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr`** (misafir menüsü kendi adresinde; Mola Yönetim'in ya da sitenin adresinde asla), `MERKEZ_SITE_ORIGIN=https://molayazilim.com.tr` (sosyal medya kısa adresleri) ve `MERKEZ_CALISMA_KLASORU=/var/lib/mola-merkez/calisma`. `journalctl -u mola-merkez | grep "MERKEZ_MENU_ORIGIN yok sayıldı"` boş olmalı. `MOLA_TEST_TUNNEL`, `MERKEZ_INITIAL_PASSWORD`, `NODE_ENV`, `MERKEZ_KEY_PASSPHRASE` gibi değişkenler **olmamalı** (parola yalnız dosyada).
+- [ ] `/etc/mola-merkez/ayarlar.env`: `PUBLIC_ORIGIN=https://merkez.molayazilim.com.tr`, `TRUST_LOCAL_PROXY=1`, **`MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr`** (misafir menüsü kendi adresinde; Mola Yönetim'in ya da sitenin adresinde asla), `MERKEZ_OWNER_ORIGIN=https://kafem.molayazilim.com.tr` (Kafemi yönet kendi adresinde), `MERKEZ_SITE_ORIGIN=https://molayazilim.com.tr` (sosyal medya kısa adresleri) ve `MERKEZ_CALISMA_KLASORU=/var/lib/mola-merkez/calisma`. `journalctl -u mola-merkez | grep -E "MERKEZ_(MENU|OWNER)_ORIGIN yok sayıldı"` boş olmalı. `MOLA_TEST_TUNNEL`, `MERKEZ_INITIAL_PASSWORD`, `NODE_ENV`, `MERKEZ_KEY_PASSPHRASE` gibi değişkenler **olmamalı** (parola yalnız dosyada).
 - [ ] Dosya izinleri: `sudo ls -la /var/lib/mola-merkez /etc/mola-merkez` → veri, yedek ve çalışma klasörü yalnız `mola`, parola dosyası `root:mola 440`.
 
 **Okuma izni (§15)**
@@ -623,7 +646,7 @@ Kurulumdan sonra bir kez, her maddeyi işaretleyerek geçin. Ayrıntılı gerek�
 - [ ] `ls -l /usr/local/sbin/mola-oku` → `root root`, `-rwxr-xr-x` (başkası değiştiremez).
 
 **Caddy**
-- [ ] DNS'te `menu` A kaydı; Cloudflare'de dört kayıt da gri bulut (DNS only), ufw'de "yalnız Cloudflare IP'leri" kuralı yok (§5). §13'teki Caddyfile (zaman aşımları, `request_body` sınırları, HSTS, `nosniff`, `menu.` bloğu yalnız `/q/*`, `merkez.` ve site bloklarında `/q/*` → `menu.` yönlendirmesi). `sudo caddy validate --config /etc/caddy/Caddyfile`.
+- [ ] DNS'te `menu` ve `kafem` A kayıtları; Cloudflare'de beş kayıt da gri bulut (DNS only), ufw'de "yalnız Cloudflare IP'leri" kuralı yok (§5). §13'teki Caddyfile (zaman aşımları, `request_body` sınırları, HSTS, `nosniff`, `menu.` bloğu yalnız `/q/*`, `merkez.` ve site bloklarında `/q/*` → `menu.` yönlendirmesi, `kafem.` bloğu). `sudo caddy validate --config /etc/caddy/Caddyfile`.
 - [ ] Erişim kaydı (`log`) eklemeyin (gizlilik metni). Caddy'nin kendi hata kayıtları `journalctl -u caddy`'de kalır.
 - [ ] İsteğe bağlı (önerilir): Mola Yönetim'i yalnız sizin bağlantınızdan açın. Ev ya da ofis IP'niz sabitse `merkez.` bloğuna, `reverse_proxy`'den önce:
   ```
@@ -633,7 +656,7 @@ Kurulumdan sonra bir kez, her maddeyi işaretleyerek geçin. Ayrıntılı gerek�
   }
   respond @yonetim 404
   ```
-  (198.51.100.7 yerine kendi IP'niz). IP'niz değişiyorsa bunun yerine SSH tüneli: `ssh -L 4000:127.0.0.1:4000 yonetici@203.0.113.10` ve tarayıcıda `http://localhost:4000`. Kafelerin `/api/merkez/v1`, `/yonet`, `/raporlarim`, `/destek` yolları bundan etkilenmemeli; bu ayarı yaptıktan sonra bir kafeyle kalp atışını ve Raporlarım'ı deneyin.
+  (198.51.100.7 yerine kendi IP'niz). IP'niz değişiyorsa bunun yerine SSH tüneli: `ssh -L 4000:127.0.0.1:4000 yonetici@203.0.113.10` ve tarayıcıda `http://localhost:4000`. Kafelerin `/api/merkez/v1`, `/destek` yolları (Kafemi yönet `kafem.` adresinde) bundan etkilenmemeli; bu ayarı yaptıktan sonra bir kafeyle kalp atışını ve Raporlarım'ı deneyin.
 
 **Kayıtlar, yedek, takip**
 - [ ] Günlük boyutu: `/etc/systemd/journald.conf.d/mola.conf` içine `[Journal]` / `SystemMaxUse=500M` / `MaxRetentionSec=3month`, sonra `sudo systemctl restart systemd-journald`.
@@ -645,6 +668,7 @@ Kurulumdan sonra bir kez, her maddeyi işaretleyerek geçin. Ayrıntılı gerek�
 - [ ] `curl -sI https://merkez.molayazilim.com.tr/api/merkez/v1/health` → 200 ve `strict-transport-security`, `x-content-type-options` başlıkları; `server:` başlığı yok.
 - [ ] `curl -sI http://merkez.molayazilim.com.tr/` → HTTPS'e yönlendirme.
 - [ ] `curl -sI https://merkez.molayazilim.com.tr/q/AAAAAAAAAA/x` ve `curl -sI https://molayazilim.com.tr/q/AAAAAAAAAA/x` → 308, `location: https://menu.molayazilim.com.tr/q/…`. `curl -sI https://menu.molayazilim.com.tr/` ve `curl -sI https://menu.molayazilim.com.tr/api/merkez/admin/state` → 404.
+- [ ] `curl -sI https://kafem.molayazilim.com.tr/` → 200 (`x-robots-tag: noindex`); `curl -sI https://merkez.molayazilim.com.tr/yonet` → 404; `curl -sI https://kafem.molayazilim.com.tr/api/merkez/admin/state` ve `…/q/AAAAAAAAAA/x` → 404.
 - [ ] `curl -s -X POST -H 'Content-Type: application/json' --data-binary @buyuk.json https://merkez.molayazilim.com.tr/api/merkez/v1/relay/poll` (1 MB'lık herhangi bir dosya) → hemen `401 INSTALL_AUTH` (gövde okunmadan).
 - [ ] `curl -sI https://molayazilim.com.tr/api/merkez/admin/state` → 404; `curl -s https://merkez.molayazilim.com.tr/api/merkez/admin/state -H 'X-Forwarded-For: 127.0.0.1'` → 401 (giriş gerekli; başlık bir şey değiştirmez).
 - [ ] `nmap -Pn -p 1-65535 203.0.113.10` (yalnız kendi sunucunuza): yalnız 22, 80, 443 açık.

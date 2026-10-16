@@ -19,7 +19,7 @@ import './remote-support.css';
  *                        Done: "Kurulu ✓", one line.
  *   2 E-posta            the verified owner e-mail Mola Merkez keeps (server/owner-email.ts). None yet: typed and verified here
  *                        with a code sent to it (the application's address may be verified as it is). Changing it: Yedek.
- *   3 Cihaz eşleştirme   the Kafemi yönet address (<Merkez>/yonet) in big letters, Kopyala, a small QR of it: every device
+ *   3 Cihaz eşleştirme   the Kafemi yönet address (<Merkez>/yonet, or its own name kafem.… when Merkez names one) in big letters, Kopyala, a small QR of it: every device
  *                        signs in there with the e-mail, the password and the phone code (src/ReportsPhone.tsx).
  *   4 Eşleşmiş cihazlar  kind icon, name, last report; "Kaldır" asks the password (not the code: the lost phone may hold the app).
  *   5 Uzaktan yönetim    src/RemoteAdminSettings.tsx. Part of "Uzaktan erişim" since 15 Ekim (one service): whoever sees this

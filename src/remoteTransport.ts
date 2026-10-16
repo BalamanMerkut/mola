@@ -1,5 +1,6 @@
 import { adminOpen, deviceSession, openReply, readOpenAnswer, sealCall, type AdminAnswer, type TunnelRequest } from '../packages/domain/remote-admin-crypto';
 import { fromB64u, randomB64u } from '../packages/domain/remote-crypto';
+import { ownerHome } from './ownerHome';
 import type { Paired } from './phoneVault';
 
 /*
@@ -69,8 +70,11 @@ const realFetch: typeof fetch = (input, init) => (saved ?? globalThis.fetch)(inp
 
 /** True while this page runs the café's screens through the tunnel. */
 export const remoteMode = () => !!active;
-/** Where "back to the start" goes: on Mola Merkez's /yonet never "/" (that is Mola Yönetim there). */
-export const homePath = () => active || location.pathname === '/yonet' ? '/yonet' : '/';
+/**
+ * Where "back to the start" goes: on Mola Merkez's /yonet never "/" (that is Mola Yönetim there); on Kafemi yönet's own name
+ * (kafem.…, src/ownerHome.ts) its root "/".
+ */
+export const homePath = () => ownerHome() ?? (active || location.pathname === '/yonet' ? '/yonet' : '/');
 /** src/api.ts: the fetch to use (the tunnel only in remote mode). */
 export const transport = (): typeof fetch => active ? remoteFetch : realFetch;
 

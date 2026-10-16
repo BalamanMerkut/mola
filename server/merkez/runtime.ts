@@ -18,7 +18,7 @@ import type { JournalInput } from './journal.js';
 import type { WorkFolder } from './workfolder.js';
 import { devAllowList, pageHeaders } from '../web-serving.js';
 import { tunnelUpgrades, type GuestTunnelHub } from './guest-tunnel.js';
-import { noticePage } from './notice-page.js';
+import { missingPage } from './owner-host.js';
 import { ownerHtml } from './remote-admin.js';
 
 /*
@@ -32,7 +32,9 @@ import { ownerHtml } from './remote-admin.js';
  * (server/merkez/locked.ts) until the recovery code opens it; then the full Merkez starts in the same process.
  * kdf/backupDirectory/osLock: tests.
  */
-export type MerkezRuntimeOptions = { directory: string; port: number; host: '127.0.0.1' | '0.0.0.0'; serveBuild: boolean; buildDirectory?: string; protect?: boolean; initialPassword?: string; httpSecurity?: HttpSecurity; kdf?: KdfParams; backupDirectory?: string; releasesDirectory?: string; osLock?: MerkezLock };
+export type MerkezRuntimeOptions = { directory: string; port: number; host: '127.0.0.1' | '0.0.0.0'; serveBuild: boolean; buildDirectory?: string; protect?: boolean; initialPassword?: string; httpSecurity?: HttpSecurity; kdf?: KdfParams; backupDirectory?: string; releasesDirectory?: string; osLock?: MerkezLock;
+  /** Kafemi yönet's own origin (tests; default MERKEZ_OWNER_ORIGIN: server/merkez/owner-host.ts). */
+  ownerOrigin?: string | null };
 export async function startMerkez(options: MerkezRuntimeOptions) {
   const directory = resolve(options.directory), release = dataLock(directory, 'merkez');
   let store: MerkezStore | undefined, vite: ViteDevServer | undefined, backups: MerkezBackups | undefined, mail: MailQueue | undefined, recovery: MerkezRecovery | undefined, sweep: NodeJS.Timeout | undefined;
@@ -55,16 +57,19 @@ export async function startMerkez(options: MerkezRuntimeOptions) {
     // Köprü (server/merkez/relay.ts, remote-admin.ts) names another page: the café's own screens (index.html of this same
     // build) for Kafemi yönet (/yonet) and a Mola destek session.
     const page = (res: express.Response) => res.locals.molaPage === 'index.html' ? 'index.html' : 'merkez.html';
+    // Kafemi yönet is "/" on its own name (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts), else /yonet.
+    const ownerHome = (res: express.Response) => res.locals.molaOwnerHome === '/' ? '/' : '/yonet';
     // Mola Yönetim is the page at "/" only (its screens change inside the page). Any other address nobody answered is a plain
     // 404 page (0.1.21): an owner's mistyped or old address never lands on Mola Yönetim's sign-in.
     const known = (req: express.Request, res: express.Response) => !!res.locals.molaPage || (req.path === '/' && ['GET', 'HEAD'].includes(req.method));
     // 0.1.23: it offers the owner's own page (typed variants of /yonet and /raporlarim never get here: server/merkez/remote-admin.ts).
-    const missing = (res: express.Response) => res.status(404).type('html').set('Cache-Control', 'no-store').send(noticePage({ status: 'missing', tr: 'Bu sayfa bulunamadı.', en: 'This page could not be found.', link: { href: '/yonet', text: 'Kafemi yönet’e git' } }));
+    // With Kafemi yönet on its own name (MERKEZ_OWNER_ORIGIN) the link goes there (server/merkez/owner-host.ts).
+    const missing = (res: express.Response) => res.status(404).type('html').set('Cache-Control', 'no-store').send(missingPage(typeof app.locals.ownerOrigin === 'string' ? app.locals.ownerOrigin : '/yonet'));
     if (options.serveBuild) {
       app.use(express.static(build, { index: false }));
       app.use((req, res) => {
         if (!known(req, res)) { missing(res); return; }
-        if (res.locals.molaOwner) { res.status(200).type('html').set('Cache-Control', 'no-cache').send(ownerHtml(readFileSync(join(build, 'index.html'), 'utf8'))); return; }
+        if (res.locals.molaOwner) { res.status(200).type('html').set('Cache-Control', 'no-cache').send(ownerHtml(readFileSync(join(build, 'index.html'), 'utf8'), ownerHome(res))); return; }
         res.sendFile(page(res), { root: build });
       });
     } else {
@@ -73,7 +78,7 @@ export async function startMerkez(options: MerkezRuntimeOptions) {
       app.use(vite!.middlewares);
       app.use(async (req, res, next) => {
         if (!known(req, res)) { missing(res); return; }
-        try { const html = readFileSync(join(process.cwd(), page(res)), 'utf8'); res.status(200).set('Content-Type', 'text/html').end(await vite!.transformIndexHtml(req.originalUrl, res.locals.molaOwner ? ownerHtml(html) : html)); }
+        try { const html = readFileSync(join(process.cwd(), page(res)), 'utf8'); res.status(200).set('Content-Type', 'text/html').end(await vite!.transformIndexHtml(req.originalUrl, res.locals.molaOwner ? ownerHtml(html, ownerHome(res)) : html)); }
         catch (error) { next(error); }
       });
     }
@@ -119,7 +124,7 @@ export async function startMerkez(options: MerkezRuntimeOptions) {
     // Otomatik güncelleme: uploaded release bundles (installed: ...\Mola Yonetim\merkez-guncellemeler; development: .local/merkez-guncellemeler).
     // Destek ekleri: installed ...\Mola Yonetim\merkez-ekler; development .local/merkez-ekler. Not part of the backup.
     const app = createMerkezApp(store, { httpSecurity: options.httpSecurity, backups, recovery, releasesDirectory: options.releasesDirectory ?? beside('merkez-guncellemeler'), attachmentsDirectory: beside('merkez-ekler'),
-      keyProtection: () => guard.view(code.view().confirmed), ...(options.serveBuild ? { buildDirectory: build } : {}) });
+      keyProtection: () => guard.view(code.view().confirmed), ...(options.serveBuild ? { buildDirectory: build } : {}), ...(options.ownerOrigin !== undefined ? { ownerOrigin: options.ownerOrigin } : {}) });
     files = app.locals.attachments as Attachments; tick();
     // Çalışma klasörü (C:\MolaCalisma for the installed Mola Yönetim, or the vendor's choice): kept up to date while Merkez runs.
     workFolder = app.locals.workFolder as WorkFolder; workFolder.start();

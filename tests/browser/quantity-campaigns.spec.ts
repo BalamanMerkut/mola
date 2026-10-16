@@ -12,7 +12,7 @@ test('quantity offer follows basket changes and saved terms on order edits, with
   await page.getByRole('button', { name: 'Kampanya ekle', exact: true }).click();
   const editor = page.getByRole('dialog');
   await editor.getByLabel('Kampanya adı').fill('İki çay fırsatı');
-  await editor.getByLabel('İndirim türü').selectOption('fixed');
+  await editor.getByLabel('Kampanya türü').selectOption('fixed');
   await editor.getByLabel('İndirim tutarı (TL)').fill('10');
   await editor.getByRole('checkbox', { name: 'Adet koşulu ekle' }).check();
   await editor.getByLabel('En az kaç adet?').fill('21');

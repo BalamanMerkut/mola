@@ -5,6 +5,7 @@ import { deliveryText, externalHeading } from './platforms.js';
 import type { LineChange, Order, OrderLine, State } from './types.js';
 import { changeSideText } from './lines.js';
 import { productVat, receiptVat, vatSettings } from './vat.js';
+import { dealOff, lineDealLabel, unitsCost } from './deals.js';
 
 /** document: an ordinary office printer (laser / inkjet) that cannot read receipt-printer commands; it gets plain text through its own driver. */
 export type PrinterConnection = { type: 'network'; host: string; port: number } | { type: 'windows'; printerName: string; document?: boolean };
@@ -154,13 +155,15 @@ function billVat(s: State, lines: OrderLine[]): Op[] {
   const text = parts.map(p => `%${p.rate}: ${printMoney(p.vat)}`).join(' · ');
   return parts.length === 1 ? [{ text: `KDV dahildir · ${text}`, align: 'center' }] : [{ text: 'KDV dahildir', align: 'center' }, { text, align: 'center' }];
 }
+/** Under a line its account campaigns, already taken off the line's amount: "  2 al 1 öde: -35 TL", "  Hediye: Americano: -110 TL". */
+const dealLines = (l: OrderLine): Op[] => (l.deals ?? []).map(d => ({ text: `  ${lineDealLabel(d, l.name)}: ${printMoney(-d.units * d.off)}` }));
 /** Informational bill for the guest. Not a fiscal receipt: the cash register still issues that. */
 export function billTicket(s: State, accountId: string, now: Date): Ticket {
   const account = s.accounts.find(a => a.id === accountId)!;
   const table = s.tables.find(t => t.id === account.tableId)?.name ?? 'Masa';
   const orders = s.orders.filter(o => o.accountId === accountId && !['cancelled', 'awaiting_approval'].includes(o.status));
   const { total, paid, balance, depositCredit = 0 } = balances(s, accountId);
-  const discount = orders.flatMap(o => o.lines).reduce((n, l) => n + ((l.originalUnitPrice ?? l.unitPrice) - l.unitPrice) * l.quantity, 0);
+  const discount = orders.flatMap(o => o.lines).reduce((n, l) => n + ((l.originalUnitPrice ?? l.unitPrice) - l.unitPrice) * l.quantity + dealOff(l), 0);
   return [
     { text: s.name, align: 'center', bold: true, large: true },
     // Only information on the slip (11 Ekim, sahibin kararı): a two-word title tells it from a fiscal receipt, no legal sentences.
@@ -169,7 +172,7 @@ export function billTicket(s: State, accountId: string, now: Date): Ticket {
     // The seated reservation's name, so staff and guest see whose bill it is.
     ...(account.guest?.name ? [{ text: account.guest.name, align: 'center' } as Op] : []),
     { rule: true },
-    ...orders.flatMap(o => o.lines).flatMap(l => [{ pair: [itemName(l, l.quantity), printMoney(l.total)] } as Op, ...(l.optionNames.length ? [{ text: `  ${l.optionNames.join(', ')}` } as Op] : [])]),
+    ...orders.flatMap(o => o.lines).flatMap(l => [{ pair: [itemName(l, l.quantity), printMoney(l.total)] } as Op, ...(l.optionNames.length ? [{ text: `  ${l.optionNames.join(', ')}` } as Op] : []), ...dealLines(l)]),
     { rule: true },
     ...(discount > 0 ? [{ pair: ['Kampanya indirimi', printMoney(-discount)] } as Op] : []),
     { pair: ['TOPLAM', printMoney(total)], bold: true },
@@ -189,11 +192,13 @@ export function paymentTicket(s: State, paymentId: string, now: Date): Ticket {
   // A seated reservation's kapora also pays the bill (as a payment once the bill closed, as a credit before).
   const deposit = account.deposit ? account.deposit.paymentId ? s.payments.find(p => p.id === account.deposit!.paymentId && p.id !== payment.id && !earlier.includes(p))?.amount ?? 0 : balances(s, account.id).depositCredit ?? 0 : 0;
   const remaining = balances(s, account.id).total - earlier.reduce((n, p) => n + p.amount, 0) - payment.amount - deposit;
-  const itemLine = (line: OrderLine, quantity: number, total: number) => [{ pair: [itemName(line, quantity), printMoney(total)] } as Op, ...(line.optionNames.length ? [{ text: `  ${line.optionNames.join(', ')}` } as Op] : [])];
+  const itemLine = (line: OrderLine, quantity: number, total: number, deals: Op[] = []) => [{ pair: [itemName(line, quantity), printMoney(total)] } as Op, ...(line.optionNames.length ? [{ text: `  ${line.optionNames.join(', ')}` } as Op] : []), ...deals];
+  // Pieces of a line with free ones (deals.ts) were charged full-price ones first: what earlier payments took counts.
+  const before = (sel: { orderId: string; lineId: string }) => earlier.flatMap(p => p.selections ?? []).filter(x => x.orderId === sel.orderId && x.lineId === sel.lineId).reduce((n, x) => n + x.quantity, 0);
   // Item lines only when they are known: chosen items, or the single payment that settled the whole bill.
   const items: Op[] = payment.selections
-    ? payment.selections.flatMap(sel => { const line = orders.find(o => o.id === sel.orderId)?.lines.find(l => l.id === sel.lineId); return line ? itemLine(line, sel.quantity, line.unitPrice * sel.quantity) : []; })
-    : !earlier.length && remaining === 0 ? orders.flatMap(o => o.lines).flatMap(l => itemLine(l, l.quantity, l.total))
+    ? payment.selections.flatMap(sel => { const line = orders.find(o => o.id === sel.orderId)?.lines.find(l => l.id === sel.lineId); return line ? itemLine(line, sel.quantity, unitsCost(line, before(sel), sel.quantity)) : []; })
+    : !earlier.length && remaining === 0 ? orders.flatMap(o => o.lines).flatMap(l => itemLine(l, l.quantity, l.total, dealLines(l)))
     : [{ text: 'Hesap tutarından kısmi ödeme' }];
   return [
     { text: s.name, align: 'center', bold: true, large: true },

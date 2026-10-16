@@ -24,6 +24,14 @@ export const testMenuHosts = () => process.env.MOLA_TEST_TUNNEL === '1' && proce
  * never breaks the heartbeat; it is said once in the log.
  */
 export function menuOrigin(publicOrigin?: string, siteOrigin?: string, value = process.env.MERKEZ_MENU_ORIGIN) {
+  return separateOrigin('MERKEZ_MENU_ORIGIN', 'https://menu.molayazilim.com.tr', value, [publicOrigin, siteOrigin]);
+}
+/**
+ * A name of its own for one part of Merkez (the guest menu here, Kafemi yönet in owner-host.ts): an https root address (http
+ * only for the browser tests' *.localhost), never one of the `taken` names. Unset or wrong: undefined (a wrong value is said
+ * once in the log and never breaks anything).
+ */
+export function separateOrigin(setting: string, example: string, value: string | undefined, taken: (string | undefined)[]) {
   const raw = value?.trim();
   if (!raw) return undefined;
   let origin: string | undefined;
@@ -34,14 +42,14 @@ export function menuOrigin(publicOrigin?: string, siteOrigin?: string, value = p
     } catch { /* not an address */ }
   }
   const name = origin ? new URL(origin).hostname.toLowerCase() : '';
-  const taken = [publicOrigin, siteOrigin].filter((o): o is string => !!o).map(o => new URL(o).hostname.toLowerCase());
-  if (!origin || taken.includes(name)) { warn(raw); return undefined; }
+  const names = taken.filter((o): o is string => !!o).map(o => new URL(o).hostname.toLowerCase());
+  if (!origin || names.includes(name)) { warn(setting, example, raw); return undefined; }
   return origin;
 }
 const warned = new Set<string>();
-function warn(raw: string) {
-  if (warned.has(raw)) return; warned.add(raw);
-  console.error(`MERKEZ_MENU_ORIGIN yok sayıldı (${raw.slice(0, 80)}): Mola Merkez'in ve web sitesinin adından farklı bir https kök adresi olmalı, ör. https://menu.molayazilim.com.tr`);
+function warn(setting: string, example: string, raw: string) {
+  if (warned.has(`${setting}:${raw}`)) return; warned.add(`${setting}:${raw}`);
+  console.error(`${setting} yok sayıldı (${raw.slice(0, 80)}): Mola Merkez'in, web sitesinin ve öteki adreslerin adından farklı bir https kök adresi olmalı, ör. ${example}`);
 }
 
 /** The guest menu's name (host without port) when the menu runs on its own origin. */

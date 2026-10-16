@@ -59,7 +59,7 @@ export const features: Feature[] = [
     description: 'Sosyal medya bağlantıları, menüde takip logoları, kalıcı QR kartları (Instagram, Google ve diğerleri).' },
   // 15 Ekim (owner): one service (before: Uzaktan raporlar ₺200 + Uzaktan yönetim ₺100). The id stays 'remote-reports'.
   { id: 'remote-reports', name: 'Uzaktan erişim', group: 'Uzaktan', monthly: 130 * TL,
-    description: 'İşletme sahibi telefonundan ya da laptopundan merkez.molayazilim.com.tr/yonet adresinden satışları ve raporları görür; kasa açıkken menü, ayarlar ve bütün ekranları yönetir. Uçtan uca şifreli; kasa kapalıyken son durum.' },
+    description: 'İşletme sahibi telefonundan ya da laptopundan kafem.molayazilim.com.tr adresinden satışları ve raporları görür; kasa açıkken menü, ayarlar ve bütün ekranları yönetir. Uçtan uca şifreli; kasa kapalıyken son durum.' },
   { id: 'remote-admin', name: 'Uzaktan yönetim', group: 'Uzaktan', monthly: 0, requires: ['remote-reports'], partOf: 'remote-reports',
     description: 'Uzaktan erişimin parçası: kasa açıkken şifre ve telefon koduyla kafenin bütün ekranları; kafede Ayarlar → Uzaktan erişim’den açılır.' },
   { id: 'email-reports', name: 'E-posta raporları', group: 'Uzaktan', monthly: 30 * TL,

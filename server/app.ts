@@ -12,6 +12,7 @@ import { PersistentFailures } from './persistent-failures.js';
 import { clientKey, configureHttpSecurity, directLoopback, sessionCookie, type HttpSecurity } from './http-security.js';
 import { campaignRoutes } from './campaigns.js';
 import { saleProducts } from '../packages/domain/campaigns.js';
+import { lineDealLabel, unitCharges } from '../packages/domain/deals.js';
 import { billVatTotal } from '../packages/domain/vat.js';
 import { markTableClean, isOrderPaid } from '../packages/domain/engine.js';
 import { MerkezLink } from './kafe-link.js';
@@ -121,7 +122,8 @@ function cookies(req: Request) {
 }
 /** The kitchen's copy of a menu item (8 Ekim denetimi K11): it never shows money, so it is not sent any (price, option extras, campaigns). */
 export function kitchenProduct<P extends { price: number; groups?: { options: { extra: number }[] }[]; discounts?: unknown[] }>(p: P): P {
-  return { ...p, price: 0, ...(p.groups ? { groups: p.groups.map(g => ({ ...g, options: g.options.map(o => ({ ...o, extra: 0 })) })) } : {}), ...(p.discounts ? { discounts: [] } : {}) };
+  const { deals: _deals, ...rest } = p as P & { deals?: unknown };
+  return { ...rest, price: 0, ...(p.groups ? { groups: p.groups.map(g => ({ ...g, options: g.options.map(o => ({ ...o, extra: 0 })) })) } : {}), ...(p.discounts ? { discounts: [] } : {}) } as P;
 }
 /**
  * The café server (Kafe role). Licences come only from Mola Merkez, signed (server/kafe-link.ts); there is no admin panel here.
@@ -792,7 +794,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
     const account = s.accounts.find(v => v.id === req.params.id && v.status === 'open');
     if (!account) throw new DomainError('NOT_FOUND', 'Hesap bulunamadı.', 404);
     const paid = s.payments.filter(p => p.accountId === account.id);
-    const items = s.orders.filter(o => o.accountId === account.id && !['cancelled', 'awaiting_approval'].includes(o.status)).flatMap(o => o.lines.map(l => ({ orderId: o.id, lineId: l.id, name: l.name, orderNumber: o.number, guestLabel: o.guestLabel, movedFrom: o.tableMovedFrom, options: l.optionNames, unitPrice: l.unitPrice, quantity: l.quantity, ...(l.grams ? { grams: l.grams } : {}), remaining: l.quantity - paid.flatMap(p => p.selections ?? []).filter(p => p.orderId === o.id && p.lineId === l.id).reduce((n, p) => n + p.quantity, 0) })));
+    const items = s.orders.filter(o => o.accountId === account.id && !['cancelled', 'awaiting_approval'].includes(o.status)).flatMap(o => o.lines.map(l => ({ orderId: o.id, lineId: l.id, name: l.name, orderNumber: o.number, guestLabel: o.guestLabel, movedFrom: o.tableMovedFrom, options: l.optionNames, unitPrice: l.unitPrice, quantity: l.quantity, ...(l.grams ? { grams: l.grams } : {}), ...((done: number) => ({ remaining: l.quantity - done, ...(l.deals?.length ? { costs: unitCharges(l).slice(done), deals: l.deals.map(d => `${lineDealLabel(d, l.name)} · ${d.units} adet`) } : {}) }))(paid.flatMap(p => p.selections ?? []).filter(p => p.orderId === o.id && p.lineId === l.id).reduce((n, p) => n + p.quantity, 0)) })));
     res.json({ version: account.version, unallocated: paid.some(p => !p.selections) || !!(account.deposit && !account.deposit.settledAt), items });
   });
   app.post('/api/staff/orders/review', (req, res) => {

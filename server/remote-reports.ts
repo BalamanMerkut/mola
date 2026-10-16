@@ -311,9 +311,14 @@ export class RemoteReports {
     })().finally(() => { this.pushing = undefined; });
     return this.pushing;
   }
-  /** Where devices sign in: "Kafemi yönet" (/yonet, 0.1.23: the reports and the full screens on one page) on Mola Merkez's public address (null before activation). */
+  /**
+   * Where devices sign in: "Kafemi yönet" (/yonet, 0.1.23: the reports and the full screens on one page) on Mola Merkez's
+   * public address, or its own address when Merkez named one (https://kafem.molayazilim.com.tr: the page is its root; null
+   * before activation).
+   */
   address() {
     const r = this.link.read(); if (!r) return null;
+    if (r.ownerHost?.base) return r.ownerHost.base;
     try { return new URL('/yonet', `${(r.lanLink?.base ?? this.link.url).replace(/\/+$/, '')}/`).toString(); } catch { return null; }
   }
   view(tenant: string) {

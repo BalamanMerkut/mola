@@ -214,11 +214,12 @@ function sahip() {
     h3('Kampanya kurmak'),
     adimlar([
       'Kampanyalar → <b>Kampanya ekle</b>.',
-      'İndirim: yüzde ya da TL. Hangi ürünler?',
+      'Kampanya türü: yüzde ya da TL indirim, <b>X al Y öde</b>, <b>İkincisi indirimli</b> ya da <b>Hediye ürün</b>. Hangi ürünler?',
       'Ne zaman: tarih aralığı, haftanın belli gün ve saatleri ya da ayın bir günü.',
       'İsterseniz adet koşulu ("4 çay ve üzeri"). Yandaki kutu müşterinin göreceği fiyatı gösterir. Kaydedin.',
     ]),
     p('Kampanya kendiliğinden başlar ve biter. Bitince sonucu bir pencerede görürsünüz; <b>Kampanyayı yinele</b> aynısını yeni tarihle açar.'),
+    p('"2 al 1 öde", "İkincisi %50" ve "Hediye ürün" masanın bütün hesabına bakar; bedava olan en ucuz üründür. Hediye kendiliğinden mutfağa gitmez: garson ekranında <b>Kampanya: Americano bedava · Ekle</b> çıkar.'),
 
     h2('Stok'),
     hizmet('stock', 'Malzeme bitmeden haber alırsınız, ürün başına gerçek kârınızı görürsünüz.'),
@@ -352,11 +353,11 @@ function uzaktan() {
     h2('Kafemi yönet: raporlar her yerden'),
     hizmet('remote-reports', 'Kafede olmasanız da bugünün satışını ve kasayı telefonunuzdan ya da laptopunuzdan görürsünüz; kasa açıkken kafeyi oradan yönetirsiniz.'),
     sekil('t-raporlarim', { genislik: 220, yan: true, aciklamalar: ['Bugünün satışı: nakit, kart, sipariş sayısı.'] }),
-    p('Kasada bir kez: <b>Ayarlar → Uzaktan erişim</b>. Sonra her yerden tek adres: <b>merkez.molayazilim.com.tr/yonet</b>.'),
+    p('Kasada bir kez: <b>Ayarlar → Uzaktan erişim</b>. Sonra her yerden tek adres: <b>kafem.molayazilim.com.tr</b>.'),
     adimlar([
       '<b>1 · Telefon kodu</b>: telefona ücretsiz bir doğrulama uygulaması kurun, ekrandaki QR kodu okutun, uygulamadaki 6 haneli kodu yazın. Kurtarma kodlarını kâğıda yazın.',
       '<b>2 · E-posta</b>: adresinizi yazın, gelen 6 haneli kodu girin.',
-      'Telefonunuzda ya da laptopunuzda <b>merkez.molayazilim.com.tr/yonet</b> adresini açın. E-posta ve şifrenizi yazıp <b>Devam</b>\'a basın.',
+      'Telefonunuzda ya da laptopunuzda <b>kafem.molayazilim.com.tr</b> adresini açın. E-posta ve şifrenizi yazıp <b>Devam</b>\'a basın.',
       'Sonraki ekranda doğrulama uygulamasındaki 6 haneli kodu yazıp <b>Giriş yap</b>\'a basın. Hangi cihazla önce girdiğiniz fark etmez.',
     ]),
     p('Cihaz kendine ad verir (ör. "iPhone · 15 Ekim") ve hatırlanır. Yeni cihaz girerken kasa bilgisayarı açık olmalı; kasa kapalıyken sayfa "Kasa bilgisayarı kapalı · Son durum" ile son raporu gösterir.'),
@@ -366,7 +367,7 @@ function uzaktan() {
     p('<b>Uzaktan erişim</b> hizmetine dahildir; bir kez kafede açılır. Kafeye gitmeden fiyat değiştirir, kampanya açar, çalışan hesabı kapatırsınız.'),
     adimlar([
       '<b>5 · Uzaktan yönetim</b>\'de <b>Aç</b>: şifre ve 6 haneli kod. Bu adım yalnız kafede yapılır.',
-      'Aynı adres, <b>merkez.molayazilim.com.tr/yonet</b>: kasa açıkken girişten sonra kafenin bütün ekranları doğrudan açılır, ikinci kez sorulmaz.',
+      'Aynı adres, <b>kafem.molayazilim.com.tr</b>: kasa açıkken girişten sonra kafenin bütün ekranları doğrudan açılır, ikinci kez sorulmaz.',
       'Gün bitince (05:00) ya da oturumu kapatınca yalnız şifre ve telefon kodu sorulur. Kasa kapanırsa son rapor görünür; kasa açılınca <b>Kafeyi yönet</b>\'e basın.',
     ]),
     p('Her uzaktan giriş size bildirilir. Yedekten geri yükleme, kurtarma kodu, cihaz kaldırma, telefon kodunu kurma ve güncelleme kurma yalnız kafede yapılır.'),

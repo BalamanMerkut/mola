@@ -177,7 +177,12 @@ export type SyncResponse = { v: 1; serverTime: string; licenses: SignedLicense[]
    * Kalıcı bağlantı, only for a café that sent `lan`: each of its businesses' code for `<base>/k/<kod>` (given once, never
    * changed) and the public address it is on (the same as `social.base`; missing: the café's Merkez address).
    */
-  lanLink?: { base?: string; codes: { tenantId: string; code: string }[] } };
+  lanLink?: { base?: string; codes: { tenantId: string; code: string }[] };
+  /**
+   * Kafemi yönet's own address (MERKEZ_OWNER_ORIGIN, e.g. https://kafem.molayazilim.com.tr; server/merkez/owner-host.ts): the
+   * owner's page is its root "/". Missing (no such name, or an older Merkez): <Merkez>/yonet as before.
+   */
+  ownerHost?: { base: string } };
 /** A release Merkez offers one café: its signed manifest and archive come from /releases/:id/manifest and /paket. */
 export type UpdateOffer = { id: string; version: string; size: number; notes: string };
 /** Optional heartbeat fields of this version: an older Merkez (strict schema) never lists them, so it never gets them. */

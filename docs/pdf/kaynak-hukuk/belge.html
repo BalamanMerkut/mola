@@ -341,7 +341,7 @@
 <h2 id="b7-3" data-toc="no">7.3 Sahibin uzaktan erişimi</h2>
 <ul>
   <li><strong>Hazırlık:</strong> sahip kafedeki bilgisayarda (Ayarlar → Uzaktan erişim) telefon kodunu (TOTP) kurar ve e-postasını doğrular. Bunu yalnız sahip yapabilir; hizmet pakette olmalıdır.</li>
-  <li><strong>Giriş:</strong> herhangi bir cihazdan <code>merkez.molayazilim.com.tr/yonet</code>: önce e-posta ve şifre, sonra telefon kodu. Şifreyi ve kodu kafe denetler; yanlış denemeler sınırlıdır. En çok 3 cihaz; her yeni cihaz sahibe bildirilir. Cihazın özel anahtarı cihazdan çıkmaz.</li>
+  <li><strong>Giriş:</strong> herhangi bir cihazdan <code>kafem.molayazilim.com.tr</code>: önce e-posta ve şifre, sonra telefon kodu. Şifreyi ve kodu kafe denetler; yanlış denemeler sınırlıdır. En çok 3 cihaz; her yeni cihaz sahibe bildirilir. Cihazın özel anahtarı cihazdan çıkmaz.</li>
   <li><strong>Raporlar:</strong> günün toplamları, ödeme türleri, en çok satanlar, açık hesaplar, son kasa kapanışı, son 30 gün. Kasa kapalıyken son durum gösterilir.</li>
   <li><strong>Çıkış:</strong> cihazı kilitler; yeniden giriş e-posta ve şifreyle. Kasa kapalıyken şifre cihazdaki yerel doğrulayıcıyla denetlenir (şifrenin kendisi değil, PBKDF2 özeti). "Bu cihazı tamamen kaldır" cihazı unutturur.</li>
   <li><strong>Uzaktan yönetim:</strong> varsayılan kapalı; yalnız kafedeki bilgisayarda şifre ve telefon koduyla açılır, her yerden kapatılır. Kasa açıkken kafenin ekranlarını sahip olarak açar; her giriş sahibe bildirilir. Uzaktan yapılamaz: yedekten geri yükleme, kurtarma kodu, cihaz kaldırma, telefon kodunu kurma ya da sıfırlama, uzaktan yönetimi ya da destek iznini açma, güncelleme kurma. Kafede oturum kaydı tutulur (cihaz adı, başlangıç, bitiş; IP yok).</li>

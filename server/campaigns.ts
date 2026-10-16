@@ -6,6 +6,7 @@ import type { Actor } from '../packages/domain/types.js';
 import type { Store } from './store.js';
 import { campaignTimingError, campaignUsage, campaignViews, weightRuleMessage, type CampaignSchedule, type CampaignScope } from '../packages/domain/campaigns.js';
 import { soldByWeight } from '../packages/domain/lines.js';
+import { isDeal } from '../packages/domain/deals.js';
 import { menuCategories } from '../packages/domain/categories.js';
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 // null clears a weekly schedule; leaving it out keeps the saved one, so an older open screen cannot drop it unseen.
@@ -15,9 +16,14 @@ const schedule = z.union([
   z.object({ monthDay: z.number().int().min(1).max(31), from: hhmm.optional(), to: hhmm.optional() }).strict(),
 ]).nullable().optional();
 const campaignBase = z.object({ schedule, maxQuantity: z.number().int().min(1).max(1_000_000).nullable().optional(), minQuantity: z.number().int().min(1).max(20).optional(), id: z.string().optional(), name: z.string().trim().min(2).max(80), productIds: z.array(z.string()).max(200), categories: z.array(z.string().max(80)).max(40).optional(), excludedProductIds: z.array(z.string()).max(200).optional(), startsAt: z.iso.datetime(), endsAt: z.iso.datetime().nullable(), enabled: z.boolean(), combine: z.boolean() });
+// Account campaigns (packages/domain/deals.ts): "X al Y öde", "İkincisi %N", "Hediye ürün". No quantity condition, no combining.
+const deal = { minQuantity: z.literal(1).optional(), combine: z.literal(false), amount: z.never().optional() };
 const campaignInput = z.union([
   campaignBase.extend({ kind: z.literal('percent').optional(), percent: z.number().int().min(1).max(90), amount: z.never().optional() }),
   campaignBase.extend({ kind: z.literal('fixed'), amount: z.number().int().min(1).max(100_000_000), percent: z.never().optional() }),
+  campaignBase.extend({ ...deal, kind: z.literal('buyPay'), buy: z.number().int().min(2).max(10), pay: z.number().int().min(1).max(9), percent: z.never().optional() }),
+  campaignBase.extend({ ...deal, kind: z.literal('second'), percent: z.number().int().min(1).max(100) }),
+  campaignBase.extend({ ...deal, kind: z.literal('gift'), buy: z.number().int().min(1).max(10), giftProductId: z.string().max(100), giftQuantity: z.number().int().min(1).max(5).optional(), percent: z.never().optional() }),
 ]);
 export function campaignRoutes(app: Express, store: Store, actor: (req: Request) => Actor, now: () => Date) {
   // Mola destek (`support`, server/support-session.ts) edits campaigns too, but never sees how many were sold under them.
@@ -37,9 +43,18 @@ export function campaignRoutes(app: Express, store: Store, actor: (req: Request)
       } else {
         if (!c.productIds.length || new Set(c.productIds).size !== c.productIds.length || c.productIds.some(id => !s.products.some(p => p.id === id && p.published !== false))) throw new DomainError('INVALID_PRODUCTS', 'Yayındaki ürünlerden seçim yapın.');
         // Category campaigns skip weighed products for quantity conditions by themselves; chosen products are refused instead.
-        const weighed = (c.minQuantity ?? 1) > 1 ? s.products.filter(p => c.productIds.includes(p.id) && soldByWeight(p)) : [];
+        const weighed = (c.minQuantity ?? 1) > 1 || isDeal(c) ? s.products.filter(p => c.productIds.includes(p.id) && soldByWeight(p)) : [];
         if (weighed.length) throw new DomainError('QUANTITY_RULE_WEIGHT', weightRuleMessage(weighed.map(p => p.name)));
       }
+      if (c.kind === 'buyPay' && c.pay >= c.buy) throw new DomainError('INVALID_DEAL', 'Ödenen adet, alınan adetten az olmalı (ör. 3 al 2 öde).');
+      if (c.kind === 'gift') {
+        const gift = s.products.find(p => p.id === c.giftProductId && p.published !== false);
+        if (!gift) throw new DomainError('INVALID_PRODUCTS', 'Hediye ürünü menüde bulunamadı. Yayındaki ürünlerden seçin.');
+        if (soldByWeight(gift)) throw new DomainError('QUANTITY_RULE_WEIGHT', 'Hediye ürünü kiloyla satılan bir ürün olamaz.');
+      }
+      // An edit keeps a campaign's kind: an older open screen (percent/TL only) cannot turn an account campaign into a price one.
+      const before = s.campaigns?.find(v => v.id === c.id);
+      if (before && isDeal(before) !== isDeal(c)) throw new DomainError('KIND_FIXED', 'Kampanya türü değiştirilemez. Yeni bir kampanya ekleyin.', 409);
       if (c.id && !s.campaigns?.some(v => v.id === c.id)) throw new DomainError('NOT_FOUND', 'Kampanya bulunamadı.', 404);
       if (!c.id && (s.campaigns?.length ?? 0) >= 100) throw new DomainError('LIMIT', 'En fazla 100 kampanya kaydı olabilir.');
       const at = now().toISOString(); const previous = s.campaigns?.find(v => v.id === c.id);

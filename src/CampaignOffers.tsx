@@ -2,6 +2,7 @@ import { Tags } from 'lucide-react';
 import { categoryOfferText, type DiscountOffer } from '../packages/domain/campaigns';
 import { soldByWeight, weightOffers } from '../packages/domain/lines';
 import type { Product } from '../packages/domain/types';
+import { dealOfferText } from '../packages/domain/deals';
 import './campaign-offers.css';
 /**
  * Category campaigns on the photo menu (guest, preview): "Tatlılarda %10 indirim" on each covered product card and, above
@@ -20,4 +21,10 @@ export function CategoryOfferStrip({ products, en, label }: { products: readonly
   for (const p of products) for (const o of categoryOffers(p)) if (!offers.has(o.id)) offers.set(o.id, o);
   if (!offers.size) return null;
   return <ul className="category-offer-strip" aria-label={en ? 'Offers' : 'Kampanyalar'}>{[...offers.values()].map(o => <li key={o.id}><Tags size={15} strokeWidth={1.8} aria-hidden="true" /><span>{text(o, en, label)}</span>{o.remainingQuantity !== undefined && <small>{en ? `${o.remainingQuantity} left` : `${o.remainingQuantity} adet kaldı`}</small>}</li>)}</ul>;
+}
+/** Account campaigns on a product card (packages/domain/deals.ts): "2 al 1 öde", "2 Demleme Çay alana Americano bedava", and on
+ * the gift itself "2 Demleme Çay alana bedava". The menu price stays as it is: these are counted on the bill. */
+export function DealOfferBadge({ product, en, label }: { product: Product; en: boolean; label: Label }) {
+  const deals = product.deals ?? [];
+  return deals.length ? <span className="category-offer-badge deal-offer-badge">{deals.map(o => dealOfferText(o, en, label)).join(' · ')}</span> : null;
 }

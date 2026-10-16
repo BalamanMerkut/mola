@@ -31,15 +31,18 @@ export function ownerPage(path: string) {
 
 /**
  * index.html as Kafemi yönet (server/merkez/runtime.ts): its own title and Home Screen name, not indexed, no referrer, and no
- * café manifest or standalone mode (the manifest's start address "/" is Mola Yönetim on Merkez).
+ * café manifest or standalone mode (the manifest's start address "/" is Mola Yönetim on Merkez). `home`: where the page is,
+ * "/yonet" on Merkez's own name or "/" on its own name (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts); the page reads it
+ * (src/ownerHome.ts) to know it is Kafemi yönet at "/" and where "back to the start" goes.
  */
-export const ownerHtml = (html: string) => html
+export const ownerHtml = (html: string, home: '/' | '/yonet' = '/yonet') => html
   .replace(/<link rel="manifest"[^>]*>\s*/, '').replace(/<meta name="(apple-)?mobile-web-app-capable"[^>]*>\s*/g, '')
   .replace(/<title>[^<]*<\/title>/, '<title>Kafemi yönet · Mola</title>')
   .replace(/(name="(apple-mobile-web-app-title|application-name)" content=")[^"]*/g, '$1Kafemi yönet')
-  .replace('<head>', '<head>\n    <meta name="robots" content="noindex" />\n    <meta name="referrer" content="no-referrer" />');
+  .replace('<head>', `<head>\n    <meta name="robots" content="noindex" />\n    <meta name="referrer" content="no-referrer" />\n    <meta name="mola-owner-home" content="${home}" />`);
 export function remoteAdminRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
   // Old and typed addresses (a bookmark of /raporlarim keeps working; the same origin, so the device's keys are the same).
+  // With Kafemi yönet on its own name (MERKEZ_OWNER_ORIGIN) these never get here: 404 on Merkez's name (server/merkez/owner-host.ts).
   app.use((req, res, next) => {
     const to = ['GET', 'HEAD'].includes(req.method) ? ownerPage(req.path) : undefined;
     if (!to) return next();
