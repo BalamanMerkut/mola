@@ -24,6 +24,7 @@ import { floorTables } from '../packages/domain/takeaway.js';
 import { cleanArea, sameArea } from '../packages/domain/table-sections.js';
 import { sectorHeroes, sectorOf, sectors } from '../packages/domain/sector.js';
 import { loadSectorMenu, untouchedStarterMenu } from './sector-templates.js';
+import { addTemplatePhotos } from './template-photos.js';
 
 // `day` (YYYY-MM-DD, Turkish date) and `method` are optional, so older pending expense requests keep their fingerprint.
 /** "Tümü" in Giderler lists this many of the newest expenses (and corrections); a year shows all of its own. */
@@ -314,7 +315,8 @@ export function managementRoutes(app: Express, store: Store, actorFor: (req: Req
       if (b.insideCount !== undefined) floorTables(s).forEach((table, i) => { table.area = i < b.insideCount! ? 'inside' : 'outside'; });
       // The sector's starter menu replaces only a starter menu nobody touched; edits, campaigns and sales are never thrown away.
       const sector = b.sector ?? sectorOf(s), menuLoaded = sector !== 'cafe' && untouchedStarterMenu(s);
-      if (menuLoaded) loadSectorMenu(s, sector);
+      // With the menu its photos (server/template-photos.ts); the café menu's came with the business (server/kafe-link.ts).
+      if (menuLoaded) { loadSectorMenu(s, sector); addTemplatePhotos(store.directory, s.tenantId, s.products); }
       if (sector !== 'cafe') s.menuHero ??= sectorHeroes[sector];
       s.sector = sector;
       s.paymentMode = b.paymentMode ?? 'after_service'; s.cleaningEnabled = b.cleaningEnabled ?? false; s.waiterApproval = b.waiterApproval ?? false; s.autoApproveQr = false; s.name = b.name; s.changeSeconds = b.changeSeconds; s.commissionBps = b.commissionBps; s.setupCompleted = true; s.businessRevision = b.version + 1;

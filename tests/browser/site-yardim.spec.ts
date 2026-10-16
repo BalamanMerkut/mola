@@ -80,45 +80,77 @@ test('Mola Yardım: answers "gün sonu" and ASCII "odeme", falls back to Destek,
   const requests: string[] = [];
   page.on('request', r => requests.push(r.url()));
 
-  const answer = dialog.locator('.yardim-cevap');
-  await box.fill('gün sonu');
+  // A short conversation (16 Ekim): the greeting, the topics as quick replies; what is asked on the right, the answer on the
+  // left with the small picture; the conversation is a polite live log; the box to type in at the bottom with "Gönder".
+  const log = dialog.getByRole('log');
+  await expect(log).toHaveAttribute('aria-live', 'polite');
+  await expect(log.locator('.yardim-selam')).toHaveText('Merhaba! Ne konuda yardım edeyim?');
+  const sendButton = dialog.getByRole('button', { name: 'Gönder' });
+  await expect(sendButton).toBeVisible();
+  expect((await sendButton.boundingBox())!.y).toBeGreaterThan((await log.boundingBox())!.y + (await log.boundingBox())!.height - 1);
+  const answer = dialog.locator('.yardim-cevap').last(), said = dialog.locator('.yardim-sorulan').last();
+  const send = async (text: string) => { await box.fill(text); await box.press('Enter'); };
+  await send('gün sonu');
+  await expect(said).toHaveText('gün sonu');
+  await expect(box).toHaveValue('');
   await expect(answer.getByRole('heading', { level: 3 })).toHaveText('Gün sonu nasıl yapılır?');
   await expect(answer).toContainText('“Kapanışı tamamla”ya basın.');
   await expect(answer.locator('ol li')).toHaveCount(4);
-  await expect(dialog.getByRole('heading', { name: 'Başka sorular' })).toBeVisible();
+  await expect(answer.locator('.yardim-ilgili').filter({ hasText: 'Başka sorular:' })).toBeVisible();
+  const p = (await dialog.boundingBox())!, s = (await said.boundingBox())!, a = (await answer.boundingBox())!;
+  expect(s.x + s.width).toBeGreaterThan(p.x + p.width - 40); expect(s.x).toBeGreaterThan(a.x);
+  await expect(dialog.locator('.yardim-bot').last().locator('img.yardim-avatar-kucuk')).toBeVisible();
+  // Colours (16 Ekim): a solid green head with cream letters, Mola Yardım's bubbles light green, the visitor's solid green.
+  const colour = (l: typeof answer, prop: 'backgroundColor' | 'color') => l.evaluate((e, k) => getComputedStyle(e)[k], prop);
+  expect(await colour(dialog.locator('.yardim-ust'), 'backgroundColor')).toBe('rgb(35, 76, 62)');
+  expect(await colour(dialog.locator('.yardim-ust h2'), 'color')).toBe('rgb(246, 241, 232)');
+  expect(await colour(answer, 'backgroundColor')).toBe('rgb(230, 239, 231)');
+  expect(await colour(said, 'backgroundColor')).toBe('rgb(35, 76, 62)');
+  expect(await colour(said, 'color')).toBe('rgb(246, 241, 232)');
+  expect(await colour(sendButton, 'backgroundColor')).toBe('rgb(35, 76, 62)');
+  await page.waitForTimeout(200);
   await shot(page, info, 'yardim-masaustu.png');
 
   await box.fill('odeme');
+  await sendButton.click();
+  await expect(said).toHaveText('odeme');
   await expect(answer.getByRole('heading', { level: 3 })).toHaveText('Ödeme nasıl alınır?');
   await expect(answer).toContainText('“Ödemeyi kaydet”e basın.');
+  await expect(box).toBeFocused();
 
-  // Nothing fits: the contact, clearly. The phone stays hidden as everywhere on the site.
-  await box.fill('xqzt blorfmak');
-  await expect(answer).toBeHidden();
-  await expect(dialog.getByText('Bunu bulamadım. Bize ulaşın:')).toBeVisible();
-  await expect(dialog.getByRole('link', { name: 'Destek ve İletişim' })).toHaveAttribute('href', '/iletisim/');
-  await expect(dialog.locator('a[href^="mailto:"]')).toHaveAttribute('href', /^mailto:[^@\s]+@[^@\s]+\.[a-z]{2,}$/);
+  // Nothing fits: "Bunu bilmiyorum." and the contact, clearly. The phone stays hidden as everywhere on the site.
+  await send('xqzt blorfmak');
+  const none = dialog.locator('.yardim-yok').last();
+  await expect(none).toContainText('Bunu bilmiyorum.');
+  await expect(none.getByRole('link', { name: 'Destek ve İletişim' })).toHaveAttribute('href', '/iletisim/');
+  await expect(none.locator('a[href^="mailto:"]')).toHaveAttribute('href', /^mailto:[^@\s]+@[^@\s]+\.[a-z]{2,}$/);
   await expect(dialog.locator('a[href^="tel:"], a[href*="wa.me"]')).toHaveCount(0);
+  await page.waitForTimeout(200);
   await shot(page, info, 'yardim-bulunamadi.png');
 
   // Typed markup is shown as the letters typed: no element is made from it, nothing runs.
   const payload = '<img src=x onerror=alert(1)>';
-  await box.fill(payload);
-  await expect(dialog.locator('.yardim-aranan')).toHaveText(`Aradığınız: “${payload}”`);
+  await send(payload);
+  await expect(said).toHaveText(payload);
   await expect(page.locator('img[src="x"]')).toHaveCount(0);
   await expect(dialog.locator('img:not(.yardim-avatar)')).toHaveCount(0);
   await page.waitForTimeout(500);
 
-  // Topics: a chip lists its questions; a question opens its answer and takes the focus (keyboard and screen readers).
-  await box.fill('');
+  // Topics are quick replies: a chip asks for its questions; a question asked shows its answer; related ones are chips.
   const chip = dialog.getByRole('group', { name: 'Konular' }).getByRole('button', { name: 'Kasa ve ödeme' });
   await chip.click();
   await expect(chip).toHaveAttribute('aria-pressed', 'true');
-  await dialog.getByRole('button', { name: 'Gün sonu nasıl yapılır?', exact: true }).click();
-  await expect(answer).toBeFocused();
+  await expect(said).toHaveText('Kasa ve ödeme');
+  await dialog.locator('.yardim-bot').last().getByRole('button', { name: 'Gün sonu nasıl yapılır?', exact: true }).click();
+  await expect(said).toHaveText('Gün sonu nasıl yapılır?');
   await expect(answer.getByRole('heading', { level: 3 })).toHaveText('Gün sonu nasıl yapılır?');
   await answer.getByRole('button', { name: 'Kasa açılışı nasıl yapılır?' }).click();
   await expect(answer.getByRole('heading', { level: 3 })).toHaveText('Kasa açılışı nasıl yapılır?');
+  // The conversation keeps this visit's last six exchanges, newest at the bottom and in sight.
+  for (const q of ['yazıcı', 'qr menü', 'yedek', 'mutfak', 'internet', 'garson']) await send(q);
+  await expect(dialog.locator('.yardim-kisi')).toHaveCount(6);
+  await expect(said).toHaveText('garson');
+  await expect(said).toBeInViewport();
   expect(requests).toEqual([]);
 
   // Tab and Shift+Tab stay inside the panel.
@@ -147,7 +179,9 @@ test('Mola Yardım on a phone (360 px): the round button, the panel inside the s
   const dialog = page.getByRole('dialog', { name: 'Mola Yardım' });
   await expect(dialog).toBeVisible();
   await dialog.getByRole('searchbox', { name: 'Sorunuzu yazın' }).fill('yazici');
-  await expect(dialog.locator('.yardim-cevap h3')).toHaveText('Fiş yazıcısını nasıl bağlarım?');
+  await dialog.getByRole('searchbox', { name: 'Sorunuzu yazın' }).press('Enter');
+  await expect(dialog.locator('.yardim-sorulan').last()).toHaveText('yazici');
+  await expect(dialog.locator('.yardim-cevap h3').last()).toHaveText('Fiş yazıcısını nasıl bağlarım?');
   const p = (await dialog.boundingBox())!;
   expect(p.x).toBeGreaterThanOrEqual(0); expect(p.x + p.width).toBeLessThanOrEqual(360); expect(p.y + p.height).toBeLessThanOrEqual(780);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -296,4 +330,39 @@ test('Bilgi ve deneme talebi: no "Masa sayısı" and no intro sentence; Şehir s
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await panel.screenshot({ path: info.outputPath('iletisim-form-telefon.png') });
   if (process.env.SITE_EKRAN) await panel.screenshot({ path: join(process.env.SITE_EKRAN, 'iletisim-form-telefon.png') });
+});
+
+test('Mola Yardım\'s topics in a narrow panel (360 px): › while more is to the right, it shows the last topic, then ‹ and no ›; wheel and keyboard', async ({ page }, info) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  const problems = watch(page);
+  await page.goto(`${SITE}/indir/`);
+  await page.getByRole('button', { name: 'Mola Yardım' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Mola Yardım' });
+  await expect(dialog).toBeVisible();
+  await page.waitForTimeout(200);
+  await shot(page, info, 'yardim-telefon-acilis.png');
+  const row = dialog.getByRole('group', { name: 'Konular' }), back = dialog.getByRole('button', { name: 'Önceki konular' }), next = dialog.getByRole('button', { name: 'Sonraki konular' });
+  const last = row.getByRole('button').last();
+  await expect(next).toBeVisible(); await expect(back).toBeHidden();
+  await expect(next).toHaveAttribute('tabindex', '-1');
+  // The clipped edge fades softly.
+  expect(await row.evaluate(e => getComputedStyle(e).maskImage || getComputedStyle(e).webkitMaskImage)).toContain('linear-gradient');
+  const inRow = async () => { const r = (await row.boundingBox())!, c = (await last.boundingBox())!; return c.x >= r.x - 1 && c.x + c.width <= r.x + r.width + 1; };
+  expect(await inRow()).toBe(false);
+  for (let i = 0; i < 8 && await next.isVisible(); i++) { await next.click(); await page.waitForTimeout(450); }
+  await expect.poll(inRow).toBe(true);
+  await expect(next).toBeHidden(); await expect(back).toBeVisible();
+  // The arrows never take the focus; the box keeps it.
+  await expect(dialog.getByRole('searchbox', { name: 'Sorunuzu yazın' })).toBeFocused();
+  await back.click();
+  await expect(next).toBeVisible();
+  // The keyboard reaches every chip (a focused chip comes into sight); the wheel moves the row sideways.
+  await row.getByRole('button').first().focus();
+  await expect.poll(() => row.evaluate(e => e.scrollLeft)).toBe(0);
+  await expect(back).toBeHidden();
+  await row.hover();
+  await page.mouse.wheel(0, 300);
+  await expect.poll(() => row.evaluate(e => e.scrollLeft)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(problems).toEqual([]);
 });

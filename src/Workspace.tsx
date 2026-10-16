@@ -118,9 +118,9 @@ const NAV_FEATURE: Partial<Record<string, FeatureId>> = { stock: 'stock', integr
 import './remote-support.css';
 const SettingsPanel = lazy(() => import('./SettingsPanel').then(module => ({ default: module.SettingsPanel })));
 const Integrations = lazy(() => import('./Integrations').then(module => ({ default: module.Integrations })));
-// Mola Yardım (15 Ekim): the "?" beside the bell opens hazır cevaplar for this role, the screen's topic first (src/HelpPanel.tsx).
+// Mola Yardım (15 Ekim): the button beside the bell opens hazır cevaplar for this role, the screen's topic first (src/HelpPanel.tsx).
 const HelpSheet = lazy(() => import('./HelpPanel').then(module => ({ default: module.HelpSheet })));
-import { CircleHelp } from 'lucide-react';
+import { HelpButton } from './HelpButton';
 const roles: Record<Role, string> = { owner: 'İşletme sahibi', manager: 'Müdür', cashier: 'Kasiyer', waiter: 'Garson', kitchen: 'Mutfak', support: 'Mola destek' };
 const stageNames = { new: 'Yeni', preparing: 'Hazırlanıyor', ready: 'Hazır' } as const;
 /** Where a ready order is handed over, in the waiter's words; a platform order goes with the courier or at the counter. */
@@ -394,9 +394,9 @@ export function Workspace() {
     if (place) openPlace(place[1]); else if (n.kind === 'reminder' && n.day && owner) openPlace({ view: 'agenda', day: n.day }); else go('notifications');
   };
   const go = (id: string) => { setSupportDraft(null); setView(id === 'campaigns' ? 'menu' : id); setError(''); setReportsAt(null); setStockAt(null); setSettingsAt(null); setCashAt(null); setStaffAt(null); setMenuAt(id === 'campaigns' ? { key: Date.now(), tab: 'campaigns' } : null); setSupportTab('tickets'); setAgendaDay(null); };
-  // Mola Yardım: the small "?" (every role) and its sheet. The owner's "Destek talebi aç" (nothing found) opens Destek →
+  // Mola Yardım: its button (the eagle; "Yardım" beside it for the owner, Müdür and cashier: src/HelpButton.tsx) and its sheet. The owner's "Destek talebi aç" (nothing found) opens Destek →
   // Talepler with the question written in; only the owner writes to the Mola team.
-  const helpButton = <button type="button" className="topbar-help" aria-label="Mola Yardım" title="Mola Yardım" aria-haspopup="dialog" aria-expanded={helpOpen} onClick={() => setHelpOpen(true)}><CircleHelp size={19} aria-hidden="true" /></button>;
+  const helpButton = <HelpButton role={data.role} user={data.userId ?? data.username ?? data.name} expanded={helpOpen} onOpen={() => setHelpOpen(true)} />;
   const helpSheet = helpOpen && <Suspense fallback={null}><HelpSheet role={data.role as 'owner'} view={view} onClose={() => setHelpOpen(false)}
     onTicket={owner ? question => { setHelpOpen(false); go('support'); setSupportDraft({ key: Date.now(), ...helpTicketDraft(question) }); } : undefined} /></Suspense>;
   // Mutfak modu (src/KitchenMode.tsx): the kitchen account's whole workspace, and only the kitchen account's (owner's decision,

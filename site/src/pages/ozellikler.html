@@ -8,14 +8,12 @@ nav: features
   <div class="wrap">
     <span class="eyebrow">Özellikler</span>
     <h1>Mola neler yapar?</h1>
-    <p class="lead">Kafenizde her rolün kendi ekranı var; her ekran yalnız o kişinin işini gösterir. Aşağıda önce kimin ne yaptığını, sonra satın alabileceğiniz hizmetleri ve ayrıntıları bulacaksınız.</p>
-    <nav class="jump" aria-label="Bu sayfada">
-      <a href="#roller">Rollere göre</a><a href="#hizmetler">Hizmetler</a><a href="#raporlar">Raporlar</a><a href="#kasa">Kasa ve gün sonu</a><a href="#stok">Stok ve kârlılık</a><a href="#ekler">Rezervasyon, vardiya, sosyal medya</a><a href="#uzaktan">Uzaktan</a><a href="#guvenlik">Yedek ve güvenlik</a><a href="#paketler">Paketler</a>
-    </nav>
+    <p class="lead">Kafenizde her rolün kendi ekranı var; her ekran yalnız o kişinin işini gösterir. Aşağıda önce kimin ne yaptığını, sonra satın alabileceğiniz hizmetleri, ayrıntıları ve fiyatları bulacaksınız.</p>
   </div>
 </section>
+{{bolumler}}
 
-<section class="section" id="roller" aria-labelledby="roller-baslik">
+<section class="section" id="roller" data-bolum="Rollere göre" aria-labelledby="roller-baslik">
   <div class="wrap">
     <div class="section-head left reveal">
       <span class="eyebrow">Rollere göre</span>
@@ -39,7 +37,7 @@ nav: features
   </div>
 </section>
 
-<section class="section band-white" id="hizmetler" aria-labelledby="hizmetler-baslik">
+<section class="section band-white" id="hizmetler" data-bolum="Hizmetler" aria-labelledby="hizmetler-baslik">
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">Hizmetler</span>
@@ -52,7 +50,7 @@ nav: features
 
 <section class="section" aria-label="Ayrıntılar">
   <div class="wrap">
-    <div class="showcase reveal" id="raporlar">
+    <div class="showcase reveal" id="raporlar" data-bolum="Raporlar">
       <div class="showcase-text">
         <span class="eyebrow">Raporlar</span>
         <h3>Sade özet, istediğinizde ayrıntı</h3>
@@ -68,7 +66,7 @@ nav: features
       <div>{{video:rapor-yil}}</div>
     </div>
 
-    <div class="details-2">
+    <div class="details-2" id="kasa-ve-stok" data-bolum="Kasa ve stok">
       <article class="detail reveal" id="kasa"><span class="card-icon">{{icon:Calculator}}</span><div><h3>Kasa ve gün sonu</h3>
         <p>Kasa açılışından gün sonuna kadar her para hareketi kayıtlı.</p>
         <ul><li>Kör sayım: kasiyer önce sayar, sonra farkı görür</li><li>Para bozdurma, gider kaydı, vardiya devri</li><li>Para çıkışını yalnız işletme sahibi girer</li><li>Kasiyerin büyük nakit giderinde sahibe bildirim</li></ul></div></article>
@@ -77,7 +75,7 @@ nav: features
         <ul><li>“Bu malzemeyle kaç adet yapılabilir?”</li><li>Alış ve sayım, fire kaydı</li><li>Ürün bazında kâr, düşük kâr uyarısı</li><li>Düşük stokta bildirim</li></ul></div></article>
     </div>
 
-    <div class="details" id="ekler" style="margin-top:18px">
+    <div class="details" id="ekler" data-bolum="Rezervasyon ve vardiya" style="margin-top:18px">
       <article class="detail reveal"><span class="card-icon">{{icon:CalendarDays}}</span><div><h3>Rezervasyon ve etkinlik</h3>
         <p>Masa ayırın, kapora alın. Saati gelince masada “Rezerve” yazar; misafir gecikirse Mola “Geldi mi?” diye sorar. Maç ve özel günler için geçici masalarla etkinlik açın; etkinliğin satışı ayrı raporda görünür.</p></div></article>
       <article class="detail reveal"><span class="card-icon">{{icon:Clock}}</span><div><h3>Vardiya, bahşiş ve personel raporu</h3>
@@ -86,7 +84,7 @@ nav: features
         <p>Instagram, WhatsApp, Google değerlendirme ve diğer bağlantılarınız menünün altında. Masaya koyacağınız kalıcı QR kartlarını PNG ya da PDF olarak indirin; bağlantıyı değiştirseniz de basılı kart çalışır. Masa QR kodlarını A4’e ya da A6 masa standına basabilirsiniz.</p></div></article>
     </div>
 
-    <div class="showcase flip reveal" style="margin-top:clamp(36px,5vw,56px)">
+    <div class="showcase flip reveal" id="qr-kartlari" data-bolum="QR kartları" style="margin-top:clamp(36px,5vw,56px)">
       <div class="showcase-text">
         <span class="eyebrow">QR kartları</span>
         <h3>Masa standı ve “Bizi takip edin” kartı</h3>
@@ -98,7 +96,7 @@ nav: features
   </div>
 </section>
 
-<section class="section band-sage" id="uzaktan" aria-labelledby="uzaktan-baslik">
+<section class="section band-sage" id="uzaktan" data-bolum="Uzaktan" aria-labelledby="uzaktan-baslik">
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">Uzaktan</span>
@@ -113,7 +111,7 @@ nav: features
   </div>
 </section>
 
-<section class="section" id="guvenlik" aria-labelledby="guvenlik-baslik">
+<section class="section" id="guvenlik" data-bolum="Yedek ve güvenlik" aria-labelledby="guvenlik-baslik">
   <div class="wrap">
     <div class="section-head left reveal">
       <span class="eyebrow">Cihazlar, yedek ve güvenlik</span>
@@ -140,7 +138,7 @@ nav: features
   </div>
 </section>
 
-<section class="section band-cream" id="paketler" aria-labelledby="paketler-baslik">
+<section class="section band-cream" id="paketler" data-bolum="Paketler ve fiyatlar" aria-labelledby="paketler-baslik">
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">Paketler</span>

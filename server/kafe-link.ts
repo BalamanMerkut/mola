@@ -16,6 +16,7 @@ import { APP_VERSION, claimsToLicense, DEV_MERKEZ_URL, emptyContact, keyFingerpr
 import { runQuiet } from './os-lock.js';
 import { open, seal } from './sealing.js';
 import { starterState } from './starter-template.js';
+import { addTemplatePhotos } from './template-photos.js';
 import type { StaffUser } from './accounts.js';
 import type { Store } from './store.js';
 import { SOCIAL_CODE } from '../packages/domain/social-links.js';
@@ -777,6 +778,8 @@ export class MerkezLink {
     if (!pending) throw new DomainError('NOT_PENDING', 'Kurulacak işletme yok.', 409);
     if (this.store.findUser(owner.username)) throw new DomainError('USERNAME_TAKEN', 'Bu kullanıcı adı kullanılıyor.', 409);
     const state: State = starterState(pending.tenantId, pending.name);
+    // The starter menu's photos, as the business's own (server/template-photos.ts); a file that cannot be written leaves the drawing.
+    addTemplatePhotos(this.store.directory, pending.tenantId, state.products);
     state.staffUsers = [{ id: randomUUID(), role: 'owner', active: true, version: 1, createdAt: this.now().toISOString(), ...owner }]; state.setupCompleted = false;
     // Only a preselection: the first setup still asks and loads that kind's starter menu (server/management.ts).
     if (pending.sector) state.sector = pending.sector;

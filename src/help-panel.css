@@ -1,48 +1,70 @@
-/* Mola Yardım in the café app (src/HelpPanel.tsx): its side sheet and Destek → Yardım (the "?" itself: src/moved.css). */
+/* Mola Yardım in the café app (src/HelpPanel.tsx): its side sheet and Destek → Yardım (the button itself: src/moved.css). */
 .help-sheet{margin:0 0 0 auto;padding:0;border:0;border-left:1px solid var(--line);width:min(440px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;background:var(--paper,#fff);color:var(--ink);box-shadow:-20px 0 60px #0c21152e;overflow:hidden}
 .help-sheet[open]{display:flex;flex-direction:column}
 .help-sheet::backdrop{background:#13261d55}
-.help-sheet-head{display:flex;align-items:center;gap:12px;padding:14px 14px 10px 18px;flex:none}
-.help-sheet-head img{flex:none;width:40px;height:40px;border-radius:50%}
-.help-sheet-head h2{flex:1;margin:0;font-size:20px;font-weight:600}
-.help-sheet-close{flex:none;display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);color:var(--green);cursor:pointer}
-.help-sheet-close:hover{background:var(--brand-soft,#e3eedd)}
+/* 16 Ekim ("renkleri biraz daha belirgin"): the head a solid band of the palette's primary with cream letters; Mola Yardım's
+ * bubbles a light tint of the palette (an eighth of the primary in the cream card colour) with dark letters, what was
+ * asked solid primary with cream letters, quick replies outlined, the send button solid. Every palette's primary is dark:
+ * cream on it 5.7:1 (Bakır) to 9.6:1, ink on the tint at least 8.6:1, primary on the tint at least 4.8:1
+ * (packages/domain/theme.ts). Matte cream, never pure white. The app has no dark mode for these screens. */
+.help-sheet-head{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 16px;flex:none;background:var(--green);color:#f6f1e8}
+.help-sheet-head img{flex:none;width:40px;height:40px;border-radius:50%;box-shadow:0 0 0 2px #f6f1e8}
+.help-sheet-head h2{flex:1;margin:0;font-size:20px;font-weight:600;color:#f6f1e8}
+.help-sheet-close{flex:none;display:grid;place-items:center;width:44px;height:44px;min-height:0;padding:0;border:1px solid #f6f1e873;border-radius:12px;background:transparent;color:#f6f1e8;cursor:pointer}
+.help-sheet-close:hover{background:#f6f1e824;border-color:#f6f1e8}
+.help-sheet-close:focus-visible{outline-color:#f6f1e8}
 
 .help-body{display:flex;flex-direction:column;min-height:0;font-size:15px;line-height:1.5}
 .help-body-scroll{flex:1}
-.help-search{position:relative;padding:4px 18px 10px;flex:none}
-.help-search svg{position:absolute;left:32px;top:19px;z-index:1;color:var(--muted);pointer-events:none}
-/* (More specific than the app's every-input rule in style.css.) */
-.help-body .help-search input[type=search]{width:100%;margin:0;min-height:48px;padding:11px 14px 11px 42px;font-size:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft,#f6f7f4);color:var(--ink)}
-.help-body .help-search input[type=search]:focus{outline:none;border-color:var(--green);background:var(--paper,#fff);box-shadow:0 0 0 3px #234c3e22}
-/* Topics: one row that swipes sideways, no scrollbar under it. */
-.help-topics{display:flex;gap:6px;overflow-x:auto;padding:2px 18px 12px;border-bottom:1px solid var(--line);flex:none;scrollbar-width:none}
-.help-topics::-webkit-scrollbar{display:none}
-.help-topic{flex:none;min-height:36px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface-soft,#f6f7f4);color:var(--ink);font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
-.help-topic:hover{border-color:var(--green);color:var(--green)}
-.help-topic[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
-.help-scroll{padding:14px 18px 18px}
+/* The conversation (16 Ekim): Mola Yardım on the left with its small picture, what was asked on the right. */
+.help-scroll{position:relative;display:flex;flex-direction:column;gap:12px;padding:16px 14px 18px;background:var(--paper,#f6f1e8)}
 .help-body-scroll .help-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-.help-answer{background:var(--brand-soft,#eef3ea);border-radius:14px;padding:14px 16px;margin-bottom:16px}
-.help-answer:focus{outline:none}
-.help-answer:focus-visible{outline:2px solid var(--green);outline-offset:2px}
-.help-answer-topic{display:inline-block;margin-bottom:8px;padding:3px 9px;border-radius:999px;background:var(--paper,#fff);color:var(--green);font-size:12px;font-weight:600}
-.help-answer h3{margin:0 0 8px;font-size:17px}
+.help-exchange{display:flex;flex-direction:column;gap:12px}
+.help-msg{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.help-msg.mine{justify-content:flex-end}
+.help-msg-avatar{flex:none;width:30px;height:30px;border-radius:50%}
+.help-balloon{min-width:0;flex:1 1 auto;margin:0;background:var(--brand-soft,#e3eedd);background:color-mix(in srgb,var(--green) 12%,var(--paper,#f6f1e8));border:1px solid color-mix(in srgb,var(--green) 18%,transparent);color:var(--ink);border-radius:16px 16px 16px 5px;padding:10px 13px}
+.help-balloon>p{margin:0 0 .6em}
+.help-balloon>:last-child{margin-bottom:0}
+.help-msg.bot .help-hello{flex:0 1 auto;font-weight:600;color:var(--ink)}
+.help-said{flex:0 1 auto;max-width:85%;background:var(--green);border-color:var(--green);color:#f6f1e8;border-radius:16px 16px 5px 16px;font-weight:600;overflow-wrap:anywhere;white-space:pre-wrap}
+/* Topics: quick replies under the greeting, one row that swipes sideways (no scrollbar); ‹ › and the wheel for a mouse. */
+.help-topics-box{position:relative;flex:none;margin:-4px 0 0 38px}
+.help-topics{position:relative;display:flex;gap:6px;overflow-x:auto;padding:1px 0 2px;scrollbar-width:none;--fade-back:0px;--fade-next:0px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--fade-back),#000 calc(100% - var(--fade-next)),transparent);mask-image:linear-gradient(90deg,transparent,#000 var(--fade-back),#000 calc(100% - var(--fade-next)),transparent)}
+.help-topics::-webkit-scrollbar{display:none}
+.help-topics-box.more-back .help-topics{--fade-back:60px}
+.help-topics-box.more-next .help-topics{--fade-next:60px}
+.help-topic{flex:none;min-height:36px;padding:0 13px;border-radius:999px;border:1px solid var(--green);background:var(--paper,#fff);color:var(--green);font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.help-topic:hover{background:var(--brand-soft,#e3eedd)}
+.help-topic[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#f6f1e8}
+.help-topics-box .help-row-arrow{position:absolute;top:19px;transform:translateY(-50%);z-index:1;display:grid;place-items:center;width:32px;height:32px;min-height:0;padding:0;border-radius:50%;border:1px solid var(--line);background:var(--paper,#fff);color:var(--green);box-shadow:0 4px 12px -6px #0c211573;cursor:pointer}
+.help-topics-box .help-row-arrow:hover{background:var(--green);border-color:var(--green);color:#f6f1e8}
+.help-topics-box .help-row-arrow.back{left:0}
+.help-topics-box .help-row-arrow.next{right:0}
+.help-answer-topic{display:inline-block;margin-bottom:8px;padding:3px 9px;border-radius:999px;background:var(--paper,#f6f1e8);color:var(--green);font-size:12px;font-weight:600}
+.help-answer h3{margin:0 0 8px;font-size:16px}
 .help-answer p,.help-answer ol{margin:0 0 .6em}
 .help-answer ol{padding-left:22px}
 .help-answer li{margin:3px 0}
-.help-answer>:last-child{margin-bottom:0}
-.help-related{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding-top:8px;border-top:1px dashed #b9c8b0;font-size:14px;color:var(--muted)}
-.help-related button{border:0;background:none;padding:4px 0;color:var(--green);font:inherit;font-weight:600;text-align:left;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.help-none{background:#fbf3e2;color:#6b4f1d;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:grid;gap:10px;justify-items:start}
+/* Under an answer: the related questions (and the other matches) as small chips. */
+.help-related{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed color-mix(in srgb,var(--green) 30%,transparent);font-size:13px;color:var(--ink)}
+.help-related span{width:100%;font-weight:600}
+.help-related button{min-height:32px;padding:5px 11px;border:1px solid color-mix(in srgb,var(--green) 25%,transparent);border-radius:999px;background:var(--paper,#f6f1e8);color:var(--green);font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.help-related button:hover{border-color:var(--green);background:var(--paper,#fff)}
+.help-none{background:#fbf3e2;border-color:#ecdcb5;color:#6b4f1d;display:grid;gap:8px;justify-items:start}
 .help-none p{margin:0}
 .help-none-title{font-weight:700;font-size:16px}
-.help-asked{font-size:13px;opacity:.85;overflow-wrap:anywhere}
-.help-list h3{margin:4px 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
-.help-list+.help-list{margin-top:14px}
+.help-list h3{margin:2px 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
 .help-list ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.help-question{width:100%;display:grid;gap:2px;text-align:left;padding:10px 13px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--paper,#fff);color:var(--ink);font-size:14.5px;font-weight:600;line-height:1.35;cursor:pointer}
-.help-question:hover{border-color:var(--green)}
-.help-question small{color:var(--muted);font-weight:400;font-size:12.5px}
-/* Destek → Yardım: the same, inside the page. */
-.support-help{max-width:760px;margin:0 auto;background:var(--paper,#fff);border:1px solid var(--line);border-radius:14px;padding-top:14px}
+.help-question{width:100%;display:grid;gap:2px;text-align:left;padding:9px 12px;min-height:44px;border-radius:12px;border:1px solid color-mix(in srgb,var(--green) 18%,transparent);background:var(--paper,#f6f1e8);color:var(--ink);font-size:14.5px;font-weight:600;line-height:1.35;cursor:pointer}
+.help-question:hover{border-color:var(--green);background:var(--paper,#fff)}
+.help-question small{color:var(--ink);opacity:.8;font-weight:400;font-size:12.5px}
+/* The box to type in, at the bottom like a chat, with its send button. (More specific than the app's every-input rule.) */
+.help-compose{flex:none;display:flex;align-items:center;gap:8px;padding:10px 12px 12px 14px;border-top:1px solid var(--line);background:var(--paper,#fff)}
+.help-body .help-compose input[type=search]{flex:1 1 auto;min-width:0;width:auto;margin:0;min-height:46px;padding:11px 16px;font-size:16px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft,#f6f7f4);color:var(--ink)}
+.help-body .help-compose input[type=search]:focus{outline:none;border-color:var(--green);background:var(--paper,#fff);box-shadow:0 0 0 3px #234c3e22}
+.help-compose .help-send{flex:none;display:grid;place-items:center;width:46px;height:46px;min-height:0;padding:0;border:0;border-radius:50%;background:var(--green);color:#f6f1e8;cursor:pointer}
+.help-compose .help-send:hover{background:var(--brand-hover,var(--green))}
+/* Destek → Yardım: the same, inside the page; the conversation stays a readable height there. */
+.support-help{max-width:760px;margin:0 auto;background:var(--paper,#fff);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.support-help .help-scroll{max-height:min(640px,70vh);overflow-y:auto}

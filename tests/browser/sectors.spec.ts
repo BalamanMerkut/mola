@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('restaurant setup: sector card loads the restaurant menu, no counter-sales switch; the guest menu shows food icons', async ({ page, browser }, info) => {
+test('restaurant setup: sector card loads the restaurant menu with its photos, no counter-sales switch; the guest menu shows food icons on the tabs', async ({ page, browser }, info) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Mutlu misafir\.\s*Kolay işletme\./ })).toBeVisible();
@@ -35,7 +35,10 @@ test('restaurant setup: sector card loads the restaurant menu, no counter-sales 
   expect(state.sector).toBe('restaurant'); expect(state.takeawayEnabled).toBeUndefined();
   expect(state.categories).toEqual(['Çorbalar', 'Ana Yemekler', 'Burgerler', 'Salatalar', 'Tatlılar', 'İçecekler']);
   await page.getByRole('button', { name: 'Menü yönetimi', exact: true }).click();
-  await expect(page.locator('.menu-row').filter({ hasText: 'Mercimek Çorbası' }).locator('.art-soup')).toBeVisible();
+  // The starter menu comes with its photos (server/template-photos.ts), loaded like uploaded ones.
+  const soup = page.locator('.menu-row').filter({ hasText: 'Mercimek Çorbası' }).locator('.product-photo img');
+  await expect(soup).toBeVisible();
+  await expect.poll(() => soup.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(0);
   // Ayarlar: the type is a label only.
   await page.getByRole('button', { name: 'Ayarlar', exact: true }).click();
   await expect(page.getByLabel('İşletme türü', { exact: true })).toHaveValue('restaurant');
@@ -51,7 +54,9 @@ test('restaurant setup: sector card loads the restaurant menu, no counter-sales 
   await expect(tabs.getByRole('button', { name: 'Çorbalar' }).locator('svg.lucide-soup')).toBeVisible();
   await expect(tabs.getByRole('button', { name: 'Burgerler' }).locator('svg.lucide-hamburger')).toBeVisible();
   await expect(tabs.getByRole('button', { name: 'Salatalar' }).locator('svg.lucide-salad')).toBeVisible();
-  await expect(guest.locator('.product-card').filter({ hasText: 'Klasik Burger' }).locator('.art-burger svg.lucide-hamburger')).toBeVisible();
+  const burger = guest.locator('.product-card').filter({ hasText: 'Klasik Burger' }).locator('.product-photo img');
+  await burger.scrollIntoViewIfNeeded();
+  await expect.poll(() => burger.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth)).toBeGreaterThan(0);
   await expect(guest.locator('.customer-footer')).toContainText('Afiyet olsun, yine bekleriz.');
   await guest.getByRole('button', { name: 'EN', exact: true }).click();
   await expect(tabs.getByRole('button', { name: 'Soups' })).toBeVisible();

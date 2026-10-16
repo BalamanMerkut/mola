@@ -85,10 +85,15 @@
   var api = root.MolaYardim = { normalize: normalize, search: search, get: get, data: DATA };
   if (!root.document) return;
 
-  // ---- Panel ----
-  var doc = root.document, NS = 'http://www.w3.org/2000/svg';
-  var panel, backdrop, input, chips, bodyEl, answer, listTitle, list, notFound, searched, live;
-  var opener = null, topic = null, selected = null, inerted = [], liveTimer = 0;
+  // ---- Panel: a short conversation (16 Ekim) ----
+  // Mola Yardım greets ("Merhaba! Ne konuda yardım edeyim?"), the topics under it are quick replies, then Sık sorulanlar.
+  // What is asked (typed and sent, a topic or a question tapped) appears on the right, the answer on the left with the small
+  // picture; the related questions as small chips under it; nothing found: "Bunu bilmiyorum." and the ways to reach us. The
+  // conversation keeps this visit's last few exchanges (KEEP), newest at the bottom; it is a polite live log for screen
+  // readers. The box to type in sits at the bottom with a send button. Still the same answers and the same search.
+  var doc = root.document, NS = 'http://www.w3.org/2000/svg', KEEP = 6;
+  var panel, backdrop, input, chips, bodyEl, exchanges = [], said = 0;
+  var opener = null, topic = null, inerted = [], measureChips = function () {};
 
   function el(tag, attrs, text) {
     var e = doc.createElement(tag);
@@ -103,10 +108,97 @@
     paths.forEach(function (d) { var p = doc.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.appendChild(p); });
     return svg;
   }
-  function empty(node) { while (node.firstChild) node.removeChild(node.firstChild); }
-  function announce(text) { clearTimeout(liveTimer); liveTimer = setTimeout(function () { live.textContent = text; }, 450); }
+  /** A row of the conversation: Mola Yardım's (left, with the small picture) or the visitor's (right). */
+  function botRow(content) {
+    var row = el('div', { 'class': 'yardim-satir yardim-bot' });
+    if (AVATAR) row.appendChild(el('img', { 'class': 'yardim-avatar yardim-avatar-kucuk', src: AVATAR.src, srcset: AVATAR.srcset, width: '30', height: '30', alt: '', decoding: 'async' }));
+    else row.appendChild(el('span', { 'class': 'yardim-avatar-kucuk', 'aria-hidden': 'true' }));
+    row.appendChild(content);
+    return row;
+  }
+  function userRow(text) {
+    var row = el('div', { 'class': 'yardim-satir yardim-kisi' });
+    row.appendChild(el('p', { 'class': 'yardim-balonu yardim-sorulan' }, text));
+    return row;
+  }
+  function questionList(items, hint) {
+    var ul = el('ul', { 'class': 'yardim-liste' });
+    items.forEach(function (q) {
+      var li = el('li'), b = el('button', { type: 'button', 'class': 'yardim-soru' });
+      b.appendChild(el('span', null, q.soru));
+      if (hint) b.appendChild(el('small', null, topicName[q.konu] || ''));
+      b.addEventListener('click', function () { askQuestion(q); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    return ul;
+  }
+  /** Small chips under an answer: "İlgili:" or "Başka sorular:". */
+  function chipsUnder(label, items) {
+    var rel = el('div', { 'class': 'yardim-ilgili' });
+    rel.appendChild(el('span', null, label));
+    items.forEach(function (q) {
+      var b = el('button', { type: 'button' }, q.soru);
+      b.addEventListener('click', function () { askQuestion(q); });
+      rel.appendChild(b);
+    });
+    return rel;
+  }
+  function answerBubble(q, others) {
+    var id = 'yardim-cevap-' + (++said), a = el('article', { 'class': 'yardim-balonu yardim-cevap', 'aria-labelledby': id });
+    a.appendChild(el('span', { 'class': 'chip' }, topicName[q.konu] || ''));
+    a.appendChild(el('h3', { id: id }, q.soru));
+    q.cevap.forEach(function (b) {
+      if (typeof b === 'string') { a.appendChild(el('p', null, b)); return; }
+      var ol = el('ol');
+      b.forEach(function (step) { ol.appendChild(el('li', null, step)); });
+      a.appendChild(ol);
+    });
+    var related = (q.ilgili || []).map(get).filter(Boolean);
+    if (related.length) a.appendChild(chipsUnder('İlgili:', related));
+    if (others && others.length) a.appendChild(chipsUnder('Başka sorular:', others));
+    return a;
+  }
+  function notFoundBubble() {
+    var box = el('div', { 'class': 'yardim-balonu yardim-yok' });
+    box.appendChild(el('p', { 'class': 'yardim-yok-baslik' }, 'Bunu bilmiyorum.'));
+    box.appendChild(el('p', null, 'Başka kelimelerle deneyin ya da bize ulaşın:'));
+    var ways = el('div', { 'class': 'yardim-yollar' });
+    ways.appendChild(el('a', { 'class': 'btn btn-primary', href: '/iletisim/' }, 'Destek ve İletişim'));
+    // The e-mail the site already shows in its footer (site.js may have put Mola Yönetim's over it); the phone stays hidden.
+    var mail = doc.querySelector('.site-footer [data-iletisim="email"] a[href^="mailto:"]'), address = mail ? mail.getAttribute('href').slice(7) : '';
+    if (/^[^\s@<>"]{1,64}@[^\s@<>"]{1,180}\.[a-z]{2,}$/i.test(address)) ways.appendChild(el('a', { 'class': 'btn btn-ghost yardim-eposta', href: 'mailto:' + address }, address));
+    box.appendChild(ways);
+    box.appendChild(el('p', { 'class': 'yardim-yok-not' }, 'Mola’yı kullanıyorsanız programdan da yazabilirsiniz: Destek → Talepler.'));
+    return box;
+  }
+  /** One exchange: the visitor's words on the right, the answer on the left; the oldest goes after KEEP; scrolled to. */
+  function say(text, reply) {
+    var mine = userRow(text), theirs = botRow(reply);
+    bodyEl.appendChild(mine); bodyEl.appendChild(theirs);
+    exchanges.push([mine, theirs]);
+    while (exchanges.length > KEEP) exchanges.shift().forEach(function (n) { n.parentNode.removeChild(n); });
+    bodyEl.scrollTop = Math.max(0, mine.offsetTop - 12);
+  }
+  function askQuestion(q) { say(q.soru, answerBubble(q)); }
+  function askTopic(id) {
+    topic = id;
+    Array.prototype.forEach.call(chips.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-konu') === id)); });
+    var box = el('div', { 'class': 'yardim-balonu' });
+    box.appendChild(el('p', null, topicName[id] + ' hakkında sorulanlar:'));
+    box.appendChild(questionList(DATA.sorular.filter(function (q) { return q.konu === id; }), false));
+    say(topicName[id], box);
+  }
+  function askText() {
+    var text = input.value.trim().slice(0, 120);
+    if (!text) { input.focus(); return; }
+    input.value = '';
+    var results = meaningful(words(text)).length ? search(text, 4) : [];
+    if (!results.length) { say(text, notFoundBubble()); return; }
+    say(text, answerBubble(get(results[0].id), results.slice(1, 4).map(function (r) { return get(r.id); })));
+  }
 
   function create() {
+    if (!index) build();
     backdrop = el('div', { 'class': 'yardim-katman', hidden: '' });
     backdrop.addEventListener('click', close);
     panel = el('section', { 'class': 'yardim-panel', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'yardim-baslik', id: 'mola-yardim', hidden: '' });
@@ -121,113 +213,45 @@
     x.addEventListener('click', close);
     head.appendChild(titles); head.appendChild(x);
 
-    var box = el('div', { 'class': 'yardim-ara' });
-    box.appendChild(el('label', { 'for': 'yardim-sorgu', 'class': 'visually-hidden' }, 'Sorunuzu yazın'));
-    var glass = icon(['M21 21l-4.3-4.3', 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z']);
-    box.appendChild(glass);
-    input = el('input', { id: 'yardim-sorgu', type: 'search', placeholder: 'Sorunuzu yazın…', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', maxlength: '120', enterkeyhint: 'search', 'aria-controls': 'yardim-govde' });
-    input.addEventListener('input', function () { topic = null; selected = null; render(); });
-    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });
-    box.appendChild(input);
-
+    bodyEl = el('div', { 'class': 'yardim-govde', id: 'yardim-govde', role: 'log', 'aria-live': 'polite', 'aria-label': 'Mola Yardım ile konuşma' });
+    var hello = el('div', { 'class': 'yardim-balonu yardim-selam' });
+    hello.appendChild(el('p', null, 'Merhaba! Ne konuda yardım edeyim?'));
+    bodyEl.appendChild(botRow(hello));
+    // The topics are quick replies; they swipe sideways, for a mouse ‹ › and the wheel too (site.js MolaKaydir).
+    var chipBox = el('div', { 'class': 'yardim-konular-kutu' });
     chips = el('div', { 'class': 'yardim-konular', role: 'group', 'aria-label': 'Konular' });
     DATA.konular.forEach(function (k) {
       var b = el('button', { type: 'button', 'class': 'yardim-konu', 'aria-pressed': 'false', 'data-konu': k.id }, k.ad);
-      b.addEventListener('click', function () {
-        topic = topic === k.id ? null : k.id; selected = null; input.value = '';
-        render(); bodyEl.scrollTop = 0;
-      });
+      b.addEventListener('click', function () { askTopic(k.id); });
       chips.appendChild(b);
     });
+    chipBox.appendChild(chips);
+    bodyEl.appendChild(chipBox);
+    var common = el('div', { 'class': 'yardim-balonu' });
+    common.appendChild(el('h3', { 'class': 'yardim-liste-baslik' }, 'Sık sorulanlar'));
+    common.appendChild(questionList(DATA.sikSorulanlar.map(get).filter(Boolean), true));
+    bodyEl.appendChild(botRow(common));
 
-    bodyEl = el('div', { 'class': 'yardim-govde', id: 'yardim-govde' });
-    live = el('p', { 'class': 'visually-hidden', 'aria-live': 'polite' });
-    answer = el('article', { 'class': 'yardim-cevap', tabindex: '-1', 'aria-labelledby': 'yardim-cevap-baslik', hidden: '' });
-    listTitle = el('h3', { 'class': 'yardim-liste-baslik', id: 'yardim-liste-baslik' });
-    list = el('ul', { 'class': 'yardim-liste', 'aria-labelledby': 'yardim-liste-baslik' });
-    notFound = el('div', { 'class': 'yardim-yok', hidden: '' });
-    notFound.appendChild(el('p', { 'class': 'yardim-yok-baslik' }, 'Bunu bulamadım. Bize ulaşın:'));
-    var ways = el('div', { 'class': 'yardim-yollar' });
-    ways.appendChild(el('a', { 'class': 'btn btn-primary', href: '/iletisim/' }, 'Destek ve İletişim'));
-    // The e-mail the site already shows in its footer (site.js may have put Mola Yönetim's over it); the phone stays hidden.
-    var mail = doc.querySelector('.site-footer [data-iletisim="email"] a[href^="mailto:"]'), address = mail ? mail.getAttribute('href').slice(7) : '';
-    if (/^[^\s@<>"]{1,64}@[^\s@<>"]{1,180}\.[a-z]{2,}$/i.test(address)) ways.appendChild(el('a', { 'class': 'btn btn-ghost yardim-eposta', href: 'mailto:' + address }, address));
-    notFound.appendChild(ways);
-    notFound.appendChild(el('p', null, 'Başka kelimelerle de deneyin. Mola’yı kullanıyorsanız programdan da yazabilirsiniz: Destek → Talepler.'));
-    searched = el('p', { 'class': 'yardim-aranan' });
-    notFound.appendChild(searched);
-    bodyEl.appendChild(live); bodyEl.appendChild(answer); bodyEl.appendChild(notFound); bodyEl.appendChild(listTitle); bodyEl.appendChild(list);
+    var compose = el('div', { 'class': 'yardim-yaz' });
+    compose.appendChild(el('label', { 'for': 'yardim-sorgu', 'class': 'visually-hidden' }, 'Sorunuzu yazın'));
+    input = el('input', { id: 'yardim-sorgu', type: 'search', placeholder: 'Sorunuzu yazın…', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', maxlength: '120', enterkeyhint: 'send', 'aria-controls': 'yardim-govde' });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); askText(); } });
+    var send = el('button', { type: 'button', 'class': 'yardim-gonder', 'aria-label': 'Gönder' });
+    send.appendChild(icon(['M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z', 'M6 12h16']));
+    send.addEventListener('click', function () { askText(); input.focus(); });
+    compose.appendChild(input); compose.appendChild(send);
 
-    panel.appendChild(head); panel.appendChild(box); panel.appendChild(chips); panel.appendChild(bodyEl);
+    panel.appendChild(head); panel.appendChild(bodyEl); panel.appendChild(compose);
     panel.addEventListener('keydown', onKey);
     // A link inside (Destek ve İletişim) closes the panel first: the page underneath is where it goes.
     panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a) close(true); });
     doc.body.appendChild(backdrop); doc.body.appendChild(panel);
-  }
-
-  function questionButton(q, hint) {
-    var li = el('li'), b = el('button', { type: 'button', 'class': 'yardim-soru' });
-    b.appendChild(el('span', null, q.soru));
-    if (hint) b.appendChild(el('small', null, hint));
-    b.addEventListener('click', function () { selected = q.id; render(); bodyEl.scrollTop = 0; answer.focus(); });
-    li.appendChild(b);
-    return li;
-  }
-  function showAnswer(q) {
-    empty(answer);
-    answer.appendChild(el('span', { 'class': 'chip' }, topicName[q.konu] || ''));
-    answer.appendChild(el('h3', { id: 'yardim-cevap-baslik' }, q.soru));
-    q.cevap.forEach(function (b) {
-      if (typeof b === 'string') { answer.appendChild(el('p', null, b)); return; }
-      var ol = el('ol');
-      b.forEach(function (step) { ol.appendChild(el('li', null, step)); });
-      answer.appendChild(ol);
-    });
-    if (q.ilgili && q.ilgili.length) {
-      var rel = el('div', { 'class': 'yardim-ilgili' });
-      rel.appendChild(el('span', null, 'İlgili:'));
-      q.ilgili.forEach(function (id) {
-        var r = get(id); if (!r) return;
-        var b = el('button', { type: 'button' }, r.soru);
-        b.addEventListener('click', function () { selected = r.id; render(); bodyEl.scrollTop = 0; answer.focus(); });
-        rel.appendChild(b);
-      });
-      answer.appendChild(rel);
-    }
-    answer.hidden = false;
-  }
-  function render() {
-    var text = input.value, results = null, shown = selected ? get(selected) : null, items;
-    answer.hidden = true; notFound.hidden = true; listTitle.hidden = false; empty(list);
-    Array.prototype.forEach.call(chips.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-konu') === topic)); });
-    if (meaningful(words(text)).length) {
-      results = search(text, 7);
-      if (!results.length) {
-        searched.textContent = 'Aradığınız: “' + text.trim().slice(0, 120) + '”';
-        notFound.hidden = false; listTitle.hidden = true;
-        announce('Hazır cevap bulunamadı.');
-        return;
-      }
-      if (!shown) shown = get(results[0].id);
-      items = results.map(function (r) { return get(r.id); });
-      listTitle.textContent = 'Başka sorular';
-      announce(results.length === 1 ? 'Bir cevap bulundu.' : results.length + ' cevap bulundu.');
-    } else if (topic) {
-      items = DATA.sorular.filter(function (q) { return q.konu === topic; });
-      listTitle.textContent = topicName[topic];
-    } else {
-      items = DATA.sikSorulanlar.map(get).filter(Boolean);
-      listTitle.textContent = 'Sık sorulanlar';
-    }
-    if (shown) showAnswer(shown);
-    items = items.filter(function (q) { return !shown || q.id !== shown.id; });
-    items.forEach(function (q) { list.appendChild(questionButton(q, topic || results ? '' : topicName[q.konu])); });
-    if (!items.length) listTitle.hidden = true;
+    if (root.MolaKaydir) measureChips = root.MolaKaydir(chips, chipBox, 'Önceki konular', 'Sonraki konular');
   }
 
   // ---- Open, close, keyboard: Esc closes, Tab stays inside, focus goes back to the button that opened it ----
   function focusables() {
-    return Array.prototype.filter.call(panel.querySelectorAll('button, a[href], input, [tabindex]:not([tabindex="-1"])'), function (n) {
+    return Array.prototype.filter.call(panel.querySelectorAll('button:not([tabindex="-1"]), a[href], input, [tabindex]:not([tabindex="-1"])'), function (n) {
       return !n.disabled && n.getClientRects().length > 0;
     });
   }
@@ -256,7 +280,7 @@
     doc.documentElement.classList.add('yardim-acik');
     setTriggers(true);
     doc.addEventListener('focusin', keepFocus);
-    render();
+    measureChips();
     input.focus();
   }
   function close(leaving) {

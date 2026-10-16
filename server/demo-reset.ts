@@ -15,6 +15,7 @@ import type { Notifications } from './notifications.js';
 import { seed } from './seed.js';
 import { DEMO_STAFF_PASSWORD, type DemoReset as ResetOrder } from './signed-notes.js';
 import type { Store } from './store.js';
+import { addTemplatePhotos } from './template-photos.js';
 
 /*
  * "Tanıtım işletmesi" (the vendor's demo business for sales visits). Only a business Mola Merkez marked as demo (signed,
@@ -109,6 +110,8 @@ export class DemoResets {
       const old = this.store.read(tenant), profile = DEMO_PROFILES[o.sector], products = demoProducts(o.sector), tables = keepQr(old.tables, demoTables());
       // Printed QRs stay valid: only tables the business did not have before got a new token (to print once).
       const added = tables.filter(t => !old.tables.some(x => x.id === t.id)).length;
+      // The template's product photos, new copies (server/template-photos.ts); the old ones are left unused for the photo cleaning.
+      addTemplatePhotos(this.store.directory, tenant, products);
       // Staff stay; with the demo password every account but the owner's gets it (and is signed out: its version moves on).
       const staffUsers = (old.staffUsers ?? []).map(u => secret && u.role !== 'owner' ? { ...u, ...secret, version: u.version + 1 } : u);
       const next: State = {

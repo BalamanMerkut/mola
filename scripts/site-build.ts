@@ -120,6 +120,24 @@ function packagesHtml() {
   return `<p class="package-offer reveal">${icon('Gift', 20)}<span><b>İlk 30 gün ücretsiz</b> · <b>Kurulum ücretsiz</b></span></p><div class="packages">${cards.join('\n')}</div>`;
 }
 
+// ---------- "Bu sayfada" ({{bolumler}}, right after a page's hero) ----------
+/**
+ * The page's own parts, each marked in the page with an id and a short name (data-bolum="…"), in their order: a slim rail on
+ * the left on wide screens (≥ 1280 px; the content moves right only as far as the rail needs) and a row of chips that swipes
+ * sideways under the header on narrower ones (site.css). Plain links without a script; site.js marks the part on screen
+ * (aria-current), scrolls there and moves the focus to its heading. The page's <html> gets class="bolumlu".
+ */
+function sectionNavHtml(page: PageMeta) {
+  const parts = [...page.body.matchAll(/<[a-z0-9]+\b[^>]*\bdata-bolum="([^"]+)"[^>]*>/g)].map(([tag, name]) => {
+    const id = tag.match(/\bid="([^"]+)"/)?.[1];
+    if (!id) throw new Error(`${page.file}: data-bolum="${name}" bir id ister.`);
+    return { id, name };
+  });
+  if (parts.length < 3) throw new Error(`${page.file}: {{bolumler}} en az üç bölüm ister (data-bolum="…").`);
+  const list = `<ul>${parts.map(p => `<li><a href="#${esc(p.id)}">${esc(p.name)}</a></li>`).join('')}</ul>`;
+  return `<div class="bolum-rayi"><nav class="bolumler bolumler-ray" aria-label="Bu sayfada"><p class="bolumler-baslik" aria-hidden="true">Bu sayfada</p>${list}</nav></div>\n<nav class="bolumler bolumler-cubuk" aria-label="Bu sayfada">${list}</nav>`;
+}
+
 // ---------- Uygulamayı indir (/indir/) ----------
 const PLATFORM_COPY: Record<Platform, { icon: string; name: string; sub: string; how: string }> = {
   windows: { icon: 'Monitor', name: 'Windows 10 / 11', sub: 'Mola kurulum · çoğu kafe bilgisayarı', how: 'ZIP dosyasını açın (sağ tık → Tümünü ayıkla), içindeki “Mola Kurulum.exe”ye çift tıklayın, “Kur”a basın.' },
@@ -240,6 +258,7 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
       case 'downloads': return downloadsHtml(downloads);
       case 'downloadVersion': return downloads.version ? ` · sürüm ${esc(downloads.version)}` : '';
       case 'packages': return packagesHtml();
+      case 'bolumler': return sectionNavHtml(page);
       // Hidden until a number is known (here or from Mola Yönetim).
       case 'whatsappButton': return `<a class="${esc(arg ?? 'btn btn-ghost')}" data-iletisim="whatsapp" href="${esc(waHref || '#')}" rel="noopener"${waHref ? '' : ' hidden'}>${icon('MessageCircle')} WhatsApp’tan yazın</a>`;
       case 'contactCards': return [contactCard('whatsapp', waHref, 'WhatsApp’tan yazın', config.whatsapp), contactCard('phone', phoneHref, 'Bizi arayın', config.phone), contactCard('email', mailHref, 'E-posta gönderin', config.email)].join('\n');
@@ -277,7 +296,7 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
     const structured = page.path === '/' ? `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'Mola', applicationCategory: 'BusinessApplication', operatingSystem: 'Windows, Android, iOS (web)', description: page.description, url: config.siteUrl, inLanguage: 'tr', publisher: { '@type': 'Organization', name: config.company, email: config.email, address: { '@type': 'PostalAddress', addressLocality: config.address, addressCountry: 'TR' } } })}</script>` : '';
     let html = layout.replace('{{content}}', () => content).replace('{{structuredData}}', () => structured)
       .replace(/\{\{current:([a-z]+)\}\}/g, (_m, nav: string) => nav === page.nav ? 'aria-current="page"' : '')
-      .replace(/\{\{(pageTitle|description|canonical|robots|cssVersion|jsVersion|yardimVersion|helpButton|footerContact)\}\}/g, (_m, k: string) => ({ pageTitle: esc(page.title), description: esc(page.description), canonical: esc(canonical), robots: page.robots ?? 'index, follow', cssVersion, jsVersion, yardimVersion, helpButton: page.help === 'off' ? '' : helpButton, footerContact } as Record<string, string>)[k]);
+      .replace(/\{\{(pageTitle|description|canonical|robots|cssVersion|jsVersion|yardimVersion|helpButton|footerContact|htmlClass)\}\}/g, (_m, k: string) => ({ pageTitle: esc(page.title), description: esc(page.description), canonical: esc(canonical), robots: page.robots ?? 'index, follow', cssVersion, jsVersion, yardimVersion, helpButton: page.help === 'off' ? '' : helpButton, footerContact, htmlClass: page.body.includes('{{bolumler}}') ? ' class="bolumlu"' : '' } as Record<string, string>)[k]);
     html = fill(html, page);
     const out = page.path === '404' ? join(dist, '404.html') : join(dist, page.path, 'index.html');
     mkdirSync(dirname(out), { recursive: true });

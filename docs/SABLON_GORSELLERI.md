@@ -14,6 +14,8 @@ Yeni kurulumda gelen üç hazır menünün (kafe, tatlıcı, restoran) 47 ürün
 
 Bitince görselleri tek klasörde, aşağıdaki dosya adlarıyla toplayın (ör. `.local\sablon-gorselleri\`) ve haber verin; hazır şablonlara (`templates/cafe-v1.json`, `dessert-v1.json`, `restaurant-v1.json`) bağlanır.
 
+**Bağlandı (16 Ekim 2026):** 41 görsel `templates/gorseller/` klasöründe (her biri 800×800 ve 320×320 WebP, toplam ~1,6 MB). Yeniden üretmek için: `npx tsx scripts/sablon-gorselleri.ts <fotoğraf-klasörü>`. Tekrarlanan görseller bir kez saklanır (çay, su, limonata, Türk kahvesi; `server/template-photos.ts`). Yeni açılan işletme, ilk kurulumda seçilen türün menüsü ve "Tanıtımı sıfırla" bu fotoğraflarla gelir; işletme sahibi her birini değiştirip kaldırabilir. Üç menünün 47 ürününün hepsinin fotoğrafı var. Var olan işletmelerin menüsü değişmez.
+
 ## Kafe (8)
 
 ### 1. Caffè Latte → `latte.png`

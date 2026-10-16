@@ -18,11 +18,24 @@
 .sidebar nav .nav-group-label:first-child{margin-top:0}
 .sidebar nav .nav-group-rule{display:block;height:1px;margin:6px 12px;background:var(--line)}
 @media(max-width:700px){.topbar-bell{width:36px;height:36px}}
-/* Mola Yardım's "?" beside the bell (every signed-in role; the kitchen's bar too): a small square, nothing pops up by itself. */
-.topbar-help{display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);color:var(--ink);cursor:pointer;flex:none;padding:0}
-.topbar-help:hover,.topbar-help[aria-expanded="true"]{background:var(--brand-soft,#e3eedd);color:var(--green)}
-@media(max-width:700px){.topbar-help{width:36px;height:36px}}
-.kitchen-bar .topbar-help{width:44px;height:44px}
+/* Mola Yardım's button beside the bell (src/HelpButton.tsx; every signed-in role, the kitchen's bar too): the round eagle; for
+ * the owner, Müdür and cashier "Yardım" beside it (a pill) from 701 px. In the bar, never over the screen. Its one-time hint
+ * (owner, Müdür, cashier) hangs under it for 6 s. Solid palette primary with cream letters (16 Ekim) so it stands out from the
+ * bar's other icons: 5.7:1 (Bakır) to 9.6:1. */
+.topbar-help-wrap{position:relative;display:inline-flex;flex:none}
+.topbar-help{display:inline-flex;align-items:center;gap:8px;height:38px;min-height:0;padding:2px;border:1px solid var(--green);border-radius:999px;background:var(--green);color:#f6f1e8;font-size:13.5px;font-weight:700;cursor:pointer;flex:none;box-shadow:0 4px 12px -6px #0c211573}
+.topbar-help img{flex:none;width:32px;height:32px;border-radius:50%;box-shadow:0 0 0 1.5px #f6f1e8}
+.topbar-help.named{padding-right:14px}
+.topbar-help:hover,.topbar-help[aria-expanded="true"]{background:var(--brand-hover,var(--green));border-color:var(--brand-hover,var(--green))}
+@media(max-width:700px){.topbar-help{height:36px}.topbar-help img{width:30px;height:30px}.topbar-help.named{padding-right:2px}.topbar-help-text{display:none}}
+.kitchen-bar .topbar-help{height:44px;padding:3px}.kitchen-bar .topbar-help img{width:36px;height:36px}
+.help-hint{position:absolute;top:calc(100% + 10px);right:0;z-index:60;display:flex;align-items:flex-start;gap:2px;width:max-content;max-width:min(260px,calc(100vw - 24px));padding:10px 4px 10px 14px;border:1px solid var(--line);border-radius:14px 4px 14px 14px;background:var(--paper,#fff);color:var(--ink);box-shadow:0 14px 34px -14px #0c211573;font-size:14px;line-height:1.4;animation:help-hint-in .25s ease-out}
+.help-hint::before{content:"";position:absolute;top:-7px;right:14px;width:12px;height:12px;background:var(--paper,#fff);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.help-hint .help-hint-text{display:block;min-height:0;padding:0;border:0;background:none;color:inherit;font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.help-hint .help-hint-close{flex:none;display:grid;place-items:center;width:30px;height:30px;min-height:0;margin-top:-5px;padding:0;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
+.help-hint .help-hint-close:hover{background:var(--brand-soft,#e3eedd);color:var(--green)}
+@keyframes help-hint-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.help-hint{animation:none}}
 
 /* The homes (src/Homes.tsx, src/HomeBooks.tsx): level 1 icon tabs, level 2 the quieter row, then the page. */
 .home{display:grid;gap:16px;min-width:0}

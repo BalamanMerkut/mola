@@ -11,10 +11,11 @@ nav: contact
     <p class="lead">Mola’yı denemek, kurulum için gün almak ya da bir şey sormak için formu doldurun; sizi arayalım. İsterseniz hemen WhatsApp’tan yazın.</p>
   </div>
 </section>
+{{bolumler}}
 
 <section class="section-tight" aria-label="İletişim">
   <div class="wrap contact-grid">
-    <div class="panel" id="form">
+    <div class="panel" id="form" data-bolum="Talep formu">
       <h2>Bilgi ve deneme talebi</h2>
       <form id="talep-formu" novalidate data-consent-version="{{consentVersion}}" aria-describedby="form-status">
         <div class="form-grid">
@@ -42,7 +43,7 @@ nav: contact
       </div>
     </div>
 
-    <aside class="panel" aria-labelledby="dogrudan">
+    <aside class="panel" id="ulasin" data-bolum="Doğrudan ulaşın" aria-labelledby="dogrudan">
       <h2 id="dogrudan">Doğrudan ulaşın</h2>
       <p class="muted">Mola’yı kullanan işletmeler, programın içindeki Destek bölümünden de yazabilir.</p>
       <div class="contact-list">
@@ -54,7 +55,7 @@ nav: contact
   </div>
 </section>
 
-<section class="section-tight" id="yardim" aria-labelledby="yardim-kart-baslik">
+<section class="section-tight" id="yardim" data-bolum="Mola Yardım" aria-labelledby="yardim-kart-baslik">
   <div class="wrap">
     <div class="yardim-kart">
       {{yardimAvatar}}
@@ -67,7 +68,7 @@ nav: contact
   </div>
 </section>
 
-<section class="section" id="sss" aria-labelledby="sss-baslik">
+<section class="section" id="sss" data-bolum="Sık sorulanlar" aria-labelledby="sss-baslik">
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow">Sık sorulan sorular</span>

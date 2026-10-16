@@ -46,7 +46,7 @@ export function KitchenMode({ data, view, onView, connected, error, onError, onT
   /** A notice for everyone on staff (the sign-in ending at 05:00). */
   notice?: ReactNode;
   shiftChip?: ReactNode; children?: ReactNode;
-  /** Mola Yardım's small "?" (src/HelpPanel.tsx): only this icon on the kitchen's bar, nothing that pops up by itself. */
+  /** Mola Yardım's button (src/HelpButton.tsx): only the eagle on the kitchen's bar, nothing that pops up by itself. */
   help?: ReactNode;
 }) {
   const board = view === 'kitchen';

@@ -11,7 +11,9 @@ export default defineConfig({
   // phone unless they say otherwise (tests/browser/menu-language.spec.ts opens an English one).
   // mola-campaign-ended: a campaign one spec ends (time or quota) must not open the owner's "Kampanya bitti" window over the next
   // specs' screens (src/CampaignEnded.tsx); tests/browser/campaign-ended.spec.ts opens it on its own device.
+  // mola-yardim-ipucu: Mola Yardım's one-time hint under its button (src/HelpButton.tsx) stays off for the other specs;
+  // tests/browser/app-yardim.spec.ts shows it on a fresh device.
   use: { baseURL: `http://127.0.0.1:${port}`, locale: 'tr-TR', channel: process.env.CI ? undefined : 'chrome', trace: 'retain-on-failure', screenshot: 'only-on-failure',
-    storageState: { cookies: [], origins: [{ origin: `http://127.0.0.1:${port}`, localStorage: [{ name: 'mola-report-view', value: 'detail' }, { name: 'mola-campaign-ended', value: 'off' }] }] } },
+    storageState: { cookies: [], origins: [{ origin: `http://127.0.0.1:${port}`, localStorage: [{ name: 'mola-report-view', value: 'detail' }, { name: 'mola-campaign-ended', value: 'off' }, { name: 'mola-yardim-ipucu', value: 'off' }] }] } },
   webServer: { command: 'node scripts/test-server.mjs', url: `http://127.0.0.1:${port}/api/health`, reuseExistingServer: false, timeout: 90000 },
 });

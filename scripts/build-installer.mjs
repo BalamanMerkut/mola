@@ -239,6 +239,8 @@ function copyPackage(name, appDir, done = new Set()) {
 // `top`: the launchers beside app/ as they are shipped ({ target: Buffer }, scripts/integrity-manifest.mjs CODE_TOP).
 async function appFolder(appDir, target, platform, top) {
   copyTree('dist', join(appDir, 'dist'));
+  // Hazır şablon görselleri (server/template-photos.ts): read from app/templates/gorseller when a business is made from a template.
+  copyTree('templates/gorseller', join(appDir, 'templates', 'gorseller'));
   copyFileSync(join(stage, 'server.mjs'), join(appDir, 'server.mjs'));
   // Watchdog: the launchers run the server under it, so a crashed server comes back by itself.
   copyFileSync(join(desktop, 'nobetci.mjs'), join(appDir, 'nobetci.mjs'));
