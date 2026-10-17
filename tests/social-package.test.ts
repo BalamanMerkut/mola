@@ -19,7 +19,7 @@ import { guestSocial } from '../packages/domain/social-links.js';
 import { client, licensed, MERKEZ_PASSWORD, merkezPair, temp, testLicense, TEST_PUBLIC_KEY } from './merkez-fixture.js';
 
 /*
- * "Sosyal medya ve QR kartları" (`social`, owner's decision 6 Ekim): a paid service (₺20/ay since 15 Ekim), in Restoran Pro, on the old
+ * "Sosyal medya ve QR kartları" (`social`, owner's decision 6 Ekim): a paid service (₺20/ay from 15 Ekim, ₺50/ay since 17 Ekim), in Restoran Pro, on the old
  * plans and in the trial; sold as an add-on to the others. Without it the café keeps the Google review row (core) and the
  * after-payment Google button, refuses the other platforms and the QR cards, hides the follow icons from guests; Merkez's
  * short addresses show "kullanılamıyor"; nothing is deleted. A licence from a Merkez that does not decide `social` yet keeps
@@ -29,13 +29,13 @@ const TL = 100, rid = () => randomUUID().replace(/-/g, '');
 const WITHOUT_SOCIAL = sellableFeatures().filter(id => id !== 'social');
 const strip = (ids: readonly FeatureId[]) => ids.filter(id => id !== 'social');
 
-test('the catalogue: ₺20/ay in Ekler, yearly ×10; Restoran Pro 2.600 TL/ay with it (and Bulutta şifreli yedek); Kafe Standart and Çay bahçesi without; old plans and the trial hold it', () => {
+test('the catalogue: ₺50/ay in Ekler, yearly ×10; Restoran Pro services 1.910 TL/ay with it (and Bulutta şifreli yedek); Kafe Standart and Çay bahçesi without; old plans and the trial hold it', () => {
   const f = featureById.get('social')!;
-  assert.equal(f.name, 'Sosyal medya ve QR kartları'); assert.equal(f.group, 'Ekler'); assert.equal(f.monthly, 20 * TL); assert.ok(!f.soon && !f.required);
-  assert.equal(yearlyFromMonthly(f.monthly), 200 * TL);
+  assert.equal(f.name, 'Sosyal medya ve QR kartları'); assert.equal(f.group, 'Ekler'); assert.equal(f.monthly, 50 * TL); assert.ok(!f.soon && !f.required);
+  assert.equal(yearlyFromMonthly(f.monthly), 500 * TL);
   const pkg = (id: string) => defaultPackages.find(p => p.id === id)!.features;
   assert.ok(pkg('restoran-pro').includes('social'));
-  assert.equal(monthlyTotal(pkg('restoran-pro')), 2600 * TL);
+  assert.equal(monthlyTotal(pkg('restoran-pro')), 1910 * TL);
   assert.equal(pkg('kafe-standart').includes('social'), false); assert.equal(pkg('cay-bahcesi').includes('social'), false);
   assert.ok(legacyFeatures('full').includes('social')); assert.ok(legacyFeatures('menu').includes('social'));
   assert.ok(licenseFeatures({ kind: 'trial' }).includes('social'));

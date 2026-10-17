@@ -61,6 +61,7 @@ const A: Record<string, [string, JournalGroup]> = {
   'catalog.single_licence': ['Lisanslar tek kopya ve hizmet listesiyle yeniden imzalandı (güvenlik)', 'lisans'],
   'catalog.prices_changed':['Hizmet fiyatları değiştirildi', 'satis'],
   'catalog.prices_2026_10': ['Fiyatlar 2026-10 listesine güncellendi (Uzaktan erişim tek hizmet)', 'satis'],
+  'catalog.prices_2026_10_17': ['Fiyatlar 17 Ekim listesine güncellendi', 'satis'],
   'catalog.vat_changed': ['Yazılım hizmeti KDV oranı değiştirildi', 'satis'],
   'package.created': ['Yeni paket oluşturuldu', 'satis'],
   'package.updated': ['Paket değiştirildi', 'satis'],

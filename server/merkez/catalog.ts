@@ -54,7 +54,9 @@ export function ensureCatalog(store: MerkezStore, now: Date) {
       const from = d.catalog.version ?? 1;
       if (from < 2) addSocial(store, d, now);
       if (from < 3) singleLicence(store, d, now);
-      if (from < 4) prices2026(store, d, now);
+      // Step 4 reads today's starting list, so a record from before it lands on the newest list at once: step 5 is for a
+      // Merkez that already had step 4 (the 15 Ekim list).
+      if (from < 4) prices2026(store, d, now); else if (from < 5) prices17Ekim(d, now);
       d.catalog.version = CATALOG_VERSION; return;
     }
     const at = now.toISOString();
@@ -81,13 +83,15 @@ export function ensureCatalog(store: MerkezStore, now: Date) {
  *   3 (11 Ekim, güvenlik denetimi O6): one licence per business, always with `features`; the copy without them is gone.
  *   4 (15 Ekim, owner): the 2026-10 price list and "Uzaktan erişim" as one service (prices2026 below). Not only additive: the
  *     owner asked for it, once; prices or packages he changes afterwards are never touched again.
+ *   5 (17 Ekim, owner): the newer, lower list (prices17Ekim below), once; only what is still exactly the 15 Ekim list moves,
+ *     a price or package the owner changed in Mola Yönetim since then stays as he left it.
  */
-export const CATALOG_VERSION = 4;
+export const CATALOG_VERSION = 5;
 /**
  * Step 4. The owner's 2026-10 list (packages/domain/features.ts, KDV hariç): every sellable service's price goes back to the
- * starting price, which is now that list (a typed yearly price too: yearly = monthly × 10); the stored price of 'remote-admin'
- * (sold inside "Uzaktan erişim" now, never priced on its own) is dropped. The three starting packages, found by their ids, get
- * their starting services and discount (Çay bahçesi ₺980, Kafe Standart ₺1.950, Restoran Pro ₺2.600 a month); their names,
+ * starting price, which is today's list (15 Ekim's when it shipped; a typed yearly price too: yearly = monthly × 10); the
+ * stored price of 'remote-admin' (sold inside "Uzaktan erişim" now, never priced on its own) is dropped. The three starting packages, found by their ids, get
+ * their starting services and discount (15 Ekim: Çay bahçesi ₺980, Kafe Standart ₺1.950, Restoran Pro ₺2.600 a month); their names,
  * "Arşivde" and every other package (the vendor's own and the two old plans) stay as they are. A business on one of the three
  * follows its package (licence signed again when what it may use changed: Kafe Standart now holds Uzaktan yönetim); businesses'
  * own discounts and "Özel" lists are not touched. "Paket servis platformları" (Yakında) keeps its price.
@@ -120,6 +124,49 @@ function prices2026(store: MerkezStore, d: MerkezData, now: Date) {
   c.updatedAt = at;
   const totals = defaultPackages.map(s => c.packages.find(p => p.id === s.id && !p.legacy)).filter(p => !!p).map(p => `${p!.name} ${lira(priceFor(p!.features, c.prices, p!.discount).monthly)}`).join(', ');
   d.audit.push({ action: 'catalog.prices_2026_10', target: 'merkez', at, by: 'system', detail: `Fiyatlar 2026-10 listesine güncellendi (KDV hariç, aylık): ${totals || 'başlangıç paketi yok'}. “Uzaktan raporlar” ve “Uzaktan yönetim” tek hizmet: “Uzaktan erişim”.${moved ? ` ${moved} işletme paketini izledi, ${signed} lisans yeniden imzalandı.` : ''} İşletmelerin kendi indirimlerine dokunulmadı.`, ...(changes.length ? { changes } : {}) });
+}
+/** The 15 Ekim starting list as step 4 left it (₺/ay, KDV hariç; yearly ×10), so step 5 can tell it from the owner's own changes. */
+const LIST_15_EKIM: Partial<Record<FeatureId, number>> = {
+  core: 750, 'qr-menu': 200, 'qr-order': 300, 'reports-advanced': 100, stock: 650, reservations: 50, shifts: 20, social: 20,
+  'remote-reports': 130, 'email-reports': 30, 'split-screen': 50, 'cloud-backup': 300, integrations: 125,
+};
+/** The starting packages' discounts on 15 Ekim (their services were the same as today's defaultPackages). */
+const DISCOUNT_15_EKIM: Partial<Record<string, Discount>> = { 'kafe-standart': { kind: 'amount', value: 110 * 100 } };
+/**
+ * Step 5. The owner's 17 Ekim list (packages/domain/features.ts, KDV hariç): Çay bahçesi ₺750, Kafe Standart ₺1.375 (its ₺110
+ * package discount is gone), Restoran Pro ₺1.910 − ₺35 = ₺1.875 a month. Once, and only over what is still the 15 Ekim list:
+ *   - A service without a stored price already shows the new starting price (only the history line is written). A stored price
+ *     that is just the 15 Ekim one (monthly, yearly ×10 or not typed) is dropped, so it follows the new list too; any other
+ *     stored price is the owner's own (Hizmet fiyatları) and stays.
+ *   - A starting package, found by its id, gets the new discount only while its services and discount are still exactly the
+ *     15 Ekim ones; one the owner changed (services or discount) stays as he left it. Names, "Arşivde", his own packages and
+ *     the two old plans are not touched.
+ * No service list changes, so no business moves and no licence is signed again; businesses' own discounts and "Özel" lists are
+ * not touched (a business's price is worked out from these each time).
+ */
+function prices17Ekim(d: MerkezData, now: Date) {
+  const at = now.toISOString(), c = d.catalog!, changes: JournalChange[] = [], kept: string[] = [];
+  const text = (x: { monthly: number; yearly: number; yearlyTyped: boolean }) => `${lira(x.monthly)}/ay · ${lira(x.yearly)}/yıl${x.yearlyTyped ? '' : ' (×10)'}`;
+  for (const f of features) {
+    const was = LIST_15_EKIM[f.id];
+    if (f.partOf || was === undefined) continue;
+    const o = c.prices[f.id], old = was * 100;
+    const before = o ? { monthly: o.monthly, yearly: o.yearly ?? o.monthly * 10, yearlyTyped: o.yearly !== undefined } : { monthly: old, yearly: old * 10, yearlyTyped: false };
+    if (o && (o.monthly !== old || (o.yearly !== undefined && o.yearly !== old * 10))) { if (priceOf(f.id, c.prices).changed) kept.push(f.name); continue; }
+    if (o) delete c.prices[f.id];
+    if (text(before) !== text(priceOf(f.id, c.prices))) changes.push({ field: f.name, from: text(before), to: text(priceOf(f.id, c.prices)) });
+  }
+  for (const start of defaultPackages) {
+    const pkg = c.packages.find(p => p.id === start.id && !p.legacy), next = start.discount ? { ...start.discount } : undefined;
+    if (!pkg || discountText(pkg.discount) === discountText(next)) continue;
+    if (pkg.features.join() !== normalFeatures(start.features).join() || discountText(pkg.discount) !== discountText(DISCOUNT_15_EKIM[start.id])) { kept.push(pkg.name); continue; }
+    changes.push({ field: `${pkg.name} paket indirimi`, from: discountText(pkg.discount) || 'yok', to: discountText(next) || 'yok' });
+    if (next) pkg.discount = next; else delete pkg.discount;
+    pkg.updatedAt = at;
+  }
+  c.updatedAt = at;
+  const totals = defaultPackages.map(s => c.packages.find(p => p.id === s.id && !p.legacy)).filter(p => !!p).map(p => `${p!.name} ${lira(priceFor(p!.features, c.prices, p!.discount).monthly)}`).join(', ');
+  d.audit.push({ action: 'catalog.prices_2026_10_17', target: 'merkez', at, by: 'system', detail: `Fiyatlar 17 Ekim listesine güncellendi (KDV hariç, aylık): ${totals || 'başlangıç paketi yok'}.${kept.length ? ` Sizin değiştirdiğiniz için korunan: ${kept.join(', ')}.` : ''} İşletmelerin kendi indirimlerine ve Özel listelerine dokunulmadı.`, ...(changes.length ? { changes } : {}) });
 }
 /**
  * Step 3. Every connected business is signed again (serial + 1) with its list only: its café takes the new licence with the

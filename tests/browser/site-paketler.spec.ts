@@ -38,7 +38,7 @@ async function shot(page: Page, info: TestInfo, name: string) {
 const card = (page: Page, id: string) => page.locator(`#paketler article[data-paket="${id}"]`);
 
 for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [360, 780, 'paketler-telefon.png']] as const) {
-  test(`Paketler (${width} px): three prices + KDV, Kafe Standart's struck list price, the yearly line, "İlk 30 gün ücretsiz", Özel without prices`, async ({ page }, info) => {
+  test(`Paketler (${width} px): three prices + KDV, Restoran Pro's struck list price, the yearly line, "İlk 30 gün ücretsiz", Özel without prices`, async ({ page }, info) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.setViewportSize({ width, height });
@@ -48,8 +48,8 @@ for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [360,
     const offer = section.locator('.package-offer');
     await expect(offer).toHaveText('İlk 30 gün ücretsiz · Kurulum ücretsiz');
     expect((await offer.boundingBox())!.y).toBeLessThan((await section.locator('.packages').boundingBox())!.y);
-    // The owner's prices (15 Ekim), KDV hariç, "+ KDV" always beside the price.
-    const expected = { 'cay-bahcesi': ['₺980', '₺9.800'], 'kafe-standart': ['₺1.950', '₺19.500'], 'restoran-pro': ['₺2.600', '₺26.000'] } as const;
+    // The owner's prices (17 Ekim), KDV hariç, "+ KDV" always beside the price.
+    const expected = { 'cay-bahcesi': ['₺750', '₺7.500'], 'kafe-standart': ['₺1.375', '₺13.750'], 'restoran-pro': ['₺1.875', '₺18.750'] } as const;
     for (const [id, [monthly, yearly]] of Object.entries(expected)) {
       const c = card(page, id), now = c.locator('.package-price .now');
       await expect(now.locator('b')).toHaveText(monthly);
@@ -59,13 +59,13 @@ for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [360,
       expect(per.y, `${id}: + KDV fiyatın yanında`).toBeLessThan(b.y + b.height); expect(per.x).toBeGreaterThan(b.x);
       await expect(c.locator('.package-price .year')).toHaveText(`Yıllık ödemede 2 ay bedava: ${yearly} + KDV`);
     }
-    // Kafe Standart: ₺2.060 struck through above ₺1.950, read out as "Liste fiyatı ₺2.060", then "Paket fiyatı ₺1.950".
-    const standart = card(page, 'kafe-standart'), was = standart.locator('s.was');
-    await expect(was).toHaveText('Liste fiyatı ₺2.060'); await expect(was).toBeVisible();
-    await expect(standart.locator('.package-price .now')).toHaveText('Paket fiyatı ₺1.950 /ay + KDV');
+    // Restoran Pro: ₺1.910 struck through above ₺1.875, read out as "Liste fiyatı ₺1.910", then "Paket fiyatı ₺1.875".
+    const pro = card(page, 'restoran-pro'), was = pro.locator('s.was');
+    await expect(was).toHaveText('Liste fiyatı ₺1.910'); await expect(was).toBeVisible();
+    await expect(pro.locator('.package-price .now')).toHaveText('Paket fiyatı ₺1.875 /ay + KDV');
     expect(await was.evaluate(e => getComputedStyle(e).textDecorationLine)).toBe('line-through');
-    expect((await was.boundingBox())!.y + (await was.boundingBox())!.height).toBeLessThanOrEqual((await standart.locator('.now b').boundingBox())!.y + 1);
-    for (const id of ['cay-bahcesi', 'restoran-pro']) await expect(card(page, id).locator('s')).toHaveCount(0);
+    expect((await was.boundingBox())!.y + (await was.boundingBox())!.height).toBeLessThanOrEqual((await pro.locator('.now b').boundingBox())!.y + 1);
+    for (const id of ['cay-bahcesi', 'kafe-standart']) await expect(card(page, id).locator('s')).toHaveCount(0);
     // Worked out from the code (no price typed into the page): the same as Mola Merkez's priceFor on the defaults.
     for (const p of defaultPackages) {
       const price = priceFor(p.features, {}, p.discount);

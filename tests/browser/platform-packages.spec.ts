@@ -87,32 +87,33 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await expect(blocked.getByRole('button', { name: 'İki adımlı doğrulamayı aç' })).toBeVisible();
   await blocked.getByRole('button', { name: 'Kapat', exact: true }).last().click();
   await expect(prices.locator('.notice-error')).toContainText('iki adımlı doğrulamayı açın');
-  expect((await yonetimState(page.request)).catalog.features.find((f: any) => f.id === 'qr-menu').monthly).toBe(20000);
+  expect((await yonetimState(page.request)).catalog.features.find((f: any) => f.id === 'qr-menu').monthly).toBe(15000);
   // Two-step login on (every session ends); signed in again with a backup code.
   await enableAdminFactor(page.request);
   await openYonetim(page);
   await yonetimPackages(page, 'Paketler');
   const list = page.getByRole('region', { name: 'Paketler' });
   for (const name of ['Çay bahçesi', 'Kafe Standart', 'Restoran Pro']) await expect(list.getByRole('article', { name })).toBeVisible();
-  // 15 Ekim (owner's prices): Kafe Standart ₺2.060 − ₺110 = ₺1.950/ay with "Uzaktan erişim" (one chip: Uzaktan yönetim is inside it).
-  // The list price small and struck through ABOVE the price (read out as "Liste fiyatı"), the yearly line with its struck list
-  // price, and "Paket indirimi ₺110/ay" under it: no "₺110/ay indirim" chip beside ₺1.950 (it read as 110 off 1.950).
-  const standart = list.getByRole('article', { name: 'Kafe Standart' }), standartPrice = standart.locator('.package-price');
-  const struck = standartPrice.locator(':scope > s.list-price'), now = standartPrice.locator('.package-now');
-  await expect(struck).toHaveText('Liste fiyatı ₺2.060'); await expect(struck.locator('.visually-hidden')).toHaveText('Liste fiyatı ');
-  await expect(now).toHaveText('Paket fiyatı ₺1.950/ay'); await expect(now.locator('strong')).toHaveText('₺1.950');
+  // 17 Ekim (owner's prices): Restoran Pro ₺1.910 − ₺35 = ₺1.875/ay, without a separate Müdür rolü (in the core), with Sosyal
+  // medya ve QR kartları and Bulutta şifreli yedek. The list price small and struck through ABOVE the price (read out as "Liste
+  // fiyatı"), the yearly line with its struck list price, and "Paket indirimi ₺35/ay" under it: no "₺35/ay indirim" chip beside
+  // ₺1.875 (it read as 35 off 1.875).
+  const pro = list.getByRole('article', { name: 'Restoran Pro' }), proPrice = pro.locator('.package-price');
+  const struck = proPrice.locator(':scope > s.list-price'), now = proPrice.locator('.package-now');
+  await expect(struck).toHaveText('Liste fiyatı ₺1.910'); await expect(struck.locator('.visually-hidden')).toHaveText('Liste fiyatı ');
+  await expect(now).toHaveText('Paket fiyatı ₺1.875/ay'); await expect(now.locator('strong')).toHaveText('₺1.875');
   expect(await struck.evaluate(e => getComputedStyle(e).textDecorationLine)).toBe('line-through');
   const [wasBox, nowBox] = [await struck.boundingBox(), await now.boundingBox()];
   expect(wasBox!.y + wasBox!.height).toBeLessThanOrEqual(nowBox!.y + 1);
-  await expect(standartPrice.locator('small').first()).toHaveText('Liste fiyatı ₺20.600 → ₺19.500 / yıl');
-  await expect(standartPrice.locator('.package-discount')).toHaveText('Paket indirimi ₺110/ay');
-  await expect(standart).not.toContainText('₺110/ay indirim'); await expect(standart.locator('.discount-chip')).toHaveCount(0);
-  // Without a package discount the card is as before: the price and the yearly line, nothing struck.
-  const cay = list.getByRole('article', { name: 'Çay bahçesi' });
-  await expect(cay.locator('.package-price')).toHaveText('₺980/ay₺9.800 / yıl'); await expect(cay.locator('s')).toHaveCount(0);
+  await expect(proPrice.locator('small').first()).toHaveText('Liste fiyatı ₺19.100 → ₺18.750 / yıl');
+  await expect(proPrice.locator('.package-discount')).toHaveText('Paket indirimi ₺35/ay');
+  await expect(pro).not.toContainText('₺35/ay indirim'); await expect(pro.locator('.discount-chip')).toHaveCount(0);
+  // Without a package discount the card is as before: the price and the yearly line, nothing struck. Kafe Standart ₺1.375/ay
+  // (no package discount since 17 Ekim) with "Uzaktan erişim" (one chip: Uzaktan yönetim is inside it).
+  const cay = list.getByRole('article', { name: 'Çay bahçesi' }), standart = list.getByRole('article', { name: 'Kafe Standart' });
+  await expect(cay.locator('.package-price')).toHaveText('₺750/ay₺7.500 / yıl'); await expect(cay.locator('s')).toHaveCount(0);
+  await expect(standart.locator('.package-price')).toHaveText('₺1.375/ay₺13.750 / yıl'); await expect(standart.locator('s')).toHaveCount(0);
   await expect(standart.getByRole('list', { name: 'Hizmetler' })).toContainText('Uzaktan erişim'); await expect(standart).not.toContainText('Uzaktan yönetim');
-  // Restoran Pro without a separate Müdür rolü (in the core), with Sosyal medya ve QR kartları and Bulutta şifreli yedek: 2.600 TL/ay.
-  await expect(list.getByRole('article', { name: 'Restoran Pro' })).toContainText('₺2.600');
   await expect(page.locator('main')).not.toContainText('Müdür rolü');
   await expect(list.getByRole('region', { name: 'Eski planlar' })).toContainText('Tam sistem (eski plan)');
   await list.getByRole('button', { name: 'Yeni paket' }).first().click();
@@ -129,15 +130,15 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   // "Uzaktan erişim" is one service: one card, no separate "Uzaktan yönetim" to tick (15 Ekim).
   const uzak = builder.locator('section.feature-group[aria-label="Uzaktan"]');
   await expect(uzak.getByRole('checkbox')).toHaveCount(2); await expect(uzak).toContainText('Uzaktan erişim'); await expect(uzak).not.toContainText('Uzaktan yönetim');
-  await expect(uzak.locator('.feature-card').filter({ hasText: 'Uzaktan erişim' })).toContainText('₺130');
-  // 750 + 200 + 300 + 50 = 1.300 TL/ay; 10% off → 1.170 TL/ay, 11.700 TL/yıl.
+  await expect(uzak.locator('.feature-card').filter({ hasText: 'Uzaktan erişim' })).toContainText('₺100');
+  // 550 + 150 + 225 + 45 = 970 TL/ay; 10% off → 873 TL/ay, 8.730 TL/yıl.
   const total = builder.getByLabel('Paket toplamı');
-  await expect(total).toContainText('₺1.300');
+  await expect(total).toContainText('₺970');
   await builder.getByRole('radio', { name: '%' }).click();
   await builder.getByLabel('İndirim yüzdesi').fill('10');
-  await expect(total).toContainText('₺1.170'); await expect(total).toContainText('₺11.700');
-  // The live total shows the list prices struck above (₺1.300 / ₺13.000) and "Paket indirimi %10" under it.
-  await expect(total.locator('s.list-price')).toHaveText(['Liste fiyatı ₺1.300', 'Liste fiyatı ₺13.000']);
+  await expect(total).toContainText('₺873'); await expect(total).toContainText('₺8.730');
+  // The live total shows the list prices struck above (₺970 / ₺9.700) and "Paket indirimi %10" under it.
+  await expect(total.locator('s.list-price')).toHaveText(['Liste fiyatı ₺970', 'Liste fiyatı ₺9.700']);
   await expect(builder.locator('.builder-total')).toContainText('Paket indirimi %10'); await expect(builder.locator('.builder-total')).not.toContainText('%10 indirim');
   await yonetimShot(page, 'paket-olustur.png', info.outputPath('paket-olustur.png'));
   for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `paket oluştur ${width}`).toBe('ok'); }
@@ -147,7 +148,7 @@ test('Paketler: build a package (requirements added, discount, live total), Hizm
   await confirmStepUp(page, 'Paketi oluştur');
   await expect(list.getByText('“Bahçe Plus” paketi oluşturuldu.')).toBeVisible();
   const card = list.getByRole('article', { name: 'Bahçe Plus' });
-  await expect(card.locator('.package-now strong')).toHaveText('₺1.170'); await expect(card.locator('.package-price > s')).toHaveText('Liste fiyatı ₺1.300');
+  await expect(card.locator('.package-now strong')).toHaveText('₺873'); await expect(card.locator('.package-price > s')).toHaveText('Liste fiyatı ₺970');
   await expect(card.locator('.package-discount')).toHaveText('Paket indirimi %10');
   await yonetimShot(page, 'paketler.png', info.outputPath('paketler.png'));
   for (const [width, height] of sizes) { await page.setViewportSize({ width, height }); expect(await fits(page), `paketler ${width}`).toBe('ok'); if (width === 360) await page.screenshot({ path: info.outputPath('paketler-360.png'), fullPage: true }); }
@@ -187,9 +188,9 @@ test('İşletme → Hizmet: Özel with a discount (confirmed), Lisans → "Ödem
   const detail = await openBusiness(page, demo.name);
   await detailTab(detail, 'Hizmet').click();
   await expect(detail.getByRole('region', { name: 'Hizmet durumu' })).toContainText('Şu an açık');
-  // The package cards: Kafe Standart (a package discount) with its list price struck above; Çay bahçesi without.
+  // The package cards: Restoran Pro (a package discount) with its list price struck above; Çay bahçesi without.
   const choices = detail.getByRole('radiogroup', { name: 'Hizmet paketi' });
-  await expect(choices.getByRole('radio', { name: /^Kafe Standart/ }).locator('.service-card-price')).toContainText(/^Liste fiyatı ₺[\d.]+Paket fiyatı ₺[\d.]+\/ay/);
+  await expect(choices.getByRole('radio', { name: /^Restoran Pro/ }).locator('.service-card-price')).toContainText(/^Liste fiyatı ₺[\d.]+Paket fiyatı ₺[\d.]+\/ay/);
   await expect(choices.getByRole('radio', { name: /^Çay bahçesi/ }).locator('s')).toHaveCount(0);
   await choices.getByRole('radio', { name: /^Özel/ }).click();
   // Start from the Çay bahçesi-like core + QR menü: untick what is not needed, tick Stok.

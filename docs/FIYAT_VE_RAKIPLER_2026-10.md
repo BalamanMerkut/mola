@@ -6,7 +6,7 @@ Bu belge 5 Ekim tarihli `FIYAT_ARASTIRMASI.md`'nin yerini alır. Rakip fiyatlar�
 
 ## A. Kısa özet
 
-- **Bugünkü Mola fiyatları (kodda, KDV hariç):** Çay bahçesi 1.025 TL/ay, Kafe Standart 1.625 TL/ay, Restoran Pro 2.450 TL/ay; yıllık = 10 ay. Restoran Pro 5 Ekim belgesindeki 2.350 değil, 2.450: bulutta yedek pakete geri eklenmiş (`packages/domain/features.ts`, commit a4ff8b0).
+- **Bugünkü Mola fiyatları (17 Ekim, sahibin son kararı, kodda; KDV hariç):** Çay bahçesi 750 TL/ay, Kafe Standart 1.375 TL/ay, Restoran Pro 1.875 TL/ay (1.910 − 35 paket indirimi); yıllık = 10 ay. Ayrıntı bölüm E'nin başında. Bu belge yazılırken (15 Ekim sabahı) kodda 1.025 / 1.625 / 2.450 vardı; aşağıdaki konum ve öneri satırları o fiyatlara göredir.
 - **Üst çapa Adisyo:** Lite + QR 1.796, Standart + QR 2.396, Pro + QR 3.126 TL/ay. Fiyatlar 5 Ekim'den beri aynı. Yazar kasa (+565) ve platformlar (+225–325) ayrı.
 - **Alt çapa ucuz bulut programları:** GoPOS + QR ≈ 770 TL/ay; Restomenum 699 TL/ay (yıllıkta 583); 3E Yazılım 6.990 TL/yıl; Kafe360 8.999 TL/yıl (≈ 750/ay). Bunlarda QR menü ve stok çoğunlukla dahil. 5 Ekim'de bu grup tabloda yoktu; piyasanın alt ucu sandığımızdan ucuz.
 - **Konum (bugünkü fiyatla):** Mola, Adisyo'nun aynı düzey paketinin %22–43 altında; en küçük paketiyle ucuz bulut programlarının (≈ 750–770 TL/ay) %30–40 üstünde. Bu farkı haklı çıkaran şeyler: internet kesilince de çalışması, verinin kafede kalması, Elazığ'da yerinde kurulum ve destek, sınırsız cihaz, mutfak ekranının en küçük pakette olması.
@@ -100,7 +100,27 @@ Not: Adisyo QR menü ekinin yıllık fiyatı sayfada yok. GoPOS sayfasındaki "T
 
 ## E. Fiyat önerisi
 
-> **Sahibin son kararı (15 Ekim 2026, uygulamada).** "Uzaktan raporlar" ve "Uzaktan yönetim" tek hizmet olarak satılır: **Uzaktan erişim** (55 + 75 = 130 TL/ay). Hizmet fiyatları, KDV hariç, TL/ay:
+> **Sahibin son kararı (17 Ekim 2026, uygulamada).** Bütün fiyatlar indi. "Uzaktan erişim" tek hizmet olarak kalır (40 + 60 = 100 TL/ay). Kafe Standart'ın paket indirimi kalktı; Restoran Pro'ya 35 TL paket indirimi geldi. Hizmet fiyatları, KDV hariç, TL/ay:
+>
+> | Hizmet | TL/ay | Hizmet | TL/ay |
+> |---|---|---|---|
+> | Adisyon çekirdeği | 550 | Gelişmiş raporlar | 90 |
+> | QR menü | 150 | Rezervasyon ve etkinlik | 45 |
+> | QR sipariş ve garson çağırma | 225 | Sosyal medya ve QR kartları | 50 |
+> | Stok, reçete ve kârlılık | 300 | Vardiya, bahşiş ve personel raporu | 50 |
+> | **Uzaktan erişim** (raporlar + yönetim) | **100** | İki ekran | 50 |
+> | E-posta raporları | 50 | Bulutta şifreli yedek | 250 |
+> | | | Paket servis platformları (yakında) | 100 |
+>
+> | Paket | Hizmet toplamı | Paket indirimi | Aylık hariç | Aylık dahil | Yıllık hariç |
+> |---|---|---|---|---|---|
+> | Çay bahçesi | 750 | yok | **750** | 900 | 7.500 |
+> | Kafe Standart (Uzaktan erişim dahil) | 1.375 | yok | **1.375** | 1.650 | 13.750 |
+> | Restoran Pro | 1.910 | 35 | **1.875** | 2.250 | 18.750 |
+>
+> Kodda başlangıç fiyatları bunlar (`packages/domain/features.ts`). Canlı Merkez bir sonraki açılışta bir kez bu listeye geçer (katalog adımı 5). Yalnız hâlâ 15 Ekim listesinde duran fiyat ve paketler değişir; sahibin o tarihten sonra Mola Yönetim'de elle değiştirdiği fiyat ya da paket olduğu gibi kalır ve İşlem kayıtları'nda "korunan" diye yazılır. Aşağıdaki 15 Ekim kararı geçmiş olarak duruyor.
+
+> **Önceki karar (15 Ekim 2026; 17 Ekim'de yerini yukarıdaki aldı).** "Uzaktan raporlar" ve "Uzaktan yönetim" tek hizmet olarak satılır: **Uzaktan erişim** (55 + 75 = 130 TL/ay). Hizmet fiyatları, KDV hariç, TL/ay:
 >
 > | Hizmet | TL/ay | Hizmet | TL/ay |
 > |---|---|---|---|
