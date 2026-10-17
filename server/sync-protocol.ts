@@ -179,7 +179,7 @@ export type SyncResponse = { v: 1; serverTime: string; licenses: SignedLicense[]
    */
   lanLink?: { base?: string; codes: { tenantId: string; code: string }[] };
   /**
-   * Kafemi yönet's own address (MERKEZ_OWNER_ORIGIN, e.g. https://kafem.molayazilim.com.tr; server/merkez/owner-host.ts): the
+   * İşletmemi yönet's own address (MERKEZ_OWNER_ORIGIN, e.g. https://isletme.molayazilim.com.tr; server/merkez/owner-host.ts): the
    * owner's page is its root "/". Missing (no such name, or an older Merkez): <Merkez>/yonet as before.
    */
   ownerHost?: { base: string } };

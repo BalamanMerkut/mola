@@ -9,7 +9,7 @@ import { dropSession, openRemote, REMOTE_ENDED_EVENT, REMOTE_OFFLINE_EVENT, Remo
 import './reports-phone.css';
 
 /*
- * "Kafemi yönet" (/yonet on Mola Merkez, 0.1.23: Raporlarım and "Kafeyi yönet" on one page, one address; /raporlarim and
+ * "İşletmemi yönet" (/yonet on Mola Merkez, 0.1.23: Raporlarım and "Kafeyi yönet" on one page, one address; /raporlarim and
  * typed variants come here with a 301). The owner's decision: one website sign-in, nothing else to find.
  *   Giriş        not signed in on this device: "E-posta" + "Şifre" → "Devam" (the café computer checks the password at once,
  *                sealed to it; Mola Merkez never sees it) → "Telefon kodu" → "Giriş yap"; at most 3 devices ("Hangisinin
@@ -65,21 +65,21 @@ export function OwnerPage() {
   const [paired, setPaired] = useState<Paired | null | undefined>(undefined);
   const [k] = useState(readStart), [notice, setNotice] = useState(''), [fresh, setFresh] = useState<{ business: string; grant?: string } | null>(null);
   useEffect(() => {
-    document.title = 'Kafemi yönet · Mola';
+    document.title = 'İşletmemi yönet · Mola';
     void cryptoReady().then(r => setReady(r as 'ok' | 'https' | 'old')); void readPaired().then(p => setPaired(p ?? null)).catch(() => setPaired(null));
   }, []);
   if (ready === 'checking' || paired === undefined) return <Opening />;
-  if (ready !== 'ok') return <Shell><div className="rp-card rp-warn" role="alert"><h2>Bu sayfa burada açılamıyor</h2><p>{ready === 'https' ? 'Kafemi yönet yalnız güvenli bağlantıyla (https://) açılır. Adresi https:// ile yazın ya da Mola ekibine danışın.' : 'Bu tarayıcı gereken şifrelemeyi desteklemiyor. Cihazınızı ve tarayıcınızı güncelleyip yeniden deneyin.'}</p></div></Shell>;
+  if (ready !== 'ok') return <Shell><div className="rp-card rp-warn" role="alert"><h2>Bu sayfa burada açılamıyor</h2><p>{ready === 'https' ? 'İşletmemi yönet yalnız güvenli bağlantıyla (https://) açılır. Adresi https:// ile yazın ya da Mola ekibine danışın.' : 'Bu tarayıcı gereken şifrelemeyi desteklemiyor. Cihazınızı ve tarayıcınızı güncelleyip yeniden deneyin.'}</p></div></Shell>;
   if (!paired || paired.locked) return <Shell k={k} theme={paired?.last?.report.theme}><Login key={paired ? 'kilitli' : 'yeni'} notice={notice} locked={paired ?? undefined} onPaired={(p, grant) => { setNotice(''); setFresh({ business: p.business, grant }); setPaired(p); }} /></Shell>;
   return <Home paired={paired} fresh={fresh} k={k}
     onLocked={p => { setNotice('Çıkış yapıldı.'); setFresh(null); setPaired(p); }}
     onGone={why => { setNotice(why); setFresh(null); setPaired(null); void forgetPaired().catch(() => {}); }} />;
 }
 
-/** The slim header (Mola mark, "Kafemi yönet", the business) over the owner's own screens; `theme`: the business's palette. */
+/** The slim header (Mola mark, "İşletmemi yönet", the business) over the owner's own screens; `theme`: the business's palette. */
 function Shell({ children, business, k, action, theme }: { children: ReactNode; business?: string; k?: string | null; action?: ReactNode; theme?: PhoneReport['theme'] }) {
   return <div className="rp-shell" style={businessTheme(theme)}>
-    <header className="rp-header"><div className="rp-header-in"><span className="rp-logo" aria-hidden="true">M</span><div className="rp-title"><strong>Kafemi yönet</strong>{business && <span>{business}</span>}</div>{action}</div></header>
+    <header className="rp-header"><div className="rp-header-in"><span className="rp-logo" aria-hidden="true">M</span><div className="rp-title"><strong>İşletmemi yönet</strong>{business && <span>{business}</span>}</div>{action}</div></header>
     <main className="rp-page">{children}</main>
     {k && <a className="rp-cafe" href={`/k/${k}?kafe=1`}>Kafedeyim, kasayı aç</a>}
     <footer className="rp-foot">Bu cihazla kasa bilgisayarı arasındaki her şey şifrelidir. Mola Merkez yalnız iletir, okuyamaz.</footer>

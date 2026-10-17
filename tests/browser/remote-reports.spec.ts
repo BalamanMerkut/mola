@@ -2,7 +2,7 @@ import { test, expect, devices, type Page } from '@playwright/test';
 import { codesOf, ensureSetup, MERKEZ, merkezMail, openSettings, OWNER_EMAIL, raporlarimCode, raporlarimPassword, remoteLoginOpen } from './helpers';
 
 /*
- * Kafemi yönet (0.1.23, /yonet on Mola Merkez; src/ReportsPhone.tsx, server/remote-reports.ts): one website sign-in. The café
+ * İşletmemi yönet (0.1.23, /yonet on Mola Merkez; src/ReportsPhone.tsx, server/remote-reports.ts): one website sign-in. The café
  * computer's Ayarlar → Uzaktan erişim (src/RemoteAccess.tsx) has exactly five plain cards: the phone code and the e-mail set up
  * on screen, then the address. A device that is not signed in opens that address (typed with Turkish letters too) and sees
  * "Giriş yap": the e-mail and the password ("Devam", checked by the café computer at once), then the phone code. Any device
@@ -16,7 +16,7 @@ const PASSWORD = 'MolaDemo!2026';
 const today = () => new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long' });
 const wide = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 
-test('Uzaktan erişim → five plain cards; Kafemi yönet: any device first, two-step sign-in, live report, café off → last report, "Çıkış", removal', async ({ browser }, info) => {
+test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first, two-step sign-in, live report, café off → last report, "Çıkış", removal', async ({ browser }, info) => {
   test.setTimeout(360_000);
   const cafe = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const phoneContext = await browser.newContext({ ...devices['iPhone 13'] });
@@ -66,16 +66,16 @@ test('Uzaktan erişim → five plain cards; Kafemi yönet: any device first, two
     // 3: the plain address in big letters, Kopyala, its small QR; nothing else.
     const address = `${MERKEZ}/yonet`;
     await expect(step3.locator('.remote-address-text')).toHaveText(address.replace(/^https?:\/\//, ''));
-    await expect(step3.getByRole('img', { name: 'Kafemi yönet adresinin QR kodu' })).toBeVisible();
+    await expect(step3.getByRole('img', { name: 'İşletmemi yönet adresinin QR kodu' })).toBeVisible();
     await step3.getByRole('button', { name: 'Kopyala' }).click();
     await owner.screenshot({ path: info.outputPath('sahip-uzaktan-erisim.png'), fullPage: true });
     await remoteLoginOpen();
 
-    // The laptop first (0.1.23: no phone-first rule), the old address typed with a Turkish letter: Kafemi yönet's sign-in.
+    // The laptop first (0.1.23: no phone-first rule), the old address typed with a Turkish letter: İşletmemi yönet's sign-in.
     const laptop = await laptopContext.newPage();
     await laptop.goto(`${MERKEZ}/raporlarım#e=${'A'.repeat(22)}`);
     await expect(laptop).toHaveURL(`${MERKEZ}/yonet`);
-    await expect(laptop).toHaveTitle('Kafemi yönet · Mola');
+    await expect(laptop).toHaveTitle('İşletmemi yönet · Mola');
     const loginForm = laptop.getByRole('form', { name: 'Giriş yap' });
     await expect(loginForm).toBeVisible();
     await expect(loginForm.getByLabel('Bu cihazın adı')).toHaveCount(0);
@@ -221,11 +221,11 @@ test('Uzaktan erişim → five plain cards; Kafemi yönet: any device first, two
     }).toPass({ timeout: 30_000 });
     await expect(phone.getByRole('form', { name: 'Giriş yap' }).getByRole('status')).toHaveText('Bu cihazın bağlantısı kaldırıldı. Yeniden giriş yapabilirsiniz.');
 
-    // An address nobody answers: the plain 404 page with the way to Kafemi yönet (no Mola Yönetim).
+    // An address nobody answers: the plain 404 page with the way to İşletmemi yönet (no Mola Yönetim).
     await phone.goto(`${MERKEZ}/raporlar-eski`);
     await expect(phone.getByRole('heading', { name: 'Bu sayfa bulunamadı.' })).toBeVisible();
     await phone.screenshot({ path: info.outputPath('telefon-404.png'), fullPage: true });
-    await phone.getByRole('link', { name: 'Kafemi yönet’e git' }).click();
+    await phone.getByRole('link', { name: 'İşletmemi yönet’e git' }).click();
     await expect(phone).toHaveURL(`${MERKEZ}/yonet`);
   } finally {
     await relay(true).catch(() => {});

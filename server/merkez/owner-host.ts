@@ -6,22 +6,22 @@ import { noticePage } from './notice-page.js';
 import { ownerPage } from './remote-admin.js';
 
 /*
- * Kafemi yönet'in kendi adresi (16 Ekim, sahibin kararı): the owner's page ("Kafemi yönet": sign-in, reports, the café's own
- * screens through the sealed tunnel) runs on its OWN origin, e.g. https://kafem.molayazilim.com.tr, so owners never see
+ * İşletmemi yönet'in kendi adresi (16 Ekim, sahibin kararı): the owner's page ("İşletmemi yönet": sign-in, reports, the café's own
+ * screens through the sealed tunnel) runs on its OWN origin, e.g. https://isletme.molayazilim.com.tr, so owners never see
  * "merkez" (Mola Yönetim's name) and the page's device keys (IndexedDB) never share an origin with Mola Yönetim's cookies.
  * Modelled on the guest menu's own name (menu-host.ts). MERKEZ_OWNER_ORIGIN names it:
- *   - on that name Merkez answers only the owner's things: the page at "/" (index.html as Kafemi yönet), its built files
+ *   - on that name Merkez answers only the owner's things: the page at "/" (index.html as İşletmemi yönet), its built files
  *     (/assets/…, the icons the page names) and exactly the calls the page makes (POST /api/merkez/v1/phone/login/start,
  *     login, live, status, postbox, forget, admin); /yonet and its typed variants there are a 308 to "/" (typed by hand);
  *     everything else is 404 (no Mola Yönetim, no /api/merkez/admin, no /q/, /s/, /k/, no café calls);
  *   - on Merkez's own name the page is not served: /yonet, /raporlarim and their typed variants are a plain 404 like any
  *     unknown address (no customer used the old address yet: the owner's decision, no redirect kept for it);
  *   - the cafés learn the address with the heartbeat (`ownerHost.base`; Ayarlar → Uzaktan erişim shows it) and /k/<kod> off
- *     the café's network goes there; the web site's /yonet, /raporlarim, /kafemi-yonet pages send typed addresses there.
- * Without it (development, tests, an older setup) nothing changes: Kafemi yönet is <Merkez>/yonet.
+ *     the café's network goes there. The web site has no /yonet page (the owner's decision, 16 Ekim): it is the site's 404.
+ * Without it (development, tests, an older setup) nothing changes: İşletmemi yönet is <Merkez>/yonet.
  */
 export function ownerOrigin(publicOrigin?: string, siteOrigin?: string, menuOrigin?: string, value = process.env.MERKEZ_OWNER_ORIGIN) {
-  return separateOrigin('MERKEZ_OWNER_ORIGIN', 'https://kafem.molayazilim.com.tr', value, [publicOrigin, siteOrigin, menuOrigin]);
+  return separateOrigin('MERKEZ_OWNER_ORIGIN', 'https://isletme.molayazilim.com.tr', value, [publicOrigin, siteOrigin, menuOrigin]);
 }
 export const ownerHostName = (origin: string) => new URL(origin).hostname.toLowerCase();
 
@@ -49,7 +49,7 @@ export function ownerHostRoutes(app: Express, origin: string, o: { menuName?: st
     }
     res.set('X-Robots-Tag', 'noindex');
     if (typed) { const q = req.originalUrl.indexOf('?'); res.set('Cache-Control', 'no-store'); res.redirect(308, `/${q >= 0 ? req.originalUrl.slice(q) : ''}`); return; }
-    // The page itself (server/merkez/runtime.ts serves index.html as Kafemi yönet with "/" as its home).
+    // The page itself (server/merkez/runtime.ts serves index.html as İşletmemi yönet with "/" as its home).
     if (read && req.path === '/') { res.locals.molaPage = 'index.html'; res.locals.molaOwner = true; res.locals.molaOwnerHome = '/'; res.locals.molaOwnerHost = true; return next(); }
     if ((read && (OWNER_FILES.test(req.path) || (o.development && DEV_FILES.test(req.path)))) || (req.method === 'POST' && OWNER_CALLS.test(req.path))) { res.locals.molaOwnerHost = true; return next(); }
     res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" });
@@ -57,5 +57,5 @@ export function ownerHostRoutes(app: Express, origin: string, o: { menuName?: st
     res.status(404).type('html').send(missingPage('/'));
   });
 }
-/** "Bu sayfa bulunamadı." with one plain link to Kafemi yönet (server/merkez/runtime.ts uses it for every unknown address). */
-export const missingPage = (owner: string) => noticePage({ status: 'missing', tr: 'Bu sayfa bulunamadı.', en: 'This page could not be found.', link: { href: owner === '/' || owner === '/yonet' ? owner : `${owner}/`, text: 'Kafemi yönet’e git' } });
+/** "Bu sayfa bulunamadı." with one plain link to İşletmemi yönet (server/merkez/runtime.ts uses it for every unknown address). */
+export const missingPage = (owner: string) => noticePage({ status: 'missing', tr: 'Bu sayfa bulunamadı.', en: 'This page could not be found.', link: { href: owner === '/' || owner === '/yonet' ? owner : `${owner}/`, text: 'İşletmemi yönet’e git' } });

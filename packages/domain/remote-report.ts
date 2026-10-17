@@ -28,7 +28,7 @@ export type PhoneReport = {
   lastClosing: { at: string; day: string; byName: string; extra?: boolean; counted: number; expected: number; difference: number } | null;
   /** The last 30 business days, oldest first. */
   days: { day: string; sales: number }[];
-  /** The business's palette (0.1.23): Kafemi yönet wears the café's own colours. */
+  /** The business's palette (0.1.23): İşletmemi yönet wears the café's own colours. */
   theme?: import('./theme.js').ThemeId;
   /** "Kafeyi yönet": absent when the package has no Uzaktan yönetim; otherwise whether the owner turned it on (0.1.21). */
   admin?: 'on' | 'off';

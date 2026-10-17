@@ -33,7 +33,7 @@ import { ownerHtml } from './remote-admin.js';
  * kdf/backupDirectory/osLock: tests.
  */
 export type MerkezRuntimeOptions = { directory: string; port: number; host: '127.0.0.1' | '0.0.0.0'; serveBuild: boolean; buildDirectory?: string; protect?: boolean; initialPassword?: string; httpSecurity?: HttpSecurity; kdf?: KdfParams; backupDirectory?: string; releasesDirectory?: string; osLock?: MerkezLock;
-  /** Kafemi yönet's own origin (tests; default MERKEZ_OWNER_ORIGIN: server/merkez/owner-host.ts). */
+  /** İşletmemi yönet's own origin (tests; default MERKEZ_OWNER_ORIGIN: server/merkez/owner-host.ts). */
   ownerOrigin?: string | null };
 export async function startMerkez(options: MerkezRuntimeOptions) {
   const directory = resolve(options.directory), release = dataLock(directory, 'merkez');
@@ -55,15 +55,15 @@ export async function startMerkez(options: MerkezRuntimeOptions) {
   const pages = (app: Express) => {
     pageHeaders(app, { frames: 'none', development: !options.serveBuild });
     // Köprü (server/merkez/relay.ts, remote-admin.ts) names another page: the café's own screens (index.html of this same
-    // build) for Kafemi yönet (/yonet) and a Mola destek session.
+    // build) for İşletmemi yönet (/yonet) and a Mola destek session.
     const page = (res: express.Response) => res.locals.molaPage === 'index.html' ? 'index.html' : 'merkez.html';
-    // Kafemi yönet is "/" on its own name (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts), else /yonet.
+    // İşletmemi yönet is "/" on its own name (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts), else /yonet.
     const ownerHome = (res: express.Response) => res.locals.molaOwnerHome === '/' ? '/' : '/yonet';
     // Mola Yönetim is the page at "/" only (its screens change inside the page). Any other address nobody answered is a plain
     // 404 page (0.1.21): an owner's mistyped or old address never lands on Mola Yönetim's sign-in.
     const known = (req: express.Request, res: express.Response) => !!res.locals.molaPage || (req.path === '/' && ['GET', 'HEAD'].includes(req.method));
     // 0.1.23: it offers the owner's own page (typed variants of /yonet and /raporlarim never get here: server/merkez/remote-admin.ts).
-    // With Kafemi yönet on its own name (MERKEZ_OWNER_ORIGIN) the link goes there (server/merkez/owner-host.ts).
+    // With İşletmemi yönet on its own name (MERKEZ_OWNER_ORIGIN) the link goes there (server/merkez/owner-host.ts).
     const missing = (res: express.Response) => res.status(404).type('html').set('Cache-Control', 'no-store').send(missingPage(typeof app.locals.ownerOrigin === 'string' ? app.locals.ownerOrigin : '/yonet'));
     if (options.serveBuild) {
       app.use(express.static(build, { index: false }));

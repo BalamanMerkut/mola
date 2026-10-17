@@ -59,15 +59,15 @@ test('built screens carry the security headers on both servers; Mola Yönetim an
   assert.equal(yonetim.status, 200); assert.match(yonetim.body, /Mola Yönetim/);
   assert.match(String(yonetim.headers['content-security-policy']), /frame-ancestors 'none'/); assert.equal(yonetim.headers['x-frame-options'], 'DENY');
   // Only "/" is Mola Yönetim (0.1.21): any other address nobody answers is a plain 404 page, never its sign-in; it offers the
-  // owner's own page (0.1.23: "Kafemi yönet’e git", plain, no Mola Yönetim link).
+  // owner's own page (0.1.23: "İşletmemi yönet’e git", plain, no Mola Yönetim link).
   for (const path of ['/yonetim', '/raporlar', '/k', '/x/y/z', '/merkez']) {
     const r = await raw(merkezPort, path);
     assert.equal(r.status, 404, path); assert.match(r.body, /Bu sayfa bulunamadı/, path); assert.doesNotMatch(r.body, /Mola Yönetim|merkez-main/, path);
-    assert.match(r.body, /<a class="go" href="\/yonet">Kafemi yönet’e git<\/a>/, path);
+    assert.match(r.body, /<a class="go" href="\/yonet">İşletmemi yönet’e git<\/a>/, path);
   }
-  // Kafemi yönet (0.1.23): the café's screens page under its own name, no café manifest (its start "/" is Mola Yönetim here).
+  // İşletmemi yönet (0.1.23): the café's screens page under its own name, no café manifest (its start "/" is Mola Yönetim here).
   const manage = await raw(merkezPort, '/yonet');
-  assert.equal(manage.status, 200); assert.match(manage.body, /<title>Kafemi yönet · Mola<\/title>/); assert.doesNotMatch(manage.body, /Mola Yönetim|rel="manifest"/);
+  assert.equal(manage.status, 200); assert.match(manage.body, /<title>İşletmemi yönet · Mola<\/title>/); assert.doesNotMatch(manage.body, /Mola Yönetim|rel="manifest"/);
   assert.match(manage.body, /<meta name="robots" content="noindex" \/>/);
   // The old address and every way an owner may type either one: 301 to /yonet, the query kept (GET and HEAD only).
   for (const [path, to] of [['/raporlarim', '/yonet'], ['/raporlar%C4%B1m', '/yonet'], ['/Raporlarim', '/yonet'], ['/RAPORLARIM', '/yonet'], ['/RAPORLARIM/', '/yonet'], ['/Raporlar%C4%B1m', '/yonet'],
@@ -82,7 +82,7 @@ test('built screens carry the security headers on both servers; Mola Yönetim an
   assert.equal((await raw(merkezPort, '/api/merkez/admin/state', { 'X-Forwarded-For': '192.168.1.30' })).status, 403, 'through a proxy without HTTPS');
 });
 
-test('Kafemi yönet addresses as typed: Turkish letters folded, capitals and a trailing slash ignored; nothing else matches', () => {
+test('İşletmemi yönet addresses as typed: Turkish letters folded, capitals and a trailing slash ignored; nothing else matches', () => {
   for (const path of ['/raporlarim', '/raporlar%C4%B1m', '/RAPORLARIM', '/Raporlar%C4%B0m', '/raporlarim/', '/raporlarim//', '/Yonet', '/YÖNET', '/y%C3%B6net', '/yonet/'])
     assert.equal(ownerPage(path), '/yonet', path);
   for (const path of ['/yonet', '/yonetim', '/raporlar', '/raporlarimx', '/r/aporlarim', '/%E0%A4%A', '/', '/k/raporlarim'])

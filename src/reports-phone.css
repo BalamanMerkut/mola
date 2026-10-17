@@ -1,5 +1,5 @@
 /*
- * "Kafemi yönet" (src/ReportsPhone.tsx, /yonet on Mola Merkez): the sign-in, the report and its banners. Loaded beside the
+ * "İşletmemi yönet" (src/ReportsPhone.tsx, /yonet on Mola Merkez): the sign-in, the report and its banners. Loaded beside the
  * café app's own style sheets (index.html), so everything is scoped to .rp-shell. The business's palette comes in as the
  * app's theme tokens (src/BusinessTheme.tsx businessTheme on .rp-shell: --green, --paper, --brand-bg, --line …), matte like
  * the café screens; Mola's own palette until a report has told it. Dark when the device is dark.
@@ -8,7 +8,7 @@
   min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--rp-page);color:var(--rp-ink);font:16px/1.45 Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%;color-scheme:light}
 .rp-shell *,.rp-shell *::before,.rp-shell *::after{box-sizing:border-box}
 @media (prefers-color-scheme:dark){.rp-shell{--rp-page:#121815;--rp-card:#1b231f;--rp-field:#141b18;--rp-line:#2c3832;--rp-brand-ink:#9fd0b8;--rp-soft:#22302a;--rp-ink:#e5ece7;--rp-muted:#9eada5;--rp-warn:#f0a497;--rp-amber:#f0c27a;--rp-amber-bg:#33291a;--rp-ok-bg:#1e3328;color-scheme:dark}}
-/* Slim header: the Mola mark, "Kafemi yönet", the business; Çıkış at its end. */
+/* Slim header: the Mola mark, "İşletmemi yönet", the business; Çıkış at its end. */
 .rp-header{position:sticky;top:0;z-index:5;background:var(--rp-card);border-bottom:1px solid var(--rp-line);padding-top:env(safe-area-inset-top)}
 .rp-header-in{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:60px}
 .rp-logo{width:36px;height:36px;border-radius:11px;background:var(--rp-brand);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px;flex-shrink:0}

@@ -54,7 +54,7 @@ const kafeChild = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts']
     // İnternetten menü (server/guest-tunnel.ts): the guest tunnel comes back within half a second, and tests/browser/guest-internet.spec.ts
     // may switch it off and on from this computer (POST /api/test/tunnel) as if the café computer were off.
     MOLA_TEST_TUNNEL: '1', MOLA_TUNNEL_RETRY_MS: '500',
-    // Kafemi yönet (tests/browser/remote-admin.spec.ts, remote-reports.spec.ts): POST /api/test/relay { on } stops the köprü as
+    // İşletmemi yönet (tests/browser/remote-admin.spec.ts, remote-reports.spec.ts): POST /api/test/relay { on } stops the köprü as
     // if the café computer were off; Mola Merkez calls it off once no poll came for MOLA_RELAY_HOLD_MS + 10 s.
     MOLA_RELAY_HOLD_MS: '5000',
     // QR siparişleri (server/qr-ordering.ts): the suites order as guests without a staff screen open, so "a staff screen is

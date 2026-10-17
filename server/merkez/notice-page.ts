@@ -4,7 +4,7 @@
  * fits a 360 px phone, no script. `refresh`: seconds until the browser tries again by itself (a café computer offline).
  */
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
-/** `link`: one plain link under the text (the 404 page: "Kafemi yönet’e git"). */
+/** `link`: one plain link under the text (the 404 page: "İşletmemi yönet’e git"). */
 export function noticePage(o: { status: string; tr: string; en: string; detail?: string; detailEn?: string; refresh?: number; link?: { href: string; text: string } }) {
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${o.refresh ? `<meta http-equiv="refresh" content="${o.refresh}">` : ''}<title>Mola</title><style>
 :root{color-scheme:light dark;--bg:#f4f1ea;--card:#fff;--ink:#22352c;--muted:#66746b;--brand:#2f6b55}

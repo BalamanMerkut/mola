@@ -16,7 +16,7 @@ import { remoteRefusal } from '../server/remote-admin.js';
 import { merkezPair, OWNER_EMAIL, phonePost, remoteLoginReady } from './merkez-fixture.js';
 
 /*
- * Raporlarım (server/remote-reports.ts; the page is "Kafemi yönet" on /yonet since 0.1.23): a device signs in with the
+ * Raporlarım (server/remote-reports.ts; the page is "İşletmemi yönet" on /yonet since 0.1.23): a device signs in with the
  * business's verified owner e-mail and the owner's password (step 1), then the phone code (step 2); the café computer checks
  * them, Mola Merkez only routes by the e-mail and carries ciphertext. Then live reports, the postbox while the café is off,
  * "Kaldır" and "Çıkış".
@@ -204,7 +204,7 @@ test('two steps: the password at once (a ticket for the code), then the code; wr
   for (let i = 0; i < 5; i++) assert.equal((await login({ password: `yanlis-${i}` })).result.kind, 'error');
   const waiting = await login({ name: 'Bekleyen', stay: true });
   assert.equal(waiting.result.kind, 'error'); assert.match((waiting.result as { message: string }).message, /^Çok fazla hatalı deneme\. \d+ dakika sonra yeniden deneyin\.$/);
-  assert.ok(((await owner('/staff/notifications')).data.items as { title: string }[]).some(n => n.title === 'Kafemi yönet: hatalı girişler'));
+  assert.ok(((await owner('/staff/notifications')).data.items as { title: string }[]).some(n => n.title === 'İşletmemi yönet: hatalı girişler'));
   assert.ok(pair.store.auditLog(tenant, 50).some(a => a.action === 'remote.login_failed'));
   // After the wait the right one goes in (and the wrong count starts over).
   clock.add(15 * 60_000);

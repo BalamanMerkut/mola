@@ -88,7 +88,7 @@ export async function remoteLoginOpen(email = OWNER_EMAIL) {
   try { await expect.poll(async () => (await api.post(`${MERKEZ}/api/merkez/v1/phone/login/start`, { data: { email } })).status(), { timeout: 30_000, intervals: [500, 1000, 2000] }).toBe(200); }
   finally { await api.dispose(); }
 }
-/** Kafemi yönet's first screen (src/ReportsPhone.tsx, 0.1.23): the e-mail and the password, "Devam". */
+/** İşletmemi yönet's first screen (src/ReportsPhone.tsx, 0.1.23): the e-mail and the password, "Devam". */
 export async function raporlarimPassword(page: Page, o: { email?: string; password?: string } = {}) {
   const form = page.getByRole('form', { name: 'Giriş yap' });
   await form.getByLabel('E-posta').fill(o.email ?? OWNER_EMAIL);
@@ -102,7 +102,7 @@ export async function raporlarimCode(page: Page, code: string | (() => Promise<s
   await form.getByLabel('Telefon kodu').fill(typeof code === 'string' ? code : await code());
   await form.getByRole('button', { name: 'Giriş yap' }).click();
 }
-/** Kafemi yönet's whole sign-in on this page: the e-mail and the password, then the phone code (the device names itself). */
+/** İşletmemi yönet's whole sign-in on this page: the e-mail and the password, then the phone code (the device names itself). */
 export async function raporlarimLogin(page: Page, o: { code: string | (() => Promise<string>); email?: string; password?: string }) {
   await raporlarimPassword(page, o);
   await raporlarimCode(page, o.code);

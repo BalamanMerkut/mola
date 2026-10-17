@@ -138,7 +138,7 @@
   <text x="464" y="136" font-size="10.5">• Lisans imzalama (Ed25519), kalp atışı</text>
   <text x="464" y="153" font-size="10.5">• Destek talepleri ve ekleri</text>
   <text x="464" y="170" font-size="10.5">• Misafir tüneli merkezi (WebSocket)</text>
-  <text x="464" y="187" font-size="10.5">• Köprü: uzaktan destek, Kafemi yönet</text>
+  <text x="464" y="187" font-size="10.5">• Köprü: uzaktan destek, İşletmemi yönet</text>
   <text x="464" y="204" font-size="10.5">• Şifreli yedek kasası, güncelleme dağıtımı</text>
   <text x="464" y="221" font-size="10.5">• Mola Yönetim paneli (React)</text>
   <text x="464" y="238" font-size="10.5">• İşlem kayıtları (hash zinciri)</text>
@@ -152,7 +152,7 @@
   <text x="450" y="400" font-size="10.5">QR → /q/kod/masa</text>
   <rect x="600" y="360" width="152" height="60" rx="8" fill="#fff" stroke="#1f3b5c"/>
   <text x="612" y="382" font-size="11.5" font-weight="600">Sahibin cihazları</text>
-  <text x="612" y="400" font-size="10.5">/yonet (Kafemi yönet)</text>
+  <text x="612" y="400" font-size="10.5">/yonet (İşletmemi yönet)</text>
   <rect x="438" y="432" width="152" height="60" rx="8" fill="#fff" stroke="#1f3b5c"/>
   <text x="450" y="454" font-size="11.5" font-weight="600">Satıcının tarayıcısı</text>
   <text x="450" y="472" font-size="10.5">Mola Yönetim</text>
@@ -196,7 +196,7 @@
   <tbody>
     <tr><td colspan="2" class="grup">Diller</td></tr>
     <tr><td>TypeScript 7</td><td>Bütün sunucu, ekran ve iş kuralı kodu.</td></tr>
-    <tr><td>HTML, CSS</td><td>Üç sayfa girişi (personel, misafir ve Kafemi yönet; Mola Yönetim; internetten menü) ve web sitesi. Çatı yok; 83 elle yazılmış stil dosyası, yazdırma stilleri. Bu belge de HTML'den basıldı.</td></tr>
+    <tr><td>HTML, CSS</td><td>Üç sayfa girişi (personel, misafir ve İşletmemi yönet; Mola Yönetim; internetten menü) ve web sitesi. Çatı yok; 83 elle yazılmış stil dosyası, yazdırma stilleri. Bu belge de HTML'den basıldı.</td></tr>
     <tr><td>SQL (SQLite)</td><td>Tablolar, dizinler, değiştirilemez kayıt için tetikleyiciler, yıl paketlerinde <code>ATTACH</code> + <code>INSERT…SELECT</code>.</td></tr>
     <tr><td>C# (.NET Framework 4)</td><td>Windows kurulum programı, <code>Mola.exe</code>, kaldırıcı; Windows'un kendi <code>csc.exe</code>'siyle derlenir, ek kurulum gerekmez.</td></tr>
     <tr><td>Java</td><td>Android kabuğu: WebView, ağda kafe arama, kütüphanesiz QR çözücü (Reed-Solomon dahil).</td></tr>
@@ -320,8 +320,8 @@
 
 <!-- ============================================================ 8 -->
 <h1 id="t8" class="akis"><span class="no">8</span>Uzaktan erişim</h1>
-<h2 id="t8-1">Kafemi yönet: giriş ve uçtan uca şifreleme</h2>
-<p>Sahip telefonundan ya da laptopundan tek adrese girer: <code>kafem.molayazilim.com.tr</code>. Eşleştirme QR'ı yoktur; cihaz e-posta, şifre ve telefon koduyla bir kez girer ve hatırlanır (en çok 3 cihaz). Raporlar Merkez'den geçer ama Merkez okuyamaz (<code>packages/domain/remote-crypto.ts</code>, <code>remote-login.ts</code>; aynı kod sunucuda Node'un, cihazda tarayıcının WebCrypto'suyla çalışır).</p>
+<h2 id="t8-1">İşletmemi yönet: giriş ve uçtan uca şifreleme</h2>
+<p>Sahip telefonundan ya da laptopundan tek adrese girer: <code>isletme.molayazilim.com.tr</code>. Eşleştirme QR'ı yoktur; cihaz e-posta, şifre ve telefon koduyla bir kez girer ve hatırlanır (en çok 3 cihaz). Raporlar Merkez'den geçer ama Merkez okuyamaz (<code>packages/domain/remote-crypto.ts</code>, <code>remote-login.ts</code>; aynı kod sunucuda Node'un, cihazda tarayıcının WebCrypto'suyla çalışır).</p>
 <figure>
 <svg viewBox="0 0 760 384" xmlns="http://www.w3.org/2000/svg">
   <defs><marker id="e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1d2321"/></marker></defs>
@@ -360,7 +360,7 @@
     <text x="293" y="370">kapalıyken son kutu ≤ 7 gün bekler</text>
   </g>
 </svg>
-<figcaption><b>Şema 3.</b> Kafemi yönet girişi ve rapor kutusu. Şifre ve kod yalnız kafenin açabileceği biçimde mühürlenir. Kutu anahtarı iki Diffie-Hellman sonucundan türer: yalnız kafe (sabit anahtarıyla) cihazın kabul edeceği bir kutu yapabilir, yalnız cihaz açabilir.</figcaption>
+<figcaption><b>Şema 3.</b> İşletmemi yönet girişi ve rapor kutusu. Şifre ve kod yalnız kafenin açabileceği biçimde mühürlenir. Kutu anahtarı iki Diffie-Hellman sonucundan türer: yalnız kafe (sabit anahtarıyla) cihazın kabul edeceği bir kutu yapabilir, yalnız cihaz açabilir.</figcaption>
 </figure>
 <ul>
   <li><strong>Posta kutusu:</strong> kafe açıkken 5 dakikada bir, gün sonunda ve kapanırken her cihaz için raporun tamamını şifreli bırakır; kasa kapalıyken cihaz "Kasa bilgisayarı kapalı · Son durum" gösterir. Kutu alınınca ya da 7 günde silinir, Merkez yedeğine girmez.</li>
@@ -375,9 +375,9 @@
   <li><strong>TOTP</strong> (RFC 6238): HMAC-SHA1, 30 saniye, 6 hane, ±1 adım, aynı adım ikinci kez kabul edilmez. 5 serbest denemeden sonra bekleme iki katına çıkar (<code>server/totp.ts</code>). Mola Yönetim girişi ve adım onayı da aynı kodu kullanır.</li>
 </ul>
 <h2 id="t8-3">Uzaktan destek köprüsü</h2>
-<p>Merkez kafeye bağlanamaz. Kafe, yalnız gerektiğinde (destek izni açık, bağlı bir cihaz var ya da yeni cihaz girebilir) Merkez'e en çok 25 saniye bekleyen bir istek açık tutar; Merkez işleri bu cevaba koyar, kafe sonuçları ayrı imzalı istekle döndürür (<code>server/relay.ts</code>). Kafemi yönet girişi ve ekranları da bu köprüden geçer. "Mola destek" rolü sunucuda izin listesiyle sınırlıdır: menü, masa, yazıcı açık; satış, ödeme, kasa, çalışan şifreleri, misafir telefonları kapalı. Oturum açıkken bütün ekranlarda "Mola ekibi bağlı" bandı görünür.</p>
+<p>Merkez kafeye bağlanamaz. Kafe, yalnız gerektiğinde (destek izni açık, bağlı bir cihaz var ya da yeni cihaz girebilir) Merkez'e en çok 25 saniye bekleyen bir istek açık tutar; Merkez işleri bu cevaba koyar, kafe sonuçları ayrı imzalı istekle döndürür (<code>server/relay.ts</code>). İşletmemi yönet girişi ve ekranları da bu köprüden geçer. "Mola destek" rolü sunucuda izin listesiyle sınırlıdır: menü, masa, yazıcı açık; satış, ödeme, kasa, çalışan şifreleri, misafir telefonları kapalı. Oturum açıkken bütün ekranlarda "Mola ekibi bağlı" bandı görünür.</p>
 <h2 id="t8-4">Kalıcı bağlantı</h2>
-<p>Kafedeki laptop ve telefonlar kasa bilgisayarını yerel ağ adresiyle açar; modem başka adres verince bu adres bozulur. Her işletmenin değişmeyen bir Merkez adresi vardır: <code>/k/&lt;kod&gt;</code>. Kafe kalp atışıyla yerel adreslerini bildirir; ziyaretçi işletmenin ağından geliyorsa Merkez onu kasa bilgisayarının güncel yerel adresine yönlendirir, dışarıdaysa (pakette varsa) Kafemi yönet'e (<code>server/merkez/lan-link.ts</code>).</p>
+<p>Kafedeki laptop ve telefonlar kasa bilgisayarını yerel ağ adresiyle açar; modem başka adres verince bu adres bozulur. Her işletmenin değişmeyen bir Merkez adresi vardır: <code>/k/&lt;kod&gt;</code>. Kafe kalp atışıyla yerel adreslerini bildirir; ziyaretçi işletmenin ağından geliyorsa Merkez onu kasa bilgisayarının güncel yerel adresine yönlendirir, dışarıdaysa (pakette varsa) İşletmemi yönet'e (<code>server/merkez/lan-link.ts</code>).</p>
 
 <!-- ============================================================ 9 -->
 <h1 id="t9" class="akis"><span class="no">9</span>İnternetten menü: misafir tüneli</h1>

@@ -116,7 +116,7 @@ export type LinkRecord = {
    */
   lanLink?: { base?: string; codes: Record<string, string> };
   /**
-   * Kafemi yönet's own address when Merkez named one (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts): Ayarlar → Uzaktan
+   * İşletmemi yönet's own address when Merkez named one (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts): Ayarlar → Uzaktan
    * erişim shows it (server/remote-reports.ts address); gone with the first heartbeat that does not name it.
    */
   ownerHost?: { base: string };
@@ -233,7 +233,7 @@ export function hasNetwork() {
 const sameHost = (a: string, b: string) => { try { return new URL(a).hostname.toLowerCase() === new URL(b).hostname.toLowerCase(); } catch { return false; } };
 const testTunnel = () => process.env.MOLA_TEST_TUNNEL === '1' && process.env.MOLA_RELEASE_BUILD !== '1';
 /**
- * The heartbeat's menu address (`tunnel.base`) and Kafemi yönet's (`ownerHost.base`): a Merkez address, or (browser tests
+ * The heartbeat's menu address (`tunnel.base`) and İşletmemi yönet's (`ownerHost.base`): a Merkez address, or (browser tests
  * only) an http *.localhost name.
  */
 function menuBaseAddress(base: unknown) {
@@ -1262,7 +1262,7 @@ eset: right after a real contact with Merkez its (signed) time replaces the kept
           for (const c of answer.lanLink.codes.slice(0, 50)) if (c && typeof c.tenantId === 'string' && typeof c.code === 'string' && SOCIAL_CODE.test(c.code) && r.licenses[c.tenantId]) lan.codes[c.tenantId] = c.code;
           if (typeof base === 'string' && merkezAddress.safeParse(base).success) lan.base = merkezAddress.parse(base); else delete lan.base;
         }
-        // Kafemi yönet's own address (a newer Merkez with MERKEZ_OWNER_ORIGIN); otherwise <Merkez>/yonet as before.
+        // İşletmemi yönet's own address (a newer Merkez with MERKEZ_OWNER_ORIGIN); otherwise <Merkez>/yonet as before.
         { const owner = menuBaseAddress(answer.ownerHost && typeof answer.ownerHost === 'object' ? answer.ownerHost.base : undefined); if (owner) r.ownerHost = { base: owner }; else delete r.ownerHost; }
         if (key) for (const signed of Array.isArray(answer.demo) ? answer.demo.slice(0, 50) : []) {
           try {

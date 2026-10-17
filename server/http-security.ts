@@ -80,8 +80,8 @@ export function sessionCookie(req: Request, path = '/'): CookieOptions {
 const SERVER_TO_SERVER = /^\/merkez\/v1\//;
 /**
  * `alsoHosts`: further names answered (Mola Merkez: the guest menu's own name, MERKEZ_MENU_ORIGIN, for /q/* only: merkez/menu-host.ts;
- * Kafemi yönet's, MERKEZ_OWNER_ORIGIN: merkez/owner-host.ts). `ownOrigins`: origins whose pages call /api on their own name
- * (Kafemi yönet): a request to that name must come from that origin, not from PUBLIC_ORIGIN.
+ * İşletmemi yönet's, MERKEZ_OWNER_ORIGIN: merkez/owner-host.ts). `ownOrigins`: origins whose pages call /api on their own name
+ * (İşletmemi yönet): a request to that name must come from that origin, not from PUBLIC_ORIGIN.
  */
 export function configureHttpSecurity(app: Express, config: HttpSecurity, alsoHosts: string[] = [], ownOrigins: string[] = []) {
   const origin = canonicalOrigin(config.publicOrigin);

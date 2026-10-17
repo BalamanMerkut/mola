@@ -125,7 +125,7 @@ const A: Record<string, [string, JournalGroup]> = {
   'support.session_started': ['Uzaktan destek oturumu başladı', 'destek'],
   'support.session_ended': ['Uzaktan destek oturumu bitti', 'destek'],
   'support.action': ['Uzaktan destekte işlem yapıldı', 'destek'],
-  'remote.phone_paired': ['İşletme sahibi bir cihaz eşleştirdi (Kafemi yönet)', 'destek'],
+  'remote.phone_paired': ['İşletme sahibi bir cihaz eşleştirdi (İşletmemi yönet)', 'destek'],
   'remote_admin.session_started': ['İşletme sahibi uzaktan yönetime girdi', 'destek'],
   'remote_admin.session_ended': ['İşletme sahibinin uzaktan yönetim oturumu bitti', 'destek'],
   // Güncellemeler

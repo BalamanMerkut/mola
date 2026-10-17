@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { checkVerifier, localFailed, localWait, makeVerifier, plainEmail, VERIFIER_ITERATIONS, waitText } from '../packages/domain/local-verifier.js';
 
 /*
- * Kafemi yönet "Çıkış" with the café off (0.1.24, packages/domain/local-verifier.ts): the device opens again with the e-mail
+ * İşletmemi yönet "Çıkış" with the café off (0.1.24, packages/domain/local-verifier.ts): the device opens again with the e-mail
  * and the password checked against the verifier of its last sign-in. PBKDF2-SHA256, ≥ 310 000 rounds, a random salt, never
  * the password; wrong tries slow down (5 free, then 1 minute, doubling).
  */

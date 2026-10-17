@@ -1,7 +1,7 @@
 import { loginRequest, openLoginAnswer, type LoginDevice, type LoginInner } from './remote-crypto.js';
 
 /*
- * Kafemi yönet giriş (0.1.23, two steps), the device's side: the page (src/ReportsPhone.tsx) and the tests run this very code.
+ * İşletmemi yönet giriş (0.1.23, two steps), the device's side: the page (src/ReportsPhone.tsx) and the tests run this very code.
  *   1. POST /phone/login/start { email }        Mola Merkez finds the business by its verified owner e-mail and hands out the
  *                                               café's public key (or says plainly what is missing: package, phone code, café off).
  *   2. POST /phone/login { email, request }     the sealed request (remote-crypto.ts loginRequest) goes through the köprü to the

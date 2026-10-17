@@ -58,7 +58,7 @@
     <li>İşletmenin bütün verisi (satış, ödeme, menü, çalışan, misafir, rezervasyon) <strong>işletmenin kendi bilgisayarında</strong>, şifreli durur. Satış verisi satıcıya gelmez. Amaç: misafir ve çalışan verisinin sorumlusu işletme olsun.</li>
     <li>Mola Merkez yalnız lisans, destek, güncelleme ve bakım bilgisini, menünün herkese açık kopyasını ve (hizmet alınmışsa) işletmenin <strong>şifreli yedeğini</strong> tutar. Yedeğin anahtarı Merkez'de yoktur.</li>
     <li>İnternetten açılan QR menünün trafiği Merkez'den <strong>geçer</strong>; Merkez onu açık görür ama saklamaz.</li>
-    <li>Sahibin telefonuna ya da laptopuna giden raporlar ve uzaktan yönetim (Kafemi yönet) uçtan uca şifrelidir. Mola ekibi kafeye yalnız sahibin izniyle ve satış ile kişisel veri ekranları kapalı olarak bağlanır.</li>
+    <li>Sahibin telefonuna ya da laptopuna giden raporlar ve uzaktan yönetim (İşletmemi yönet) uçtan uca şifrelidir. Mola ekibi kafeye yalnız sahibin izniyle ve satış ile kişisel veri ekranları kapalı olarak bağlanır.</li>
     <li>Kapanan her yılın kayıtları paketlenirken müşterilerin kişisel bilgileri kendiliğinden silinir; rakamlar kalır.</li>
     <li>Mola yazar kasa değildir, yasal fiş kesmez, e-Adisyon değildir.</li>
   </ul>
@@ -157,7 +157,7 @@
   <text x="478" y="234" font-size="11.5" font-weight="700" fill="#b8661f">Geçirir, saklamaz</text>
   <text x="478" y="252" font-size="10.5">• İnternetten QR menü trafiği (açık görür)</text>
   <text x="478" y="268" font-size="10.5">• Uzaktan destek istekleri (izinle)</text>
-  <text x="478" y="284" font-size="10.5">• Kafemi yönet: raporlar, uzaktan yönetim</text>
+  <text x="478" y="284" font-size="10.5">• İşletmemi yönet: raporlar, uzaktan yönetim</text>
   <text x="490" y="300" font-size="10.5">(uçtan uca şifreli, okuyamaz)</text>
   <!-- Dış kullanıcılar -->
   <rect x="452" y="330" width="146" height="58" rx="8" fill="#fff" stroke="#b8661f"/>
@@ -165,7 +165,7 @@
   <text x="464" y="370" font-size="10" fill="#5d6763">masa QR'ı, mobil veri</text>
   <rect x="606" y="330" width="146" height="58" rx="8" fill="#fff" stroke="#1f3b5c"/>
   <text x="618" y="352" font-size="11.5" font-weight="600">Sahibin cihazları</text>
-  <text x="618" y="370" font-size="10" fill="#5d6763">Kafemi yönet (/yonet)</text>
+  <text x="618" y="370" font-size="10" fill="#5d6763">İşletmemi yönet (/yonet)</text>
   <rect x="452" y="404" width="146" height="58" rx="8" fill="#fff" stroke="#1f3b5c"/>
   <text x="464" y="426" font-size="11.5" font-weight="600">Satıcı ve yetkilileri</text>
   <text x="464" y="444" font-size="10" fill="#5d6763">Mola Yönetim paneli</text>
@@ -213,7 +213,7 @@
     <tr><td>Menünün kopyası</td><td>Misafir menüsünün herkese açık içeriği ve fotoğrafları; şifreli. Satış, misafir, çalışan bilgisi yok. Kafe kapalıyken menü görünsün diye (sipariş verilemez).</td><td>Kafe güncelledikçe değişir; kayıt silinince hemen.</td></tr>
     <tr><td>Site talepleri</td><td>İşletme adı, ad soyad, telefon, e-posta, şehir, masa sayısı, tür, mesaj, onay zamanı ve metin sürümü, ekibin notları. IP yazılmaz.</td><td>Kapandıktan 2 yıl; "Sil" ile hemen.</td></tr>
     <tr><td>Şifreli sunucu yedekleri (ücretli)</td><td>İşletme yedeğinin şifreli dosyaları; Merkez yalnız zaman, boyut, özet, sürüm görür. Mola Yönetim'den indirilemez, açılamaz.</td><td>Varsayılan son 3 gün + son 2 hafta (satıcı işletme başına değiştirebilir); yıl paketleri işletme silinene kadar.</td></tr>
-    <tr><td>Uzaktan erişim kayıtları</td><td>Uzaktan destek izni ve oturumları, yapılan değişiklikler; sahibin uzak oturumlarının başı ve sonu. Kafemi yönet için: işletmeyi bulmaya yarayan doğrulanmış sahip e-postası, kafenin açık anahtarı, bağlı cihazların (en çok 3) kimliği, açık anahtarı ve erişim belirtecinin özeti. Şifre ve telefon kodu Merkez'e açık hâlde hiç gelmez.</td><td>İşlem kayıtlarıyla; cihaz kayıtları cihaz çıkarılınca silinir.</td></tr>
+    <tr><td>Uzaktan erişim kayıtları</td><td>Uzaktan destek izni ve oturumları, yapılan değişiklikler; sahibin uzak oturumlarının başı ve sonu. İşletmemi yönet için: işletmeyi bulmaya yarayan doğrulanmış sahip e-postası, kafenin açık anahtarı, bağlı cihazların (en çok 3) kimliği, açık anahtarı ve erişim belirtecinin özeti. Şifre ve telefon kodu Merkez'e açık hâlde hiç gelmez.</td><td>İşlem kayıtlarıyla; cihaz kayıtları cihaz çıkarılınca silinir.</td></tr>
     <tr><td>Kalıcı bağlantı</td><td>Kafedeki laptop ve telefonlar kasa bilgisayarını değişmeyen bir Merkez adresiyle açar. Bunun için kasa bilgisayarının yerel ağ adresleri ve işletmenin internet (genel) IP adresi tutulur. Bağlantıyı açan ziyaretçiden hiçbir şey yazılmaz.</td><td>Son durum; kafe ağa kapanınca silinir.</td></tr>
     <tr><td>İşlem kayıtları</td><td>Mola Yönetim'deki her işlem ve güvenlik olayı (kim, ne, eski ve yeni değer); dışarıdan gelen isteklerde IP. Şifre, kod, fatura değeri, satış verisi yazılmaz.</td><td>10 yıl (en az 2, ayarlanır); <strong>IP 1 yıl</strong> <span class="rozet karar">Karar</span></td></tr>
     <tr><td>Diğer</td><td>Duyuru okundu bilgisi (rol, kişi adı yok); program dosyası denetiminde değişen dosya <em>adları</em>; sosyal medya bağlantıları; satıcının kendi satışları (paket, tahsilat, fatura no); Mola Yönetim hesapları (ad, şifre özeti, iki adımlı giriş sırrı, e-posta ayarı).</td><td>Satış kayıtları silinmez; diğerleri kayıt ya da hesapla.</td></tr>
@@ -227,7 +227,7 @@
   <li><strong>Misafirin IP adresi:</strong> yalnız aşırı istekleri sınırlamak için bellekte sayılır; saklanmaz.</li>
   <li><strong>Çerez</strong> <code>mola_browser</code> (30 gün) yalnız menü adresine ve o işletmenin yoluna yazılır; işletmeler arasında paylaşılmaz.</li>
   <li><strong>Askıdaki işletme</strong> (lisans bitti, askı, dondurma ya da 14 gündür bağlantı yok): Merkez "menü kullanılamıyor" sayfası gösterir.</li>
-  <li><strong>Kafemi yönet (raporlar ve uzaktan yönetim):</strong> kafe ile sahibin cihazı arasında uçtan uca şifreli. Girişte şifre ve telefon kodu kafenin anahtarıyla mühürlenip kafeye iletilir; Merkez onları göremez, denetimi kafe yapar. Kafe açıkken 5 dakikada bir ve kapanırken her cihaz için bırakılan şifreli rapor (posta kutusu) Merkez'de okunamaz; cihaz alınca ya da en geç 7 günde silinir, Merkez yedeğine girmez.</li>
+  <li><strong>İşletmemi yönet (raporlar ve uzaktan yönetim):</strong> kafe ile sahibin cihazı arasında uçtan uca şifreli. Girişte şifre ve telefon kodu kafenin anahtarıyla mühürlenip kafeye iletilir; Merkez onları göremez, denetimi kafe yapar. Kafe açıkken 5 dakikada bir ve kapanırken her cihaz için bırakılan şifreli rapor (posta kutusu) Merkez'de okunamaz; cihaz alınca ya da en geç 7 günde silinir, Merkez yedeğine girmez.</li>
 </ul>
 
 <h2 id="b3-4">3.4 Merkez verisinin sunucu dışındaki kopyaları</h2>
@@ -341,7 +341,7 @@
 <h2 id="b7-3" data-toc="no">7.3 Sahibin uzaktan erişimi</h2>
 <ul>
   <li><strong>Hazırlık:</strong> sahip kafedeki bilgisayarda (Ayarlar → Uzaktan erişim) telefon kodunu (TOTP) kurar ve e-postasını doğrular. Bunu yalnız sahip yapabilir; hizmet pakette olmalıdır.</li>
-  <li><strong>Giriş:</strong> herhangi bir cihazdan <code>kafem.molayazilim.com.tr</code>: önce e-posta ve şifre, sonra telefon kodu. Şifreyi ve kodu kafe denetler; yanlış denemeler sınırlıdır. En çok 3 cihaz; her yeni cihaz sahibe bildirilir. Cihazın özel anahtarı cihazdan çıkmaz.</li>
+  <li><strong>Giriş:</strong> herhangi bir cihazdan <code>isletme.molayazilim.com.tr</code>: önce e-posta ve şifre, sonra telefon kodu. Şifreyi ve kodu kafe denetler; yanlış denemeler sınırlıdır. En çok 3 cihaz; her yeni cihaz sahibe bildirilir. Cihazın özel anahtarı cihazdan çıkmaz.</li>
   <li><strong>Raporlar:</strong> günün toplamları, ödeme türleri, en çok satanlar, açık hesaplar, son kasa kapanışı, son 30 gün. Kasa kapalıyken son durum gösterilir.</li>
   <li><strong>Çıkış:</strong> cihazı kilitler; yeniden giriş e-posta ve şifreyle. Kasa kapalıyken şifre cihazdaki yerel doğrulayıcıyla denetlenir (şifrenin kendisi değil, PBKDF2 özeti). "Bu cihazı tamamen kaldır" cihazı unutturur.</li>
   <li><strong>Uzaktan yönetim:</strong> varsayılan kapalı; yalnız kafedeki bilgisayarda şifre ve telefon koduyla açılır, her yerden kapatılır. Kasa açıkken kafenin ekranlarını sahip olarak açar; her giriş sahibe bildirilir. Uzaktan yapılamaz: yedekten geri yükleme, kurtarma kodu, cihaz kaldırma, telefon kodunu kurma ya da sıfırlama, uzaktan yönetimi ya da destek iznini açma, güncelleme kurma. Kafede oturum kaydı tutulur (cihaz adı, başlangıç, bitiş; IP yok).</li>
@@ -382,8 +382,8 @@
   <tbody>
     <tr><td>Şifreleme</td><td>Kafedeki her kayıt AES-256-GCM, işletme başına rastgele anahtar; anahtar Windows kilidi, kurtarma kodu ve sahip şifresiyle kilitli. Yedekler şifreli ve geri yüklenerek doğrulanır. Merkez'deki menü kopyası, site talepleri ve satış kayıtları da şifreli.</td></tr>
     <tr><td>İmza ve bağlantı</td><td>Lisans, güncelleme ve Merkez bildirimleri Ed25519 ile imzalı. Kafe ile Merkez arası her istek imzalı ve HTTPS; tekrar oynatma önlenir.</td></tr>
-    <tr><td>Uçtan uca şifreleme</td><td>Kafemi yönet: raporlar, posta kutusu ve uzaktan yönetim.</td></tr>
-    <tr><td>Kimlik doğrulama</td><td>Şifreler yalnız özet (scrypt); deneme sınırı. İki adımlı kod: Mola Yönetim (açılmışsa ve hassas işlemlerde), Kafemi yönet girişi ve uzaktan yönetim; "İşletmem var" için e-posta kodu. Çerezler HttpOnly, SameSite=Strict.</td></tr>
+    <tr><td>Uçtan uca şifreleme</td><td>İşletmemi yönet: raporlar, posta kutusu ve uzaktan yönetim.</td></tr>
+    <tr><td>Kimlik doğrulama</td><td>Şifreler yalnız özet (scrypt); deneme sınırı. İki adımlı kod: Mola Yönetim (açılmışsa ve hassas işlemlerde), İşletmemi yönet girişi ve uzaktan yönetim; "İşletmem var" için e-posta kodu. Çerezler HttpOnly, SameSite=Strict.</td></tr>
     <tr><td>Yetki ve kayıt</td><td>Her işlem sunucuda role göre denetlenir; Merkez işlem kayıtları hash zinciri ve imzayla korunur.</td></tr>
     <tr><td>Güncelleme ve dosyalar</td><td>İmzası doğrulanmayan güncelleme kurulmaz; önce yedek alınır, sorun olursa program ve veri eski hâline döner. Program dosyaları imzalı listeyle karşılaştırılır, fark yalnız bildirilir.</td></tr>
     <tr><td>Web</td><td>İstek sınırları, tahmin edilemeyen masa kodları, başka siteden gelen isteklerin reddi, sıkı içerik güvenliği politikası.</td></tr>
@@ -416,7 +416,7 @@
     <tr><td><code>mola_staff</code>, <code>mola_staff_p2</code></td><td>Personel oturumu.</td><td>Sonraki 05:00</td></tr>
     <tr><td><code>mola_merkez</code> · <code>mola_merkez_cihaz</code></td><td>Mola Yönetim oturumu · "bilinen cihaz" işareti.</td><td>4 saat · 90 gün</td></tr>
     <tr><td><code>mola_destek</code></td><td>Uzaktan destek oturumu.</td><td>8 saat (30 dk işlemsizlikte biter)</td></tr>
-    <tr><td>Sekme deposu, yerel depolama, tarayıcı veritabanı</td><td>Gönderilmemiş sepet; ekran tercihleri; Kafemi yönet cihaz anahtarı, son rapor ve yerel şifre doğrulayıcısı.</td><td>Sekme kapanınca · silinene kadar · cihaz kaldırılana kadar</td></tr>
+    <tr><td>Sekme deposu, yerel depolama, tarayıcı veritabanı</td><td>Gönderilmemiş sepet; ekran tercihleri; İşletmemi yönet cihaz anahtarı, son rapor ve yerel şifre doğrulayıcısı.</td><td>Sekme kapanınca · silinene kadar · cihaz kaldırılana kadar</td></tr>
   </tbody>
 </table>
 <p class="kucuk">Ayrı bir çerez bildirimi penceresi yoktur; <code>mola_browser</code> misafir menüsündeki taslak "Gizlilik" sayfasında anlatılır.</p>
@@ -467,7 +467,7 @@
     <tr><td>Çalışan aydınlatma metni</td><td>İşletmenin çalışanları; şablon</td><td>Hesap, oturum cihaz bilgisi, vardiya ve geç kalma, ilk ve son işlem, ödemeler, bahşiş, kasa sayımları ve kasa güvenliği bildirimleri, gerekçeler, e-posta raporunda saatler, süresiz saklama.</td></tr>
     <tr><td>İşletme sahibi aydınlatması</td><td>Satıcının; başvuru formu</td><td>Bugünkü metne ek: kalp atışıyla gidenler, destek ve ekler, sözleşme kabulü, şifreli yedek, "İşletmem var", uzaktan erişim, işlem kayıtlarında IP, satıcı bilgisayarı ve Drive kopyaları, e-posta sağlayıcısı, yetkililer, süreler, başvuru yolu.</td></tr>
     <tr><td>Abonelik sözleşmesi</td><td>İşletme</td><td>Bölüm 12: deneme, planlar, paketler, KDV hariç fiyat, dondurma, askı, elle ödeme, 14 gün kuralı, bir lisans bir bilgisayar, sona ermede veri.</td></tr>
-    <tr><td>Veri işleme sözleşmesi</td><td>Satıcı ile işletme (bölüm 2'deki değerlendirmeye göre)</td><td>Şifreli yedek ve felaket kopyası, "İşletmem var", menü trafiği, uzaktan destek, destek ekleri, Kafemi yönet posta kutusu, alt işleyen VDS, güvenlik önlemleri, ihlal bildirimi, sona ermede silme.</td></tr>
+    <tr><td>Veri işleme sözleşmesi</td><td>Satıcı ile işletme (bölüm 2'deki değerlendirmeye göre)</td><td>Şifreli yedek ve felaket kopyası, "İşletmem var", menü trafiği, uzaktan destek, destek ekleri, İşletmemi yönet posta kutusu, alt işleyen VDS, güvenlik önlemleri, ihlal bildirimi, sona ermede silme.</td></tr>
     <tr><td>Uzaktan destek onay metni</td><td>Sahip; izin açılırken</td><td>Bölüm 7.2'deki kapsam, geri alınabilir izin, kayıt ve bildirimler, bağlanabilecek kişiler.</td></tr>
     <tr><td>Site metinleri</td><td>Ziyaretçi; site (Ek B)</td><td>Taslaklar programla uyumlu. Yer tutucular: unvan, adres, vergi no/MERSİS, sunucu sağlayıcısı.</td></tr>
     <tr><td>Lisans sözleşmesi</td><td>İşletme; etkinleştirme (Ek A)</td><td>Metin değişince sürüm artar, sahibe yeniden sorulur.</td></tr>

@@ -61,7 +61,7 @@ export function PlatformRemoteSupport({ tenantId, name, disabled, focus = 0 }: {
     <ul className="dlines">
       <li><span className={`status-dot ${on ? 'ok' : ''}`} aria-hidden="true" /><span>{state}</span></li>
       {s && on && <li><span className={`status-dot ${s.online ? 'ok' : 'warn'}`} aria-hidden="true" /><span>{s.online ? 'İşletmenin bilgisayarı Mola Merkez’e bağlı.' : 'İşletmenin bilgisayarı şu anda bağlı değil (kapalı ya da internet yok).'}</span></li>}
-      {s && s.phones > 0 && <li><span className="status-dot" aria-hidden="true" /><span>Kafemi yönet: {s.phones} cihaz eşleşmiş (Mola Merkez okuyamaz).</span></li>}
+      {s && s.phones > 0 && <li><span className="status-dot" aria-hidden="true" /><span>İşletmemi yönet: {s.phones} cihaz eşleşmiş (Mola Merkez okuyamaz).</span></li>}
     </ul>
     {s?.active ? <div className="remote-live" role="status"><span className="remote-live-dot" aria-hidden="true" /><p><strong>Bağlısınız</strong> · {clock(s.active.startedAt)}’den beri · {s.active.requests} istek</p><button type="button" className="btn secondary" disabled={busy || disabled} onClick={() => void end()}><Unplug size={16} aria-hidden="true" />Bağlantıyı kes</button></div> : null}
     <div className="application-actions"><button type="button" className="btn primary" disabled={busy || disabled || !on || !s?.online} onClick={() => void connect()}><MonitorSmartphone size={16} aria-hidden="true" />{s?.active ? 'Yeniden bağlan' : 'Kafeye bağlan'}</button>

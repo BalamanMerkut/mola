@@ -54,7 +54,7 @@ import { shortLinkOrigin, siteLeadRoutes } from './site-leads.js';
 // İnternetten menü (server/merkez/guest-tunnel.ts): the cafés' guest tunnels and the public /q/<kod>/… addresses.
 import { GuestTunnelHub, guestTunnelRoutes, menuOpen, recordTunnel } from './guest-tunnel.js';
 import { MENU_ORIGIN_FLAG, menuHostName, menuHostRoutes, menuOrigin } from './menu-host.js';
-// Kafemi yönet'in kendi adresi (MERKEZ_OWNER_ORIGIN, kafem.molayazilim.com.tr): the owner's page on its own name.
+// İşletmemi yönet'in kendi adresi (MERKEZ_OWNER_ORIGIN, isletme.molayazilim.com.tr): the owner's page on its own name.
 import { ownerHostName, ownerHostRoutes, ownerOrigin } from './owner-host.js';
 // Menünün Mola Merkez'deki kopyası (8 Ekim): the cafés' guest-visible menus and photos, served while a café is away (server/merkez/menu-mirror.ts).
 import { MenuMirrorStore, menuMirrorRoutes } from './menu-mirror.js';
@@ -119,7 +119,7 @@ export type MerkezOptions = { now?: () => Date; httpSecurity?: HttpSecurity; bac
   buildDirectory?: string;
   /** The guest menu's own origin (default: MERKEZ_MENU_ORIGIN; null: none; server/merkez/menu-host.ts). */
   menuOrigin?: string | null;
-  /** Kafemi yönet's own origin (default: MERKEZ_OWNER_ORIGIN; null: none; server/merkez/owner-host.ts). */
+  /** İşletmemi yönet's own origin (default: MERKEZ_OWNER_ORIGIN; null: none; server/merkez/owner-host.ts). */
   ownerOrigin?: string | null;
   /** "Göz at" (Yedek → İkinci yedek yeri, Çalışma klasörü): the folder window and quick places (tests pass a fake runner). */
   folderPicker?: FolderPicker };
@@ -177,7 +177,7 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   // Misafir menüsünün kendi adresi (MERKEZ_MENU_ORIGIN, server/merkez/menu-host.ts): /q/* only there, nothing else there.
   const siteOrigin = shortLinkOrigin(options.httpSecurity?.publicOrigin);
   const guestOrigin = options.menuOrigin === null ? undefined : menuOrigin(options.httpSecurity?.publicOrigin, siteOrigin, options.menuOrigin);
-  // Kafemi yönet'in kendi adresi (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts): the owner's page and its calls only there,
+  // İşletmemi yönet'in kendi adresi (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts): the owner's page and its calls only there,
   // not on Merkez's own name. Before the menu's routes: /q/ on the owner's name is 404, not a redirect.
   const ownerSite = options.ownerOrigin === null ? undefined : ownerOrigin(options.httpSecurity?.publicOrigin, siteOrigin, guestOrigin, options.ownerOrigin);
   if (ownerSite) app.locals.ownerOrigin = ownerSite;
@@ -190,7 +190,7 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   const httpsOrigin = options.httpSecurity?.publicOrigin;
   app.use((req, res, next) => {
     // /s/: the social QR codes' public short addresses (server/merkez/social.ts), reachable like the café calls; /q/: the guest
-    // menu over the internet (server/merkez/guest-tunnel.ts); /k/: Kalıcı bağlantı (server/merkez/lan-link.ts); Kafemi yönet on
+    // menu over the internet (server/merkez/guest-tunnel.ts); /k/: Kalıcı bağlantı (server/merkez/lan-link.ts); İşletmemi yönet on
     // its own name (only its page, files and calls get here: server/merkez/owner-host.ts).
     if (req.path === MERKEZ_API || req.path.startsWith(`${MERKEZ_API}/`) || req.path.startsWith('/s/') || req.path.startsWith('/q/') || req.path.startsWith('/k/') || res.locals.molaOwnerHost === true || (httpsOrigin ? req.secure : loopbackRequest(req))) return next();
     res.status(403);
@@ -1205,7 +1205,7 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
       const contact = signedContact(d);
       return { v: 1, serverTime: time, licenses: replaced ? [] : mine.flatMap(x => x.signed ? [x.signed] : []), tickets: d.tickets.filter(x => owned.has(x.tenantId)).slice(-50), delivered, next: 600, pulse, ...(removed.length ? { removed } : {}), ...(contact ? { contact } : {}), accepts: guestOrigin ? [...MERKEZ_ACCEPTS, MENU_ORIGIN_FLAG] : MERKEZ_ACCEPTS,...(update !== undefined ? { update } : {}), ...notes,
         ...(!replaced ? (m => m ? { integrityManifest: m } : {})(integrity.manifestFor(releases, b.integrity)) : {}), ...(announcements ? { announcements } : {}), ...(social ? { social } : {}), ...(tunnel ? { tunnel } : {}), ...(lanLink ? { lanLink } : {}),
-        // Kafemi yönet's own address (MERKEZ_OWNER_ORIGIN): the café shows it in Ayarlar → Uzaktan erişim.
+        // İşletmemi yönet's own address (MERKEZ_OWNER_ORIGIN): the café shows it in Ayarlar → Uzaktan erişim.
         ...(ownerSite && !replaced ? { ownerHost: { base: ownerSite } } : {}) };
     });
     sendSigned(res, caller.secret, nonce, answer);

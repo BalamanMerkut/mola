@@ -65,7 +65,7 @@ test('Kalıcı bağlantı: code given once and kept; same network → 302 to the
   assert.match(p.text, new RegExp(`href="/k/${code}\\?kafe=1">Kafedeyim, kasayı aç`));
   assert.match(p.text, /href="https:\/\/mola\.example\.com\/iletisim\/">Mola ekibine ulaşın/);
   assert.match(p.text, /href="tel:05321112233">0532 111 22 33/); assert.match(p.text, /href="mailto:destek@example\.com"/);
-  assert.equal(/href="\/"|Yönetim|\/raporlarim|\/yonet/.test(p.text), false, 'nothing leads to Mola Yönetim or Kafemi yönet');
+  assert.equal(/href="\/"|Yönetim|\/raporlarim|\/yonet/.test(p.text), false, 'nothing leads to Mola Yönetim or İşletmemi yönet');
   assert.ok(p.text.includes(biz().name.replace(/'/g, '&#39;')), 'the business name is the title');
   // Stale (no heartbeat for 30 minutes), back on the café's address: not sent to the café computer; Raporlarım with the service.
   pair.merkezStore.mutate(d => { const lan = d.installs.find(i => i.id === biz().installId)!.lan!; lan.client = '127.0.0.1'; lan.at = new Date(Date.now() - 31 * 60_000).toISOString(); });

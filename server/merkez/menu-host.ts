@@ -27,7 +27,7 @@ export function menuOrigin(publicOrigin?: string, siteOrigin?: string, value = p
   return separateOrigin('MERKEZ_MENU_ORIGIN', 'https://menu.molayazilim.com.tr', value, [publicOrigin, siteOrigin]);
 }
 /**
- * A name of its own for one part of Merkez (the guest menu here, Kafemi yönet in owner-host.ts): an https root address (http
+ * A name of its own for one part of Merkez (the guest menu here, İşletmemi yönet in owner-host.ts): an https root address (http
  * only for the browser tests' *.localhost), never one of the `taken` names. Unset or wrong: undefined (a wrong value is said
  * once in the log and never breaks anything).
  */

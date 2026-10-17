@@ -9,7 +9,7 @@ import './remote-admin.css';
 /*
  * Ayarlar → Uzaktan erişim → "5 · Uzaktan yönetim" (0.1.21; server/remote-admin.ts; the owner's own account). Off by default.
  * Turning it on asks the password and the 6-digit phone code, on a computer of the café only; turning it off works from
- * anywhere and ends every remote session. 0.1.23, very plain: the state in one line with Aç/Kapat, the Kafemi yönet address
+ * anywhere and ends every remote session. 0.1.23, very plain: the state in one line with Aç/Kapat, the İşletmemi yönet address
  * once it is on, and the open remote sessions with "Bütün uzak oturumları kapat" only when there are any (the history stays
  * in the record and Mola Merkez's İşlem kayıtları).
  */

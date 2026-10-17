@@ -114,7 +114,7 @@ export async function hazirGoruntu(ad: string, png: Buffer) {
   console.log(`  ✓ ${ad} (${kayitlar[ad].w}×${kayitlar[ad].h})`);
 }
 export type Cihaz = 'telefon' | 'masaustu' | 'tablet' | 'dik';
-/** `userAgent`: a phone's own (Kafemi yönet names the device from what its browser says it is: "iPhone · 15 Ekim"). */
+/** `userAgent`: a phone's own (İşletmemi yönet names the device from what its browser says it is: "iPhone · 15 Ekim"). */
 export async function yeniSayfa(browser: Browser, cihaz: Cihaz, o: { yukseklik?: number; detay?: boolean; userAgent?: string } = {}) {
   const size = { telefon: { width: 390, height: 844 }, masaustu: { width: 1280, height: 800 }, tablet: { width: 1180, height: 820 }, dik: { width: 820, height: 1180 } }[cihaz];
   if (o.yukseklik) size.height = o.yukseklik;

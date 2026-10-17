@@ -194,13 +194,13 @@ MERKEZ_KEY_PASSPHRASE_FILE=/etc/mola-merkez/anahtar-parolasi
 # PUBLIC_ORIGIN and the web site: the cafés' guest pages never open where Mola Yönetim's cookies or the web site live. Its DNS
 # "A" record and the Caddyfile block "menu.ornek-alanadi.com" must exist first. Set it BEFORE the cafés print table QR codes.
 MERKEZ_MENU_ORIGIN=https://menu.ornek-alanadi.com
-# Kafemi yönet's OWN address (the owners' page; they never see "merkez"): another name than the ones above. Its DNS "A" record
-# and the Caddyfile block "kafem.ornek-alanadi.com" must exist first (docs/KAFEM_ADRESI.md). Without it Kafemi yönet stays
-# at https://merkez.ornek-alanadi.com/yonet. With it Kafemi yönet is only there (merkez.…/yonet is 404).
-MERKEZ_OWNER_ORIGIN=https://kafem.ornek-alanadi.com
+# İşletmemi yönet's OWN address (the owners' page; they never see "merkez"): another name than the ones above. Its DNS "A" record
+# and the Caddyfile block "isletme.ornek-alanadi.com" must exist first (docs/ISLETME_ADRESI.md). Without it İşletmemi yönet stays
+# at https://merkez.ornek-alanadi.com/yonet. With it İşletmemi yönet is only there (merkez.…/yonet is 404).
+MERKEZ_OWNER_ORIGIN=https://isletme.ornek-alanadi.com
 `;
 const CADDYFILE = `# Caddy: HTTPS for Mola Merkez with an automatic certificate (Let's Encrypt). /etc/caddy/Caddyfile
-# Replace merkez.ornek-alanadi.com, menu.ornek-alanadi.com and kafem.ornek-alanadi.com with your own names; their DNS "A"
+# Replace merkez.ornek-alanadi.com, menu.ornek-alanadi.com and isletme.ornek-alanadi.com with your own names; their DNS "A"
 # records must point at this server's IP address first.
 # Slow clients (slowloris) may not hold connections open: headers within 15 s, idle keep-alive 2 minutes.
 {
@@ -254,10 +254,10 @@ menu.ornek-alanadi.com {
 		respond 404
 	}
 }
-# Kafemi yönet, the owners' page on its own name (MERKEZ_OWNER_ORIGIN=https://kafem.ornek-alanadi.com): Host goes on as it is;
+# İşletmemi yönet, the owners' page on its own name (MERKEZ_OWNER_ORIGIN=https://isletme.ornek-alanadi.com): Host goes on as it is;
 # Merkez answers there only the page ("/"), its files and its calls, everything else is 404. A product photo sent from
 # "Kafeyi yönet" is up to ~13 MB sealed. The page's CSP comes from Merkez.
-kafem.ornek-alanadi.com {
+isletme.ornek-alanadi.com {
 	encode zstd gzip
 	request_body {
 		max_size 16MB
@@ -305,8 +305,8 @@ chown -R root:root /opt/mola-merkez
 install -m 644 "$HERE/mola-merkez.service" /etc/systemd/system/mola-merkez.service
 systemctl daemon-reload
 systemctl enable mola-merkez >/dev/null
-# Kafemi yönet's own address (docs/KAFEM_ADRESI.md): ayarlar.env is never rewritten here; a missing line is only said.
-grep -q '^MERKEZ_OWNER_ORIGIN=' /etc/mola-merkez/ayarlar.env || echo "Not: Kafemi yönet kendi adresinde değil. /etc/mola-merkez/ayarlar.env içine MERKEZ_OWNER_ORIGIN=https://kafem.<alan adınız> satırını ekleyin (docs/KAFEM_ADRESI.md)."
+# İşletmemi yönet's own address (docs/ISLETME_ADRESI.md): ayarlar.env is never rewritten here; a missing line is only said.
+grep -q '^MERKEZ_OWNER_ORIGIN=' /etc/mola-merkez/ayarlar.env || echo "Not: İşletmemi yönet kendi adresinde değil. /etc/mola-merkez/ayarlar.env içine MERKEZ_OWNER_ORIGIN=https://isletme.<alan adınız> satırını ekleyin (docs/ISLETME_ADRESI.md)."
 if [ "\${YENI:-0}" = 1 ]; then
   echo "İlk kurulum: önce /etc/mola-merkez/ayarlar.env içindeki PUBLIC_ORIGIN'i kendi alan adınızla değiştirin, sonra:"
   echo "  sudo systemctl start mola-merkez"
@@ -364,7 +364,7 @@ Adım adım anlatım: docs/VDS_KURULUM.md (Ubuntu LTS, SSH anahtarı, güvenlik 
 
 KISACA
   tar xzf Mola-Merkez-Linux-x64-${version}.tar.gz && cd ${BASE} && sudo ./kur.sh
-  sudo nano /etc/mola-merkez/ayarlar.env     (PUBLIC_ORIGIN=https://merkez.<alan adınız>, MERKEZ_MENU_ORIGIN=https://menu.<alan adınız>, MERKEZ_OWNER_ORIGIN=https://kafem.<alan adınız>)
+  sudo nano /etc/mola-merkez/ayarlar.env     (PUBLIC_ORIGIN=https://merkez.<alan adınız>, MERKEZ_MENU_ORIGIN=https://menu.<alan adınız>, MERKEZ_OWNER_ORIGIN=https://isletme.<alan adınız>)
   sudo systemctl start mola-merkez && systemctl status mola-merkez
   Sağlık: curl -fsS https://<alan adınız>/api/merkez/v1/health
 

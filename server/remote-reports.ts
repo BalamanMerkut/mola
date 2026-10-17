@@ -145,7 +145,7 @@ export class RemoteReports {
     f.count++; if (f.count >= 5) f.waitUntil = t + Math.min(15 * 60_000, 60_000 * 2 ** (f.count - 5));
     this.fails.set(tenant, f);
     // The owner hears it once a day: someone may be guessing.
-    if (f.count === 5) try { this.notifications?.()?.add(tenant, `remote:login-fails:${businessDay(t)}`, { kind: 'merkez', title: 'Kafemi yönet: hatalı girişler', text: 'Kafemi yönet’e 5 kez yanlış şifre ya da kodla girilmeye çalışıldı. Siz değilseniz şifrenizi değiştirin.' }); } catch { /* the counter has it */ }
+    if (f.count === 5) try { this.notifications?.()?.add(tenant, `remote:login-fails:${businessDay(t)}`, { kind: 'merkez', title: 'İşletmemi yönet: hatalı girişler', text: 'İşletmemi yönet’e 5 kez yanlış şifre ya da kodla girilmeye çalışıldı. Siz değilseniz şifrenizi değiştirin.' }); } catch { /* the counter has it */ }
   }
   private async login(r: Extract<RelayRequest, { kind: 'login' }>): Promise<RelayReply> {
     const tenant = r.tenantId, q = r.request as LoginRequest, t = this.now().getTime();
@@ -312,8 +312,8 @@ export class RemoteReports {
     return this.pushing;
   }
   /**
-   * Where devices sign in: "Kafemi yönet" (/yonet, 0.1.23: the reports and the full screens on one page) on Mola Merkez's
-   * public address, or its own address when Merkez named one (https://kafem.molayazilim.com.tr: the page is its root; null
+   * Where devices sign in: "İşletmemi yönet" (/yonet, 0.1.23: the reports and the full screens on one page) on Mola Merkez's
+   * public address, or its own address when Merkez named one (https://isletme.molayazilim.com.tr: the page is its root; null
    * before activation).
    */
   address() {
@@ -331,7 +331,7 @@ export class RemoteReports {
 /**
  * Owner only (the owner's own account; Müdür, other staff and Mola destek get 403): GET /api/staff/remote-reports (the
  * devices, the Raporlarım address `address`, whether the owner has a phone code `code`), POST /api/staff/remote-reports/
- * phones/remove { id, password }. Devices sign in on the Kafemi yönet page (/yonet; no pairing here since 0.1.22). A remote session
+ * phones/remove { id, password }. Devices sign in on the İşletmemi yönet page (/yonet; no pairing here since 0.1.22). A remote session
  * ("Kafeyi yönet") cannot remove (server/remote-admin.ts REMOTE_FORBIDDEN). "Gün sonu" (a final closing) sends the postbox
  * at once; setting the phone code up or resetting it tells Mola Merkez at once (the sign-in depends on it).
  */

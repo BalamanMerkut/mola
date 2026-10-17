@@ -40,7 +40,7 @@ test('Mola Yardım: everyday questions find their answer, with or without Turkis
   assert.equal(top('qr kod bas'), 'qr-bas');
   assert.equal(top('internet kesildi'), 'internet-kesildi');
   assert.equal(top('şifremi unuttum'), 'sifre-unuttum');
-  assert.equal(top('kafemi yönet'), 'kafemi-yonet-kur');
+  assert.equal(top('işletmemi yönet'), 'kafemi-yonet-kur');
   assert.equal(top('kasa kapalı son durum'), 'kasa-kapali-son-durum');
   assert.equal(top('android tablet apk'), 'kafe-ici-cihazlar');
   assert.equal(top('fiyatlar ne kadar'), 'fiyat');
@@ -76,11 +76,12 @@ test('Mola Yardım: short answers in every topic, each with its audience; nothin
   for (const k of data.konular) assert.ok(data.sorular.filter(q => q.konu === k.id).length >= 3, `${k.id} en az 3 soru`);
   const all = JSON.stringify(data);
   for (const banned of ['Mola Yönetim', '/api/', 'VDS', 'Caddy', 'HMAC', 'token', 'localhost', '127.0.0.1', '₺', 'innerHTML']) assert.ok(!all.includes(banned), `"${banned}" yardımda olmamalı`);
-  // What people read (question and answer): no internals. "merkez.molayazilim.com.tr/yonet" (Kafemi yönet) is the one
-  // address of Mola's own that may be named; "uçtan uca şifreli" at most once.
-  const shown = (q: (typeof data.sorular)[number]) => [q.soru, ...q.cevap.flat()].join(' ').replaceAll('merkez.molayazilim.com.tr/yonet', '');
+  // What people read (question and answer): no internals. "isletme.molayazilim.com.tr" (İşletmemi yönet, 16 Ekim) is the one
+  // address of Mola's own that may be named (never the old kafem. or merkez.…/yonet); "uçtan uca şifreli" at most once.
+  const shown = (q: (typeof data.sorular)[number]) => [q.soru, ...q.cevap.flat()].join(' ').replaceAll('isletme.molayazilim.com.tr', '');
   for (const q of data.sorular) {
     const text = shown(q);
+    for (const old of ['kafem.', 'merkez.molayazilim.com.tr', 'Kafemi yönet', 'molayazilim.com.tr/yonet']) assert.ok(!text.includes(old), `${q.id}: "${old}" yazılmamalı`);
     for (const banned of ["Merkez'in", 'Merkez’in', 'Mola Merkez', 'Merkez', 'Mola Yönetim', 'relay', 'röle', 'API', 'sunucu', 'şifreleme', 'anahtar çifti', 'tünel', 'kitle', 'tenant']) assert.ok(!text.includes(banned), `${q.id}: "${banned}" yazılmamalı`);
     // Short: at most three sentences outside the steps, at most four steps.
     const sentences = q.cevap.filter(b => typeof b === 'string').join(' ').split(/[.!?](?:\s|$)/).filter(s => s.trim()).length;
@@ -135,7 +136,7 @@ test('Mola Yardım audiences: known names only, at least one each; every role ha
 test('Mola Yardım: the app\'s search (packages/domain/yardim.ts) answers exactly as the website\'s (site/src/assets/yardim.js)', () => {
   const ts = createYardimSearch(forAudience(readYardim(SRC), 'site'));
   const words = ['gün sonu', 'gun sonu nasil yapilir', 'odeme', 'Ödeme nasıl alınır', 'yazici', 'yazci', 'odme', 'yaz', 'fiş çıkmıyor', 'kasa açılışı', 'iade',
-    'hesap bölme', 'qr kod bas', 'internet kesildi', 'şifremi unuttum', 'kafemi yönet', 'android tablet apk', 'bilgisayar bozuldu', 'güncelleme', 'stok', 'mudur',
+    'hesap bölme', 'qr kod bas', 'internet kesildi', 'şifremi unuttum', 'işletmemi yönet', 'android tablet apk', 'bilgisayar bozuldu', 'güncelleme', 'stok', 'mudur',
     'fiyat', 'deneme', 'vardiya kodu', 'garson çağırıyor', 'mutfak iptal', 'xqzt blorfmak', '<img src=x onerror=alert(1)>', '', 'nasıl', 'a'.repeat(300)];
   // (JSON: the website's results are objects of the sandbox, with its own Object.)
   for (const w of words) assert.deepEqual(ts.search(w), JSON.parse(JSON.stringify(api.search(w).map(h => ({ id: h.id, soru: h.soru, score: h.score })))), w);

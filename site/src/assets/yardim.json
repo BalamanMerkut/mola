@@ -9,7 +9,7 @@
     { "id": "menu", "ad": "Menü ve QR" },
     { "id": "personel", "ad": "Personel ve vardiya" },
     { "id": "cihaz", "ad": "Cihazlar ve yazıcı" },
-    { "id": "uzaktan", "ad": "Kafemi yönet" },
+    { "id": "uzaktan", "ad": "İşletmemi yönet" },
     { "id": "yedek", "ad": "Yedek ve güncelleme" },
     { "id": "sorun", "ad": "Sorunlar" }
   ],
@@ -695,20 +695,20 @@
       "id": "kafemi-yonet-kur",
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
-      "soru": "Kafemi yönet’i (telefondan uzaktan rapor) nasıl kurarım?",
+      "soru": "İşletmemi yönet’i (telefondan uzaktan rapor) nasıl kurarım?",
       "cevap": [
-        ["Kasada Ayarlar → Uzaktan erişim’e girin.", "“1 · Telefon kodu”: doğrulama uygulamasıyla QR’ı okutup 6 haneli kodu yazın.", "“2 · E-posta”: adresinize gelen kodu yazın.", "Telefonunuzda kafem.molayazilim.com.tr adresini açıp girin."]
+        ["Kasada Ayarlar → Uzaktan erişim’e girin.", "“1 · Telefon kodu”: doğrulama uygulamasıyla QR’ı okutup 6 haneli kodu yazın.", "“2 · E-posta”: adresinize gelen kodu yazın.", "Telefonunuzda isletme.molayazilim.com.tr adresini açıp girin."]
       ],
-      "anahtar": ["kafemi yönet", "kafemi yonet", "uzaktan", "uzaktan erişim", "uzaktan rapor", "telefondan rapor", "evden bakmak", "telefon kodu", "doğrulama uygulaması", "authenticator", "google authenticator", "raporlarım", "yonet"],
+      "anahtar": ["işletmemi yönet", "kafemi yonet", "uzaktan", "uzaktan erişim", "uzaktan rapor", "telefondan rapor", "evden bakmak", "telefon kodu", "doğrulama uygulaması", "authenticator", "google authenticator", "raporlarım", "yonet"],
       "ilgili": ["kafemi-yonet-giris", "kasa-kapali-son-durum"]
     },
     {
       "id": "kafemi-yonet-giris",
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
-      "soru": "kafem.molayazilim.com.tr adresine nasıl girerim?",
+      "soru": "isletme.molayazilim.com.tr adresine nasıl girerim?",
       "cevap": [
-        ["kafem.molayazilim.com.tr adresini açın.", "E-posta adresinizi ve şifrenizi yazıp “Devam”a basın.", "Doğrulama uygulamasındaki 6 haneli kodu yazıp “Giriş yap”a basın."],
+        ["isletme.molayazilim.com.tr adresini açın.", "E-posta adresinizi ve şifrenizi yazıp “Devam”a basın.", "Doğrulama uygulamasındaki 6 haneli kodu yazıp “Giriş yap”a basın."],
         "En fazla 3 cihaz eşleşir. Yeni cihaz ilk kez girerken kasa bilgisayarı açık olmalı."
       ],
       "anahtar": ["giriş", "giris", "yönet giriş", "merkez", "merkez.molayazilim.com.tr", "yonet adresi", "uzaktan giriş", "telefon kodu", "6 haneli kod", "doğrulama kodu", "devam"],
@@ -719,14 +719,14 @@
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
       "soru": "Kasa bilgisayarı kapalıyken telefondan ne görürüm?",
-      "cevap": ["Kafemi yönet “Kasa bilgisayarı kapalı · Son durum” yazar ve son raporu gösterir. Kasa açılınca güncel bilgiler gelir."],
+      "cevap": ["İşletmemi yönet “Kasa bilgisayarı kapalı · Son durum” yazar ve son raporu gösterir. Kasa açılınca güncel bilgiler gelir."],
       "anahtar": ["kasa kapalı", "son durum", "bilgisayar kapalı", "kapalıyken", "son rapor", "kasa bilgisayarı kapalı", "güncel değil", "eski rapor"]
     },
     {
       "id": "cihaz-kaldir",
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
-      "soru": "Kafemi yönet’e girdiğim telefon kayboldu.",
+      "soru": "İşletmemi yönet’e girdiğim telefon kayboldu.",
       "cevap": ["Kasada Ayarlar → Uzaktan erişim → “4 · Eşleşmiş cihazlar”dan o telefonu kaldırın; şifreniz sorulur."],
       "anahtar": ["cihaz kaldır", "eşleşmiş cihazlar", "telefon kayboldu", "telefon çalındı", "cihaz sil", "çıkış", "cikis", "3 cihaz", "yeni telefon", "cihazı kaldır"]
     },
@@ -735,19 +735,19 @@
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
       "soru": "Kafeye gitmeden fiyat değiştirebilir miyim?",
-      "cevap": ["Evet. Kafede bir kez Ayarlar → Uzaktan erişim → “5 · Uzaktan yönetim”i açın. Sonra Kafemi yönet’ten, kasa açıkken kafenin ekranlarını kullanırsınız; her uzaktan giriş size bildirilir."],
+      "cevap": ["Evet. Kafede bir kez Ayarlar → Uzaktan erişim → “5 · Uzaktan yönetim”i açın. Sonra İşletmemi yönet’ten, kasa açıkken kafenin ekranlarını kullanırsınız; her uzaktan giriş size bildirilir."],
       "anahtar": ["uzaktan yönetim", "uzaktan yonetim", "evden fiyat", "uzaktan fiyat", "kafeyi yönet", "uzaktan ayar", "kafeye gitmeden", "dışarıdan yönetmek"]
     },
     {
       "id": "kafemi-yonet-giremiyorum",
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
-      "soru": "Kafemi yönet’e giremiyorum.",
+      "soru": "İşletmemi yönet’e giremiyorum.",
       "cevap": [
         ["Sayfadaki uyarıyı okuyun; nedeni yazar.", "Ayarlar → Uzaktan erişim’de 1 ve 2. adımlar tamamlanmış olmalı.", "Kodu doğrulama uygulamasından yazın; e-postayla gelen kod giriş için değildir."],
         "Çözülmezse Destek → Talepler’den yazın."
       ],
-      "anahtar": ["giremiyorum", "giriş olmuyor", "kod yanlış", "kod hatalı", "kafemi yönet açılmıyor", "uzaktan giriş olmuyor", "yonet hata", "doğrulama kodu yanlış"]
+      "anahtar": ["giremiyorum", "giriş olmuyor", "kod yanlış", "kod hatalı", "işletmemi yönet açılmıyor", "uzaktan giriş olmuyor", "yonet hata", "doğrulama kodu yanlış"]
     },
 
     {

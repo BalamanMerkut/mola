@@ -6,7 +6,7 @@ import { codesOf, e2eRun, ensureSetup, openSettings } from './helpers';
 
 // Kalıcı bağlantı (src/PermanentLink.tsx): the business's permanent Merkez link to the café computer, in the desktop window's
 // Kafe içi cihazlar and in Ayarlar → Cihazlar → Kafe içi cihazlar, with "Bu cihaza kısayol ekle" off the café computer (Mola Merkez's
-// /k/<kod>/kur, server/merkez/lan-link.ts). It is for the café only (0.1.22): Ayarlar → Uzaktan erişim gives the Kafemi yönet
+// /k/<kod>/kur, server/merkez/lan-link.ts). It is for the café only (0.1.22): Ayarlar → Uzaktan erişim gives the İşletmemi yönet
 // address to sign in with instead. The test café has no Merkez link of its own, so the answers are given here; the last
 // test asks a Mola Merkez of its own for the real page.
 const URL = 'https://merkez.example.com/k/Ab3dEf7hJk';
@@ -91,7 +91,7 @@ test('a laptop on the permanent link: "Bu cihaza kısayol ekle" opens Mola Merke
     const add = block.getByRole('link', { name: 'Bu cihaza kısayol ekle' });
     await expect(add).toHaveAttribute('href', `${URL}/kur`); await expect(add).toHaveAttribute('target', '_blank');
     await block.screenshot({ path: info.outputPath('laptop-kisayol.png') });
-    // Uzaktan erişim has no shortcut any more (0.1.22): away from the café the owner signs in to Kafemi yönet.
+    // Uzaktan erişim has no shortcut any more (0.1.22): away from the café the owner signs in to İşletmemi yönet.
     await openSettings(page, 'Uzaktan erişim');
     await expect(page.getByRole('heading', { name: '3 · Cihaz eşleştirme' })).toBeVisible();
     await expect(page.locator('.remote-access').getByRole('link', { name: 'Bu cihaza kısayol ekle' })).toHaveCount(0);

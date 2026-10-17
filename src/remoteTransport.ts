@@ -5,17 +5,17 @@ import type { Paired } from './phoneVault';
 
 /*
  * Sahibin uzaktan yönetimi, the browser's side (server/remote-admin.ts, packages/domain/remote-admin-crypto.ts). On Mola
- * Merkez's /yonet page ("Kafemi yönet": src/ReportsPhone.tsx, src/RemoteAdmin.tsx) the café's own screens run as usual, but
+ * Merkez's /yonet page ("İşletmemi yönet": src/ReportsPhone.tsx, src/RemoteAdmin.tsx) the café's own screens run as usual, but
  * every /api and /media request goes through this tunnel: sealed with the session key (AES-256-GCM, a sequence number per
  * tab, bound to its answer), posted to Mola Merkez, which hands it to the café as ciphertext. The answer comes back sealed and becomes an ordinary Response, so the
  * screens (src/api.ts `transport()`, and the few direct fetch() calls such as downloads) need no change. Large answers (Excel,
- * PDF) come in parts. Product photos (<img src="/media/…">) are fetched through the tunnel and shown from blob: addresses.
+ * PDF) come in parts. Product photos (<img src="/media/…">, and the files of their srcset) are fetched through the tunnel and shown from blob: addresses.
  * The session key is a non-extractable CryptoKey kept in this origin's IndexedDB until the session ends (a reload keeps it).
  */
 const API = '/api/merkez/v1/phone/admin';
 export const REMOTE_ENDED_EVENT = 'mola:remote-ended';
 /**
- * The connection to the café computer dropped while the session itself stays (0.1.23: Kafemi yönet shows the last report
+ * The connection to the café computer dropped while the session itself stays (0.1.23: İşletmemi yönet shows the last report
  * meanwhile and "Kasa açıldı · Kafeyi yönet" once it answers again). Once per outage. 0.1.24 (the owner marked a product
  * "Tükendi" with the café just closed and it said "Kaydediliyor…" for ever): no request here waits longer than
  * REMOTE_WAIT_MS, and the drop fails every pending one at once (`cut`). A drop is: Mola Merkez says the café is off
@@ -71,8 +71,8 @@ const realFetch: typeof fetch = (input, init) => (saved ?? globalThis.fetch)(inp
 /** True while this page runs the café's screens through the tunnel. */
 export const remoteMode = () => !!active;
 /**
- * Where "back to the start" goes: on Mola Merkez's /yonet never "/" (that is Mola Yönetim there); on Kafemi yönet's own name
- * (kafem.…, src/ownerHome.ts) its root "/".
+ * Where "back to the start" goes: on Mola Merkez's /yonet never "/" (that is Mola Yönetim there); on İşletmemi yönet's own name
+ * (isletme.…, src/ownerHome.ts) its root "/".
  */
 export const homePath = () => ownerHome() ?? (active || location.pathname === '/yonet' ? '/yonet' : '/');
 /** src/api.ts: the fetch to use (the tunnel only in remote mode). */
@@ -198,21 +198,40 @@ export async function dropSession() { if (active) await closeRemote(); else awai
 // ---------- Product photos ----------
 const blobs = new Map<string, Promise<string>>();
 let observer: MutationObserver | undefined;
+const MEDIA = /^\/media\//;
+/**
+ * The /media file an image shows: its src, or, with a srcset (src/components.tsx ProductArt: the 320 px thumbnail and the
+ * 800 px photo), the smallest one wide enough for its place on this screen (the largest when it has no place yet).
+ */
+function mediaPath(img: HTMLImageElement, src: string | null, set: string | null) {
+  const options = (set ?? '').split(',').map(c => c.trim().split(/\s+/)).map(([url, w]) => ({ url, width: Number(/^(\d+)w$/.exec(w ?? '')?.[1] ?? 0) })).filter(c => c.url && MEDIA.test(c.url) && c.width > 0).sort((a, b) => a.width - b.width);
+  if (!options.length) return src && MEDIA.test(src) ? src : undefined;
+  const needed = img.getBoundingClientRect().width * (window.devicePixelRatio || 1);
+  return (needed > 0 ? options.find(c => c.width >= needed) : undefined)?.url ?? options[options.length - 1].url;
+}
 function showMedia(img: HTMLImageElement) {
-  const src = img.getAttribute('src');
-  if (!active || !src || !src.startsWith('/media/')) return;
-  if (!blobs.has(src)) blobs.set(src, remoteFetch(src).then(async r => { if (!r.ok) throw new Error('foto'); return URL.createObjectURL(await r.blob()); }).catch(e => { blobs.delete(src); throw e; }));
-  void blobs.get(src)!.then(url => { if (img.getAttribute('src') === src) img.setAttribute('src', url); }).catch(() => {});
+  if (!active) return;
+  const src = img.getAttribute('src'), set = img.getAttribute('srcset');
+  if (!(src && MEDIA.test(src)) && !set?.includes('/media/')) return;
+  const path = mediaPath(img, src, set);
+  // 16 Ekim (the owner's case: every product picture broken on İşletmemi yönet, first seen in "Menüden kampanya ürünü seç"):
+  // a srcset outranks src, so the browser asked this origin for /media/… itself, which is not here (only the café has the
+  // photos). Through the tunnel an image shows one file, as a blob: the srcset and its sizes go.
+  if (set !== null) { img.removeAttribute('srcset'); img.removeAttribute('sizes'); }
+  if (!path) return;
+  img.dataset.molaMedia = path;
+  if (!blobs.has(path)) blobs.set(path, remoteFetch(path).then(async r => { if (!r.ok) throw new Error('foto'); return URL.createObjectURL(await r.blob()); }).catch(e => { blobs.delete(path); throw e; }));
+  void blobs.get(path)!.then(url => { if (img.dataset.molaMedia === path) img.setAttribute('src', url); }).catch(() => {});
 }
 function watchMedia() {
   if (observer) return;
-  const scan = (root: ParentNode) => { for (const img of root.querySelectorAll<HTMLImageElement>('img[src^="/media/"]')) showMedia(img); };
+  const scan = (root: ParentNode) => { for (const img of root.querySelectorAll<HTMLImageElement>('img[src^="/media/"], img[srcset*="/media/"]')) showMedia(img); };
   observer = new MutationObserver(list => {
     for (const m of list) {
       if (m.type === 'attributes' && m.target instanceof HTMLImageElement) showMedia(m.target);
       else for (const n of m.addedNodes) if (n instanceof HTMLImageElement) showMedia(n); else if (n instanceof Element) scan(n);
     }
   });
-  observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['src'] });
+  observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['src', 'srcset'] });
   scan(document);
 }

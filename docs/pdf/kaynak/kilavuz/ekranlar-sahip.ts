@@ -564,7 +564,7 @@ const sahipAyarlar: Grup = async (browser, { sahip }) => {
   await s.context().close();
 };
 
-// ---------------------------------------------------------------- Sahip: Destek, Mola desteği, Kafemi yönet
+// ---------------------------------------------------------------- Sahip: Destek, Mola desteği, İşletmemi yönet
 const sahipDestek: Grup = async browser => {
   const s = await sahipSayfasi(browser, { yukseklik: 900 });
   await git(s, 'Destek');
@@ -579,7 +579,7 @@ const sahipDestek: Grup = async browser => {
   await git(s, 'Destek');
   await s.getByRole('tab', { name: /Mola desteği/ }).click(); await sleep(900);
   await dene('s-uzaktan-erisim', () => cek(s, 's-uzaktan-erisim'));
-  // Kafemi yönet (0.1.23, /yonet): kasada telefon kodu ve e-posta (Ayarlar → Uzaktan erişim), sonra telefon tek adresten iki
+  // İşletmemi yönet (0.1.23, /yonet): kasada telefon kodu ve e-posta (Ayarlar → Uzaktan erişim), sonra telefon tek adresten iki
   // adımda girer (e-posta + şifre, sonra kod). Kod
   // API'den kurulur; e-posta Mola Merkez'in sahte SMTP'ye gönderdiği kodla doğrulanır (çekimden sonra Merkez'in e-postası
   // yeniden kapatılır); çekimden sonra telefon kodu kurtarma koduyla kapatılır (sonraki çekimlerde raporlar kod sormaz).

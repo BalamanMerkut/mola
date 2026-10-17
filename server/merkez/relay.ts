@@ -21,7 +21,7 @@ import { liveRequestSchema, loginRequestSchema, phoneId, postboxBody, RELAY, REL
  *   kutu.sqlite       the postbox, beside the data folder (`<data>-kutu/`, never in a backup): one encrypted box per phone,
  *                     deleted when the phone fetches it or after RELAY.POSTBOX_DAYS. Merkez cannot open a box: it never sees a
  *                     private key, the owner's password or phone code (packages/domain/remote-crypto.ts).
- * Kafemi yönet giriş (/yonet; 0.1.22, two steps since 0.1.23): a new device types the business's verified owner e-mail;
+ * İşletmemi yönet giriş (/yonet; 0.1.22, two steps since 0.1.23): a new device types the business's verified owner e-mail;
  * Merkez finds the business, hands out the public key its café sent with the heartbeat (MerkezBusiness.remoteLogin) and
  * passes the sealed steps to the café, which checks the password, then the phone code. Merkez only learns whether a device
  * was added (it gives it a token).
@@ -362,7 +362,7 @@ export function relayRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
     if (reply.status === 504) { res.status(504).json({ code: 'CAFE_TIMEOUT', message: 'Kasa bilgisayarı yanıt vermedi.' }); return; }
     res.status(reply.status).json(reply.json ?? {});
   });
-  // Kafemi yönet (0.1.23): is the café computer on? Asked before the full screens open and while they wait for it; the box
+  // İşletmemi yönet (0.1.23): is the café computer on? Asked before the full screens open and while they wait for it; the box
   // stays where it is.
   app.post(`${MERKEZ_API}/phone/status`, (req, res) => {
     phoneLimits(req, 'status', 120);

@@ -21,8 +21,8 @@ import { licenseFeatures, type Install, type MerkezBusiness, type MerkezData, ty
  *     between (0.1.21, the owner's own test: the old page led nowhere useful outside the café):
  *       on the café's network (heard from within FRESH_MS, the visitor from the same public address) → 302 to the café
  *       computer's first address, its usual sign-in;
- *       anywhere else, with Raporlarım in the licence ('remote-reports') → 302 to <Merkez>/yonet#k=<code> (Kafemi yönet, on its
- *       own name <kafem>/#k=<code> when MERKEZ_OWNER_ORIGIN is set: server/merkez/owner-host.ts; the last
+ *       anywhere else, with Raporlarım in the licence ('remote-reports') → 302 to <Merkez>/yonet#k=<code> (İşletmemi yönet, on its
+ *       own name <isletme>/#k=<code> when MERKEZ_OWNER_ORIGIN is set: server/merkez/owner-host.ts; the last
  *       report shows even while the café computer is off; the page offers "Kafedeyim, kasayı aç" with the code it was given);
  *       without it → a small page: not in the package, the link opens the register at the café, how to reach the Mola team;
  *     `?kafe=1` ("Kafedeyim, kasayı aç": the phone reached Merkez over IPv6 while the café computer used IPv4, so the two
@@ -100,7 +100,7 @@ const KUR_SCRIPT = `(() => {
 })();`;
 const KUR_HASH = `'sha256-${createHash('sha256').update(KUR_SCRIPT).digest('base64')}'`;
 function kurPage(e: Entry, code: string) {
-  const name = escape(e.name), line = e.reports ? 'Simge kafedeyken kasayı, dışarıdayken Kafemi yönet’i açar.' : 'Simge kafenin Wi-Fi’sindeyken kasayı açar.';
+  const name = escape(e.name), line = e.reports ? 'Simge kafedeyken kasayı, dışarıdayken İşletmemi yönet’i açar.' : 'Simge kafenin Wi-Fi’sindeyken kasayı açar.';
   return molaPage('kur', `<h1>Mola'yı bu cihaza ekle</h1><p>${name}</p>
 <div class="actions" id="kur" data-base="/k/${code}"><button type="button" class="go" id="add">Mola'yı bu cihaza ekle</button></div>
 <div class="how" data-how="ios" hidden><ol><li>Alttaki <b>Paylaş</b> düğmesine dokunun.</li><li><b>Ana Ekrana Ekle</b>’ye dokunun. “Web Uygulaması olarak aç” görünürse kapatın, sonra <b>Ekle</b>.</li></ol><p class="note">Simge Safari’de açılır: bu cihazın eşleşmesi Safari’de kayıtlı.</p></div>
@@ -116,7 +116,7 @@ function kurPage(e: Entry, code: string) {
 }
 /** A web app per business: the start address is the permanent link (inside the scope), the café's own Mola icons. */
 const manifest = (e: Entry, code: string) => ({
-  id: `/k/${code}/`, name: `Mola · ${e.name}`, short_name: 'Mola', description: 'Kafedeyken kasayı, dışarıdayken Kafemi yönet’i açar.', lang: 'tr', dir: 'ltr',
+  id: `/k/${code}/`, name: `Mola · ${e.name}`, short_name: 'Mola', description: 'Kafedeyken kasayı, dışarıdayken İşletmemi yönet’i açar.', lang: 'tr', dir: 'ltr',
   start_url: `/k/${code}/`, scope: `/k/${code}/`, display: 'standalone', background_color: '#f6f7f4', theme_color: '#234c3e',
   icons: [
     { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
@@ -134,7 +134,7 @@ self.addEventListener('fetch', event => { if (event.request.method !== 'GET') re
 type Entry = { name: string; origin?: string; client?: string; at?: number; reports: boolean };
 export function lanLinkRoutes(app: Express, deps: { store: MerkezStore; now: () => Date; publicOrigin?: string; siteOrigin?: string; ownerOrigin?: string }) {
   const { store, now } = deps;
-  // Kafemi yönet: on its own name (MERKEZ_OWNER_ORIGIN), else on Merkez's own address (not the web site's); without
+  // İşletmemi yönet: on its own name (MERKEZ_OWNER_ORIGIN), else on Merkez's own address (not the web site's); without
   // PUBLIC_ORIGIN (development) on this same address.
   const reportsUrl = deps.ownerOrigin ? `${deps.ownerOrigin}/` : `${deps.publicOrigin ?? ''}/yonet`;
   // Per address, as /s/: 60 a minute is far more than anyone opening a saved link needs, and little for someone trying codes.

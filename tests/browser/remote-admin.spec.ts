@@ -1,8 +1,9 @@
 import { test, expect, devices, type Request as PwRequest } from '@playwright/test';
+import sharp from 'sharp';
 import { ensureSetup, MERKEZ, openSettings, openView, OWNER_EMAIL, ownerEmailOn, phoneCodeOn, raporlarimLogin, remoteLoginOpen, reportAction } from './helpers';
 
 /*
- * Kafemi yönet with Uzaktan yönetim on (0.1.23: one address, /yonet; server/remote-admin.ts, src/ReportsPhone.tsx,
+ * İşletmemi yönet with Uzaktan yönetim on (0.1.23: one address, /yonet; server/remote-admin.ts, src/ReportsPhone.tsx,
  * src/RemoteAdmin.tsx, src/remoteTransport.ts): a device signs in (the e-mail and the password, then the phone code) and goes
  * straight into the café's own screens, without being asked again (the sign-in's one-time grant). Satış ve Raporlar, a price
  * changed, Ayarlar, the Excel file. The café computer off: the last report with "Kasa bilgisayarı kapalı"; back on: "Kasa
@@ -14,7 +15,7 @@ import { ensureSetup, MERKEZ, openSettings, openView, OWNER_EMAIL, ownerEmailOn,
  */
 const PASSWORD = 'MolaDemo!2026';
 
-test('Kafemi yönet: sign in → the café screens at once, a price, reports, Excel; café off → last report; back → "Kafeyi yönet"; Merkez sees only ciphertext', async ({ browser }, info) => {
+test('İşletmemi yönet: sign in → the café screens at once, a price, reports, Excel; café off → last report; back → "Kafeyi yönet"; Merkez sees only ciphertext', async ({ browser }, info) => {
   test.setTimeout(360_000);
   const cafe = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const laptop = await browser.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true });
@@ -70,6 +71,27 @@ test('Kafemi yönet: sign in → the café screens at once, a price, reports, Ex
     // Menü yönetimi opens with the new price; Ayarlar opens, and Uzaktan erişim there removes nothing remotely.
     await openView(device, 'Menü yönetimi');
     await expect(device.getByText(product.name).first()).toBeVisible({ timeout: 30_000 });
+    // A product photo (16 Ekim, the owner's case: broken pictures in "Menüden kampanya ürünü seç" on İşletmemi yönet): every
+    // <img> of the café's screens loads through the tunnel, its srcset too (the owner's own address has no /media).
+    const square = await sharp({ create: { width: 200, height: 200, channels: 3, background: '#8a5a3c' } }).png().toBuffer();
+    const uploaded = await (await cafe.request.post('/api/staff/photos', { data: { data: `data:image/png;base64,${square.toString('base64')}` } })).json() as { photo: string };
+    expect(uploaded.photo).toMatch(/^\/media\//);
+    const pictured = await cafe.request.post('/api/staff/products', { data: { id: product.id, product: { ...product, nameEn: product.nameEn ?? '', description: product.description ?? '', price, photo: uploaded.photo } } });
+    expect(pictured.ok(), await pictured.text()).toBe(true);
+    const photoLoaded = async (img: import('@playwright/test').Locator) => {
+      await img.scrollIntoViewIfNeeded();
+      await expect.poll(() => img.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth > 0 && e.currentSrc.startsWith('blob:')), { timeout: 30_000 }).toBe(true);
+    };
+    await openView(device, 'Menü yönetimi');
+    await photoLoaded(device.locator('.menu-row').filter({ hasText: product.name }).locator('.product-photo img'));
+    await openView(device, 'Kampanyalar');
+    await device.getByRole('button', { name: 'Kampanya ekle', exact: true }).click();
+    await device.getByRole('dialog').getByRole('button', { name: /Menüden seç/ }).click();
+    const picker = device.getByRole('dialog', { name: 'Menüden kampanya ürünü seç' });
+    await photoLoaded(picker.locator('.product-card').filter({ hasText: product.name }).locator('.product-photo img'));
+    await device.screenshot({ path: info.outputPath('laptop-1b-kampanya-urun-secimi.png') });
+    await device.keyboard.press('Escape'); await device.keyboard.press('Escape');
+    await device.getByRole('button', { name: 'Ürünler', exact: true }).click();
     await openSettings(device, 'Uzaktan erişim');
     await expect(device.getByRole('heading', { name: '1 · Telefon kodu' })).toBeVisible({ timeout: 30_000 });
     await expect(device.locator('.remote-access')).toContainText('Kurulu ✓');

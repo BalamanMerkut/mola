@@ -499,7 +499,7 @@ if (chosen.includes('yonetim')) {
   await bundle('scripts/merkez-sifre-sifirla.ts', 'merkez-sifre-sifirla.mjs', { 'process.env.MOLA_RELEASE_BUILD': '"1"' });
   mkdirSync(join(prog, 'runtime'), { recursive: true });
   // The built screens: Merkez serves merkez.html for every page; index.html only inside a Mola destek session
-  // (/destek/<id>, server/merkez/relay.ts) and on /yonet ("Kafemi yönet", the owner's devices; 0.1.23, once raporlarim.html).
+  // (/destek/<id>, server/merkez/relay.ts) and on /yonet ("İşletmemi yönet", the owner's devices; 0.1.23, once raporlarim.html).
   for (const name of readdirSync('dist')) copyTree(join('dist', name), join(app, 'dist', name));
   if (!existsSync(join(app, 'dist', 'index.html'))) throw new Error('dist/index.html yok: önce npm run build.');
   if (!existsSync(join(app, 'dist', 'merkez.html'))) throw new Error('dist/merkez.html yok: önce npm run build.');

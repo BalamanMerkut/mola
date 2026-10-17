@@ -178,7 +178,7 @@ export class RemoteAdmin {
   private phone(tenant: string, phoneId: string) {
     const p = this.reports().read(tenant).phones.find(x => x.id === phoneId);
     const owner = p && this.store.read(tenant).staffUsers?.find(u => u.id === p.ownerId && u.role === 'owner' && u.active);
-    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın bağlantısı kaldırıldı. Kafemi yönet’e yeniden giriş yapın.', 403);
+    if (!p || !owner) throw new DomainError('PHONE_REVOKED', 'Bu cihazın bağlantısı kaldırıldı. İşletmemi yönet’e yeniden giriş yapın.', 403);
     return { p, owner };
   }
   private cafeKey(tenant: string) {

@@ -84,7 +84,8 @@ test('no sales data ever leaves the café: the heartbeat and ticket delivery car
   await pair.adminLogin();
   const merkezState = (await pair.admin('/state')).data, state = JSON.stringify(merkezState);
   assert.equal(state.includes(s.tables[0].token), false, 'table token');
-  for (const secret of ['49500', 'Latte', 'GIZLI', 'Zeynep', 'isletme']) assert.equal(withoutClockAndIds(merkezState).includes(secret), false, secret);
+  // "isletme" is the demo owner's user name; the package description names İşletmemi yönet's address (isletme.molayazilim.com.tr).
+  for (const secret of ['49500', 'Latte', 'GIZLI', 'Zeynep', 'isletme']) assert.equal(withoutClockAndIds(merkezState).replaceAll('isletme.molayazilim.com.tr', '').includes(secret), false, secret);
   assert.match(state, /Yazıcı çalışmıyor/);
 });
 

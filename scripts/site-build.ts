@@ -343,14 +343,6 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, html);
   }
-  // Kafemi yönet has its own name (kafem.<alan>/, MERKEZ_OWNER_ORIGIN; it was merkez.<alan>/yonet); owners type the short site
-  // address (16 Ekim: molayazilim.com.tr/yonet gave the 404 page). Tiny static pages send them on: no script, no Caddy change;
-  // not in the sitemap.
-  const ownerPage = `${new URL(config.siteUrl).protocol}//kafem.${new URL(config.siteUrl).host.replace(/^www\./, '')}/`;
-  for (const path of ['yonet', 'raporlarim', 'kafemi-yonet']) {
-    mkdirSync(join(dist, path), { recursive: true });
-    writeFileSync(join(dist, path, 'index.html'), `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=${esc(ownerPage)}"><title>Kafemi yönet · Mola</title></head><body style="font-family:system-ui,sans-serif;background:#ece6da;color:#1f3128;padding:24px"><p>Kafemi yönet açılıyor… Açılmazsa: <a href="${esc(ownerPage)}">${esc(ownerPage.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a></p></body></html>\n`);
-  }
   const indexed = pages.filter(p => p.path !== '404' && !(p.robots ?? '').includes('noindex'));
   writeFileSync(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexed.map(p => `  <url><loc>${config.siteUrl}${p.path}</loc><lastmod>${config.legalUpdated}</lastmod></url>`).join('\n')}\n</urlset>\n`);
   writeFileSync(join(dist, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /s/\n\nSitemap: ${config.siteUrl}/sitemap.xml\n`);

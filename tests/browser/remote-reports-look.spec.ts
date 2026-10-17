@@ -3,7 +3,7 @@ import type { PhoneReport } from '../../packages/domain/remote-report';
 import { MERKEZ } from './helpers';
 
 /*
- * Kafemi yönet's report, how it looks (0.1.24: the owner found it "biraz ilkel"; src/ReportsPhone.tsx ReportView): the day
+ * İşletmemi yönet's report, how it looks (0.1.24: the owner found it "biraz ilkel"; src/ReportsPhone.tsx ReportView): the day
  * on top with the comparison, payments as one stacked bar with its legend, top products as ranked rows with bars, the last
  * 30 days as a bar chart with dates, the average line and a value on tap. A signed-in device is put in this browser's
  * IndexedDB with a full last report and Mola Merkez answers "the café is off", so the page shows exactly that report at

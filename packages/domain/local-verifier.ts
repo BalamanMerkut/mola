@@ -1,7 +1,7 @@
 import { bytes, fromB64u, toB64u, utf8 } from './remote-crypto.js';
 
 /*
- * Kafemi yönet "Çıkış" (0.1.24): the device locks itself and keeps its keys; the e-mail and the password open it again.
+ * İşletmemi yönet "Çıkış" (0.1.24): the device locks itself and keeps its keys; the e-mail and the password open it again.
  * With the café computer on, the café checks them (the usual sign-in, with the code step). With it off (the owner's case:
  * Çıkış at night, the café closed, locked out), the device checks them itself against this verifier, made at the last
  * successful sign-in: PBKDF2-SHA256 (WebCrypto, browser and tests alike), a random salt, never the password itself.

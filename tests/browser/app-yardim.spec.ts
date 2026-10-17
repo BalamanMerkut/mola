@@ -233,8 +233,8 @@ test('the waiter\'s phone: only the eagle, the waiter\'s own answers, no pop-ups
   await expect(sheet(page)).not.toContainText('Müşteriye iade nasıl yapılır?');
   await page.waitForTimeout(300);
   await shot(page, info, 'mola-yardim-garson.png');
-  await ask(page, 'kafemi yönet');
-  await expect(sheet(page)).not.toContainText('Kafemi yönet’i');
+  await ask(page, 'işletmemi yönet');
+  await expect(sheet(page)).not.toContainText('İşletmemi yönet’i');
   await ask(page, 'xqzt blorfmak');
   const none = sheet(page).locator('.help-none').last();
   await expect(none).toContainText('Bunu bilmiyorum.');

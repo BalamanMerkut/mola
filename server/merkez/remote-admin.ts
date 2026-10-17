@@ -6,7 +6,7 @@ import { adminRequestSchema, phoneId, RELAY, type RelayReply } from '../relay-pr
 import type { RelayHub } from './relay.js';
 
 /*
- * Sahibin uzaktan yönetimi, Mola Merkez's part (the café's is server/remote-admin.ts). Merkez serves "Kafemi yönet" at /yonet
+ * Sahibin uzaktan yönetimi, Mola Merkez's part (the café's is server/remote-admin.ts). Merkez serves "İşletmemi yönet" at /yonet
  * (index.html of this build: the sign-in, the reports and the café's own screens on one page, 0.1.23; the old /raporlarim
  * and every typed variant of either address with Turkish letters, capitals or a slash come here with a 301: `ownerPage`)
  * and passes the paired device's sealed requests to the café
@@ -30,19 +30,19 @@ export function ownerPage(path: string) {
 }
 
 /**
- * index.html as Kafemi yönet (server/merkez/runtime.ts): its own title and Home Screen name, not indexed, no referrer, and no
+ * index.html as İşletmemi yönet (server/merkez/runtime.ts): its own title and Home Screen name, not indexed, no referrer, and no
  * café manifest or standalone mode (the manifest's start address "/" is Mola Yönetim on Merkez). `home`: where the page is,
  * "/yonet" on Merkez's own name or "/" on its own name (MERKEZ_OWNER_ORIGIN, server/merkez/owner-host.ts); the page reads it
- * (src/ownerHome.ts) to know it is Kafemi yönet at "/" and where "back to the start" goes.
+ * (src/ownerHome.ts) to know it is İşletmemi yönet at "/" and where "back to the start" goes.
  */
 export const ownerHtml = (html: string, home: '/' | '/yonet' = '/yonet') => html
   .replace(/<link rel="manifest"[^>]*>\s*/, '').replace(/<meta name="(apple-)?mobile-web-app-capable"[^>]*>\s*/g, '')
-  .replace(/<title>[^<]*<\/title>/, '<title>Kafemi yönet · Mola</title>')
-  .replace(/(name="(apple-mobile-web-app-title|application-name)" content=")[^"]*/g, '$1Kafemi yönet')
+  .replace(/<title>[^<]*<\/title>/, '<title>İşletmemi yönet · Mola</title>')
+  .replace(/(name="(apple-mobile-web-app-title|application-name)" content=")[^"]*/g, '$1İşletmemi yönet')
   .replace('<head>', `<head>\n    <meta name="robots" content="noindex" />\n    <meta name="referrer" content="no-referrer" />\n    <meta name="mola-owner-home" content="${home}" />`);
 export function remoteAdminRoutes(app: Express, deps: () => Deps, hub: RelayHub) {
   // Old and typed addresses (a bookmark of /raporlarim keeps working; the same origin, so the device's keys are the same).
-  // With Kafemi yönet on its own name (MERKEZ_OWNER_ORIGIN) these never get here: 404 on Merkez's name (server/merkez/owner-host.ts).
+  // With İşletmemi yönet on its own name (MERKEZ_OWNER_ORIGIN) these never get here: 404 on Merkez's name (server/merkez/owner-host.ts).
   app.use((req, res, next) => {
     const to = ['GET', 'HEAD'].includes(req.method) ? ownerPage(req.path) : undefined;
     if (!to) return next();
@@ -67,7 +67,7 @@ export function remoteAdminRoutes(app: Express, deps: () => Deps, hub: RelayHub)
       .catch((e: DomainError) => ({ status: e.status ?? 503, json: { code: e.code, message: e.message } }) as RelayReply);
     res.status(reply.status).json(reply.json ?? {});
   });
-  // Kafemi yönet: the sign-in, the reports and the café's own screens (the page reads the device's keys from this origin's
+  // İşletmemi yönet: the sign-in, the reports and the café's own screens (the page reads the device's keys from this origin's
   // IndexedDB; on a VDS only over HTTPS: WebCrypto needs a secure page).
   app.get('/yonet', (_req, res, next) => { res.locals.molaPage = 'index.html'; res.locals.molaOwner = true; next(); });
 }

@@ -19,7 +19,7 @@ import './remote-support.css';
  *                        Done: "Kurulu ✓", one line.
  *   2 E-posta            the verified owner e-mail Mola Merkez keeps (server/owner-email.ts). None yet: typed and verified here
  *                        with a code sent to it (the application's address may be verified as it is). Changing it: Yedek.
- *   3 Cihaz eşleştirme   the Kafemi yönet address (<Merkez>/yonet, or its own name kafem.… when Merkez names one) in big letters, Kopyala, a small QR of it: every device
+ *   3 Cihaz eşleştirme   the İşletmemi yönet address (<Merkez>/yonet, or its own name isletme.… when Merkez names one) in big letters, Kopyala, a small QR of it: every device
  *                        signs in there with the e-mail, the password and the phone code (src/ReportsPhone.tsx).
  *   4 Eşleşmiş cihazlar  kind icon, name, last report; "Kaldır" asks the password (not the code: the lost phone may hold the app).
  *   5 Uzaktan yönetim    src/RemoteAdminSettings.tsx. Part of "Uzaktan erişim" since 15 Ekim (one service): whoever sees this
@@ -141,7 +141,7 @@ function LoginEmail({ email, onChange }: { email: Email | null | undefined; onCh
   </form>;
 }
 
-/** "Cihaz eşleştirme": the plain Kafemi yönet address (no secret in it), big, with Kopyala and a small QR. */
+/** "Cihaz eşleştirme": the plain İşletmemi yönet address (no secret in it), big, with Kopyala and a small QR. */
 function Connect({ address, line = 'Telefonunuzda ve laptopunuzda bu adresi açıp e-posta, şifre ve telefon kodunuzla girin.' }: { address: string | null; line?: string }) {
   const [image, setImage] = useState(''), [copied, setCopied] = useState<boolean | null>(null);
   useEffect(() => { let live = true; if (address) void QRCode.toDataURL(address, { width: 240, margin: 1, color: { dark: '#234c3e', light: '#ffffff' } }).then(v => { if (live) setImage(v); }); return () => { live = false; }; }, [address]);
@@ -150,8 +150,8 @@ function Connect({ address, line = 'Telefonunuzda ve laptopunuzda bu adresi aç�
     <p className="settings-card-note">{line}</p>
     <div className="remote-address"><strong className="remote-address-text">{address.replace(/^https?:\/\//, '')}</strong>
       <button type="button" className="btn secondary small-btn" onClick={() => setCopied(copyText(address))}><Copy size={14} aria-hidden="true" />{copied ? 'Kopyalandı' : 'Kopyala'}</button></div>
-    {copied === false && <input className="remote-address-copy" readOnly value={address} aria-label="Kafemi yönet adresi" onFocus={e => e.currentTarget.select()} />}
-    {image && <img className="remote-address-qr" src={image} width={120} height={120} alt="Kafemi yönet adresinin QR kodu" />}
+    {copied === false && <input className="remote-address-copy" readOnly value={address} aria-label="İşletmemi yönet adresi" onFocus={e => e.currentTarget.select()} />}
+    {image && <img className="remote-address-qr" src={image} width={120} height={120} alt="İşletmemi yönet adresinin QR kodu" />}
   </div>;
 }
 
