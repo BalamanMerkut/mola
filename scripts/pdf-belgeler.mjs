@@ -3,6 +3,7 @@
 //   docs/pdf/kaynak-teknik/belge.html -> docs/pdf/Mola-Teknik-Anlatim.pdf         (for the owner's teachers)
 //   docs/pdf/kaynak-paketler/belge.html -> docs/pdf/Mola-Paketler.pdf       (packages and their services, no prices)
 //   docs/pdf/kaynak-fiyat/belge.html -> docs/pdf/Mola-Fiyat-ve-Rakipler.pdf  (internal: competitors and price proposal; from docs/FIYAT_VE_RAKIPLER_2026-10.md)
+//   docs/pdf/kaynak-fiyat-listesi/belge.html -> docs/pdf/Mola-Fiyat-Listesi.pdf  (for customers: our packages and prices only)
 // Optional: `npm run pdf:belgeler -- hukuk`, `-- teknik` or `-- paketler` builds one.
 //
 // How it works: the page is opened from disk (relative images resolve), appendices are filled from their single sources
@@ -23,6 +24,7 @@ const DOCS = {
   teknik: { src: 'docs/pdf/kaynak-teknik/belge.html', out: 'docs/pdf/Mola-Teknik-Anlatim.pdf' },
   paketler: { src: 'docs/pdf/kaynak-paketler/belge.html', out: 'docs/pdf/Mola-Paketler.pdf' },
   fiyat: { src: 'docs/pdf/kaynak-fiyat/belge.html', out: 'docs/pdf/Mola-Fiyat-ve-Rakipler.pdf' },
+  'fiyat-listesi': { src: 'docs/pdf/kaynak-fiyat-listesi/belge.html', out: 'docs/pdf/Mola-Fiyat-Listesi.pdf' },
 };
 const wanted = process.argv.slice(2).filter(a => DOCS[a]);
 const EM_DASH = '—';

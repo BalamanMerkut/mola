@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mola Fiyat Listesi</title>
+<link rel="stylesheet" href="../kaynak-paketler/belge.css">
+<style>
+  /* Müşteriye verilen fiyat listesi: yalnız Mola paketleri ve fiyatları (rakip karşılaştırması yok).
+     Fiyatlar packages/domain/features.ts ile aynı; değişirse burası da güncellenir. */
+  @page {
+    @bottom-left { content: "Mola · Fiyat listesi · Merkut Studios · molayazilim.com.tr"; }
+  }
+  .ust { display: flex; align-items: center; gap: 10pt; margin: 0 0 4pt; }
+  .ust svg { width: 30pt; height: 30pt; }
+  .ust h1 { margin: 0; border: 0; padding: 0; font-size: 20pt; break-before: auto; }
+  .ust-not { margin: 0 0 12pt; color: #5d6763; font-size: 9pt; }
+  .paketler { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; margin: 0 0 12pt; }
+  .paket { break-inside: avoid; padding: 10pt 11pt; border: 1px solid var(--cizgi); border-radius: 9pt; background: #fbf8f2; display: flex; flex-direction: column; }
+  .paket.one { border: 2px solid var(--yesil); }
+  .paket .etiket { align-self: flex-start; font-size: 7pt; font-weight: 700; letter-spacing: .6pt; text-transform: uppercase; color: var(--krem); background: var(--yesil); border-radius: 20pt; padding: 1.5pt 7pt; margin: 0 0 4pt; }
+  .paket h2 { margin: 0 0 6pt; font-size: 13pt; border: 0; padding: 0; break-before: auto; }
+  .fiyat { font-size: 21pt; font-weight: 700; color: var(--yesil); line-height: 1; }
+  .fiyat small { font-size: 8.5pt; font-weight: 600; color: #5d6763; }
+  .fiyat s { display: block; font-size: 9pt; font-weight: 400; color: #8a938f; margin: 0 0 2pt; }
+  .dahil { white-space: nowrap; font-size: 7.6pt; color: #6b7570; margin: 3pt 0 0; }
+  .yillik { font-size: 8.2pt; margin: 5pt 0 7pt; padding: 3pt 6pt; border-radius: 5pt; background: var(--yesil-acik); color: var(--yesil); font-weight: 600; }
+  .paket ul { margin: 0; padding-left: 12pt; font-size: 8.5pt; }
+  .paket li { margin: 1.5pt 0; }
+  h2.bolum { font-size: 12.5pt; margin: 4pt 0 5pt; border: 0; padding: 0; break-before: auto; }
+  .aciklama { font-size: 8.6pt; color: #5d6763; margin: 0 0 6pt; }
+  table.hz { width: 100%; border-collapse: collapse; }
+  table.hz td, table.hz th { font-size: 8.6pt; padding: 3pt 6pt; border-bottom: 1px solid var(--cizgi); text-align: left; }
+  table.hz td.tl, table.hz th.tl { text-align: right; white-space: nowrap; font-weight: 600; width: 22%; }
+  table.hz td span { display: block; font-size: 7.4pt; color: #6b7570; font-weight: 400; }
+  .iki { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14pt; }
+  .herkese { margin: 12pt 0 0; padding: 9pt 12pt; border-radius: 9pt; background: var(--yesil); color: #fff; break-inside: avoid; }
+  .herkese h2 { color: var(--krem); font-size: 11.5pt; margin: 0 0 4pt; border: 0; padding: 0; break-before: auto; }
+  .herkese ul { margin: 0; padding-left: 13pt; font-size: 8.8pt; columns: 2; column-gap: 14pt; }
+  .herkese li { margin: 1.5pt 0; }
+  .son-not { font-size: 7.8pt; color: #6b7570; margin: 8pt 0 0; }
+</style>
+</head>
+<body>
+<main>
+
+<div class="ust">
+  <svg viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="56" fill="#234c3e"/><g transform="translate(41.6 45.2) scale(7.2)" fill="none" stroke="#f3ebdd" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/></g></svg>
+  <h1 data-toc="no">Mola Fiyat Listesi</h1>
+</div>
+<p class="ust-not">Fiyatlar aylıktır ve KDV hariçtir (KDV %20). İlk 30 gün bütün hizmetler ücretsiz açıktır, kurulum ücretsizdir.</p>
+
+<div class="paketler">
+  <div class="paket">
+    <h2>Çay bahçesi</h2>
+    <div class="fiyat">980 TL <small>/ ay + KDV</small></div>
+    <p class="dahil">KDV dahil 1.176 TL</p>
+    <p class="yillik">Yıllık 9.800 TL + KDV (2 ay bedava)</p>
+    <ul>
+      <li>Adisyon çekirdeği</li>
+      <li>QR menü</li>
+      <li>E-posta raporları</li>
+    </ul>
+  </div>
+  <div class="paket one">
+    <span class="etiket">Önerilen</span>
+    <h2>Kafe Standart</h2>
+    <div class="fiyat"><s>2.060 TL</s>1.950 TL <small>/ ay + KDV</small></div>
+    <p class="dahil">KDV dahil 2.340 TL · 110 TL paket indirimi</p>
+    <p class="yillik">Yıllık 19.500 TL + KDV (2 ay bedava)</p>
+    <ul>
+      <li>Adisyon çekirdeği</li>
+      <li>QR menü</li>
+      <li>QR sipariş ve garson çağırma</li>
+      <li>Stok, reçete ve kârlılık</li>
+      <li>Uzaktan erişim</li>
+      <li>E-posta raporları</li>
+    </ul>
+  </div>
+  <div class="paket">
+    <h2>Restoran Pro</h2>
+    <div class="fiyat">2.600 TL <small>/ ay + KDV</small></div>
+    <p class="dahil">KDV dahil 3.120 TL</p>
+    <p class="yillik">Yıllık 26.000 TL + KDV (2 ay bedava)</p>
+    <ul>
+      <li>Kafe Standart'taki her şey</li>
+      <li>Gelişmiş raporlar</li>
+      <li>Rezervasyon ve etkinlik</li>
+      <li>Vardiya, bahşiş ve personel raporu</li>
+      <li>Sosyal medya ve QR kartları</li>
+      <li>İki ekran</li>
+      <li>Bulutta şifreli yedek</li>
+    </ul>
+  </div>
+</div>
+
+<h2 class="bolum" data-toc="no">Özel paket: hizmetleri tek tek seçin</h2>
+<p class="aciklama">Adisyon çekirdeği her pakette vardır; diğer hizmetler istenirse eklenir. QR sipariş için QR menü de seçilmelidir. Kapatılan hizmetin verileri silinmez.</p>
+<div class="iki">
+<table class="hz">
+  <thead><tr><th>Hizmet</th><th class="tl">Aylık, KDV hariç</th></tr></thead>
+  <tbody>
+    <tr><td>Adisyon çekirdeği<span>masalar, sipariş, mutfak ekranı ve fişi, kasa, gün sonu, menü, kampanyalar</span></td><td class="tl">750 TL</td></tr>
+    <tr><td>QR menü<span>fotoğraflı dijital menü, Türkçe ve İngilizce</span></td><td class="tl">200 TL</td></tr>
+    <tr><td>QR sipariş ve garson çağırma<span>misafir telefondan sipariş verir, hesap ister</span></td><td class="tl">300 TL</td></tr>
+    <tr><td>Stok, reçete ve kârlılık<span>stok satıştan düşer, ürün başına kâr</span></td><td class="tl">650 TL</td></tr>
+    <tr><td>Uzaktan erişim<span>telefondan raporlar ve işletmeyi yönetme</span></td><td class="tl">130 TL</td></tr>
+    <tr><td>E-posta raporları<span>gün, hafta, ay ve yıl sonu</span></td><td class="tl">30 TL</td></tr>
+  </tbody>
+</table>
+<table class="hz">
+  <thead><tr><th>Hizmet</th><th class="tl">Aylık, KDV hariç</th></tr></thead>
+  <tbody>
+    <tr><td>Gelişmiş raporlar<span>PDF, muhasebeci için Excel, KDV dökümü</span></td><td class="tl">100 TL</td></tr>
+    <tr><td>Rezervasyon ve etkinlik<span>masa ayırma, kapora, maç günü masaları</span></td><td class="tl">50 TL</td></tr>
+    <tr><td>Vardiya, bahşiş ve personel raporu</td><td class="tl">20 TL</td></tr>
+    <tr><td>Sosyal medya ve QR kartları</td><td class="tl">20 TL</td></tr>
+    <tr><td>İki ekran<span>kasa ekranı ikiye bölünür</span></td><td class="tl">50 TL</td></tr>
+    <tr><td>Bulutta şifreli yedek<span>yedeklerin şifreli kopyası Mola sunucusunda</span></td><td class="tl">300 TL</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="herkese">
+  <h2 data-toc="no">Bütün paketlerde</h2>
+  <ul>
+    <li>İlk 30 gün bütün hizmetler açık</li>
+    <li>Kredi kartı istenmez</li>
+    <li>Kurulum ve ilk eğitim ücretsiz</li>
+    <li>Deneme bitince kendiliğinden ücretli olmaz</li>
+    <li>Sınırsız cihaz</li>
+    <li>İnternet kesilse de çalışır</li>
+    <li>Gece otomatik yedek</li>
+    <li>Yıllık ödemede 2 ay bedava</li>
+  </ul>
+</div>
+
+<p class="son-not">Fiyatlar Ekim 2026 itibarıyla geçerlidir. Paket servis platformları (Yemeksepeti, Getir, Trendyol) yakında eklenecektir. Bilgi ve başvuru: molayazilim.com.tr · destek@molayazilim.com.tr</p>
+
+</main>
+</body>
+</html>
