@@ -306,9 +306,11 @@ async function video(browser: Browser, scene: Scene, file: string) {
   const fps = 30, total = Math.round(scene.duration * fps);
   if (!coversOnly) {
     const mp4 = join(OUT, `${file}.mp4`);
+    // Sessiz ses kanalı: Meta'nın Reels yükleyicisi ses kanalı olmayan videoda %95'te takılıp başa dönüyor.
     const ff = spawn(FFMPEG, ['-y', '-hide_banner', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'png', '-i', '-',
+      '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000', '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '128k', '-shortest',
       '-vf', 'scale=1080:1920:flags=lanczos:out_color_matrix=bt709:out_range=tv,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-profile:v', 'high', '-level', '4.1',
-      '-pix_fmt', 'yuv420p', '-color_range', 'tv', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-r', String(fps), '-movflags', '+faststart', '-an', mp4], { stdio: ['pipe', 'inherit', 'inherit'] });
+      '-pix_fmt', 'yuv420p', '-color_range', 'tv', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-r', String(fps), '-movflags', '+faststart', mp4], { stdio: ['pipe', 'inherit', 'inherit'] });
     const done = new Promise<number>(r => ff.on('exit', c => r(c ?? 1)));
     const write = (b: Buffer) => new Promise<void>(r => { if (ff.stdin.write(b)) r(); else ff.stdin.once('drain', () => r()); });
     for (let i = 0; i < total; i++) {
