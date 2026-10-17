@@ -264,7 +264,7 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   // Uzaktan destek (Destek → Mola desteği) and uzaktan raporlar (Ayarlar → Uzaktan erişim): the owner's switches and phones;
   // before the cash routes, because a gün sonu sends the phones' postbox at once.
   const remote = new RemoteReports(store, link, relay, now, cash);
-  // Raporlarım shows "Kafeyi yönet" only with Uzaktan yönetim in the package (the report says whether it is on).
+  // Raporlarım shows "İşletmeyi yönet" only with Uzaktan yönetim in the package (the report says whether it is on).
   remote.adminState = tenant => { try { return link.has(tenant, 'remote-admin') ? remoteAdmin.read(tenant).on ? 'on' : 'off' : undefined; } catch { return undefined; } };
   link.onStop.push(() => remote.close()); link.beforeClose.push(() => remote.push('shutdown', true));
   // Turning support on and removing a device ask the owner's password again (confirmPassword, below the login). A new

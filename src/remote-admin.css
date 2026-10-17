@@ -1,4 +1,4 @@
-/* "Kafeyi yönet" (src/RemoteAdmin.tsx: the bar over the café's screens on /yonet) and its settings card (src/RemoteAdminSettings.tsx). */
+/* "İşletmeyi yönet" (src/RemoteAdmin.tsx: the bar over the café's screens on /yonet) and its settings card (src/RemoteAdminSettings.tsx). */
 .remote-bar{position:fixed;top:0;left:0;right:0;z-index:20;height:44px;display:flex;align-items:center;gap:8px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));background:var(--rail,#1f3b31);color:#fff;font:14px/1.2 Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;box-shadow:0 4px 14px -10px #0008}
 .remote-bar-mark{width:26px;height:26px;border-radius:8px;background:#ffffff26;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0}
 .remote-bar-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}

@@ -7,7 +7,7 @@ import type { Product, OptionGroup } from '../packages/domain/types';
 import { api, ApiError, parseMoney, parseAdjustment, requestId } from './api';
 import { Modal, Notice, ProductArt, ProductDialog } from './components';
 import { HelpTip } from './HelpTip';
-import { goTo } from './navigate';
+import { PlaceLink } from './Moved';
 import { artForCategory } from '../packages/domain/sector';
 import { optionLabelSuggestion } from '../packages/domain/menu-translation';
 import { DEFAULT_VAT, productVat, suggestVat, vatSettings, type VatSettings } from '../packages/domain/vat';
@@ -119,7 +119,7 @@ function VatField({ rate, auto = false, list, name, category, onChange, onApplie
   }
   return <div className="editor-vat">
     <div className="editor-unit"><label>KDV<select aria-label="KDV" value={rate} onChange={e => onChange(Number(e.target.value))}>{list.rates.map(r => <option key={r} value={r}>%{r}{r === list.default ? ' (varsayılan)' : ''}</option>)}</select></label><HelpTip title="KDV">Menü fiyatları KDV dahildir; müşteri menüsünde KDV görünmez. Oran, raporlardaki KDV dökümü ve hesap fişindeki "KDV dahildir" satırı içindir. Oranları Menü yönetimi → KDV oranları'ndan değiştirebilirsiniz.</HelpTip></div>
-    {owner && <button type="button" className="text-btn vat-manage" onClick={() => goTo({ view: 'menu', tab: 'vat' })}>KDV oranlarını yönet</button>}
+    {owner && <PlaceLink to={{ view: 'menu', tab: 'vat' }} className="vat-manage">KDV oranlarını yönet</PlaceLink>}
     {auto && suggestion === rate && <p className="vat-hint" role="status">Alkollü içecek gibi göründüğü için %{rate} seçildi. Değilse yukarıdan değiştirin.</p>}
     {suggestion !== null && suggestion !== rate && <p className="vat-hint" role="status">Alkollü içecek gibi görünüyor: genelde %{suggestion} uygulanır. <button type="button" className="text-btn" onClick={() => onChange(suggestion)}>%{suggestion} seç</button></p>}
     {category && !asking && <button type="button" className="text-btn vat-apply" onClick={() => { setNote(null); setAsking(true); }}>Bu bölümdeki ürünlere uygula</button>}

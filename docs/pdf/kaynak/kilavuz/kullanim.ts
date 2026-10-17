@@ -149,6 +149,7 @@ function mutfak() {
     sekil('k-pano', { genislik: 560, aciklamalar: ['Yeni siparişler.', 'Hazırlananlar.', 'Hazır olanlar.', '"Stok": sayım ve fire.'] }),
     liste([
       'Her kart bir siparişdir: masa, kaç dakikadır beklediği, ürünler ve notlar.',
+      'Müşterinin değiştirme süresi açıksa QR siparişi bu süre bitince karta düşer (fiş de o an basılır); o ana kadar müşteri değiştirebilir ya da iptal edebilir.',
       '<b>Hazırlamaya başla</b>, sonra <b>Hazır olarak işaretle</b>. Garsonun telefonu o anda haber alır. Yanlış basarsanız 5 saniye içinde <b>Geri al</b>.',
       '10 dakikayı geçen kart turuncu, 20 dakikayı geçen kırmızı olur.',
       'İptal edilen siparişte kırmızı <b>İPTAL</b> şeridi, değişen üründe turuncu <b>Değişti</b> satırı çıkar.',
@@ -368,7 +369,7 @@ function uzaktan() {
     adimlar([
       '<b>5 · Uzaktan yönetim</b>\'de <b>Aç</b>: şifre ve 6 haneli kod. Bu adım yalnız kafede yapılır.',
       'Aynı adres, <b>isletme.molayazilim.com.tr</b>: kasa açıkken girişten sonra kafenin bütün ekranları doğrudan açılır, ikinci kez sorulmaz.',
-      'Gün bitince (05:00) ya da oturumu kapatınca yalnız şifre ve telefon kodu sorulur. Kasa kapanırsa son rapor görünür; kasa açılınca <b>Kafeyi yönet</b>\'e basın.',
+      'Gün bitince (05:00) ya da oturumu kapatınca yalnız şifre ve telefon kodu sorulur. Kasa kapanırsa son rapor görünür; kasa açılınca <b>İşletmeyi yönet</b>\'e basın.',
     ]),
     p('Her uzaktan giriş size bildirilir. Yedekten geri yükleme, kurtarma kodu, cihaz kaldırma, telefon kodunu kurma ve güncelleme kurma yalnız kafede yapılır.'),
     h3('İki ekran'),

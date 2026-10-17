@@ -5,7 +5,7 @@ import { noticePage } from './notice-page.js';
 /*
  * Misafir menüsünün kendi adresi (11 Ekim, güvenlik denetimi Y1): the guest QR menu (/q/<kod>/…) holds files the cafés send,
  * so it runs on its OWN origin, e.g. https://menu.molayazilim.com.tr, never on Mola Yönetim's (merkez.…, admin cookies, the
- * owner's device keys for Raporlarım / Kafeyi yönet) nor on the web site's. MERKEZ_MENU_ORIGIN names it:
+ * owner's device keys for Raporlarım / İşletmeyi yönet) nor on the web site's. MERKEZ_MENU_ORIGIN names it:
  *   - the cafés' table QR codes and the menu copy's page use it (the heartbeat's `tunnel.base`, and 'guest.menu-origin' in
  *     `accepts` tells a new café the address is a separate menu host);
  *   - Merkez answers /q/* only when the request's Host is that name; on any other name /q/* is a 308 to it (old QR codes

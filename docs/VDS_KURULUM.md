@@ -386,7 +386,7 @@ Tanıtım sitesi (Ana sayfa, Özellikler, Destek ve İletişim, yasal sayfalar) 
 | `https://molayazilim.com.tr/q/*`, `https://merkez.molayazilim.com.tr/q/*` | Eski adresle basılmış QR'lar: `308` ile `menu.` adresine |
 | `https://isletme.molayazilim.com.tr` | **İşletmemi yönet** (işletme sahiplerinin girişi, raporları ve uzaktan yönetimi), kendi adında (`MERKEZ_OWNER_ORIGIN`). Bu adreste sayfadan ve onun çağrılarından başka hiçbir şey yoktur |
 
-**Neden ayrı bir menü adresi (11 Ekim, güvenlik denetimi Y1, sahibin kararı):** misafir menüsünün sayfası ve dosyaları kafenin bilgisayarından gelir. Değiştirilmiş (ya da ele geçirilmiş) bir kafe kendi menü sayfasına istediği kodu koyabilir. Bu sayfa Mola Yönetim'in adresinde açılsaydı, Mola Yönetim'e girişliyken menüyü açan sizin adınıza işlem yapabilirdi; aynı telefonda "Raporlarım" ya da "Kafeyi yönet" kullanan bir işletme sahibinin cihaz anahtarlarına ulaşabilirdi. Tarayıcılar çerezleri ve yerel kayıtları adrese (ada) göre ayırır: `menu.` adresinde Mola Yönetim'in ya da sitenin hiçbir çerezi ve anahtarı yoktur. Misafir çerezi (`mola_browser`) yalnız `menu.` adına ve yalnız o işletmenin yoluna (`/q/<kod>/`) yazılır. Lisans ve güncelleme imzası VDS'te kalır (sahibin kararı; bu değişiklik ona dokunmaz).
+**Neden ayrı bir menü adresi (11 Ekim, güvenlik denetimi Y1, sahibin kararı):** misafir menüsünün sayfası ve dosyaları kafenin bilgisayarından gelir. Değiştirilmiş (ya da ele geçirilmiş) bir kafe kendi menü sayfasına istediği kodu koyabilir. Bu sayfa Mola Yönetim'in adresinde açılsaydı, Mola Yönetim'e girişliyken menüyü açan sizin adınıza işlem yapabilirdi; aynı telefonda "Raporlarım" ya da "İşletmeyi yönet" kullanan bir işletme sahibinin cihaz anahtarlarına ulaşabilirdi. Tarayıcılar çerezleri ve yerel kayıtları adrese (ada) göre ayırır: `menu.` adresinde Mola Yönetim'in ya da sitenin hiçbir çerezi ve anahtarı yoktur. Misafir çerezi (`mola_browser`) yalnız `menu.` adına ve yalnız o işletmenin yoluna (`/q/<kod>/`) yazılır. Lisans ve güncelleme imzası VDS'te kalır (sahibin kararı; bu değişiklik ona dokunmaz).
 
 **Sosyal medya kısa adresleri (`/s/`) sitede kalır:** bunlar Merkez'in yalnız işletmenin kendi bağlantısına `302` ile yönlendirdiği adreslerdir; sayfa, betik ya da kafeden gelen bir dosya sunulmaz. Basılmış kartlar da bu adresi taşıdığı için yerinde kalır. (`menu.` adresinde `/s/` açılmaz.)
 
@@ -517,7 +517,7 @@ menu.molayazilim.com.tr {
 }
 
 # İşletmemi yönet: işletme sahiplerinin sayfası, kendi adında (MERKEZ_OWNER_ORIGIN). Host olduğu gibi gider: Merkez bu adla
-# yalnız sayfayı ("/"), dosyalarını ve sayfanın çağrılarını açar; gerisi 404. Kafeyi yönet'ten gönderilen bir ürün
+# yalnız sayfayı ("/"), dosyalarını ve sayfanın çağrılarını açar; gerisi 404. İşletmeyi yönet'ten gönderilen bir ürün
 # fotoğrafı şifreli hâliyle en çok ~13 MB'tır. Sayfanın CSP'si Merkez'den gelir.
 isletme.molayazilim.com.tr {
 	encode zstd gzip

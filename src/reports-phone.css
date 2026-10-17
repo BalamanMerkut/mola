@@ -52,7 +52,7 @@
 .rp-confirm{border-color:var(--rp-warn)}
 .rp-actions{display:flex;flex-wrap:wrap;gap:8px}
 .rp-actions>*{flex:1 1 150px}
-/* The report's status line, its banners and the "Kafeyi yönet" way in. */
+/* The report's status line, its banners and the "İşletmeyi yönet" way in. */
 .rp-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;min-height:40px}
 .rp-status{margin:0;font-size:14px;color:var(--rp-muted);display:flex;align-items:center;gap:8px;min-width:0}
 .rp-status.live{color:var(--rp-brand-ink);font-weight:600}

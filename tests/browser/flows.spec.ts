@@ -164,9 +164,10 @@ test('lost response after acceptance can be retried without a duplicate order', 
   await context.close();
 });
 
-test('kitchen countdown blocks preparation of QR guest orders in UI and API, then unlocks; staff orders start at once', async ({ page, browser }) => {
+test('a QR guest order reaches the kitchen only when its change window ends (API refuses an early start); staff orders at once', async ({ page, browser }) => {
   await login(page);
-  await page.request.post('/api/staff/settings', { data: { changeSeconds: 4, commissionBps: null } });
+  // 17 Ekim (owner's decision): while the guest may still change it, the order is not on the kitchen's screen at all.
+  await page.request.post('/api/staff/settings', { data: { changeSeconds: 8, commissionBps: null } });
   const state = await (await page.request.get('/api/staff/state')).json(), table5 = state.tables.find((t: any) => t.id === 'table-5');
   // The change window belongs to the QR guest: a phone orders at Masa 05.
   const phone = await browser.newContext(), guestApi = phone.request;
@@ -179,6 +180,8 @@ test('kitchen countdown blocks preparation of QR guest orders in UI and API, the
   const staffOrder = await (await page.request.post('/api/staff/orders', { data: { requestId: 'wait-test-staff', tableId: 'table-6', lines: [{ productId: 'tea', quantity: 1, selections: [] }], expectedTotal: 3500 } })).json();
   const staffView = (await (await page.request.get('/api/staff/state')).json()).orders.find((o: any) => o.id === staffOrder.orderId);
   expect(staffView.editableUntil).toBeUndefined();
+  // The owner (and the waiters) see the QR order at once, with its window.
+  expect((await (await page.request.get('/api/staff/state')).json()).orders.find((o: any) => o.id === order.orderId).editableUntil).toBeTruthy();
   await phone.close();
   const ownerCookies = await page.context().cookies();
   await page.request.post('/api/login', { data: { username: 'mutfak', password: 'MolaDemo!2026' } }); await page.reload();
@@ -187,8 +190,12 @@ test('kitchen countdown blocks preparation of QR guest orders in UI and API, the
   await expect(staffCard.getByRole('button', { name: 'Hazırlamaya başla' })).toBeEnabled();
   await expect(staffCard.getByRole('button', { name: /Müşteri değiştirebilir/ })).toHaveCount(0);
   const card = page.locator('.kitchen-card').filter({ hasText: 'Masa 05' });
-  await expect(card.getByRole('button', { name: /Müşteri değiştirebilir/ })).toBeDisabled();
-  await expect(card.getByRole('button', { name: 'Hazırlamaya başla' })).toBeEnabled({ timeout: 7000 });
+  await expect(card).toHaveCount(0); // not on the board while the guest may change it, nor in the "Yeni" count
+  const newCount = page.locator('.kitchen-bar-counts .count-new strong'), waiting = Number(await newCount.textContent());
+  // When the window ends it arrives as a normal new order: no countdown, "Hazırlamaya başla" at once.
+  await expect(card.getByRole('button', { name: 'Hazırlamaya başla' })).toBeEnabled({ timeout: 12000 });
+  await expect(page.getByRole('button', { name: /Müşteri değiştirebilir/ })).toHaveCount(0);
+  await expect(newCount).toHaveText(String(waiting + 1));
   await card.getByRole('button', { name: 'Hazırlamaya başla' }).click();
   await expect(card.getByRole('button', { name: 'Hazır olarak işaretle' })).toBeVisible();
   await page.context().addCookies(ownerCookies);

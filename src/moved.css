@@ -1,6 +1,16 @@
 /* Place links ("Gider kayıtlarını aç", src/Moved.tsx) and the shared bits of the homes. */
-.place-link{display:inline-flex;align-items:center;gap:4px;min-height:32px}
-.home-links{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:-4px 0 12px}
+/* 17 Ekim (sahibin isteği: the underlined small links were missed): every link to another place is a soft pill in the palette,
+ * its colour on its light tint with a thin edge and an arrow. Text on tint is 4.6:1 (Bakır) to 7.5:1 on every palette
+ * (packages/domain/theme.ts; tests/link-style.test.ts). Never filled like a primary button and never framed like a
+ * secondary one (8 px corners): a link that reads as a link. Inside a sentence it sits on the line, a little smaller. */
+button.text-btn.place-link{display:inline-flex;align-items:center;gap:6px;justify-self:start;align-self:center;vertical-align:middle;max-width:100%;min-height:36px;margin:0;padding:6px 12px 6px 14px;border:1px solid #0000001f;border:1px solid color-mix(in srgb,var(--green,#234c3e) 32%,transparent);border-radius:999px;background:var(--brand-soft,#e3eedd);color:var(--green,#234c3e);font-size:13px;font-weight:600;line-height:1.3;text-align:left;text-decoration:none;overflow-wrap:anywhere;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+button.text-btn.place-link svg{flex:none;transition:transform .15s}
+button.text-btn.place-link:hover{border-color:var(--green,#234c3e);color:var(--brand-hover,var(--green,#234c3e));text-decoration:underline;text-underline-offset:3px}
+button.text-btn.place-link:hover svg{transform:translateX(2px)}
+button.text-btn.place-link:active{background:var(--surface-soft,#eef1ea)}
+:is(p,small,span,label,.notice) button.text-btn.place-link{min-height:30px;padding:3px 10px 3px 12px;margin:2px 0;font-size:12.5px}
+@media(prefers-reduced-motion:reduce){button.text-btn.place-link,button.text-btn.place-link svg{transition:none}button.text-btn.place-link:hover svg{transform:none}}
+.home-links{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:-4px 0 12px}
 /* The bell on the top bar (Bildirimler, owner). */
 .topbar-bell{position:relative;display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:var(--paper,#fff);color:var(--ink);cursor:pointer;flex:none}
 .topbar-bell:hover,.topbar-bell.active{background:var(--brand-soft,#e3eedd);color:var(--green)}
@@ -49,7 +59,7 @@
 .report-period-actions{display:flex;flex-wrap:wrap;gap:8px}
 .report-owner-tools{margin-left:auto}
 .support-license-line{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
-.vat-manage{display:inline-flex;margin-top:4px}
+button.text-btn.place-link.vat-manage{margin-top:6px}
 .profit-limits-btn{margin-left:auto}
 .agenda-links{justify-content:flex-end;margin:0}
 .staff-tips-table td{text-align:right}

@@ -213,8 +213,10 @@ test('HTTP integration: authentication, isolated businesses, concurrency, roles 
     assert.equal(store.read('mola-demo').payments.length, 1);
     assert.equal((await guests[3].call('/guest/orders', body())).status, 409);
     assert.equal((await guests[3].call('/guest/state')).data.closed, true);
-    assert.equal((await kitchen.call('/staff/state')).data.orders.length, s.orders.length);
+    // 17 Ekim: QR orders reach the kitchen only when the guest's change window (60 s) ends; then all of them, after settlement too.
+    assert.equal((await kitchen.call('/staff/state')).data.orders.length, s.orders.filter(o => o.source !== 'qr').length);
     time += 60000; await owner.call('/staff/heartbeat', {});
+    assert.equal((await kitchen.call('/staff/state')).data.orders.length, s.orders.length);
     assert.equal((await kitchen.call('/staff/status', { requestId: randomUUID(), orderId: s.orders[0].id, version: 1, status: 'preparing' })).status, 200);
     await guests[3].call('/guest/session', { token: table.token });
     assert.equal((await guests[3].call('/guest/state')).data.orders.length, 0);

@@ -256,7 +256,7 @@ menu.ornek-alanadi.com {
 }
 # İşletmemi yönet, the owners' page on its own name (MERKEZ_OWNER_ORIGIN=https://isletme.ornek-alanadi.com): Host goes on as it is;
 # Merkez answers there only the page ("/"), its files and its calls, everything else is 404. A product photo sent from
-# "Kafeyi yönet" is up to ~13 MB sealed. The page's CSP comes from Merkez.
+# "İşletmeyi yönet" is up to ~13 MB sealed. The page's CSP comes from Merkez.
 isletme.ornek-alanadi.com {
 	encode zstd gzip
 	request_body {

@@ -8,6 +8,7 @@ import { selectionKey } from './stock.js';
 import { productVat, vatSettings, type VatSettings } from './vat.js';
 import { applyBillDeals, billTotalWith, lineGross, settleDeals, unitsCost } from './deals.js';
 import { createHash, randomUUID } from 'node:crypto';
+import { changeDeadline } from './change-window.js';
 import type { Account, Actor, CafeTable, CartLine, ChangeSide, Context, Order, OrderLine, OrderStatus, Product, State, StockQuestion } from './types.js';
 
 export class DomainError extends Error {
@@ -19,14 +20,8 @@ export function requireRole(s: State, actor: Actor, roles: Actor['role'][]) {
 export function assertInt(value: number, min: number, max: number) {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new DomainError('INVALID_VALUE', 'Geçerli bir miktar girin.');
 }
-/**
- * Until when the guest may still change a QR order; the kitchen starts after it. Only QR guest orders have this window:
- * staff, masasız and platform orders start at once (also older staff orders that were saved with a deadline).
- */
-export function changeDeadline(order: Pick<Order, 'editableUntil' | 'createdAt' | 'source'>, seconds: number) {
-  if (order.source !== 'qr') return Date.parse(order.createdAt);
-  return order.editableUntil ? Date.parse(order.editableUntil) : Date.parse(order.createdAt) + seconds * 1000;
-}
+/** Until when the guest may still change a QR order (packages/domain/change-window.ts; the kitchen gets it after that). */
+export { changeDeadline };
 /** A guest may ask to cancel only before the order is ready; the kitchen answers requests while it is still on its board. */
 const GUEST_CANCELLABLE: readonly OrderStatus[] = ['awaiting_approval', 'new', 'preparing'];
 const CANCEL_ANSWERABLE: readonly OrderStatus[] = ['new', 'preparing', 'ready'];

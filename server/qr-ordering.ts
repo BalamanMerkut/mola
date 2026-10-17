@@ -15,7 +15,7 @@ import type { Store } from './store.js';
  *   Presence   every signed-in staff request (server/app.ts staffActor: the 2 s snapshot poll, the 4 s heartbeat, any action)
  *              marks that session as seen. A session counts while seen within QR_STAFF_WINDOW_MS (90 s): a tablet sleeping
  *              for a moment or a hidden window (its heartbeat keeps going) does not flap the state. Never counted: the
- *              owner's remote session (Kafeyi yönet), Mola destek, Raporlarım (no staff session at all). Kept in memory only:
+ *              owner's remote session (İşletmeyi yönet), Mola destek, Raporlarım (no staff session at all). Kept in memory only:
  *              after a restart the screens are back within seconds.
  *   Gün sonu   a completed final closing pauses QR ordering for the rest of that business day (`paused`); "Aç", opening the
  *              cash day or the next 05:00 ends it. Extra closings pause again (more sales after gün sonu, then another count).

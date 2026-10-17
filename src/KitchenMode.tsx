@@ -134,13 +134,12 @@ export function KitchenMode({ data, view, onView, connected, error, onError, onT
               <div className="order-meta"><span>{o.takeaway ? o.takeaway.label ?? '' : o.guestLabel}</span><WaitingTime since={o.createdAt} lateAfter={status === 'ready' ? Infinity : LATE_MINUTES} />{late && <span className="late-label">{late === 'very-late' ? 'Çok gecikti' : 'Gecikti'}</span>}</div>
               {o.packed && <PackedBadge loud />}{o.external && <PlatformDetails source={o.external} kitchen />}
               {o.paymentBeforePreparation && <p className="muted small">{o.paid ? 'Ödeme alındı' : 'Ödeme bekleniyor · Hazırlık kilitli'}</p>}
-              {o.updatedAt && <p className="order-change-notice">Müşteri siparişi güncelledi · {new Date(o.updatedAt).toLocaleTimeString('tr-TR')}</p>}
               {o.tableMovedFrom && <p className="order-change-notice">Masa taşındı: {o.tableMovedFrom} → {o.tableName}</p>}
               <OrderLines order={o} showPrice={false} packedBadge={false} codes={false} />
               {o.cancelRequested ? <KitchenCancellation order={o} tracked={data.stockProducts} onSaved={load} /> : <>
                 {/* 5 seconds to take a mistaken tap back (preparing → new, ready → preparing), on the card that just moved: nothing floats over the board. */}
                 {undo?.orderId === o.id && <div className="kitchen-undo" role="status"><span>{undo.text}</span><button type="button" className="undo-btn" disabled={undoBusy} onClick={() => void undoStep()}>Geri al</button></div>}
-                <KitchenAction order={o} seconds={data.changeSeconds} onStart={() => advance(o, status === 'new' ? 'preparing' : status === 'preparing' ? 'ready' : 'served')} />
+                <KitchenAction order={o} onStart={() => advance(o, status === 'new' ? 'preparing' : status === 'preparing' ? 'ready' : 'served')} />
               </>}
               {!o.cancelRequested && (o.external ? <ExternalCancel order={o} onDone={() => void load()} /> : <button type="button" className="text-btn kitchen-cancel-open" aria-label={`Sipariş #${o.number} · iptal et`} onClick={() => onCancel(o)}>İptal et</button>)}
             </article>; })}
@@ -152,17 +151,13 @@ export function KitchenMode({ data, view, onView, connected, error, onError, onT
   </div>;
 }
 
-function KitchenAction({ order, seconds, onStart }: { order: PublicOrder; seconds: number; onStart: () => Promise<void> }) {
-  const [now, setNow] = useState(Date.now());
+function KitchenAction({ order, onStart }: { order: PublicOrder; onStart: () => Promise<void> }) {
   // A hurried double tap must not send a second, stale status change.
   const [busy, setBusy] = useState(false);
   async function start() { if (busy) return; setBusy(true); try { await onStart(); } finally { setBusy(false); } }
-  // Only QR guest orders have a change window ("Müşteri değiştirebilir"); staff, masasız and platform orders start at once.
-  const deadline = order.source !== 'qr' ? 0 : order.editableUntil ? Date.parse(order.editableUntil) : Date.parse(order.createdAt) + seconds * 1000;
-  // The countdown shows whole seconds: tick once a second, and only while it is running.
-  useEffect(() => { if (order.status !== 'new' || deadline <= Date.now()) return; const timer = setInterval(() => { setNow(Date.now()); if (Date.now() >= deadline) clearInterval(timer); }, 1000); return () => clearInterval(timer); }, [order.status, deadline]);
+  // No countdown here (17 Ekim): a QR guest order reaches the kitchen only when the guest's change window has ended
+  // (server/staff-orders.ts, packages/domain/change-window.ts), so every order on the board can start at once.
   const paymentBlocked = !!order.paymentBeforePreparation && !order.paid;
-  const remaining = order.status === 'new' ? Math.max(0, Math.ceil((deadline - now) / 1000)) : 0;
-  const blocked = order.cancelRequested || remaining > 0 || paymentBlocked;
-  return <><button className={`btn full kitchen-step ${order.status === 'ready' ? 'secondary' : 'primary'}`} disabled={blocked || busy} onClick={() => void start()}>{busy ? 'Kaydediliyor…' : order.cancelRequested ? 'İptal talebi bekleniyor' : paymentBlocked ? 'Ödeme bekleniyor' : remaining > 0 ? `Müşteri değiştirebilir · ${remaining} sn` : order.status === 'new' ? (order.paymentBeforePreparation ? 'Ödeme alındı · Hazırlamaya başla' : 'Hazırlamaya başla') : order.status === 'preparing' ? 'Hazır olarak işaretle' : order.external && order.external.deliveryType !== 'gel-al' ? 'Kuryeye teslim edildi' : 'Teslim edildi'}{!blocked && !busy && <Check size={16} />}</button>{!order.cancelRequested && paymentBlocked && <p className="hold-hint">Kasiyer tahsilatı kaydettiğinde otomatik açılır.</p>}</>;
+  const blocked = order.cancelRequested || paymentBlocked;
+  return <><button className={`btn full kitchen-step ${order.status === 'ready' ? 'secondary' : 'primary'}`} disabled={blocked || busy} onClick={() => void start()}>{busy ? 'Kaydediliyor…' : order.cancelRequested ? 'İptal talebi bekleniyor' : paymentBlocked ? 'Ödeme bekleniyor' : order.status === 'new' ? (order.paymentBeforePreparation ? 'Ödeme alındı · Hazırlamaya başla' : 'Hazırlamaya başla') : order.status === 'preparing' ? 'Hazır olarak işaretle' : order.external && order.external.deliveryType !== 'gel-al' ? 'Kuryeye teslim edildi' : 'Teslim edildi'}{!blocked && !busy && <Check size={16} />}</button>{!order.cancelRequested && paymentBlocked && <p className="hold-hint">Kasiyer tahsilatı kaydettiğinde otomatik açılır.</p>}</>;
 }

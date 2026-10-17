@@ -12,7 +12,7 @@ import { loginRequest, openLoginAnswer, type LoginDevice, type LoginInner } from
  */
 export type PhonePost = (path: string, body: unknown) => Promise<{ status: number; data: Record<string, any> }>;
 export type LoginResult =
-  /** `grant`: opens "Kafeyi yönet" once within 2 minutes without asking the password and code again. */
+  /** `grant`: opens "İşletmeyi yönet" once within 2 minutes without asking the password and code again. */
   | { kind: 'paired'; phoneId: string; token: string; business: string; name: string; cafePublic: string; grant?: string }
   /** The password was right: the phone code next, with this ticket (a wrong code may come back with the same ticket). */
   | { kind: 'code'; ticket: string; cafePublic: string; message?: string }

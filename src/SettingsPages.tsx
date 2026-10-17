@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import { cloudLine, type CloudView } from './cloudBackupText';
 import type { StaffSnapshot } from '../packages/domain/types';
 import { sectorNames, sectors, type Sector } from '../packages/domain/sector';
+import { CHANGE_SECONDS_ON } from '../packages/domain/change-window';
 import { api, requestId } from './api';
 import { commissionRateProblem, parseCommissionRate, rateText } from '../packages/domain/commission';
 import { CommissionHint } from './CommissionHint';
@@ -90,8 +91,7 @@ export function BusinessPage({ data, prefs, onSaved }: { data: StaffSnapshot; pr
   </>;
 }
 
-/** Turning "değiştirip iptal edebilsin" on starts with a minute. */
-const DEFAULT_CHANGE_SECONDS = 60;
+/* Turning "değiştirip iptal edebilsin" on starts with 30 seconds (CHANGE_SECONDS_ON; new businesses start with it off). */
 export function OrdersPage({ data, prefs, onSaved }: { data: StaffSnapshot; prefs: Preferences; onSaved: () => void }) {
   const id = useId(), changeOn = Number(data.changeSeconds) > 0;
   const [auto, setAuto] = useState(!!data.autoApproveQr), [autoBusy, setAutoBusy] = useState(false), [autoError, setAutoError] = useState('');
@@ -111,10 +111,10 @@ export function OrdersPage({ data, prefs, onSaved }: { data: StaffSnapshot; pref
         </select>
       </Row>
       {/* On / off with the seconds only while on; a saved 0 (older setups) reads as off. */}
-      <Row id={`${id}-change`} label="Müşteri siparişini değiştirip iptal edebilsin" tip="Değişiklik ve iptal süresi" line={changeOn ? 'Sipariş verildikten sonra bu süre içinde müşteri değiştirebilir ya da iptal edebilir.' : 'Kapalı: sipariş hemen mutfağa geçer; iptal için müşteri personelden ister.'} help="Açıkken bu süre boyunca mutfak hazırlığı başlatamaz; müşteri siparişini kendi telefonundan değiştirebilir veya iptal edebilir. Kapalıyken yeni siparişler ödeme ve onay koşulları sağlandığında hemen hazırlanabilir; müşterinin iptal isteğini mutfak onaylar. Değişiklik yalnız yeni siparişlerde geçerlidir.">
-        <Toggle id={`${id}-change`} checked={changeOn} disabled={prefs.busy} onChange={on => void prefs.persist({ seconds: on ? String(DEFAULT_CHANGE_SECONDS) : '0' })} />
+      <Row id={`${id}-change`} label="Müşteri siparişini değiştirip iptal edebilsin" tip="Değişiklik ve iptal süresi" line={changeOn ? 'Sipariş verildikten sonra bu süre içinde müşteri değiştirebilir ya da iptal edebilir.' : 'Kapalı: sipariş hemen mutfağa geçer; iptal için müşteri personelden ister.'} help="Açıkken müşteri bu süre boyunca siparişini kendi telefonundan değiştirebilir veya iptal edebilir; sipariş mutfak ekranına süre bitince düşer (fiş de o an basılır). Garson ve kasa siparişi hemen görür. Kapalıyken yeni siparişler ödeme ve onay koşulları sağlandığında hemen hazırlanabilir; müşterinin iptal isteğini mutfak onaylar. Değişiklik yalnız yeni siparişlerde geçerlidir.">
+        <Toggle id={`${id}-change`} checked={changeOn} disabled={prefs.busy} onChange={on => void prefs.persist({ seconds: on ? String(CHANGE_SECONDS_ON) : '0' })} />
       </Row>
-      {changeOn && <Row id={`${id}-seconds`} label="Sipariş değişiklik süresi (saniye)" tip="Değişiklik süresi" line="1 ile 600 saniye arası. Önerilen 60 saniye; 0 yazarsanız kapanır." help="Müşterinin siparişi değiştirebileceği ya da iptal edebileceği süre. Süre dolunca sipariş mutfakta hazırlanabilir.">
+      {changeOn && <Row id={`${id}-seconds`} label="Sipariş değişiklik süresi (saniye)" tip="Değişiklik süresi" line="1 ile 600 saniye arası. Önerilen 30 saniye; 0 yazarsanız kapanır." help="Müşterinin siparişi değiştirebileceği ya da iptal edebileceği süre. Süre dolunca sipariş mutfak ekranına düşer ve hazırlanabilir.">
         <div className="settings-number-control"><input id={`${id}-seconds`} type="number" min="1" max="600" inputMode="numeric" aria-describedby={`${id}-seconds-help`} value={prefs.seconds} onChange={e => prefs.set({ seconds: e.target.value })} onBlur={prefs.saveNumbers} /><span aria-hidden="true">saniye</span></div>
       </Row>}
     </Card>

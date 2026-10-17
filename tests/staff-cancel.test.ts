@@ -153,7 +153,8 @@ test('HTTP: cancel route roles and reason, kitchen sees and approves QR orders, 
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
   const [w, k, c, o] = [client(base), client(base), client(base), client(base)];
   for (const [call, username] of [[w, 'garson'], [k, 'mutfak'], [c, 'kasiyer'], [o, 'isletme']] as const) assert.equal((await call('/login', { username, password: DEMO_PASSWORD })).status, 200);
-  store.mutate('mola-demo', s => { s.setupCompleted = true; s.waiterApproval = true; });
+  // No guest change window: the QR order below reaches the kitchen at once (17 Ekim: otherwise when the window ends).
+  store.mutate('mola-demo', s => { s.setupCompleted = true; s.waiterApproval = true; s.changeSeconds = 0; });
   const sent = await w('/staff/orders', { requestId: randomUUID(), tableId: 'table-1', lines: [tea(2)], expectedTotal: 7000 });
   assert.equal(sent.status, 200);
   const version = () => store.read('mola-demo').orders.find(x => x.id === sent.data.orderId)!.version;

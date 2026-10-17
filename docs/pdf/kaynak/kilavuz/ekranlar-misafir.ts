@@ -89,18 +89,11 @@ export const misafir: Grup = async (browser, { sahip, durum, id, ok }) => {
   await giris(mutfak, 'mutfak');
   await sesiAc(mutfak);
   const kart = () => mutfak.locator('article.kitchen-card').filter({ has: mutfak.getByRole('heading', { name: M, exact: true }) }).last();
-  await kart().waitFor({ timeout: 15000 }).catch(async e => { if (process.env.KILAVUZ_DEBUG) console.log('MUTFAK:', (await mutfak.locator('body').innerText()).slice(0, 1500), '\nGARSON:', (await garson.locator('body').innerText()).slice(0, 1500)); throw e; });
+  // 17 Ekim: a QR order reaches the kitchen only when the guest's change window (up to a minute here) has ended.
+  await kart().waitFor({ timeout: 80000 }).catch(async e => { if (process.env.KILAVUZ_DEBUG) console.log('MUTFAK:', (await mutfak.locator('body').innerText()).slice(0, 1500), '\nGARSON:', (await garson.locator('body').innerText()).slice(0, 1500)); throw e; });
   await kart().scrollIntoViewIfNeeded();
   await sleep(500);
-  // QR siparişinde misafir ilk dakikada siparişini değiştirebilir; mutfak o süre bitince başlar.
-  const degis = kart().getByText(/Müşteri değiştirebilir/);
-  if (await degis.isVisible().catch(() => false)) {
-    await dene('k-degistirebilir', () => cek(mutfak, 'k-degistirebilir', { kirp: kart(), pay: 16, isaretler: [
-      { n: 1, loc: kart().getByRole('heading', { name: M, exact: true }), yon: 'sag' },
-      { n: 2, loc: degis, yon: 'alt' },
-    ] }));
-  }
-  await kart().getByRole('button', { name: 'Hazırlamaya başla' }).waitFor({ timeout: 80000 });
+  await kart().getByRole('button', { name: 'Hazırlamaya başla' }).waitFor({ timeout: 15000 });
   await kart().scrollIntoViewIfNeeded();
   await dene('k-yeni', () => cek(mutfak, 'k-yeni', { isaretler: [
     { n: 1, loc: kart().getByRole('heading', { name: M, exact: true }), yon: 'sag' },

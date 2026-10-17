@@ -139,16 +139,18 @@ test('HTTP: guests and staff send it, every order list and long-term history kee
     const o = (await visitor('/guest/state')).data.orders[0];
     const edited = await visitor('/guest/orders/edit', { requestId: randomUUID(), orderId: o.id, version: o.version, expectedTotal: 7000, packed, lines: [{ productId: 'tea', quantity: 2, selections: [], existingId: o.lines[0].id }] });
     assert.equal(edited.status, 200, JSON.stringify(edited.data));
-    assert.equal((await cook('/staff/state')).data.orders[0].packed ?? false, packed);
+    // The floor sees each choice at once; the kitchen gets the order (with the last choice) when the window ends (17 Ekim).
+    assert.equal((await own('/staff/state')).data.orders[0].packed ?? false, packed);
+    assert.equal((await cook('/staff/state')).data.orders.length, 0);
   }
   // Staff for another table; the masasız route never takes the flag.
   assert.equal((await own('/staff/orders', { requestId: randomUUID(), tableId: 'table-2', ...tea(), packed: true })).status, 200);
   const bag = await own('/staff/takeaway/orders', { requestId: randomUUID(), ...tea(), packed: true });
   assert.equal(bag.status, 200); assert.equal(bag.data.tableName, 'Masasız #1');
+  time += 40_000; // past the guest's change window
   const cards = (await cook('/staff/state')).data.orders;
   assert.deepEqual(cards.map((o: any) => [o.tableName, !!o.packed]), [['Masa 01', true], ['Masa 02', true], ['Masasız #1', false]]);
   // Through the kitchen, paid, and six hours later into long-term history: the archived order still says so.
-  time += 40_000;
   for (const status of ['preparing', 'ready', 'served'] as const) { const o = (await cook('/staff/state')).data.orders.find((x: any) => x.id === placed.data.orderId); assert.equal((await cook('/staff/status', { requestId: randomUUID(), orderId: o.id, version: o.version, status })).status, 200); }
   let state = (await own('/staff/state')).data;
   const account = state.tables[0].account;

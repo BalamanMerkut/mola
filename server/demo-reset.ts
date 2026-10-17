@@ -4,6 +4,7 @@ import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node
 import { basename, dirname, join, resolve } from 'node:path';
 import { z } from 'zod';
 import { DomainError, requireRole } from '../packages/domain/engine.js';
+import { NEW_BUSINESS_CHANGE_SECONDS } from '../packages/domain/change-window.js';
 import { sectorNames, sectors, type Sector } from '../packages/domain/sector.js';
 import type { Actor, CafeTable, State } from '../packages/domain/types.js';
 import { passwordRecord } from './accounts.js';
@@ -117,7 +118,7 @@ export class DemoResets {
       const next: State = {
         ...seed(tenant), name: old.name, sector: o.sector, products, ...demoCatalog(o.sector, products), productDrafts: [], tables, staffUsers,
         setupCompleted: true, businessRevision: (old.businessRevision ?? 0) + 1, menuRevision: (old.menuRevision ?? 1) + 1, approvalVersion: (old.approvalVersion ?? 0) + 1,
-        paymentMode: 'after_service', cleaningEnabled: true, waiterApproval: true, autoApproveQr: false, changeSeconds: 60, commissionBps: 175,
+        paymentMode: 'after_service', cleaningEnabled: true, waiterApproval: true, autoApproveQr: false, changeSeconds: NEW_BUSINESS_CHANGE_SECONDS, commissionBps: 175,
         logo, theme: profile.theme as State['theme'], menuHero: profile.menuHero, googleReviewUrl: profile.googleReviewUrl,
         // The café computer's own devices and choices are not demo data.
         ...(old.printers ? { printers: old.printers } : {}), ...(old.sounds ? { sounds: old.sounds } : {}),

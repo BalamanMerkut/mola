@@ -277,7 +277,7 @@
         "10 dakikayı geçen kart turuncu, 20 dakikayı geçen kırmızı olur."
       ],
       "anahtar": ["mutfak", "mutfak ekranı", "mutfak tableti", "hazır", "hazırla", "hazırlamaya başla", "geri al", "kart", "turuncu", "kırmızı", "bekleyen sipariş", "aşçı", "servis"],
-      "ilgili": ["mutfak-iptal", "mutfak-ses"]
+      "ilgili": ["mutfak-iptal", "mutfak-ses", "degistirme-suresi"]
     },
     {
       "id": "mutfak-iptal",
@@ -286,6 +286,15 @@
       "soru": "Mutfakta iptal ve değişiklik nasıl görünür?",
       "cevap": ["İptal edilen siparişte kırmızı “İPTAL”, değişen üründe turuncu “Değişti” satırı çıkar. Müşteri iptal isterse kartta “İptali onayla” çıkar; kartın altındaki “İptal et” ile siz de iptal edebilirsiniz."],
       "anahtar": ["iptal", "mutfak iptal", "iptal şeridi", "değişti", "değişiklik", "iptali onayla", "iptal talebi", "müşteri iptal istiyor", "iptal et"]
+    },
+    {
+      "id": "degistirme-suresi",
+      "konu": "mutfak",
+      "kitle": ["site", "owner", "manager", "waiter", "kitchen"],
+      "soru": "QR siparişi mutfak ekranına neden hemen düşmüyor?",
+      "cevap": ["Müşterinin değiştirme süresi açıksa sipariş bu süre bitince mutfak ekranına düşer; ses o an çalar, fiş de o an basılır. Bu sırada müşteri siparişini değiştirebilir ya da iptal edebilir, garson siparişi hemen görür. Süreyi işletme sahibi Ayarlar → Sipariş ve mutfak → Sipariş ve onay’da açıp kapatır; açınca 30 saniyeyle başlar."],
+      "anahtar": ["değiştirme süresi", "değişiklik süresi", "müşteri değiştirebilir", "sipariş mutfağa düşmedi", "mutfağa gelmedi", "geç düşüyor", "geç geldi", "saniye", "bekleme süresi", "qr siparişi mutfakta yok", "sipariş görünmüyor"],
+      "ilgili": ["mutfak-ekran", "qr-onay"]
     },
     {
       "id": "fis-modu",
@@ -736,7 +745,7 @@
       "kitle": ["site", "owner"],
       "soru": "Kafeye gitmeden fiyat değiştirebilir miyim?",
       "cevap": ["Evet. Kafede bir kez Ayarlar → Uzaktan erişim → “5 · Uzaktan yönetim”i açın. Sonra İşletmemi yönet’ten, kasa açıkken kafenin ekranlarını kullanırsınız; her uzaktan giriş size bildirilir."],
-      "anahtar": ["uzaktan yönetim", "uzaktan yonetim", "evden fiyat", "uzaktan fiyat", "kafeyi yönet", "uzaktan ayar", "kafeye gitmeden", "dışarıdan yönetmek"]
+      "anahtar": ["uzaktan yönetim", "uzaktan yonetim", "evden fiyat", "uzaktan fiyat", "işletmeyi yönet", "kafeyi yönet", "uzaktan ayar", "kafeye gitmeden", "dışarıdan yönetmek"]
     },
     {
       "id": "kafemi-yonet-giremiyorum",

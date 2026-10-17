@@ -9,14 +9,14 @@ import type { Paired } from './phoneVault';
  * every /api and /media request goes through this tunnel: sealed with the session key (AES-256-GCM, a sequence number per
  * tab, bound to its answer), posted to Mola Merkez, which hands it to the café as ciphertext. The answer comes back sealed and becomes an ordinary Response, so the
  * screens (src/api.ts `transport()`, and the few direct fetch() calls such as downloads) need no change. Large answers (Excel,
- * PDF) come in parts. Product photos (<img src="/media/…">, and the files of their srcset) are fetched through the tunnel and shown from blob: addresses.
+ * PDF) come in parts. Product photos (<img src="/media/…">, and the files of their srcset) are fetched through the tunnel (once each, near the screen, a few at a time) and shown from blob: addresses.
  * The session key is a non-extractable CryptoKey kept in this origin's IndexedDB until the session ends (a reload keeps it).
  */
 const API = '/api/merkez/v1/phone/admin';
 export const REMOTE_ENDED_EVENT = 'mola:remote-ended';
 /**
  * The connection to the café computer dropped while the session itself stays (0.1.23: İşletmemi yönet shows the last report
- * meanwhile and "Kasa açıldı · Kafeyi yönet" once it answers again). Once per outage. 0.1.24 (the owner marked a product
+ * meanwhile and "Kasa açıldı · İşletmeyi yönet" once it answers again). Once per outage. 0.1.24 (the owner marked a product
  * "Tükendi" with the café just closed and it said "Kaydediliyor…" for ever): no request here waits longer than
  * REMOTE_WAIT_MS, and the drop fails every pending one at once (`cut`). A drop is: Mola Merkez says the café is off
  * (CAFE_OFFLINE), no answer at all (no internet, Merkez unreachable, the wait ran out), the browser going offline, or a
@@ -139,6 +139,7 @@ function ended(message: string) {
   if (!active) return;
   active = null;
   if (saved) { window.fetch = saved; saved = undefined; }
+  forgetMedia();
   void forgetSaved();
   window.dispatchEvent(new CustomEvent(REMOTE_ENDED_EVENT, { detail: message }));
 }
@@ -196,40 +197,128 @@ export async function closeRemote() { if (!active) return; try { await tunnel({ 
 export async function dropSession() { if (active) await closeRemote(); else await forgetSaved(); }
 
 // ---------- Product photos ----------
-const blobs = new Map<string, Promise<string>>();
-let observer: MutationObserver | undefined;
-const MEDIA = /^\/media\//;
-/**
- * The /media file an image shows: its src, or, with a srcset (src/components.tsx ProductArt: the 320 px thumbnail and the
- * 800 px photo), the smallest one wide enough for its place on this screen (the largest when it has no place yet).
+/*
+ * 17 Ekim (the owner's case: "Menüden kampanya ürünü seç" stuttered on İşletmemi yönet). Measured with 45 photo products
+ * (tests/browser/remote-photos.spec.ts): Menü yönetimi alone sent 82 photo requests through the tunnel at once, every
+ * thumbnail twice (removing the srcset was itself a change this watcher saw, and with no srcset left it chose the 800 px
+ * file, so the 320 px one was fetched and thrown away), all queued at Mola Merkez ahead of the screens' own calls, and the
+ * browser asked Mola Merkez itself for 21 /media files meanwhile (the img kept its /media src until the blob came). Now:
+ *  - an image shows a blank (the soft photo background) at once, never its /media address: the browser asks nothing here;
+ *  - its file is chosen when it comes near the screen (IntersectionObserver: its size is known then, nothing is measured
+ *    while the page changes), the smallest wide enough for its place (at most 2× density: a sharper thumbnail is not worth
+ *    two and a half times the bytes through the tunnel);
+ *  - at most PARALLEL photos travel at a time, so a screen's own call waits behind a few photos, never behind forty; a photo
+ *    no image wants any more by its turn (another category, the window closed) is not fetched;
+ *  - each file once per session (`cache`: re-renders and other screens reuse it), the last KEEP kept, older ones released.
  */
-function mediaPath(img: HTMLImageElement, src: string | null, set: string | null) {
+const MEDIA = /^\/media\//, PARALLEL = 4, KEEP = 200, NEAR = '300px 0px';
+/** A transparent pixel: what an image shows until its photo is here (the photo area's own background shows through). */
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+type Wanted = { options: { url: string; width: number }[] };
+const wanted = new WeakMap<HTMLImageElement, Wanted>(), showing = new WeakMap<HTMLImageElement, string>();
+/** /media path → its blob: address (the promise while it travels), oldest use first; `ready`: the ones here. */
+const cache = new Map<string, Promise<string>>(), ready = new Map<string, string>();
+const waiting: { path: string; run: () => Promise<void>; skip: () => void }[] = [];
+/** `session`: counts the sessions, so a photo still travelling when one ends is not kept for the next. */
+let observer: MutationObserver | undefined, near: IntersectionObserver | undefined, running = 0, session = 0;
+/**
+ * The /media files an image may show, smallest first: its srcset (src/components.tsx ProductArt: the 320 px thumbnail and the
+ * 800 px photo), or its src alone (width 0: the only one).
+ */
+function mediaOptions(src: string | null, set: string | null) {
   const options = (set ?? '').split(',').map(c => c.trim().split(/\s+/)).map(([url, w]) => ({ url, width: Number(/^(\d+)w$/.exec(w ?? '')?.[1] ?? 0) })).filter(c => c.url && MEDIA.test(c.url) && c.width > 0).sort((a, b) => a.width - b.width);
-  if (!options.length) return src && MEDIA.test(src) ? src : undefined;
-  const needed = img.getBoundingClientRect().width * (window.devicePixelRatio || 1);
-  return (needed > 0 ? options.find(c => c.width >= needed) : undefined)?.url ?? options[options.length - 1].url;
+  return options.length ? options : src && MEDIA.test(src) ? [{ url: src, width: 0 }] : [];
 }
+/** The smallest file wide enough for `css` pixels on this screen (the largest when it has no place). */
+function mediaFor(w: Wanted, css: number) {
+  const needed = css * Math.min(window.devicePixelRatio || 1, 2);
+  return (needed > 0 ? w.options.find(c => c.width >= needed) : undefined) ?? w.options[w.options.length - 1];
+}
+/** Called for every <img> added or changed: cheap (no layout read, no fetch), so React's re-renders cost nothing here. */
 function showMedia(img: HTMLImageElement) {
   if (!active) return;
   const src = img.getAttribute('src'), set = img.getAttribute('srcset');
+  // Our own blank or blob: (or not a photo at all).
   if (!(src && MEDIA.test(src)) && !set?.includes('/media/')) return;
-  const path = mediaPath(img, src, set);
-  // 16 Ekim (the owner's case: every product picture broken on İşletmemi yönet, first seen in "Menüden kampanya ürünü seç"):
-  // a srcset outranks src, so the browser asked this origin for /media/… itself, which is not here (only the café has the
-  // photos). Through the tunnel an image shows one file, as a blob: the srcset and its sizes go.
+  const w: Wanted = { options: mediaOptions(src, set) };
+  if (!w.options.length) return;
+  wanted.set(img, w); showing.delete(img); delete img.dataset.molaMedia;
+  // 16 Ekim: a srcset outranks src, and this origin has no /media (only the café has the photos). One file, as a blob:.
   if (set !== null) { img.removeAttribute('srcset'); img.removeAttribute('sizes'); }
-  if (!path) return;
-  img.dataset.molaMedia = path;
-  if (!blobs.has(path)) blobs.set(path, remoteFetch(path).then(async r => { if (!r.ok) throw new Error('foto'); return URL.createObjectURL(await r.blob()); }).catch(e => { blobs.delete(path); throw e; }));
-  void blobs.get(path)!.then(url => { if (img.dataset.molaMedia === path) img.setAttribute('src', url); }).catch(() => {});
+  // Already here in some size (the same photo on another screen, or before a re-render): at once; the right size when placed.
+  const have = [...w.options].reverse().find(c => ready.has(c.url));
+  if (have) { touch(have.url); showing.set(img, have.url); img.setAttribute('src', ready.get(have.url)!); }
+  else img.setAttribute('src', BLANK);
+  near!.observe(img);
+}
+/** Images near the screen: their file now, at the size they are shown. */
+function placed(entries: IntersectionObserverEntry[]) {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    const img = e.target as HTMLImageElement, w = wanted.get(img);
+    near!.unobserve(img);
+    if (!active || !w || !img.isConnected) continue;
+    const pick = mediaFor(w, e.boundingClientRect.width), had = showing.get(img);
+    // What it shows is wide enough already (a larger copy from another screen).
+    if (had && (w.options.find(c => c.url === had)?.width ?? 0) >= pick.width) continue;
+    img.dataset.molaMedia = pick.url;
+    void media(pick.url).then(url => { if (wanted.get(img) === w && img.dataset.molaMedia === pick.url) { showing.set(img, pick.url); img.setAttribute('src', url); } }).catch(() => {});
+  }
+}
+function touch(path: string) { const p = cache.get(path); if (p) { cache.delete(path); cache.set(path, p); } }
+/** One /media file through the tunnel, once: its blob: address. */
+function media(path: string): Promise<string> {
+  const had = cache.get(path);
+  if (had) { touch(path); return had; }
+  const mine = session;
+  const p = new Promise<string>((done, fail) => {
+    waiting.push({
+      path,
+      run: () => (active ? remoteFetch(path) : Promise.reject(new Error('foto'))).then(async r => { if (!r.ok) throw new Error('foto'); const blob = await r.blob(); if (mine !== session) throw new Error('foto'); const url = URL.createObjectURL(blob); ready.set(path, url); return url; }).then(done, fail),
+      skip: () => fail(new Error('foto')),
+    });
+  });
+  // Failed or skipped: asked again the next time an image wants it.
+  p.catch(() => { if (cache.get(path) === p) cache.delete(path); });
+  cache.set(path, p);
+  trim(); pump();
+  return p;
+}
+/** The next photos while fewer than PARALLEL travel; one no image waits for any more is skipped. */
+function pump() {
+  while (running < PARALLEL && waiting.length) {
+    const next = waiting.shift()!;
+    if (!document.querySelector(`img[data-mola-media="${CSS.escape(next.path)}"]`)) { next.skip(); continue; }
+    running++;
+    void next.run().finally(() => { running--; pump(); });
+  }
+}
+/** Only the last KEEP files: an older one that no image on the page shows is released. */
+function trim() {
+  for (const [path] of cache) {
+    if (cache.size <= KEEP) return;
+    const url = ready.get(path);
+    if (!url || document.querySelector(`img[src="${CSS.escape(url)}"]`)) continue;
+    cache.delete(path); ready.delete(path); URL.revokeObjectURL(url);
+  }
+}
+/** The session ended: its photos go (the next session fetches its own). */
+function forgetMedia() {
+  for (const w of waiting.splice(0)) w.skip();
+  for (const url of ready.values()) URL.revokeObjectURL(url);
+  cache.clear(); ready.clear(); session++;
 }
 function watchMedia() {
   if (observer) return;
+  // rootMargin for the page, scrollMargin for a scrolling window inside it (the picker's dialog; where the browser has it).
+  near = new IntersectionObserver(placed, { rootMargin: NEAR, scrollMargin: NEAR } as IntersectionObserverInit);
   const scan = (root: ParentNode) => { for (const img of root.querySelectorAll<HTMLImageElement>('img[src^="/media/"], img[srcset*="/media/"]')) showMedia(img); };
+  // Only what changed: the images added (and those inside what was added) and an image's own src/srcset, in the microtask of
+  // the change, before the browser would ask this origin for /media itself.
   observer = new MutationObserver(list => {
     for (const m of list) {
-      if (m.type === 'attributes' && m.target instanceof HTMLImageElement) showMedia(m.target);
-      else for (const n of m.addedNodes) if (n instanceof HTMLImageElement) showMedia(n); else if (n instanceof Element) scan(n);
+      if (m.type === 'attributes') { if (m.target instanceof HTMLImageElement) showMedia(m.target); }
+      else for (const n of m.addedNodes) if (n instanceof HTMLImageElement) showMedia(n); else if (n instanceof Element && n.firstElementChild) scan(n);
     }
   });
   observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['src', 'srcset'] });

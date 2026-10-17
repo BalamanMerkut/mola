@@ -80,6 +80,7 @@ test('Tanıtım işletmesi: only a business Merkez marked (signed), only by hand
   await owner('/login', { username: 'isletme', password: DEMO_PASSWORD });
   const after = (await owner('/staff/state')).data;
   assert.equal(after.sector, 'restaurant'); assert.equal(after.tables.length, 16); assert.equal(after.products.length, demoProducts('restaurant').length);
+  assert.equal(after.changeSeconds, 0, 'like a new business, the reset tanıtım starts with the change window off (17 Ekim)');
   // The template's product photos come back as new copies (server/template-photos.ts): every restaurant product has one.
   assert.ok(after.products.every((p: any) => /^\/media\/mola-demo\/[a-f0-9-]{36}\.webp$/.test(p.photo) && existsSync(join(kafeDir, 'media', 'mola-demo', p.photo.slice('/media/mola-demo/'.length)))), 'every product with its photo');
   assert.deepEqual([...new Set(after.tables.map((x: any) => x.area))], ['İç salon', 'Bahçe', 'Teras']);

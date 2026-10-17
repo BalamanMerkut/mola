@@ -137,7 +137,7 @@ export type LoginInner = { password?: string; code?: string; ticket?: string; re
 export type LoginRequest = { v: 1; phonePub: string; at: number; nonce: string; eph: string; iv: string; ct: string };
 /** A paired device as the sign-in lists it when the limit is reached ("Hangisinin yerine?"). */
 export type LoginDevice = { id: string; name: string; kind: DeviceKind | null; lastSeenAt: string | null };
-/** `grant`: a one-time, 2-minute proof that this device just gave the password and the code ("Kafeyi yönet" opens without asking them again). */
+/** `grant`: a one-time, 2-minute proof that this device just gave the password and the code ("İşletmeyi yönet" opens without asking them again). */
 export type LoginAnswer = { ok: true; phoneId: string; business: string; name: string; grant?: string } | { ok: false; code: string; message: string; devices?: LoginDevice[]; ticket?: string };
 const LOGIN_SALT = utf8('mola-giris-v1');
 const loginInfo = (r: Pick<LoginRequest, 'phonePub' | 'at' | 'nonce' | 'eph'>) => `giris|${r.phonePub}|${r.at}|${r.nonce}|${r.eph}`;

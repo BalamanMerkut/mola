@@ -31,7 +31,7 @@ import { featureRefusal } from './feature-guard.js';
  *            one-time ticket ("Hangisinin yerine?"). The device names itself ("iPhone · 15 Ekim") and sends its own random id
  *            (kept in its localStorage and IndexedDB): the same id of the same owner signing in again replaces that entry;
  *            a browser that forgot everything is a new entry and the limit screen handles it. The kind is only the icon.
- *            The answer carries a one-time 2-minute `grant`: "Kafeyi yönet" opens with it right after the sign-in without
+ *            The answer carries a one-time 2-minute `grant`: "İşletmeyi yönet" opens with it right after the sign-in without
  *            asking the password and code again (server/remote-admin.ts). This computer must be on to let a new device in;
  *            paired devices read the postbox while it is off. "Kaldır" in Ayarlar → Uzaktan erişim (the password again) and
  *            "Çıkış" on the device drop one at once (here, and Merkez forgets its token and postbox).
@@ -46,7 +46,7 @@ type Phone = { id: string; name: string; pub: string; ownerId: string; ownerName
 type Record_ = { v: 1; key?: { privateKey: string; publicKey: string }; phones: Phone[]; log: { at: string; text: string }[] };
 /** `code`: the password was right, the phone code comes next; `replace`: the code was right too and the list is full. */
 type Ticket = { tenant: string; ownerId: string; phonePub: string; until: number; stage: 'code' | 'replace'; tries: number };
-/** "Kafeyi yönet" right after a sign-in (server/remote-admin.ts takes it once). */
+/** "İşletmeyi yönet" right after a sign-in (server/remote-admin.ts takes it once). */
 type Grant = { tenant: string; phoneId: string; ownerId: string; until: number };
 const GRANT_MS = 2 * 60_000;
 const POSTBOX_MS = () => Number(process.env.MOLA_POSTBOX_MS) || 5 * 60_000;
@@ -73,7 +73,7 @@ export class RemoteReports {
   private timer?: NodeJS.Timeout; private lastPush = 0; private pushing?: Promise<number>; private making?: Promise<void>;
   private keys = new Map<string, Promise<CryptoKey>>();
   notifications?: () => Pick<Notifications, 'add'> | undefined;
-  /** "Kafeyi yönet" in the report: undefined without it in the package, else whether the owner turned it on (server/app.ts). */
+  /** "İşletmeyi yönet" in the report: undefined without it in the package, else whether the owner turned it on (server/app.ts). */
   adminState?: (tenant: string) => 'on' | 'off' | undefined;
   /** The phone code's check (server/report-security.ts is registered later: server/app.ts sets this). */
   ownerCode?: OwnerCode;
@@ -226,7 +226,7 @@ export class RemoteReports {
   }
   /** Every paired device of every business here (what one postbox round should leave at Merkez). */
   private tenantPhones(tenant: string) { try { return this.tenants().reduce((n, x) => n + x.phones.length, 0) || this.read(tenant).phones.length; } catch { return 0; } }
-  /** "Kafeyi yönet" right after the sign-in: the grant this device was just given, once and in time (server/remote-admin.ts). */
+  /** "İşletmeyi yönet" right after the sign-in: the grant this device was just given, once and in time (server/remote-admin.ts). */
   takeGrant(tenant: string, phoneId: string, grant: string) {
     const g = this.grants.get(grant); this.grants.delete(grant);
     return g && g.tenant === tenant && g.phoneId === phoneId && g.until > this.now().getTime() ? g : undefined;
@@ -284,7 +284,7 @@ export class RemoteReports {
       open: { accounts: s.accounts.filter(a => a.status === 'open').length, amount: o.openAccounts ?? 0 },
       lastClosing: closing && closing.status === 'closed' ? { at: closing.closedAt ?? closing.to, day: closing.day, byName: closing.byName, ...(closing.extra ? { extra: true } : {}), counted: closing.counted, expected: closing.figures.expected, difference: closing.difference } : null,
       days: m.daily.map(d => ({ day: d.day, sales: d.sales })),
-      // adminSteps: this café checks the password and the code of "Kafeyi yönet" in two steps (0.1.24; the page asks both
+      // adminSteps: this café checks the password and the code of "İşletmeyi yönet" in two steps (0.1.24; the page asks both
       // screens either way, an older café gets them together).
       ...((admin => admin ? { admin, adminSteps: 2 as const } : {})(this.adminState?.(tenant))),
     };
@@ -332,7 +332,7 @@ export class RemoteReports {
  * Owner only (the owner's own account; Müdür, other staff and Mola destek get 403): GET /api/staff/remote-reports (the
  * devices, the Raporlarım address `address`, whether the owner has a phone code `code`), POST /api/staff/remote-reports/
  * phones/remove { id, password }. Devices sign in on the İşletmemi yönet page (/yonet; no pairing here since 0.1.22). A remote session
- * ("Kafeyi yönet") cannot remove (server/remote-admin.ts REMOTE_FORBIDDEN). "Gün sonu" (a final closing) sends the postbox
+ * ("İşletmeyi yönet") cannot remove (server/remote-admin.ts REMOTE_FORBIDDEN). "Gün sonu" (a final closing) sends the postbox
  * at once; setting the phone code up or resetting it tells Mola Merkez at once (the sign-in depends on it).
  */
 export function remoteReportRoutes(app: Express, store: Store, reports: RemoteReports, actorFor: (req: Request) => Actor, confirmPassword: ConfirmPassword) {

@@ -30,8 +30,8 @@ export type PhoneReport = {
   days: { day: string; sales: number }[];
   /** The business's palette (0.1.23): İşletmemi yönet wears the café's own colours. */
   theme?: import('./theme.js').ThemeId;
-  /** "Kafeyi yönet": absent when the package has no Uzaktan yönetim; otherwise whether the owner turned it on (0.1.21). */
+  /** "İşletmeyi yönet": absent when the package has no Uzaktan yönetim; otherwise whether the owner turned it on (0.1.21). */
   admin?: 'on' | 'off';
-  /** 0.1.24: "Kafeyi yönet" asks the password and then the code in two requests (absent: an older café, both in one). */
+  /** 0.1.24: "İşletmeyi yönet" asks the password and then the code in two requests (absent: an older café, both in one). */
   adminSteps?: 2;
 };

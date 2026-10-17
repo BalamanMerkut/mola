@@ -54,6 +54,8 @@ test('Mola Yardım: everyday questions find their answer, with or without Turkis
   assert.equal(top('güncelleme'), 'guncelleme');
   assert.equal(top('stok'), 'stok');
   assert.equal(top('mudur'), 'mudur');
+  assert.equal(top('değiştirme süresi'), 'degistirme-suresi'); // 17 Ekim: the kitchen gets a QR order when it ends
+  assert.equal(top('sipariş mutfağa düşmedi'), 'degistirme-suresi');
   assert.equal(top('yazci'), 'yazici'); // one letter missing
   assert.equal(top('odme'), 'odeme-al');
   // Half-typed words already match.

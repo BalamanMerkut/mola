@@ -1,4 +1,5 @@
 import { cancelLimits, isOrderPaid } from '../packages/domain/engine.js';
+import { changeDeadline, notYetInKitchen } from '../packages/domain/change-window.js';
 import type { Order, OrderLine, PublicOrder, Role, State } from '../packages/domain/types.js';
 
 /**
@@ -6,6 +7,10 @@ import type { Order, OrderLine, PublicOrder, Role, State } from '../packages/dom
  * (derby night: 182 orders, ~190 KB per poll per screen), so it carries only what the screens use:
  * - served and fully paid orders older than DONE_KEEP_MS leave the list; the table window says how many (`doneOrders`);
  * - the kitchen gets no served orders at all (its board ends at "Hazır") and never prices;
+ * - the kitchen gets a QR guest order only once the guest's change window has ended (17 Ekim, owner's decision; the same
+ *   moment its ticket prints): until then it is not final, so it is not on the board, the counts, the approval list or the
+ *   sounds. It then arrives as the order is now, as if new: no "Müşteri siparişi güncelledi", and no DEĞİŞTİ / İPTAL notes
+ *   for what changed before it arrived (the tag of the poll changes at that moment, so the screen gets it);
  * - fields no staff screen reads are left out (guest id, menu revision, approval flag, reservation tag, raw stock
  *   questions, option ids; the kitchen also no pricing rules), as are default values (no change window, nothing paid,
  *   not paid first).
@@ -28,7 +33,7 @@ export function staffOrders(s: State, role: Role, now: number) {
   const doneOrders = new Map<string, number>(), orders: PublicOrder[] = [];
   for (const o of s.orders) {
     if (!openAccounts.has(o.accountId) && !['new', 'preparing', 'ready'].includes(o.status)) continue;
-    if (hiddenMoney && !KITCHEN.includes(o.status)) continue;
+    if (hiddenMoney && (!KITCHEN.includes(o.status) || notYetInKitchen(o, s.changeSeconds, now))) continue;
     const paid = isOrderPaid(s, o);
     if (o.status === 'served' && paid && now - Math.max(Date.parse(o.createdAt), o.paidAt ? Date.parse(o.paidAt) : 0) > DONE_KEEP_MS) {
       doneOrders.set(o.accountId, (doneOrders.get(o.accountId) ?? 0) + 1); continue;
@@ -40,7 +45,10 @@ export function staffOrders(s: State, role: Role, now: number) {
 
 function publicOrder(s: State, o: Order, x: { hiddenMoney: boolean; paid: boolean; pieces?: Map<string, number>; names: Map<string, string>; table?: State['tables'][number] }): PublicOrder {
   const { guestId: _g, menuRevision: _m, approvalRequired: _a, reviewedBy: _r, reservation: _v, stockQuestions: _q, statusUndo: _u, cancelPrinted: _c,
-    editableUntil, paymentBeforePreparation, cancelledBy, cancellations, changes, lines, total, external, ...rest } = o;
+    editableUntil, paymentBeforePreparation, cancelledBy, cancellations: allCancellations, changes: allChanges, updatedAt, lines, total, external, ...rest } = o;
+  // The kitchen meets a QR order when its change window ends: what happened to it before that is not news to the kitchen.
+  const arrived = x.hiddenMoney ? changeDeadline(o, s.changeSeconds) : -Infinity, after = (c: { at: string }) => Date.parse(c.at) >= arrived;
+  const cancellations = allCancellations?.filter(after), changes = allChanges?.filter(after);
   const table = x.table, tableName = table?.name ?? 'Masa';
   // Option ids are never read by staff screens; pricing rules (quantity offers, per-kg price) stay for the money screens.
   const line = (l: OrderLine): OrderLine => {
@@ -59,6 +67,7 @@ function publicOrder(s: State, o: Order, x: { hiddenMoney: boolean; paid: boolea
     ...(paymentBeforePreparation ? { paymentBeforePreparation } : {}),
     ...(external ? { external: x.hiddenMoney ? { ...external, total: 0 } : external } : {}),
     ...(cancelledBy ? { cancelledBy, cancelledByName: x.names.get(cancelledBy) ?? 'Personel' } : {}),
+    ...(updatedAt && !x.hiddenMoney ? { updatedAt } : {}),
     ...(cancellations ? { cancellations: cancellations.map(c => ({ ...c, byName: x.names.get(c.by) ?? 'Personel', lines: c.lines.map(line) })) } : {}),
     // "Değişti: Kola → Ayran" on the kitchen card and the table window (no prices in a change).
     // The kitchen: only what it prepares (a ready-made swap is the counter's business) and no money.

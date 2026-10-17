@@ -9,20 +9,20 @@ import { dropSession, openRemote, REMOTE_ENDED_EVENT, REMOTE_OFFLINE_EVENT, Remo
 import './reports-phone.css';
 
 /*
- * "İşletmemi yönet" (/yonet on Mola Merkez, 0.1.23: Raporlarım and "Kafeyi yönet" on one page, one address; /raporlarim and
+ * "İşletmemi yönet" (/yonet on Mola Merkez, 0.1.23: Raporlarım and "İşletmeyi yönet" on one page, one address; /raporlarim and
  * typed variants come here with a 301). The owner's decision: one website sign-in, nothing else to find.
  *   Giriş        not signed in on this device: "E-posta" + "Şifre" → "Devam" (the café computer checks the password at once,
  *                sealed to it; Mola Merkez never sees it) → "Telefon kodu" → "Giriş yap"; at most 3 devices ("Hangisinin
  *                yerine?"). The device makes its own key pair here (the private key never leaves this browser), names itself
  *                ("iPhone · 15 Ekim") and keeps what it needs in IndexedDB (src/phoneVault.ts; packages/domain/remote-login.ts,
- *                server/remote-reports.ts). 0.1.24: "Kafeyi yönet" asks the same two screens (`SignIn`, one component).
+ *                server/remote-reports.ts). 0.1.24: "İşletmeyi yönet" asks the same two screens (`SignIn`, one component).
  *   Kafe açık    with Uzaktan yönetim on: straight into the café's own screens (src/RemoteAdmin.tsx, sealed tunnel
  *                src/remoteTransport.ts). Right after the sign-in its one-time grant opens them; later the password and the
  *                phone code once per session (until 05:00). Without it (package or switched off): the live report.
  *   Kafe kapalı  the last report the café left at Mola Merkez (encrypted for this device) with "Kasa bilgisayarı kapalı · Son
  *                durum 23:40"; when the connection drops during a session "Bağlantı koptu" first, then that report; once it
- *                answers again "Kasa açıldı · Kafeyi yönet" brings the screens back without typing anything.
- * Until the page knows which of these it is, only "Açılıyor…" (0.1.24: F5 on "Kafeyi yönet" showed the report for a moment;
+ *                answers again "Kasa açıldı · İşletmeyi yönet" brings the screens back without typing anything.
+ * Until the page knows which of these it is, only "Açılıyor…" (0.1.24: F5 on "İşletmeyi yönet" showed the report for a moment;
  * the device may see the report, so no leak, but never a flash of another view).
  * "Çıkış" (0.1.24) locks this device and keeps its keys: the e-mail and the password open it again, checked by the café
  * when it is on, else on the device (packages/domain/local-verifier.ts). "Bu cihazı tamamen kaldır" forgets it and asks the
@@ -91,7 +91,7 @@ function Opening({ theme, text = 'Açılıyor…' }: { theme?: PhoneReport['them
 }
 
 /**
- * The one sign-in form (0.1.24: the first sign-in, a locked device and "Kafeyi yönet" look and work the same): "E-posta" +
+ * The one sign-in form (0.1.24: the first sign-in, a locked device and "İşletmeyi yönet" look and work the same): "E-posta" +
  * "Şifre" → "Devam", then "Telefon kodu" → "Giriş yap". `email` without `onEmail`: shown, read-only.
  */
 function SignIn({ label, intro, notice, email, onEmail, step, busy, error, onPassword, onCode, onBack, more }: {
@@ -280,7 +280,7 @@ function Home({ paired, fresh, k, onGone, onLocked }: { paired: Paired; fresh: {
     if (g) { grant.current = undefined; void openRemote(current.current, { grant: g }).then(s => { setSession(s); setView('manage'); }, () => setView('unlock')); return; }
     setView('unlock');
   }, [resumed, live, admin, session, view]);
-  /** The last report, "Kasa bilgisayarı kapalı"; the session stays for the café's return ("Kasa açıldı · Kafeyi yönet"). */
+  /** The last report, "Kasa bilgisayarı kapalı"; the session stays for the café's return ("Kasa açıldı · İşletmeyi yönet"). */
   const toReports = useCallback(() => { stay.current = true; setDropped(false); setBack(true); setView('reports'); setStatus({ kind: 'offline' }); }, []);
   useEffect(() => {
     // In the screens: "Bağlantı koptu" over them first (whatever was being saved did not reach the café), then the report.
@@ -290,12 +290,12 @@ function Home({ paired, fresh, k, onGone, onLocked }: { paired: Paired; fresh: {
     return () => { window.removeEventListener(REMOTE_OFFLINE_EVENT, off); window.removeEventListener(REMOTE_ENDED_EVENT, ended); };
   }, [toReports]);
   useEffect(() => { if (!dropped) return; const t = setTimeout(toReports, 2000); return () => clearTimeout(t); }, [dropped, toReports]);
-  /** "Kafeyi yönet" confirmed the password: the verifier for a sign-in while the café is off (and the e-mail, if new here). */
+  /** "İşletmeyi yönet" confirmed the password: the verifier for a sign-in while the café is off (and the e-mail, if new here). */
   const verified = useCallback((email: string, v: Promise<LocalVerifier | undefined>) => {
     void v.then(async verifier => { if (!verifier) return; current.current = { ...current.current, verifier, email: current.current.email ?? plainEmail(email) }; try { await savePaired(current.current); } catch { /* next time */ } });
   }, []);
   const manage = () => { stay.current = false; setBack(false); setNotice(''); setView(session ? 'manage' : 'unlock'); };
-  // Until the page knows what this device is to see (a reload on "Kafeyi yönet", a session, the café's state): only the
+  // Until the page knows what this device is to see (a reload on "İşletmeyi yönet", a session, the café's state): only the
   // neutral opening, never a flash of the report before the sign-in or the screens.
   if (!resumed || status.kind === 'loading' || (view === 'reports' && live && admin === 'on' && !stay.current)) return <Opening theme={r?.theme} />;
   if (view === 'manage' && session) return <>
@@ -316,19 +316,19 @@ function Home({ paired, fresh, k, onGone, onLocked }: { paired: Paired; fresh: {
     {leaving && <Logout current={() => current.current} onCancel={() => setLeaving(false)} onLocked={onLocked} onForgotten={() => gone.current('Bu cihaz kaldırıldı. Yeniden giriş yapabilirsiniz.')} />}
     {fresh && !back && view !== 'unlock' && <p className="rp-paired" role="status">Giriş yapıldı ✓ · {fresh.business}</p>}
     {/* The café is back after an outage during a session: one tap, nothing to type. */}
-    {live && back && admin === 'on' && <div className="rp-banner back" role="status"><span><strong>Kasa açıldı</strong> · ekranlar hazır</span><button type="button" className="rp-btn small" onClick={manage}>Kafeyi yönet</button></div>}
+    {live && back && admin === 'on' && <div className="rp-banner back" role="status"><span><strong>Kasa açıldı</strong> · ekranlar hazır</span><button type="button" className="rp-btn small" onClick={manage}>İşletmeyi yönet</button></div>}
     {view === 'unlock' && live && admin === 'on' ? <Unlock paired={current.current} steps={r?.adminSteps === 2 ? 2 : 1} notice={notice} onVerified={verified} onIn={s => { setNotice(''); setSession(s); stay.current = false; setBack(false); setView('manage'); }} onRevoked={() => gone.current(REVOKED)} onReports={() => { stay.current = true; setView('reports'); }} /> : <>
       <div className="rp-bar">{line}<button type="button" className="rp-ghost small" onClick={() => void refresh()}>Yenile</button></div>
-      {admin && !(live && back) && (live && admin === 'on' ? <button type="button" className="rp-btn rp-manage" onClick={manage}>Kafeyi yönet · Satış ve Raporlar, menü, ayarlar</button>
-        : live ? <p className="rp-quiet">Kafeyi yönet kapalı · kasada Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açılır.</p>
-        : <p className="rp-quiet">Kafeyi yönet: kasa açıkken</p>)}
+      {admin && !(live && back) && (live && admin === 'on' ? <button type="button" className="rp-btn rp-manage" onClick={manage}>İşletmeyi yönet · Satış ve Raporlar, menü, ayarlar</button>
+        : live ? <p className="rp-quiet">İşletmeyi yönet kapalı · kasada Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açılır.</p>
+        : <p className="rp-quiet">İşletmeyi yönet: kasa açıkken</p>)}
       {!r ? <div className="rp-card rp-empty"><p>Henüz rapor gelmedi. Kasa bilgisayarı açılınca burada görünür.</p></div> : <ReportView r={r} live={live} />}
     </>}
   </Shell>;
 }
 
 /**
- * "Kafeyi yönet" when no session is open: the same two screens as the sign-in, the e-mail shown (never typed again), until
+ * "İşletmeyi yönet" when no session is open: the same two screens as the sign-in, the e-mail shown (never typed again), until
  * 05:00. `steps` 2: the café checks the password at once (0.1.24); 1: an older café, the password waits for the code and
  * both go together.
  */
@@ -356,7 +356,7 @@ function Unlock({ paired, steps, notice, onIn, onRevoked, onReports, onVerified 
   }
   const password = (p: string) => { if (steps === 2) void attempt({ password: p }, p); else { typed.current = p; setError(''); setStep('code'); } };
   const code = (c: string) => void (steps === 2 ? attempt({ ticket: ticket.current, code: c }) : attempt({ password: typed.current, code: c }, typed.current));
-  return <SignIn label="Kafeyi yönet" step={step} busy={busy} error={error} notice={step === 'password' ? notice : undefined} email={email} onEmail={paired.email ? undefined : setEmail}
+  return <SignIn label="İşletmeyi yönet" step={step} busy={busy} error={error} notice={step === 'password' ? notice : undefined} email={email} onEmail={paired.email ? undefined : setEmail}
     intro="Kafenin bütün ekranları bu cihazda açılır. Gün sonuna (05:00) kadar yeniden sorulmaz."
     onPassword={password} onCode={code} onBack={() => { typed.current = ''; ticket.current = ''; setError(''); setStep('password'); }}
     more={<button type="button" className="rp-ghost" disabled={busy} onClick={onReports}>Yalnız raporlara bak</button>} />;

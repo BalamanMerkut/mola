@@ -180,7 +180,8 @@ test.beforeAll(async ({ browser }) => {
   expect(login.ok()).toBe(true); await ensureSetup(context.request); ownerCookies = await context.cookies(); await context.close();
 });
 
-test('customer edits quantity/options and adds a product; lost update response retries once and kitchen sees changes', async ({ page, browser }, info) => {
+test('customer edits quantity/options and adds a product; lost update response retries once; the kitchen waits for the window', async ({ page, browser }, info) => {
+  test.slow(); // the kitchen gets the order only when its 60 s change window ends (17 Ekim)
   await page.context().addCookies(ownerCookies);
   await page.request.post('/api/staff/settings', { data: { changeSeconds: 60, commissionBps: null } });
   const before = await (await page.request.get('/api/staff/state')).json();
@@ -216,10 +217,11 @@ test('customer edits quantity/options and adds a product; lost update response r
   await page.request.post('/api/login', { data: { username: 'mutfak', password: 'MolaDemo!2026' } });
   // The kitchen account works in Mutfak modu: the board straight away, no menu.
   await page.goto('/'); await expect(page.locator('.kitchen-bar')).toBeVisible();
-  const card = page.locator('.kitchen-card').filter({ hasText: before.tables[5].name });
-  await expect(card).toContainText('Müşteri siparişi güncelledi');
-  await expect(card).toContainText('Büyük boy');
-  await expect(card.getByRole('button', { name: /Müşteri değiştirebilir/ })).toBeDisabled();
+  // 17 Ekim: the guest may still change it for 60 s, so it is not on the kitchen's board yet (it arrives as the final order
+  // when the window ends: tests/kitchen-change-window.test.ts).
+  await expect(page.locator('.kitchen-board')).toBeVisible();
+  await expect(page.locator('.kitchen-card').filter({ hasText: before.tables[5].name })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Müşteri değiştirebilir/ })).toHaveCount(0);
   expect((await page.request.post('/api/login', { data: { username: 'garson', password: 'MolaDemo!2026' } })).ok()).toBe(true);
   await page.goto('/');
   await page.getByRole('navigation').getByRole('button', { name: 'Masalar', exact: true }).click();
@@ -240,7 +242,11 @@ test('customer edits quantity/options and adds a product; lost update response r
   await page.request.post('/api/login', { data: { username: 'mutfak', password: 'MolaDemo!2026' } }); await page.goto('/');
   await expect(page.locator('.kitchen-bar')).toBeVisible();
   const movedCard = page.locator('.kitchen-card').filter({ has: page.getByRole('heading', { name: destination.name, exact: true }) });
-  await expect(movedCard).toContainText(`Masa taşındı: ${before.tables[5].name}`);
+  // It arrives when the 60 s window ends: the final order (the guest's edit in it), moved, with no "güncelledi" note.
+  await expect(movedCard).toContainText(`Masa taşındı: ${before.tables[5].name}`, { timeout: 65_000 });
+  await expect(movedCard).toContainText('Büyük boy');
+  await expect(movedCard).not.toContainText('Müşteri siparişi güncelledi');
+  await expect(movedCard.getByRole('button', { name: 'Hazırlamaya başla' })).toBeEnabled();
   await page.screenshot({ path: info.outputPath('kitchen-updates.png'), fullPage: true });
   await context.close();
 });

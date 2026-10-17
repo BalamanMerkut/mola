@@ -86,7 +86,7 @@ async function setup(name: string) {
   return { pair, owner, tenant, hub, admin, wire, phoneId, token, keys, link, codeOn, code, device, clock, merkez, grant };
 }
 
-test('right after the sign-in its one-time grant opens "Kafeyi yönet" without the password and the code; once, within 2 minutes', async t => {
+test('right after the sign-in its one-time grant opens "İşletmeyi yönet" without the password and the code; once, within 2 minutes', async t => {
   const { pair, owner, codeOn, code, device, grant, clock } = await setup('remote-admin-grant');
   t.after(() => pair.close());
   assert.match(grant ?? '', /^[A-Za-z0-9_-]{22}$/);

@@ -132,7 +132,7 @@ test('sign-in → live report → postbox → "Çıkış", end to end; Merkez ne
   t.after(() => pair.close());
   await sell(owner, pair.kafe());
   const { phoneId, token, business, cafePublic, keys, grant } = paired(await login({ name: 'Ahmet’in telefonu' }));
-  assert.equal(business, pair.store.read(tenant).name); assert.match(grant ?? '', /^[A-Za-z0-9_-]{22}$/, 'the one-time grant for "Kafeyi yönet"');
+  assert.equal(business, pair.store.read(tenant).name); assert.match(grant ?? '', /^[A-Za-z0-9_-]{22}$/, 'the one-time grant for "İşletmeyi yönet"');
   // The café computer lists it as typed, as a phone; the owner is told.
   assert.deepEqual((await devices()).map(p => [p.id, p.name, p.kind]), [[phoneId, 'Ahmet’in telefonu', 'phone']]);
   const inbox = (await owner('/staff/notifications')).data.items as { title: string; text: string }[];
@@ -288,7 +288,7 @@ test('any device first; at most 3 devices: "Hangisinin yerine?" with a one-time 
   assert.equal((await phone('postbox', { phoneId: first.phoneId, token: first.token })).status, 403, 'the second sign-in of the same laptop replaced the first');
   assert.deepEqual((await devices()).map(p => [p.id, p.name, p.kind]), [[laptop.phoneId, 'Windows laptop · 22 Ekim', 'computer']]);
   assert.equal(hub.phones(tenant), 1);
-  // The report says "Kafeyi yönet" is in the package (not turned on yet).
+  // The report says "İşletmeyi yönet" is in the package (not turned on yet).
   const q = await signLive(laptop.keys.privateKey, laptop.cafePublic, laptop.phoneId, clock.now()), asked = await phone('live', { phoneId: laptop.phoneId, token: laptop.token, request: q });
   assert.equal((await openReport<PhoneReport>(laptop.keys.privateKey, laptop.cafePublic, asked.data.box, { phone: laptop.phoneId, ref: q.nonce, kind: 'live' })).admin, 'off');
   // The phone, and a tablet whose browser forgot everything (no id): new lines.
@@ -364,7 +364,7 @@ test('the owner’s own list: Müdür and staff 403, "Kaldır" asks the password
   assert.equal(wrongPassword.status, 403); assert.equal(wrongPassword.data.code, 'INVALID_PASSWORD');
   assert.equal((await owner('/staff/remote-reports/phones/remove', { id: ahmet.phoneId, password: DEMO_PASSWORD })).status, 200);
   assert.deepEqual((await devices()).map(p => p.name), ['Ev laptopu']);
-  // A remote session ("Kafeyi yönet") cannot remove, password or not.
+  // A remote session ("İşletmeyi yönet") cannot remove, password or not.
   assert.ok(remoteRefusal('POST', '/api/staff/remote-reports/phones/remove', { id: ahmet.phoneId, password: DEMO_PASSWORD }));
   void tenant;
 });

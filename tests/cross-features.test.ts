@@ -205,7 +205,9 @@ test('vardiya takibi on: the owner is never asked, QR guests still order, the ki
   const opened = ok(await guest('/guest/session', { token }));
   session = opened.session;
   const placed = ok(await guest('/guest/orders', { requestId: randomUUID(), tableId: m2.id, lines: [{ productId: 'tea', quantity: 2, selections: [] }], expectedTotal: 7000, guestContext: opened.guestContext }));
-  // The kitchen sees it but cannot start it before its shift; the owner can, without a shift.
+  // The kitchen sees it (once the guest's change window has ended, 17 Ekim) but cannot start it before its shift; the owner
+  // can, without a shift.
+  c.set('2026-10-05T07:01:30Z');
   const kitchenView = ok(await kitchen('/staff/state'));
   const o = kitchenView.orders.find((x: any) => x.id === placed.orderId);
   assert.ok(o, 'the kitchen screen still reads the orders');

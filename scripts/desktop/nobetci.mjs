@@ -118,8 +118,9 @@ function handOver(mode, after) {
 let child, stopping = false, failures = 0;
 
 function start() {
+  // windowsHide (17 Ekim): a node.exe console flashed over Mola on the café computer when the server (re)started.
   const began = Date.now();
-  child = spawn(process.execPath, [...process.execArgv, script, ...options], { stdio: 'inherit', env: cafe ? { ...process.env, MOLA_NOBETCI: '1' } : process.env });
+  child = spawn(process.execPath, [...process.execArgv, script, ...options], { stdio: 'inherit', windowsHide: true, env: cafe ? { ...process.env, MOLA_NOBETCI: '1' } : process.env });
   child.once('error', error => say(`Sunucu başlatılamadı: ${error.message}`));
   child.once('exit', (code, signal) => {
     child = undefined;

@@ -98,8 +98,8 @@ test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first
     await expect(laptop.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
     await expect(laptop.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Bugün ·');
     // Uzaktan yönetim is in the demo package but off: a quiet line says where it is turned on, no button.
-    await expect(laptop.getByText('Kafeyi yönet kapalı · kasada Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açılır.')).toBeVisible();
-    await expect(laptop.getByRole('button', { name: /^Kafeyi yönet/ })).toHaveCount(0);
+    await expect(laptop.getByText('İşletmeyi yönet kapalı · kasada Ayarlar → Uzaktan erişim → Uzaktan yönetim’den açılır.')).toBeVisible();
+    await expect(laptop.getByRole('button', { name: /^İşletmeyi yönet/ })).toHaveCount(0);
     expect(await wide(laptop)).toBe(true);
     await laptop.screenshot({ path: info.outputPath('laptop-3-rapor.png'), fullPage: true });
     // The café computer lists it, named by itself, as a computer; the owner was told.
@@ -131,13 +131,13 @@ test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first
     await expect(list).toContainText(/Son rapor: \d/, { timeout: 15_000 });
 
     // The café computer off (its köprü stops; Merkez calls it off a few seconds later): the last report from the postbox,
-    // "Kasa bilgisayarı kapalı · Son durum", and "Kafeyi yönet: kasa açıkken".
+    // "Kasa bilgisayarı kapalı · Son durum", and "İşletmeyi yönet: kasa açıkken".
     let boxes = 0; phone.on('response', r => { if (r.url().endsWith('/phone/postbox') && r.status() === 200) void r.json().then((b: { box?: unknown }) => { if (b.box) boxes++; }).catch(() => {}); });
     expect((await relay(false)).ok()).toBe(true);
     const offLine = phone.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/);
     await expect(async () => { await phone.getByRole('button', { name: 'Yenile' }).click(); await expect(offLine).toBeVisible({ timeout: 3000 }); }).toPass({ timeout: 60_000 });
     await expect(phone.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
-    await expect(phone.getByText('Kafeyi yönet: kasa açıkken')).toBeVisible();
+    await expect(phone.getByText('İşletmeyi yönet: kasa açıkken')).toBeVisible();
     await expect.poll(() => boxes, { timeout: 10_000 }).toBeGreaterThan(0);
     await phone.screenshot({ path: info.outputPath('telefon-4-kasa-kapali.png'), fullPage: true });
     // Opened again later, still off: signed in, the full last report at once.

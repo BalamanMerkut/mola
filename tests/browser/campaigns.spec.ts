@@ -3,6 +3,8 @@ import { ensureSetup, openReport, openView, reportTabs } from './helpers';
 
 test('owner campaign applies to customer, preserves accepted price and hides financials from kitchen', async ({ page, browser }, info) => {
   await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } }); await ensureSetup(page.request);
+  // No guest change window: the kitchen reads the guest's order at once (17 Ekim: it waits for the window otherwise).
+  expect((await page.request.post('/api/staff/settings', { data: { changeSeconds: 0, commissionBps: null } })).ok()).toBe(true);
   const initial = await (await page.request.get('/api/staff/state')).json();
   await page.goto('/'); await openView(page, 'Kampanyalar');
   await page.getByRole('button', { name: 'Kampanya ekle', exact: true }).click();

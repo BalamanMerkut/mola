@@ -48,7 +48,7 @@ Kritik bulgu yok. Kimlik doğrulamasız biri internetten başka bir işletmenin 
   - Misafir menüsünün sayfası ve dosyaları kafenin bilgisayarından gelir.
   - `MERKEZ_SITE_ORIGIN` verilmezse masa QR'ları `merkez.molayazilim.com.tr/q/...` adresini taşıyordu. Bu, Mola Yönetim'in kendi adresidir.
   - Program dosyaları değiştirilmiş (ya da ele geçirilmiş) tek bir kafe, kendi menü sayfasına istediği kodu koyabilir.
-- **Etkisi:** Siz Mola Yönetim'e girişliyken o menüyü açarsanız, o kod sizin adınıza Mola Yönetim'de işlem yapabilirdi. Ayrıca bir başka işletmenin sahibi aynı telefonda "Raporlarım" ya da "Kafeyi yönet" kullanıyorsa, o kod sahibin cihaz anahtarlarını kullanabilirdi.
+- **Etkisi:** Siz Mola Yönetim'e girişliyken o menüyü açarsanız, o kod sizin adınıza Mola Yönetim'de işlem yapabilirdi. Ayrıca bir başka işletmenin sahibi aynı telefonda "Raporlarım" ya da "İşletmeyi yönet" kullanıyorsa, o kod sahibin cihaz anahtarlarını kullanabilirdi.
 - **Düzeltme (sahibin kararı: ayrı alt alan adı):**
   - Misafir menüsü kendi adresinde açılır: `https://menu.molayazilim.com.tr/q/<kod>/<masa>` (`MERKEZ_MENU_ORIGIN`). Bu ad ne Mola Yönetim'in (`merkez.`) ne sitenin (`molayazilim.com.tr`) adıdır; tarayıcı çerezleri ve yerel kayıtları ada göre ayırdığı için orada başka bir adresin çerezi ya da anahtarı görünmez.
   - Merkez `/q/*`'yi yalnız istek bu adla geldiğinde açar. Başka bir adla gelen `/q/*` isteği `308` ile menü adresine gider (eski basılı QR'lar çalışır; POST reddedilir). Menü adında `/q/*` dışındaki her şey 404'tür: Mola Yönetim, `/api`, `/s/`, tünel.
@@ -207,7 +207,7 @@ Kritik bulgu yok. Kimlik doğrulamasız biri internetten başka bir işletmenin 
 3. Caddy'nin `X-Forwarded-For`'u kendisi yazdığını doğrulayın: dışarıdan `X-Forwarded-For: 1.2.3.4` gönderilen istekte Merkez'in hız sınırı sizin gerçek adresinizi saymalı. Mola Yönetim'de 6 yanlış girişten sonra bekleme, başlığı değiştirince kalkmamalı.
 4. 1 MB'lık gövdeyle `/api/merkez/v1/relay/poll` → hemen `401`.
 5. `systemd-analyze security mola-merkez`, `ss -ltnp` (4000 yalnız 127.0.0.1), `ufw status`, `fail2ban-client status sshd`.
-6. Bir kafeyle tam tur: etkinleştirme, kalp atışı, sunucu yedeği, destek oturumu (yazdırma önizlemesi açılıyor mu), Raporlarım, Kafeyi yönet, güncelleme indirme.
+6. Bir kafeyle tam tur: etkinleştirme, kalp atışı, sunucu yedeği, destek oturumu (yazdırma önizlemesi açılıyor mu), Raporlarım, İşletmeyi yönet, güncelleme indirme.
 7. Sertifika, HSTS ve HTTP'den HTTPS'e yönlendirme; `nmap` ile yalnız 22, 80 ve 443 açık.
 
 ## Testler

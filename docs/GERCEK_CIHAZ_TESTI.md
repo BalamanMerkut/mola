@@ -560,7 +560,7 @@ Hepsi şu klasörde: `C:\Users\yesbo\OneDrive\Masaüstü\kafe uygulama\.local\in
 | 20.5 | Eşleştirin. | Bugünün satışı (nakit, kart, sipariş sayısı). Aşağıda en çok satanlar, kasa durumu, son 30 gün. Kafede Bildirimler'e "Cihaz eşleştirildi". | ☐ |  |
 | 20.6 | Kafede bir satış yapın, Raporlarım'ı yenileyin. | Yeni satış görünür. | ☐ |  |
 | 20.7 | Kafe: Ayarlar → Güvenlik ve yedek → Telefonum → Uzaktan yönetim kartı → **Uzaktan yönetimi aç**: şifreniz ve telefon kodu. | "Açık". | ☐ |  |
-| 20.8 | Raporlarım sayfasında **Kafeyi yönet** → şifre ve telefon kodu. | Kafe yönetimi açılır, üstte "Uzaktan · uçtan uca şifreli". | ☐ |  |
+| 20.8 | Raporlarım sayfasında **İşletmeyi yönet** → şifre ve telefon kodu. | Kafe yönetimi açılır, üstte "Uzaktan · uçtan uca şifreli". | ☐ |  |
 | 20.9 | Uzaktan bir ürünün fiyatını değiştirin. | Kafede ve müşteri menüsünde değişir. Kafeye "uzaktan giriş" bildirimi. | ☐ |  |
 | 20.10 | Kafede **Bütün uzak oturumları kapat**. Sonra eşleşmiş cihazı kaldırın. | Uzaktaki sekme düşer. Cihaz listeden kalkar. | ☐ |  |
 
@@ -774,7 +774,7 @@ VDS kurulup Mola Merkez internete taşınınca (docs/VDS_KURULUM.md) şunları a
 | 31.5 | Askıya alınan işletmede internet menüsünün "dijital menü şu anda kullanılamıyor" demesi | ☐ |
 | 31.6 | Sosyal medya QR kartlarının kısa adresi (`/s/…`): yönlendirme, askıda "Bu işletmenin bu hizmeti şu anda kullanılamıyor" | ☐ |
 | 31.7 | Web sitesi iletişim formu → Mola Yönetim → Başvurular → Web sitesi talepleri (Arandı, Kapandı, İşletme ekle) | ☐ |
-| 31.8 | Raporlarım ve Kafeyi yönet gerçek telefonda, mobil veriyle, HTTPS üzerinden | ☐ |
+| 31.8 | Raporlarım ve İşletmeyi yönet gerçek telefonda, mobil veriyle, HTTPS üzerinden | ☐ |
 | 31.9 | Uzaktan destek (Kafeye bağlan) internet üzerinden | ☐ |
 | 31.10 | Bulutta şifreli yedek ve yeni bilgisayarda "Mola Merkez'den geri yükle" (taşıma kodu) | ☐ |
 | 31.11 | Hesap açma başvurusu: başka bir bilgisayardan, internet üzerinden, "30 günlük denemeyi başlat" (önce evde: docs/EV_AGI_PROVASI.md) | ☐ |

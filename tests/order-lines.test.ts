@@ -195,6 +195,8 @@ test('HTTP: kg product, guest note and weight reach the kitchen; campaign quanti
   mkdirSync('.local/tests', { recursive: true });
   const store = new Store(mkdtempSync(resolve('.local/tests/order-lines-')));
   licensed(store); const server = createServer(createApp(store, () => now, () => true));
+  // No change window here: the kitchen reads the guest's order at once (17 Ekim: it waits for the window otherwise).
+  store.mutate('mola-demo', s => { s.changeSeconds = 0; });
   await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
   t.after(async () => { server.closeAllConnections(); await new Promise<void>(r => server.close(() => r())); store.close(); });
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;

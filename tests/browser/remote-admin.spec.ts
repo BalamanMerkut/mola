@@ -7,15 +7,15 @@ import { ensureSetup, MERKEZ, openSettings, openView, OWNER_EMAIL, ownerEmailOn,
  * src/RemoteAdmin.tsx, src/remoteTransport.ts): a device signs in (the e-mail and the password, then the phone code) and goes
  * straight into the café's own screens, without being asked again (the sign-in's one-time grant). Satış ve Raporlar, a price
  * changed, Ayarlar, the Excel file. The café computer off: the last report with "Kasa bilgisayarı kapalı"; back on: "Kasa
- * açıldı · Kafeyi yönet" brings the screens back with nothing typed. "Bütün uzak oturumları kapat": the password and the code
+ * açıldı · İşletmeyi yönet" brings the screens back with nothing typed. "Bütün uzak oturumları kapat": the password and the code
  * once (never the e-mail). Every request and answer between the device and the café is sealed: Merkez carries ciphertext.
  * 0.1.24: the connection dropping during an edit shows "Bağlantı koptu" over the screens, then the last report (nothing
- * spins); "Kafeyi yönet" asks the same two screens as the sign-in (the e-mail shown, read-only); F5 there never shows the
+ * spins); "İşletmeyi yönet" asks the same two screens as the sign-in (the e-mail shown, read-only); F5 there never shows the
  * report first (a MutationObserver from the first byte of the page).
  */
 const PASSWORD = 'MolaDemo!2026';
 
-test('İşletmemi yönet: sign in → the café screens at once, a price, reports, Excel; café off → last report; back → "Kafeyi yönet"; Merkez sees only ciphertext', async ({ browser }, info) => {
+test('İşletmemi yönet: sign in → the café screens at once, a price, reports, Excel; café off → last report; back → "İşletmeyi yönet"; Merkez sees only ciphertext', async ({ browser }, info) => {
   test.setTimeout(360_000);
   const cafe = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const laptop = await browser.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true });
@@ -55,7 +55,7 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     await expect(bar).toBeVisible({ timeout: 30_000 });
     await expect(bar).toContainText('Uzaktan');
     await device.locator('.sidebar nav').waitFor({ timeout: 30_000 });
-    await expect(device.getByRole('form', { name: 'Kafeyi yönet' })).toHaveCount(0);
+    await expect(device.getByRole('form', { name: 'İşletmeyi yönet' })).toHaveCount(0);
     await device.screenshot({ path: info.outputPath('laptop-1-ekranlar.png') });
 
     // Change a price (Menü's own call, through the tunnel), and the café has it.
@@ -111,10 +111,10 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     expect(bytes.subarray(0, 2).toString('latin1')).toBe('PK');
     await device.keyboard.press('Escape');
 
-    // "Raporlar" in the bar: the report view, the session stays; "Kafeyi yönet" goes back with nothing typed.
+    // "Raporlar" in the bar: the report view, the session stays; "İşletmeyi yönet" goes back with nothing typed.
     await bar.getByRole('button', { name: 'Raporlar' }).click();
     await expect(device.getByText(/^Canlı · \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
-    await device.getByRole('button', { name: /^Kafeyi yönet/ }).click();
+    await device.getByRole('button', { name: /^İşletmeyi yönet/ }).click();
     await expect(bar).toBeVisible();
 
     // The café computer goes off while the owner marks a product "Tükendi" in Menü yönetimi (0.1.24, the owner's case):
@@ -134,14 +134,14 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     // The last report with "Kasa bilgisayarı kapalı", not an empty screen.
     await expect(device.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 60_000 });
     await expect(device.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
-    await expect(device.getByText('Kafeyi yönet: kasa açıkken')).toBeVisible();
+    await expect(device.getByText('İşletmeyi yönet: kasa açıkken')).toBeVisible();
     await device.screenshot({ path: info.outputPath('laptop-3-kasa-kapali.png'), fullPage: true });
-    // Back on: "Kasa açıldı · Kafeyi yönet" brings the screens back, nothing typed (the same session).
+    // Back on: "Kasa açıldı · İşletmeyi yönet" brings the screens back, nothing typed (the same session).
     expect((await relay(true)).ok()).toBe(true);
     const back = device.getByRole('status').filter({ hasText: 'Kasa açıldı' });
     await expect(back).toBeVisible({ timeout: 60_000 });
     await device.screenshot({ path: info.outputPath('laptop-4-kasa-acildi.png'), fullPage: true });
-    await back.getByRole('button', { name: 'Kafeyi yönet' }).click();
+    await back.getByRole('button', { name: 'İşletmeyi yönet' }).click();
     await expect(bar).toBeVisible();
     await device.locator('.sidebar nav').waitFor({ timeout: 30_000 });
 
@@ -161,7 +161,7 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     const notes = await (await cafe.request.get('/api/staff/notifications')).json() as { items: { title: string }[] };
     expect(notes.items.some(n => n.title === 'Uzaktan yönetim girişi')).toBe(true);
     await card.getByRole('button', { name: 'Bütün uzak oturumları kapat' }).click();
-    const unlock = device.getByRole('form', { name: 'Kafeyi yönet' });
+    const unlock = device.getByRole('form', { name: 'İşletmeyi yönet' });
     await expect(unlock).toBeVisible({ timeout: 30_000 });
     await expect(unlock).toContainText('Uzak oturum kapandı');
     // The same two screens as the sign-in: the e-mail shown and read-only, then the code.
@@ -172,7 +172,7 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     // F5 here: from the first byte of the page on, the report never shows before this form (only "Açılıyor…").
     await device.addInitScript(() => {
       const seen: string[] = []; (window as unknown as { __seen: string[] }).__seen = seen;
-      const look = () => { const s = document.querySelector('.rp-report, .rp-bar, .rp-paired') ? 'rapor' : document.querySelector('form[aria-label="Kafeyi yönet"]') ? 'giris' : document.querySelector('.rp-opening, [aria-busy="true"]') ? 'aciliyor' : ''; if (s && seen[seen.length - 1] !== s) seen.push(s); };
+      const look = () => { const s = document.querySelector('.rp-report, .rp-bar, .rp-paired') ? 'rapor' : document.querySelector('form[aria-label="İşletmeyi yönet"]') ? 'giris' : document.querySelector('.rp-opening, [aria-busy="true"]') ? 'aciliyor' : ''; if (s && seen[seen.length - 1] !== s) seen.push(s); };
       new MutationObserver(look).observe(document, { subtree: true, childList: true, attributes: true });
     });
     await device.reload();

@@ -1,7 +1,7 @@
 import { bytes, concat, dh, fromB64u, hkdf, PUBLIC_KEY, randomB64u, toB64u, utf8 } from './remote-crypto.js';
 
 /*
- * Sahibin uzaktan yönetimi ("Kafeyi yönet"): the owner's paired device (Raporlarım, src/phoneVault.ts) runs the café's own
+ * Sahibin uzaktan yönetimi ("İşletmeyi yönet"): the owner's paired device (Raporlarım, src/phoneVault.ts) runs the café's own
  * screens through Mola Merkez, end to end encrypted. WebCrypto only, so the café server and the browser share this file.
  * Mola Merkez passes these objects along and can open none of them: it never holds the café's or the device's private key.
  *

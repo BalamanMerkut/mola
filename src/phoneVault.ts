@@ -12,7 +12,7 @@ export type Paired = {
   /** The newest report this phone opened (live or from the postbox) and how it came. */
   last?: { report: PhoneReport; kind: 'live' | 'snapshot' };
   /**
-   * 0.1.24 "Çıkış" locks the device instead of forgetting it: `locked`, and the e-mail (shown on "Kafeyi yönet") with the
+   * 0.1.24 "Çıkış" locks the device instead of forgetting it: `locked`, and the e-mail (shown on "İşletmeyi yönet") with the
    * verifier from the last sign-in the café confirmed open it again while the café is off (packages/domain/local-verifier.ts).
    */
   email?: string; verifier?: LocalVerifier; locked?: boolean; tries?: LocalTries;

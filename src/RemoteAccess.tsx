@@ -24,7 +24,7 @@ import './remote-support.css';
  *   4 Eşleşmiş cihazlar  kind icon, name, last report; "Kaldır" asks the password (not the code: the lost phone may hold the app).
  *   5 Uzaktan yönetim    src/RemoteAdminSettings.tsx. Part of "Uzaktan erişim" since 15 Ekim (one service): whoever sees this
  *                        page has it (packages/domain/feature-gate.ts enabledFeatures); the owner still switches it on here.
- * A remote session ("Kafeyi yönet") cannot set the code up or remove a device: the server refuses, the page says so.
+ * A remote session ("İşletmeyi yönet") cannot set the code up or remove a device: the server refuses, the page says so.
  */
 type Phone = { id: string; name: string; ownerName: string; pairedAt: string; lastSeenAt: string | null; kind: DeviceKind | null };
 type View = { phones: Phone[]; max: number; address: string | null; relay: { connected: boolean; error: string | null }; code?: boolean };

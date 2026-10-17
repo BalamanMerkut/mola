@@ -20,7 +20,7 @@ import { verifyTotp } from './totp.js';
 import { FEATURE_NOT_IN_PACKAGE, notInPackage } from '../packages/domain/feature-gate.js';
 
 /*
- * Sahibin uzaktan yönetimi ("Kafeyi yönet"). The owner opens the café's full screens on a device paired for Raporlarım
+ * Sahibin uzaktan yönetimi ("İşletmeyi yönet"). The owner opens the café's full screens on a device paired for Raporlarım
  * (server/remote-reports.ts) from anywhere, through Mola Merkez (relay kind `admin`, server/merkez/remote-admin.ts).
  *   Açık mı   Ayarlar → Uzaktan erişim → "Uzaktan yönetim" (0.1.21), default off. Turning it on: only on a computer of the café (never
  *             remotely), with the owner's password and the 6-digit code (Raporlar için telefon kodu, which must be set up first).
