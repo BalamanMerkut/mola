@@ -157,7 +157,7 @@ export function foursquareYeriIsle(y: Yer, kapsam: 'merkez' | 'il'): Aday | null
   const ad = y.name?.trim();
   if (!ad || !y.fsq_place_id || y.date_closed) return null; // kapanmış yer
   const loc = y.location ?? {};
-  if (loc.region && !/elaz/i.test(loc.region)) return null; // başka ildeki sonuç
+  if (loc.region && !/el[aâ]z/i.test(loc.region)) return null; // başka ildeki sonuç
   if (loc.country && loc.country !== 'TR') return null;
   const ilce = ilceBul(loc);
   if (kapsam === 'merkez' && ilce && ilce !== 'Merkez') return null;

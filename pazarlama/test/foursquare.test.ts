@@ -65,6 +65,13 @@ test('Instagram biçimleri, mahalle ayıklama ve kategori → tür', () => {
   assert.equal(foursquareTur('Gece', ['Pub']), 'Bar / pub');
 });
 
+test('Gerçek cevaptaki il yazımı "Elâzığ" (şapkalı) atılmaz, başka il atılır', () => {
+  const yer = (region: string, locality = region) => foursquareYeriIsle({ fsq_place_id: 'x', name: 'X', location: { region, locality, country: 'TR' } }, 'merkez');
+  assert.equal(yer('Elâzığ')?.ilce, 'Merkez');
+  assert.ok(yer('Elazig'));
+  assert.equal(yer('Malatya'), null);
+});
+
 test('Sonraki sayfa: link başlığındaki cursor; virgüllü adres, başka sunucu ve eksik başlık', () => {
   assert.deepEqual(sonrakiSayfa(SONRAKI), { cursor: 'c2FmZQ' });
   assert.deepEqual(sonrakiSayfa('<https://places-api.foursquare.com/places/search?cursor=onceki>; rel="prev", <https://places-api.foursquare.com/places/search?cursor=sonra>; rel="next"'), { cursor: 'sonra' });
