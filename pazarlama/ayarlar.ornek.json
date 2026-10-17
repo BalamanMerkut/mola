@@ -1,0 +1,25 @@
+{
+  "_aciklama": "Bu dosyayı ayarlar.json adıyla kopyalayın. ayarlar.json git'e girmez. Boş bırakılan her şey varsayılanı kullanır.",
+  "googleApiAnahtari": "",
+  "kapsam": "merkez",
+  "googleAramalari": [
+    "kafe Elazığ", "kahve dükkanı Elazığ", "restoran Elazığ", "lokanta Elazığ", "pastane Elazığ",
+    "tatlıcı Elazığ", "çay bahçesi Elazığ", "nargile kafe Elazığ", "kahvaltı salonu Elazığ", "fast food Elazığ"
+  ],
+  "zincirler": ["Starbucks", "Kahve Dünyası", "Simit Sarayı", "Burger King", "McDonald's", "Domino's", "Popeyes", "KFC", "Little Caesars", "Pizza Hut", "Sbarro", "Arby's", "Caribou", "Gloria Jean's", "Espressolab", "Tchibo", "Mado", "Özsüt", "Baydöner", "Tavuk Dünyası", "Komagene", "Dürümcü Baba", "Usta Dönerci", "Köfteci Yusuf", "Pidem", "Simit Dünyası", "Coffy", "Kahve Diyarı", "Big Chefs", "Midpoint", "HD İskender", "Bereket Döner", "Cookshop", "Dominos", "Mc Donalds", "Subway", "Wendy's", "Carl's Jr"],
+  "oncelik": {
+    "takipci": [[20000, 25], [5000, 20], [1000, 12], [1, 5]],
+    "sonGonderi": { "hafta": 15, "ay": 10, "eski": 3, "hic": 0 },
+    "kampanya": 10,
+    "menu": { "kagit": 10, "yok": 6, "qr": 3 },
+    "googlePuan": [[4.3, 6], [4.0, 4], [0.1, 1]],
+    "googleYorum": [[500, 10], [100, 7], [30, 4], [1, 1]],
+    "web": 6,
+    "instagram": 8,
+    "eposta": 3,
+    "saatler": 3,
+    "osmTamlik": 4,
+    "zincirCarpani": 0.2,
+    "ziyaretEsigi": 30
+  }
+}

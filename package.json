@@ -43,6 +43,8 @@
     "test:paket": "tsx scripts/paket-testi.ts",
     "update:check": "tsx scripts/update-check.ts",
     "test:update": "npm run build && tsx scripts/check-update-rehearsal.ts",
+    "pazarlama": "tsx pazarlama/sunucu.ts",
+    "test:pazarlama": "tsx --test pazarlama/test/*.test.ts",
     "site:build": "tsx scripts/site-build.ts",
     "site:dev": "tsx scripts/site-dev.ts",
     "site:videos": "tsx scripts/site-videos.ts",

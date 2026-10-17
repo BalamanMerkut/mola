@@ -9,3 +9,5 @@ playwright-report/
 *.log
 .docwork/
 _arsiv/
+# Mola Pazarlama: Google anahtarı burada (veri .local/pazarlama altında)
+pazarlama/ayarlar.json

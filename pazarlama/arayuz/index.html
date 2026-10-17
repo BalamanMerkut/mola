@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mola Pazarlama</title>
+  <link rel="stylesheet" href="/stil.css">
+</head>
+<body>
+  <header class="ust">
+    <div class="ust-ic">
+      <a class="marka" href="#/liste"><span class="marka-ad">Mola</span> <span class="marka-alt">Pazarlama</span></a>
+      <nav class="sekmeler" aria-label="Bölümler">
+        <a href="#/liste" data-sekme="liste">Liste</a>
+        <a href="#/bugun" data-sekme="bugun">Bugün <span class="rozet" id="bugun-sayi" hidden></span></a>
+        <a href="#/ziyaret" data-sekme="ziyaret">Ziyaret listesi</a>
+        <a href="#/topla" data-sekme="topla">Topla</a>
+      </nav>
+      <a class="dugme dugme-ana kucuk" href="#/yeni">+ İşletme ekle</a>
+    </div>
+  </header>
+  <main id="ana" class="ana" tabindex="-1"><p class="soluk">Yükleniyor…</p></main>
+  <div id="bildirim" class="bildirim" role="status" aria-live="polite" hidden></div>
+  <script src="/uygulama.js"></script>
+</body>
+</html>

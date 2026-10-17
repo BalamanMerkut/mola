@@ -1,0 +1,18 @@
+{
+  "version": 0.6,
+  "elements": [
+    { "type": "relation", "id": 100, "tags": { "admin_level": "6", "boundary": "administrative", "name": "Elâzığ Merkez" } },
+    { "type": "node", "id": 1, "lat": 38.6748, "lon": 39.2225, "tags": { "amenity": "cafe", "name": "Lale Cafe", "phone": "+90 424 111 22 33", "addr:street": "Örnek Caddesi", "addr:housenumber": "5",
+      "opening_hours": "Mo-Su 08:00-23:00", "cuisine": "coffee_shop", "contact:instagram": "https://www.instagram.com/lalekafe23/?igsh=eDd0", "contact:facebook": "lalekafe", "email": "Bilgi@LaleKafe.com.tr" } },
+    { "type": "node", "id": 2, "lat": 38.66, "lon": 39.2, "tags": { "amenity": "cafe", "name": "Çınar Çay Bahçesi", "website": "https://instagram.com/cinarbahce" } },
+    { "type": "node", "id": 3, "lat": 38.661, "lon": 39.201, "tags": { "amenity": "cafe" } },
+    { "type": "way", "id": 4, "center": { "lat": 38.68, "lon": 39.23 }, "tags": { "shop": "bakery", "name": "Köşe Fırın", "addr:suburb": "İzzet Paşa Mahallesi" } },
+    { "type": "node", "id": 10, "lat": 38.661, "lon": 39.201, "tags": { "place": "neighbourhood", "name": "Sürsürü Mahallesi" } },
+    { "type": "relation", "id": 200, "center": { "lat": 38.675, "lon": 39.222 }, "tags": { "admin_level": "8", "boundary": "administrative", "name": "Cumhuriyet Mahallesi" } },
+    { "type": "node", "id": 1 },
+    { "type": "way", "id": 4 },
+    { "type": "relation", "id": 101, "tags": { "admin_level": "6", "boundary": "administrative", "name": "Palu" } },
+    { "type": "node", "id": 1, "lat": 38.6748, "lon": 39.2225, "tags": { "amenity": "cafe", "name": "Lale Cafe" } },
+    { "type": "node", "id": 5, "lat": 38.69, "lon": 39.95, "tags": { "amenity": "cafe", "name": "Simit Sarayı", "brand": "Simit Sarayı" } }
+  ]
+}
