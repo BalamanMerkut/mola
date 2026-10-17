@@ -58,7 +58,7 @@ const gunYaz = (g) => { if (!g) return ''; const [y, a, d] = g.split('-').map(Nu
 function gunEkle(gunSayisi) { const [y, a, d] = durum.bugun.split('-').map(Number); const t = new Date(Date.UTC(y, a - 1, d + gunSayisi)); return t.toISOString().slice(0, 10); }
 const puanSinifi = (p) => `puan${p >= 50 ? ' yuksek' : p >= 25 ? ' orta' : ''}`;
 const hostAdi = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
-const kaynakAdi = { osm: 'OSM', google: 'Google', web: 'Web', elle: 'Elle' };
+const kaynakAdi = { osm: 'OSM', google: 'Google', foursquare: 'Foursquare', web: 'Web', elle: 'Elle' };
 const instaUrl = (ad) => `https://www.instagram.com/${encodeURIComponent(ad)}/`;
 const takipEdilmedi = (k) => k.durum === 'bulundu' || k.durum === 'takip';
 
@@ -296,7 +296,8 @@ function cizKart(id) {
       metinAlani(k, 'mahalle', 'Mahalle'),
       metinAlani(k, 'adres', 'Adres'),
       metinAlani(k, 'googlePuan', 'Google puanı', { type: 'number', step: '0.1', min: '0', max: '5' }),
-      metinAlani(k, 'googleYorum', 'Google yorum sayısı', { type: 'number', min: '0' })),
+      metinAlani(k, 'googleYorum', 'Google yorum sayısı', { type: 'number', min: '0' }),
+      k.fsqPuan != null ? h('div', { class: 'alan' }, 'Foursquare puanı (/10)', h('span', null, String(k.fsqPuan))) : null),
     h('datalist', { id: 'tur-listesi' }, ['Kafe', 'Restoran', 'Lokanta', 'Pastane / tatlıcı', 'Çay bahçesi', 'Nargile kafe', 'Hızlı yemek', 'Dondurmacı', 'Fırın', 'Bar / pub', 'Diğer'].map((t) => h('option', { value: t }))),
     h('div', { class: 'satir', style: 'margin-top:10px' },
       h('span', { class: 'soluk kucuk-yazi' }, 'Zincir mi?'),
@@ -305,6 +306,7 @@ function cizKart(id) {
     h('p', { class: 'soluk kucuk-yazi', style: 'margin-top:12px' },
       k.lat != null ? `Konum: ${k.lat.toFixed(5)}, ${k.lon.toFixed(5)} · ` : '',
       k.osmId ? h('a', { href: `https://www.openstreetmap.org/${k.osmId}` }, `OSM ${k.osmId}`) : null, k.osmId ? ' · ' : '',
+      k.fsqId ? h('a', { href: `https://foursquare.com/v/${encodeURIComponent(k.fsqId)}` }, 'Foursquare') : null, k.fsqId ? ' · ' : '',
       `Eklendi ${tarihYaz(k.olusturma)} · Değişti ${tarihYaz(k.guncelleme)}`),
     h('div', { class: 'dugmeler yazdirma-yok' }, h('button', { type: 'button', class: 'dugme kucuk dugme-tehlike', onclick: async () => {
       if (!confirm(`"${k.ad}" kaydı ve notları bu bilgisayardan silinsin mi? (İşletme isterse bilgilerini silmek gerekir.)`)) return;
@@ -376,7 +378,7 @@ function cizZiyaret() {
             h('span', { class: puanSinifi(k.oncelik) }, k.oncelik),
             h('div', null,
               h('a', { href: `#/isletme/${k.id}` }, h('b', null, k.ad)), h('span', { class: 'soluk' }, k.tur ? ` · ${k.tur}` : ''),
-              h('div', { class: 'kucuk-yazi soluk' }, [k.adres, k.telefonYerel, k.instagram ? `@${k.instagram}` : '', k.googlePuan ? `Google ${k.googlePuan} (${k.googleYorum ?? 0})` : ''].filter(Boolean).join(' · '))),
+              h('div', { class: 'kucuk-yazi soluk' }, [k.adres, k.telefonYerel, k.instagram ? `@${k.instagram}` : '', k.googlePuan ? `Google ${k.googlePuan} (${k.googleYorum ?? 0})` : '', k.fsqPuan != null ? `Foursquare ${k.fsqPuan}/10` : ''].filter(Boolean).join(' · '))),
             h('div', { class: 'dugmeler yazdirma-yok' },
               h('a', { class: 'dugme kucuk', href: k.baglantilar.find((b) => b.etiket === 'Google Haritalar')?.url }, 'Harita ↗'),
               h('button', { type: 'button', class: 'dugme kucuk', onclick: async () => { if (await kaydet(k, { durum: 'ziyaret' }, 'Ziyaret edildi olarak işaretlendi')) cizZiyaret(); } }, 'Gittim')))));
@@ -392,6 +394,8 @@ function cizTopla() {
   const kapsamSec = h('select', { 'aria-label': 'Kapsam' }, h('option', { value: 'merkez', selected: b.kapsam === 'merkez' }, 'Yalnızca Merkez ilçe'), h('option', { value: 'il', selected: b.kapsam === 'il' }, 'Tüm Elazığ ili (11 ilçe)'));
   const yenile = h('input', { type: 'checkbox' });
   const googleOnay = h('input', { type: 'checkbox' });
+  const fsqOnay = h('input', { type: 'checkbox' });
+  const f = b.foursquare;
   const sinir = h('input', { type: 'number', min: '1', max: '500', value: Math.min(30, Math.max(1, b.taranacakSite)), style: 'width:90px' });
   const basla = async (yol, govde) => {
     try { await api('POST', yol, govde); isIzle(); } catch (e) { bildir(e.message, true); }
@@ -426,6 +430,23 @@ function cizTopla() {
             h('p', { class: 'soluk kucuk-yazi' }, 'Açmak için Google Cloud Console\'da Places API (New) için bir API anahtarı alın ve pazarlama/ayarlar.json dosyasına "googleApiAnahtari" olarak yazın (BENIOKU.md\'de adım adım).'),
             h('button', { type: 'button', class: 'dugme', disabled: true }, 'Google\'dan getir (anahtar gerekir)')]),
       h('section', { class: 'kart' },
+        h('h2', null, 'Foursquare'),
+        f.var ? [
+          h('p', null, 'Elazığ\'daki kafe, restoran, fırın, tatlıcı, bar ve kahvaltı yerlerini getirir: adres, telefon, web, e-posta ve kayıtlıysa Instagram/Facebook/X.'),
+          h('div', { class: 'uyari' },
+            `En fazla ${f.istekTahmini} istek (çalıştırma başına ${f.istekSiniri}). Bu ay ${f.buAy} istek yapıldı; aylık sınıra (${f.aylikSinir}) ${f.kalan} istek kaldı. `,
+            f.premium ? 'Premium alanlar (puan, saatler) AÇIK: Premium\'un ücretsiz kotası yok, her istek ücretlidir. ' : 'Yalnızca ücretsiz Pro alanlar istenir. ',
+            'Güncel kotayı ve fiyatı Foursquare\'in fiyat sayfasında kontrol edin.'),
+          h('div', { class: 'satir', style: 'margin-top:10px' }, kapsamSec.cloneNode(true), h('label', { class: 'onay' }, fsqOnay, 'Okudum, çalıştır')),
+          h('div', { class: 'dugmeler', style: 'margin-top:10px' }, h('button', { type: 'button', class: 'dugme dugme-ana', disabled: f.kalan <= 0, onclick: (e) => {
+            if (!fsqOnay.checked) { bildir('Önce "Okudum, çalıştır" kutusunu işaretleyin.', true); return; }
+            basla('/api/topla/foursquare', { onay: true, kapsam: e.target.closest('section').querySelector('select').value });
+          } }, f.kalan > 0 ? 'Foursquare\'den getir' : 'Bu ayın sınırı doldu'))]
+          : [h('p', null, 'Kapalı: Foursquare anahtarı yok.'),
+            h('p', { class: 'soluk kucuk-yazi' }, 'Açmak için foursquare.com/developers adresinde bir proje açıp Service API Key alın ve pazarlama/ayarlar.json dosyasına "foursquare": { "anahtar": "…" } olarak yazın (BENIOKU.md\'de adım adım).'),
+            h('p', { class: 'soluk kucuk-yazi' }, `Bu ay sayılan istek: ${f.buAy} / ${f.aylikSinir}.`),
+            h('button', { type: 'button', class: 'dugme', disabled: true }, 'Foursquare\'den getir (anahtar gerekir)')]),
+      h('section', { class: 'kart' },
         h('h2', null, 'Web sitelerinden bul'),
         h('p', null, 'Kendi web sitesi olan işletmelerin yalnızca ana sayfasına (gerekirse İletişim sayfasına) bakar; e-posta ve Instagram/Facebook/TikTok/WhatsApp bağlantılarını alır.'),
         h('p', { class: 'soluk kucuk-yazi' }, `Saniyede en fazla 1 istek, robots.txt'e uyulur. Henüz bakılmamış ${b.taranacakSite} site var.`),
@@ -439,7 +460,7 @@ function isCiz(is) {
   const kutu = document.getElementById('is-kutusu');
   if (!kutu) return;
   kutu.hidden = false;
-  const ad = { osm: 'OpenStreetMap', google: 'Google', web: 'Web siteleri' }[is.tur] || is.tur;
+  const ad = { osm: 'OpenStreetMap', google: 'Google', foursquare: 'Foursquare', web: 'Web siteleri' }[is.tur] || is.tur;
   const o = is.ozet;
   kutu.replaceChildren(...[
     h('h3', { class: 'grup-baslik' }, `${ad}:${is.bitti ? (is.hata ? 'olmadı' : 'bitti') : 'sürüyor…'}`),

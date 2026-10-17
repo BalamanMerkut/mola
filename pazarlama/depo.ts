@@ -18,7 +18,7 @@ export const AYAR_DOSYASI = join(KLASOR, 'ayarlar.json');
 
 export function yeniId(): string { return randomBytes(6).toString('hex'); }
 
-function guvenliYaz(dosya: string, icerik: string) {
+export function guvenliYaz(dosya: string, icerik: string) {
   mkdirSync(dirname(dosya), { recursive: true });
   const gecici = `${dosya}.${process.pid}.tmp`;
   writeFileSync(gecici, icerik, 'utf8');

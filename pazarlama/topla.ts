@@ -5,9 +5,10 @@ import type { Ayarlar, Isletme } from './tipler.js';
 import { birlestir, sosyalBul, zincirMi } from './yardimci.js';
 import { osmGetir } from './kaynaklar/osm.js';
 import { googleGetir } from './kaynaklar/google.js';
+import { AylikSayac, foursquareGetir, istekTahmini as fsqTahmin } from './kaynaklar/foursquare.js';
 import { siteTara } from './kaynaklar/web.js';
 
-/* Üç toplama işi: arayüzdeki düğmeler ve komut satırı (npx tsx pazarlama/topla.ts osm|web|ozet) aynı işleri çağırır. */
+/* Toplama işleri: arayüzdeki düğmeler ve komut satırı (npx tsx pazarlama/topla.ts osm|google|foursquare|web|ozet) aynı işleri çağırır. */
 
 export type Haber = (s: string, ilerleme?: number) => void;
 export type Ozet = { yeni: number; guncellenen: number; ayni: number; not?: string };
@@ -26,6 +27,14 @@ export async function googleTopla(depo: Depo, ayarlar: Ayarlar, kapsam: 'merkez'
   const ozet = birlestir(depo.isletmeler, s.adaylar, yeniId);
   depo.kaydet();
   return { ...ozet, not: `${s.istek} Google isteği yapıldı.` };
+}
+
+export async function foursquareTopla(depo: Depo, ayarlar: Ayarlar, kapsam: 'merkez' | 'il', haber: Haber, sayac = new AylikSayac()): Promise<Ozet> {
+  const s = await foursquareGetir(ayarlar.foursquare, kapsam, (m) => haber(m), { sayac });
+  haber(`${s.adaylar.length} işletme geldi. Listeyle birleştiriliyor…`, 0.9);
+  const ozet = birlestir(depo.isletmeler, s.adaylar, yeniId);
+  depo.kaydet();
+  return { ...ozet, not: `${s.istek} Foursquare isteği yapıldı. Bu ay kalan: ${s.kalan} / ${ayarlar.foursquare.aylikSinir}.` };
 }
 
 export function taranacakSiteler(depo: Depo): Isletme[] {
@@ -78,6 +87,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     if (is === 'osm') console.log(await osmTopla(depo, kapsam, arg.includes('--yenile'), haber));
     else if (is === 'web') console.log(await webTopla(depo, Number(sinirArg ?? 20), haber));
     else if (is === 'google') console.log(await googleTopla(depo, ayarlar, kapsam, haber));
+    else if (is === 'foursquare') {
+      const f = ayarlar.foursquare;
+      console.log(`  Foursquare: en fazla ${fsqTahmin(f)} istek (bu ay kalan ${new AylikSayac().kalan(f.aylikSinir)} / ${f.aylikSinir}).`);
+      if (f.premiumAlanlar && !arg.includes('--onay')) throw new Error('Premium alanlar açık: her istek ücretlidir. Okuduysanız komutu --onay ile yeniden çalıştırın.');
+      console.log(await foursquareTopla(depo, ayarlar, kapsam, haber));
+    }
     console.log(sayilar(depo, ayarlar));
   } catch (e) { console.error(e instanceof Error ? e.message : e); process.exitCode = 1; }
 }

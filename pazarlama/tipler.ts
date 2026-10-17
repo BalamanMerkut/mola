@@ -10,7 +10,7 @@ export const DURUM_ADI: Record<Durum, string> = {
   pilot: 'Pilot', musteri: 'Müşteri', ilgilenmiyor: 'İlgilenmiyor',
 };
 
-export type Kaynak = 'osm' | 'google' | 'web' | 'elle';
+export type Kaynak = 'osm' | 'google' | 'foursquare' | 'web' | 'elle';
 export type SonGonderi = '' | 'hafta' | 'ay' | 'eski' | 'hic';
 export type Menu = '' | 'yok' | 'kagit' | 'qr';
 
@@ -39,12 +39,16 @@ export interface Isletme {
   googleMaps: string;
   googlePuan: number | null;
   googleYorum: number | null;
+  /** Foursquare puanı, 0–10 ölçeğinde (yalnızca Premium alan açıksa gelir). Öncelikte Google puanı yoksa /2 ile kullanılır. */
+  fsqPuan: number | null;
   /** Açılış saatleri biliniyor mu (OSM opening_hours veya Google). */
   saatler: boolean;
   /** 0–1: OSM kaydında telefon, web, adres, saat, mutfak bilgisinden kaçı var. */
   osmTamlik: number | null;
   osmId: string;
   googleId: string;
+  /** Foursquare fsq_place_id. */
+  fsqId: string;
   /** OSM'de brand etiketi var (zincir işareti). */
   marka: string;
   /** null: otomatik (zincir listesinden), true/false: elle seçildi. */
@@ -87,9 +91,21 @@ export interface Oncelik {
   ziyaretEsigi: number;
 }
 
+export interface FoursquareAyari {
+  /** Foursquare Service API Key (Authorization: Bearer). Boşsa kaynak kapalı. */
+  anahtar: string;
+  /** Bir çalıştırmada en fazla istek (varsayılan 30). */
+  istekSiniri: number;
+  /** Bu bilgisayarda sayılan aylık istek sınırı (varsayılan 450; ücretsiz Pro kotasının altında kalmak için). */
+  aylikSinir: number;
+  /** true: puan ve açılış saatleri (Premium alanlar) da istenir. Premium'un ücretsiz kotası yoktur: her istek ücretlidir. */
+  premiumAlanlar: boolean;
+}
+
 export interface Ayarlar {
   googleApiAnahtari: string;
   googleAramalari: string[];
+  foursquare: FoursquareAyari;
   zincirler: string[];
   oncelik: Oncelik;
   kapsam: 'merkez' | 'il';

@@ -1,4 +1,4 @@
-import type { Aday, Ayarlar, Isletme, Oncelik } from './tipler.js';
+import type { Aday, Ayarlar, FoursquareAyari, Isletme, Oncelik } from './tipler.js';
 
 /* Saf yardımcılar (ağ ve dosya yok): testler bunları doğrudan dener. */
 
@@ -62,6 +62,7 @@ export const ORTAK_BILGI_METRE = 300;
 export function ayniIsletme(a: Partial<Isletme> & { ad: string }, b: Partial<Isletme> & { ad: string }): boolean {
   if (a.osmId && b.osmId && a.osmId === b.osmId) return true;
   if (a.googleId && b.googleId && a.googleId === b.googleId) return true;
+  if (a.fsqId && b.fsqId && a.fsqId === b.fsqId) return true;
   const m = mesafe({ lat: a.lat ?? null, lon: a.lon ?? null }, { lat: b.lat ?? null, lon: b.lon ?? null });
   const ka = adAnahtari(a.ad), kb = adAnahtari(b.ad);
   if (m < ESLESME_METRE && ka && kb) {
@@ -287,6 +288,20 @@ export function turBul(ad: string, etiket: { amenity?: string; shop?: string; cu
   return 'Diğer';
 }
 
+/** Foursquare kategori adlarından (İngilizce, ör. "Coffee Shop", "Turkish Restaurant > Doner Restaurant") tür. */
+export function foursquareTur(ad: string, kategoriler: string[] = []): string {
+  const k = kategoriler.join(' | ').toLowerCase();
+  if (/hookah/.test(k) && !/ pastane| tatli/.test(` ${sadeYazi(ad)} `)) return 'Nargile kafe';
+  const etiket = /ice cream|gelato|frozen yogurt/.test(k) ? { amenity: 'ice_cream' }
+    : /pastry|dessert|cupcake|waffle|pie shop|donut|chocolate/.test(k) ? { shop: 'pastry' }
+      : /bakery|bagel|borek/.test(k) ? { shop: 'bakery' }
+        : /cafe|café|coffee|tea room|tea house|bubble tea/.test(k) ? { amenity: 'cafe' }
+          : /fast food|burger|pizzeria|fried chicken|hot dog|doner|kebab|kumpir|tantuni|kumru|cigkofte|sandwich|food truck|food stand|snack/.test(k) ? { amenity: 'fast_food' }
+            : /\bbar\b|pub|lounge|brewery|beer|wine bar|speakeasy|meyhane/.test(k) ? { amenity: 'bar' }
+              : /restaurant|steakhouse|diner|bistro|breakfast|buffet|joint|place|spot|cafeteria/.test(k) ? { amenity: 'restaurant' } : {};
+  return turBul(ad, etiket);
+}
+
 /** Google "types" listesinden tür. */
 export function googleTur(ad: string, types: string[] = []): string {
   const t = new Set(types);
@@ -338,7 +353,10 @@ export function oncelikDokumu(i: Isletme, o: Oncelik, zincir: boolean, bugun = n
     { ad: 'Son gönderi', puan: kova ? o.sonGonderi[kova] ?? 0 : 0 },
     { ad: 'Kampanya/duyuru', puan: i.kampanya ? o.kampanya : 0 },
     { ad: 'Menü durumu', puan: i.menu ? o.menu[i.menu] ?? 0 : 0 },
-    { ad: 'Google puanı', puan: basamak(i.googlePuan, o.googlePuan) },
+    i.googlePuan == null && i.fsqPuan != null
+      // Foursquare 0–10 ölçeğindedir: Google basamaklarıyla karşılaştırmak için 2'ye bölünür (8,6/10 → 4,3/5).
+      ? { ad: 'Foursquare puanı (/10 → /5)', puan: basamak(i.fsqPuan / 2, o.googlePuan) }
+      : { ad: 'Google puanı', puan: basamak(i.googlePuan, o.googlePuan) },
     { ad: 'Google yorum sayısı', puan: basamak(i.googleYorum, o.googleYorum) },
     { ad: 'Web sitesi', puan: i.web && !sosyalBul(i.web) ? o.web : 0 },
     { ad: 'Instagram hesabı', puan: i.instagram ? o.instagram : 0 },
@@ -392,7 +410,7 @@ export function csvYap(basliklar: string[], satirlar: unknown[][]): string {
 /** Kaynaktan gelen adayı var olan kayda işler: elle değişen alanlara dokunmaz; boş alanları doldurur; Google puanı tazelenir. */
 export function adayIsle(k: Isletme, a: Aday): string[] {
   const degisen: string[] = [];
-  const tazelenen = new Set(['googlePuan', 'googleYorum', 'googleMaps', 'osmTamlik']);
+  const tazelenen = new Set(['googlePuan', 'googleYorum', 'googleMaps', 'osmTamlik', 'fsqPuan']);
   for (const [alan, deger] of Object.entries(a)) {
     if (alan === 'kaynak' || alan === 'mahalleYaklasik' || deger == null || deger === '' || (Array.isArray(deger) && !deger.length)) continue;
     if (alan === 'ad' && k.ad) continue;
@@ -413,8 +431,8 @@ export function adayIsle(k: Isletme, a: Aday): string[] {
 export function bosIsletme(id: string, ad: string, simdi = new Date().toISOString()): Isletme {
   return {
     id, ad, tur: '', ilce: '', mahalle: '', mahalleYaklasik: false, adres: '', lat: null, lon: null, telefon: '', web: '', eposta: '',
-    instagram: '', facebook: '', tiktok: '', x: '', whatsapp: '', googleMaps: '', googlePuan: null, googleYorum: null, saatler: false,
-    osmTamlik: null, osmId: '', googleId: '', marka: '', zincirElle: null, kaynaklar: [], durum: 'bulundu', notlar: [], sonrakiTakip: '',
+    instagram: '', facebook: '', tiktok: '', x: '', whatsapp: '', googleMaps: '', googlePuan: null, googleYorum: null, fsqPuan: null, saatler: false,
+    osmTamlik: null, osmId: '', googleId: '', fsqId: '', marka: '', zincirElle: null, kaynaklar: [], durum: 'bulundu', notlar: [], sonrakiTakip: '',
     takipci: null, sonGonderi: '', sonGonderiTarihi: '', kampanya: false, menu: '', webTarandi: '', webSonuc: '', elleDegisen: [],
     olusturma: simdi, guncelleme: simdi,
   };
@@ -461,7 +479,23 @@ export function ayarlarBirlestir(ham: Partial<Ayarlar> | null | undefined): Ayar
     googleAramalari: Array.isArray(h.googleAramalari) && h.googleAramalari.length ? h.googleAramalari.map(String) : VARSAYILAN_ARAMALAR,
     zincirler: Array.isArray(h.zincirler) ? h.zincirler.map(String) : VARSAYILAN_ZINCIRLER,
     oncelik: { ...VARSAYILAN_ONCELIK, ...(h.oncelik ?? {}) },
+    foursquare: foursquareAyari(h.foursquare),
     kapsam: h.kapsam === 'il' ? 'il' : 'merkez',
+  };
+}
+
+function tamSayi(v: unknown, varsayilan: number, enAz: number, enCok: number): number {
+  const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() ? Number(v) : NaN;
+  return Number.isFinite(n) ? Math.min(enCok, Math.max(enAz, Math.round(n))) : varsayilan;
+}
+
+export function foursquareAyari(ham: Partial<FoursquareAyari> | null | undefined): FoursquareAyari {
+  const h = ham && typeof ham === 'object' ? ham : {};
+  return {
+    anahtar: typeof h.anahtar === 'string' ? h.anahtar.trim() : '',
+    istekSiniri: tamSayi(h.istekSiniri, 30, 1, 500),
+    aylikSinir: tamSayi(h.aylikSinir, 450, 0, 100_000),
+    premiumAlanlar: h.premiumAlanlar === true,
   };
 }
 

@@ -5,8 +5,9 @@ import { spawn } from 'node:child_process';
 import { Depo, KLASOR, VERI_DOSYASI, ayarlariOku, yeniId } from './depo.js';
 import { DURUMLAR, DURUM_ADI, type Isletme } from './tipler.js';
 import { TAKIPCI_ARALIKLARI, aramaBaglantilari, bosIsletme, csvYap, instagramAdi, oncelikDokumu, sosyalBul, sosyalEtiket, telefonYerel, zincirMi } from './yardimci.js';
-import { googleTopla, osmTopla, sayilar, taranacakSiteler, webTopla, type Ozet } from './topla.js';
+import { foursquareTopla, googleTopla, osmTopla, sayilar, taranacakSiteler, webTopla, type Ozet } from './topla.js';
 import { istekTahmini } from './kaynaklar/google.js';
+import { AylikSayac, istekTahmini as fsqTahmin } from './kaynaklar/foursquare.js';
 
 /*
  * Mola Pazarlama yerel sunucusu: yalnızca 127.0.0.1'de dinler, başka Host başlığıyla gelen isteği reddeder (DNS
@@ -118,21 +119,28 @@ function isBaslat(tur: string, calis: (haber: (m: string, ilerleme?: number) => 
   return yeni;
 }
 
+/** Anahtarın kendisi asla gönderilmez; yalnızca var/yok ve sayaç. */
+function foursquareBilgisi(ayarlar = ayarlariOku()) {
+  const f = ayarlar.foursquare, sayac = new AylikSayac(), s = sayac.oku();
+  return { var: !!f.anahtar, istekTahmini: fsqTahmin(f, sayac), istekSiniri: f.istekSiniri, aylikSinir: f.aylikSinir, buAy: s.istek, ay: s.ay, kalan: sayac.kalan(f.aylikSinir), premium: f.premiumAlanlar };
+}
+
 function durumBilgisi() {
   const ayarlar = ayarlariOku();
   return {
     bugun: bugun(), veriDosyasi: VERI_DOSYASI, durumlar: DURUMLAR.map((d) => ({ kod: d, ad: DURUM_ADI[d] })), takipciAraliklari: TAKIPCI_ARALIKLARI,
     google: { var: !!ayarlar.googleApiAnahtari, aramalar: ayarlar.googleAramalari, istekTahmini: istekTahmini(ayarlar.googleAramalari) },
+    foursquare: foursquareBilgisi(ayarlar),
     kapsam: ayarlar.kapsam, ziyaretEsigi: ayarlar.oncelik.ziyaretEsigi, sayilar: sayilar(depo, ayarlar), taranacakSite: taranacakSiteler(depo).length, is,
   };
 }
 
 const CSV_BASLIK = ['Ad', 'Tür', 'İlçe', 'Mahalle', 'Adres', 'Telefon', 'E-posta', 'Instagram', 'Facebook', 'TikTok', 'Web', 'Google puanı', 'Google yorum',
-  'Takipçi', 'Öncelik', 'Zincir', 'Durum', 'Sonraki takip', 'Son not', 'Kaynaklar', 'Enlem', 'Boylam'];
+  'Foursquare puanı (/10)', 'Takipçi', 'Öncelik', 'Zincir', 'Durum', 'Sonraki takip', 'Son not', 'Kaynaklar', 'Enlem', 'Boylam'];
 function csvSatiri(k: ReturnType<typeof gorunum>) {
   const son = k.notlar[k.notlar.length - 1];
   return [k.ad, k.tur, k.ilce, k.mahalle, k.adres, telefonYerel(k.telefon), k.eposta, k.instagram ? `https://www.instagram.com/${k.instagram}/` : '',
-    k.facebook, k.tiktok, k.web, k.googlePuan ?? '', k.googleYorum ?? '', k.takipci ?? '', k.oncelik, k.zincir ? 'evet' : '', DURUM_ADI[k.durum],
+    k.facebook, k.tiktok, k.web, k.googlePuan ?? '', k.googleYorum ?? '', k.fsqPuan ?? '', k.takipci ?? '', k.oncelik, k.zincir ? 'evet' : '', DURUM_ADI[k.durum],
     k.sonrakiTakip, son ? `${son.tarih.slice(0, 10)} ${son.metin}` : '', k.kaynaklar.join(' '), k.lat ?? '', k.lon ?? ''];
 }
 
@@ -193,6 +201,14 @@ async function yonlendir(req: IncomingMessage, res: ServerResponse) {
     if (!ayarlar.googleApiAnahtari) throw new HataKodu(400, 'Google anahtarı yok.');
     if (v.onay !== true) throw new HataKodu(400, 'Önce ücret notunu onaylayın.');
     return gonder(res, 202, isBaslat('google', (h) => googleTopla(depo, ayarlar, v.kapsam === 'il' ? 'il' : 'merkez', h)));
+  }
+  if (yol === '/api/topla/foursquare' && yontem === 'POST') {
+    const v = await govdeOku(req);
+    const ayarlar = ayarlariOku();
+    if (!ayarlar.foursquare.anahtar) throw new HataKodu(400, 'Foursquare anahtarı yok.');
+    if (v.onay !== true) throw new HataKodu(400, 'Önce istek sınırı notunu onaylayın.');
+    if (foursquareBilgisi(ayarlar).kalan <= 0) throw new HataKodu(400, `Bu ayın Foursquare istek sınırı doldu (${ayarlar.foursquare.aylikSinir}).`);
+    return gonder(res, 202, isBaslat('foursquare', (h) => foursquareTopla(depo, ayarlar, v.kapsam === 'il' ? 'il' : 'merkez', h)));
   }
   if (yol === '/api/topla/web' && yontem === 'POST') {
     const v = await govdeOku(req);

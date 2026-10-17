@@ -42,7 +42,7 @@ Tarayıcıda `http://localhost:3700` açılır. Kapatmak için komut penceresind
 - **Ziyaret listesi**: Öncelik puanı eşiğin üstünde olan, henüz yazılmamış (Bulundu / Takip edildi) ve zincir olmayan
   işletmeler, **mahalleye göre gruplu** (yürüyerek gezmek için). Eşiği sayfada değiştirebilir, listeyi yazdırabilirsiniz.
   "Gittim" düğmesi durumu Ziyaret/görüşme yapar.
-- **Topla**: Üç kaynak (aşağıda). İlerleme ve "yeni / güncellenen / değişmeyen" özeti görünür.
+- **Topla**: Dört kaynak (aşağıda). İlerleme ve "yeni / güncellenen / değişmeyen" özeti görünür.
 
 ## Kaynaklar
 
@@ -58,7 +58,7 @@ kayıtlıysa Instagram/Facebook/TikTok gelir.
   Tazelemek için "Yeniden sor" kutusunu işaretleyin.
 - Overpass ücretsiz ve herkesin ortak sunucusudur. Bazen "meşgul" der. Birkaç dakika sonra tekrar deneyin.
 - **Önemli:** Elazığ'da OSM'ye girilmiş işletme sayısı azdır (Ekim 2026'da tüm ilde adı olan yaklaşık 30 kayıt).
-  Listeyi asıl dolduracak kaynak Google'dır.
+  Listeyi asıl dolduracak kaynak Google ya da Foursquare'dir.
 
 ### 2. Google Haritalar (isteğe bağlı, anahtar gerekir)
 
@@ -87,7 +87,58 @@ Birçok esnaf Instagram'ını "web sitesi" diye yazar. Böyle bir adres Instagra
 
 Aramaları `ayarlar.json` içindeki `"googleAramalari"` listesinden değiştirebilirsiniz.
 
-### 3. Web sitelerinden e-posta / Instagram
+### 3. Foursquare (isteğe bağlı, anahtar gerekir)
+
+Foursquare'in yeni **Places API**'si (`places-api.foursquare.com`) ile "Place Search" yapılır. Elazığ Merkez
+(şehir merkezinin 12 km çevresi) ya da "Tüm Elazığ ili" seçilirse 10 ilçe merkezi de (6–8 km çevre) taranır.
+Kategoriler: kafe/kahve/çay evi, restoran (hızlı yemek, döner, kebap dahil), fırın, tatlıcı (pastane, dondurma dahil),
+bar (nargile dahil), kahvaltı yeri. Her istek 50 sonuç getirir, sonraki sayfaya Foursquare'in verdiği `link` ile geçilir.
+
+Gelen bilgiler (**Pro** alanlar, ücretsiz kotaya girer): ad, adres, mahalle (adreste yazıyorsa), konum, kategori → tür,
+zincir adı, telefon, web sitesi, e-posta, **Instagram**, Facebook, X. Instagram'ın `@ad`, `ad` ya da tam adres
+biçimlerinin hepsi tanınır. Web sitesi yerine Instagram/Facebook adresi yazılmışsa ilgili alana taşınır. Kapanmış
+(`date_closed`) ve başka ildeki yerler alınmaz.
+
+- **Puan Premium alandır**, varsayılan olarak **istenmez**. `ayarlar.json` → `"foursquare": { "premiumAlanlar": true }`
+  yapılırsa Foursquare puanı ve açılış saatleri de gelir, **ama o zaman her arama Premium sayılır ve Premium'un ücretsiz
+  kotası yoktur, her istek ücretlidir.** Ekranda bu durumda ayrıca uyarı çıkar, komut satırında `--onay` istenir.
+- Foursquare puanı **10 üzerindendir**. Kendi alanında (`Foursquare puanı (/10)`) olduğu gibi saklanır, Google puanının
+  üstüne yazılmaz. Öncelik puanında Google puanı **yoksa** Foursquare puanı 2'ye bölünüp Google basamaklarıyla
+  değerlendirilir (8,6/10 → 4,3/5 → 6 puan). Google puanı varsa yalnızca o sayılır.
+- **İstek sınırı:** Düğmenin üstünde "En fazla N istek" yazar (çalıştırma başına varsayılan 30). Her istek bu
+  bilgisayarda sayılır (`.local/pazarlama/foursquare-sayac.json`, UTC takvim ayı). Aylık sınır varsayılan **450**'dir.
+  Sınıra gelinince araç istek atmayı reddeder, ay başında sayaç sıfırlanır. Ekranda bu ay kaç istek yapıldığı ve kaç
+  kaldığı görünür. Not: sayaç yalnızca bu araçtan yapılan istekleri bilir. Aynı anahtarı başka yerde kullanıyorsanız
+  sınırı düşürün.
+- **Ücret:** Foursquare'in fiyat sayfası (https://foursquare.com/pricing/) Ekim 2026'da Pro çağrılar için aylık ilk
+  **500 çağrıyı ücretsiz** gösteriyordu. Premium için ücretsiz basamak yoktu. **Güncel kotayı ve fiyatı bu sayfada kontrol
+  edin.** Ücretsiz kota değişirse `"aylikSinir"` değerini ona göre ayarlayın.
+- Anahtar yoksa bu kaynak kapalıdır. Anahtar hiçbir ekrana, mesaja ya da hata metnine yazılmaz ve yalnızca
+  `places-api.foursquare.com` adresine gönderilir.
+
+**Anahtar almak:**
+
+1. https://foursquare.com/developers adresine girin, hesap açın ya da giriş yapın.
+2. Developer Console'da **yeni bir proje** açın (ör. "Mola Pazarlama").
+3. Projenin ayarlarında **Service API Key** oluşturun (eski "API Key" değil). Anahtar yalnızca bir kez gösterilir,
+   hemen kopyalayın.
+4. `pazarlama/ayarlar.json` dosyasına ekleyin (yoksa `ayarlar.ornek.json`'dan kopyalayın):
+   ```json
+   "foursquare": { "anahtar": "BURAYA", "istekSiniri": 30, "aylikSinir": 450, "premiumAlanlar": false }
+   ```
+5. Topla sayfasını yenileyin. "Okudum, çalıştır" kutusunu işaretleyip **Foursquare'den getir**'e basın.
+   Komut satırından: `npx tsx pazarlama/topla.ts foursquare [--il]`.
+
+**Teknik not (Ekim 2026'da resmî belgelerden doğrulandı):** İstek `GET https://places-api.foursquare.com/places/search`,
+başlıklar `Authorization: Bearer <Service API Key>` ve `X-Places-Api-Version: 2025-06-17`. Eski `api.foursquare.com/v3`
+adresi anahtarı `Bearer` olmadan gönderiyordu. Bu araç yalnızca yenisini kullanır.
+Belgeler: https://docs.foursquare.com/fsq-developers-places/reference/authentication,
+https://docs.foursquare.com/fsq-developers-places/reference/place-search,
+https://docs.foursquare.com/fsq-developers-places/reference/pagination,
+https://docs.foursquare.com/fsq-developers-places/reference/response-fields (Pro / Premium alanlar).
+Foursquare sürüm başlığını değiştirirse `kaynaklar/foursquare.ts` → `API_SURUMU`.
+
+### 4. Web sitelerinden e-posta / Instagram
 
 Kendi web sitesi olan işletmelerin (Instagram/Facebook adresi değil) **yalnızca ana sayfasına**, orada e-posta ya da
 Instagram yoksa en fazla bir **İletişim** sayfasına bakılır. `mailto:` bağlantıları, sayfada görünen e-postalar ve
@@ -96,7 +147,7 @@ Instagram/Facebook/TikTok/X/WhatsApp bağlantıları alınır.
 - Kibar çalışır: robots.txt'e uyulur, saniyede en fazla 1 istek, 10 saniye zaman aşımı, sayfa başına en fazla 600 KB.
 - Her site bir kez taranır. Kartta web adresini değiştirirseniz site yeniden taranır.
 
-### 4. Elle
+### 5. Elle
 
 "+ İşletme ekle" ile listede olmayan bir yeri eklersiniz. Kartta elle değiştirdiğiniz bir alanın **üstüne kaynaklar bir
 daha yazmaz** (ör. düzelttiğiniz bir telefonu Google geri bozmaz).
@@ -107,6 +158,7 @@ Kaynaklar birleştirilir. Aynı işletme sayılma şartları:
 
 - Adın ayırt edici kısmı aynıysa (ya da biri ötekini içeriyorsa) ve aralarında 80 metreden az mesafe varsa. "Cafe",
   "restoran", "pastanesi" gibi genel sözcükler karşılaştırmaya girmez.
+- Aynı Google ya da Foursquare kimliği gelirse (konum değişmiş olsa da).
 - Ya da telefon, web sitesi veya Instagram aynıysa ve aralarında 300 metreden az mesafe varsa. Zincirin başka
   şubeleri aynı telefonu kullanabilir, bu yüzden mesafeye de bakılır.
 
@@ -130,7 +182,7 @@ Puan iki bölümün toplamıdır, 100'de kesilir:
 | Kampanya/duyuru yapıyor | 10 |
 | Menü | kâğıt menü → 10 · menü yok → 6 · QR menü var → 3 |
 | **Otomatik** | |
-| Google puanı | 4,3+ → 6 · 4,0+ → 4 · daha düşük → 1 |
+| Google puanı (yoksa Foursquare puanı ÷ 2) | 4,3+ → 6 · 4,0+ → 4 · daha düşük → 1 |
 | Google yorum sayısı | 500+ → 10 · 100+ → 7 · 30+ → 4 · 1+ → 1 |
 | Kendi web sitesi var | 6 |
 | Instagram hesabı biliniyor | 8 |
@@ -145,7 +197,7 @@ Puan iki bölümün toplamıdır, 100'de kesilir:
 - Bütün sayılar `ayarlar.json` → `"oncelik"` bölümünden değiştirilebilir. Basamaklı olanlar `[eşik, puan]`
   çiftleridir. Örneğin QR menüsü olanı daha çok istiyorsanız `"menu": { "qr": 10 }`.
 
-Yalnızca otomatik işaretlerle en fazla 40 puan alınabilir. Eşiği geçmek için genellikle ya Google verisi ya da elle
+Yalnızca otomatik işaretlerle en fazla 40 puan alınabilir. Eşiği geçmek için genellikle ya Google (ya da Premium Foursquare) verisi ya da elle
 işaretleme gerekir. Bu bilinçli: yürüyerek gideceğiniz yerleri profilini gördüğünüz işletmelerden seçmeniz için.
 
 ## KVKK ve İYS notu (hukuki danışmanlık değildir)
@@ -160,24 +212,26 @@ işaretleme gerekir. Bu bilinçli: yürüyerek gideceğiniz yerleri profilini g�
 - Gerekmeyen kayıtları zaman zaman temizleyin. Veri yalnızca bu bilgisayardadır, kimseyle paylaşılmaz.
 - Instagram, Facebook ve TikTok **taranmaz**. Bu platformların kuralları otomatik veri toplamayı yasaklar. Takipçi
   ve gönderi bilgisini profili kendiniz açıp işaretlersiniz.
-- Google verisini Google'ın kullanım koşullarına uygun kullanın. Listeyi başkasına satmayın ya da yayımlamayın.
+- Google ve Foursquare verisini kendi kullanım koşullarına uygun kullanın. Listeyi başkasına satmayın ya da yayımlamayın.
 
 ## Dosyalar
 
 | Dosya | Ne işe yarar |
 |---|---|
 | `sunucu.ts` | Yerel sunucu (127.0.0.1:3700) ve API |
-| `topla.ts` | Toplama işleri. Komut satırından: `npx tsx pazarlama/topla.ts osm [--il] [--yenile]`, `... web 20`, `... ozet` |
-| `kaynaklar/osm.ts`, `google.ts`, `web.ts` | Üç kaynak |
+| `topla.ts` | Toplama işleri. Komut satırından: `npx tsx pazarlama/topla.ts osm [--il] [--yenile]`, `... google`, `... foursquare [--il]`, `... web 20`, `... ozet` |
+| `kaynaklar/osm.ts`, `google.ts`, `foursquare.ts`, `web.ts` | Dört kaynak |
 | `yardimci.ts` | Eşleştirme, zincir, sosyal adres, e-posta bulma, CSV, öncelik puanı |
-| `depo.ts` | `.local/pazarlama/veri.json` okuma/yazma |
+| `depo.ts` | `.local/pazarlama/veri.json` okuma/yazma (Foursquare aylık sayacı: `foursquare-sayac.json`) |
 | `arayuz/` | Ekran (HTML, CSS, JS) |
 | `ayarlar.ornek.json` | Ayar örneği. `ayarlar.json` adıyla kopyalanır |
 | `test/` | Testler: `npm run test:pazarlama` |
 
 ## Bilinen sınırlar
 
-- OSM'de Elazığ verisi azdır. Google anahtarı olmadan liste kısa kalır.
+- OSM'de Elazığ verisi azdır. Google ya da Foursquare anahtarı olmadan liste kısa kalır.
+- Foursquare'de mahalle çoğu zaman yazmaz, yalnızca adreste "... Mah." geçiyorsa alınır. İlçe merkezlerinin koordinatları
+  yaklaşıktır.
 - Mahalle bazen yaklaşıktır ("~"). OSM'de mahalle sınırı olmayan yerlerde en yakın mahalle noktası kullanılır.
 - Web taraması yalnızca ana sayfaya ve bir iletişim sayfasına bakar. JavaScript ile sonradan yüklenen e-postaları
   göremez.

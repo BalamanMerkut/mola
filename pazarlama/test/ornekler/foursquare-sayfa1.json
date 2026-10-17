@@ -1,0 +1,48 @@
+{
+  "results": [
+    {
+      "fsq_place_id": "fsq-lale", "name": "Lale Kafe", "latitude": 38.67485, "longitude": 39.22255,
+      "categories": [{ "fsq_category_id": "4bf58dd8d48988d16d941735", "name": "Café" }],
+      "location": { "address": "Gazi Cd. Cumhuriyet Mah. No:5", "locality": "Elazığ", "region": "Elazığ", "postcode": "23100", "country": "TR", "formatted_address": "Gazi Cd. Cumhuriyet Mah. No:5, 23100 Elazığ" },
+      "tel": "0424 111 22 33", "website": "https://www.lalekafe.com.tr", "email": "Bilgi@LaleKafe.com.tr",
+      "social_media": { "instagram": "lalekafe23", "facebook_id": "100064", "twitter": "LaleKafe" }
+    },
+    {
+      "fsq_place_id": "fsq-mavi", "name": "Mavi Kahve Evi", "latitude": 38.6801, "longitude": 39.2102,
+      "categories": [{ "fsq_category_id": "4bf58dd8d48988d1e0931735", "name": "Coffee Shop" }],
+      "location": { "address": "Hürriyet Cd. İzzetpaşa Mah.", "locality": "Elazığ", "region": "Elazığ", "country": "TR" },
+      "social_media": { "instagram": "@Mavi.Kahve" }
+    },
+    {
+      "fsq_place_id": "fsq-harput", "name": "Harput Fırını", "latitude": 38.6720, "longitude": 39.2301,
+      "categories": [{ "fsq_category_id": "4bf58dd8d48988d16a941735", "name": "Bakery" }],
+      "location": { "formatted_address": "Sürsürü Mahallesi, Elazığ", "locality": "Elazığ", "region": "Elazig", "country": "TR" },
+      "social_media": { "instagram": "https://www.instagram.com/Harput_Firin/?igsh=MWx2" }
+    },
+    {
+      "fsq_place_id": "fsq-cinar", "name": "Çınar Çay Bahçesi", "latitude": 38.6690, "longitude": 39.2150,
+      "categories": [{ "fsq_category_id": "4bf58dd8d48988d1dc931735", "name": "Tea Room" }],
+      "location": { "locality": "Elazığ", "region": "Elazığ", "country": "TR" },
+      "website": "instagram.com/cinarbahce"
+    },
+    {
+      "fsq_place_id": "fsq-star", "name": "Starbucks", "latitude": 38.6760, "longitude": 39.2200,
+      "categories": [{ "fsq_category_id": "4bf58dd8d48988d1e0931735", "name": "Coffee Shop" }],
+      "chains": [{ "fsq_chain_id": "c1", "name": "Starbucks" }],
+      "location": { "locality": "Elazığ", "region": "Elazığ", "country": "TR" }
+    },
+    {
+      "fsq_place_id": "fsq-kapali", "name": "Eski Lokanta", "latitude": 38.6750, "longitude": 39.2230, "date_closed": "2024-03-01",
+      "categories": [{ "name": "Restaurant" }], "location": { "locality": "Elazığ", "region": "Elazığ", "country": "TR" }
+    },
+    {
+      "fsq_place_id": "fsq-malatya", "name": "Başka İl Kafe", "latitude": 38.35, "longitude": 38.31,
+      "categories": [{ "name": "Café" }], "location": { "locality": "Battalgazi", "region": "Malatya", "country": "TR" }
+    },
+    {
+      "fsq_place_id": "fsq-palu", "name": "Palu Döner", "latitude": 38.6908, "longitude": 39.9306,
+      "categories": [{ "name": "Doner Restaurant" }], "location": { "locality": "Palu", "region": "Elazığ", "country": "TR", "formatted_address": "Palu, Elazığ" }
+    },
+    { "fsq_place_id": "fsq-adsiz", "latitude": 38.67, "longitude": 39.22 }
+  ]
+}

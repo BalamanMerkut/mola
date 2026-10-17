@@ -1,0 +1,10 @@
+{
+  "results": [
+    {
+      "fsq_place_id": "fsq-saray", "name": "Saray Pastanesi", "latitude": 38.6770, "longitude": 39.2260, "rating": 8.6, "hours": { "display": "Pzt-Paz 08:00-23:00" },
+      "categories": [{ "fsq_category_id": "5744ccdfe4b0c0459246b4e2", "name": "Pastry Shop" }],
+      "location": { "address": "Bahçelievler Mah. 12. Sk.", "locality": "Elazığ", "region": "Elazığ", "country": "TR" },
+      "tel": "+90 424 222 33 44"
+    }
+  ]
+}

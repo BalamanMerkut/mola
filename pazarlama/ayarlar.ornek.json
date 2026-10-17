@@ -1,6 +1,13 @@
 {
   "_aciklama": "Bu dosyayı ayarlar.json adıyla kopyalayın. ayarlar.json git'e girmez. Boş bırakılan her şey varsayılanı kullanır.",
   "googleApiAnahtari": "",
+  "foursquare": {
+    "_aciklama": "anahtar: Foursquare Service API Key (BENIOKU.md). istekSiniri: bir çalıştırmada en fazla istek. aylikSinir: bu bilgisayarda sayılan aylık sınır (ücretsiz Pro kotasının altında kalın). premiumAlanlar: true yapılırsa puan ve saatler de gelir ama her istek ücretli olur.",
+    "anahtar": "",
+    "istekSiniri": 30,
+    "aylikSinir": 450,
+    "premiumAlanlar": false
+  },
   "kapsam": "merkez",
   "googleAramalari": [
     "kafe Elazığ", "kahve dükkanı Elazığ", "restoran Elazığ", "lokanta Elazığ", "pastane Elazığ",
