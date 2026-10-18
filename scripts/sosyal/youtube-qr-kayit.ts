@@ -1,35 +1,36 @@
 /*
- * YouTube pilot 1 "QR menü ve QR sipariş": recordings of the REAL app (shared parts: scripts/sosyal/kayit-ortak.ts).
- * A fresh Mola Merkez and demo café ("Mola Örnek Kafe") per run in .local/sosyal/youtube/run-<zaman>/; the demo's live floor is
- * calmed first (pending QR approvals, cancel requests and calls answered, open orders served, the cash day opened), so only
- * the clip's own orders and calls appear on the staff screens.
+ * YouTube pilot 1 "QR menü ve QR sipariş" (sürüm 2, 18 Ekim): recordings of the REAL app for one linear story
+ * (shared parts: scripts/sosyal/kayit-ortak.ts). A fresh Mola Merkez and demo café ("Mola Örnek Kafe") per run in
+ * .local/sosyal/youtube/run-<zaman>/; the demo's live floor is calmed first (pending QR approvals, cancel requests and calls
+ * answered, open orders served, the cash day opened), so only the clip's own orders and calls appear on the staff screens.
  *
- *   npx tsx scripts/sosyal/youtube-qr-kayit.ts                       all clips
- *   npx tsx scripts/sosyal/youtube-qr-kayit.ts ana onay              only these (ana, qr, onay, sure, yazdir)
+ *   npx tsx scripts/sosyal/youtube-qr-kayit.ts                       all clips, in story order
+ *   npx tsx scripts/sosyal/youtube-qr-kayit.ts b-degistir            only these
  *   npx tsx scripts/sosyal/youtube-qr-kayit.ts --sunucu              only start + prepare the servers and keep them open
  *   SOSYAL_BAGLAN=1 …                                                use servers already started by `--sunucu`
  *
+ * No pointer on any screen (owner, 18 Ekim): every tap goes through Recorder.tap, which saves the control's box and holds the
+ * screen still for a moment before the click; the edit zooms in there and draws a red highlight. Waiter = landscape tablet.
  * Ports: café 3721, Mola Merkez 3797. Needs `npm run build`. Output: .local/sosyal/youtube/kayit/<klip>/ (meta.json: frames,
- * marks, boxes) and kayit/baski/*.png (the printed QR sheets). scripts/sosyal/youtube-kurgu.ts makes the video.
+ * marks, boxes, taps) and kayit/baski/*.png (the printed QR sheets). scripts/sosyal/youtube-kurgu.ts makes the video.
  *
- * Clips
- *   ana            guest phone + waiter phone + kitchen screen + counter screen at once: scan, menu, EN/TR, Türk kahvesi
- *                  (şeker: Orta), send, Siparişlerim, change within the 30 s window, kitchen gets it after the window,
- *                  Garson çağır, Hesabı iste → Kart. Chapters 1 and 2 of the video are both cut from it.
- *   ayar-qr        owner: the sidebar card "QR siparişleri açık" → Durdur → confirm → closed → Siparişleri aç.
- *   qr-acik / qr-durdu          the same guest order with QR ordering open / stopped.
- *   ayar-onay      owner: Ayarlar → Sipariş ve mutfak → Sipariş ve onay → "QR siparişlerinde garson onayı" on.
- *   onay-kapali / onay-acik     guest + waiter phone, approval off / on (the waiter approves).
- *   ayar-sure      owner: same page → "Müşteri siparişini değiştirip iptal edebilsin" on (30 saniye).
- *   sure-kapali / sure-acik     guest + kitchen screen, change window off / 30 s.
- *   ayar-yazdir    owner: Ayarlar → Masalar ve QR → QR kodlarını yazdır → A6 masa standı; plus the printed sheets.
+ * Clips (story order; settings changed between them through the owner's API where the video does not show it)
+ *   a-siparis     default settings: QR on the table, menu, "+" Türk Kahvesi (Orta), cart, send, Siparişlerim; + a-mutfak.
+ *   a-ayar-sure   owner: Ayarlar → Sipariş ve mutfak → "Müşteri siparişini değiştirip iptal edebilsin" on (30 s).
+ *   b-degistir    guest with the 30 s window: send, "Siparişi değiştir · n sn", quantity 2, kaydet; + b-mutfak (after the window).
+ *   c-ayar-onay   owner: same page → "QR siparişlerinde garson onayı" on (the change window off again, off camera).
+ *   c-onay        guest sends, the waiter's tablet approves (c-garson), the guest sees "Onaylandı".
+ *   d-ayar-qr     owner: sidebar "QR siparişleri" → Durdur … (meanwhile d-durdu: the guest's cart) … Siparişleri aç.
+ *   e-cagri       guest: Garson çağır → waiter tablet (e-garson); Hesabı iste → Kart → counter screen (e-kasa).
+ *   f-yazdir      owner: Ayarlar → Masalar ve QR → QR kodlarını yazdır → A6 masa standı; plus the printed sheets.
+ *   g-rapor       owner: Satış ve Raporlar → 30 gün → Detaylı göster → Personel, "Müşterilerin kendi verdiği siparişler".
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { Browser, Page } from '@playwright/test';
 import QRCode from 'qrcode';
-import { DESKTOP, PHONE, ROOT, Recorder, imagesOnScreen, kit, pause, press, qrCameraHtml, smoothScroll, type Kit } from './kayit-ortak';
+import { DESKTOP, PHONE, ROOT, Recorder, TABLET, imagesOnScreen, kit, pause, qrCameraHtml, smoothScroll } from './kayit-ortak';
 
 const OUT = join(ROOT, '.local', 'sosyal', 'youtube', 'kayit');
 const args = process.argv.slice(2), serverOnly = args.includes('--sunucu'), only = args.filter(a => !a.startsWith('--'));
@@ -70,290 +71,277 @@ async function setPrefs(browser: Browser, patch: { waiterApproval?: boolean; cha
 }
 
 // ---------- Guest steps ----------
-/** Türk kahvesi, şeker Orta, into the cart, the cart opened (the guest's usual order in every clip). */
-async function orderCoffee(page: Page, rec: Recorder, o: { hold?: number } = {}) {
-  rec.mark('product');
-  await press(page, page.getByRole('button', { name: /Türk Kahvesi/ }).first(), { hold: o.hold ?? 1400 });
-  rec.mark('sugar');
-  await press(page, page.getByRole('dialog').getByText(/^Orta$/).first(), { hold: 900 });
-  rec.mark('add');
-  await press(page, page.getByRole('button', { name: /Sepete ekle/ }), { hold: 1100 });
-  rec.mark('cart');
-  await press(page, page.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }), { hold: 1800 });
+const NO_POINTER = 'window.__molaNoFinger = true';
+async function guestPhone() { const ctx = await k.phoneContext(); await ctx.addInitScript(NO_POINTER); return { ctx, page: await ctx.newPage() }; }
+const card = (page: Page, name: string) => page.locator('.product-card', { hasText: name }).first();
+/** "+" on Türk Kahvesi, (şeker Orta), Sepete ekle, the cart opened. */
+async function addCoffee(page: Page, rec: Recorder, sugar = false) {
+  await rec.tap(page, 'plus', card(page, 'Türk Kahvesi').locator('.add-circle'), { hold: 1300 });
+  if (sugar) await rec.tap(page, 'sugar', page.getByRole('dialog').getByText(/^Orta$/).first(), { hold: 700 });
+  await rec.tap(page, 'add', page.getByRole('button', { name: /Sepete ekle/ }), { hold: 1000 });
+  await rec.tap(page, 'cart', page.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }), { hold: 1500 });
 }
 async function send(page: Page, rec: Recorder) {
-  rec.mark('send');
-  await press(page, page.getByRole('button', { name: 'Siparişi gönder', exact: true }), { hold: 200 });
+  await rec.tap(page, 'send', page.getByRole('button', { name: 'Siparişi gönder', exact: true }), { hold: 100 });
   await page.getByText(/Siparişiniz alındı|Afiyet olsun|onayına gönderildi/).first().waitFor();
   rec.mark('sent');
+}
+/** The menu open on the products (for the clips that do not start at the QR stand). */
+async function menuAt(page: Page, token: string) {
+  await k.openMenu(page, token);
+  await smoothScroll(page, 330, 10); await pause(page, 600); await imagesOnScreen(page);
 }
 const camera = async (page: Page, token: string, tableName: string) => {
   const qr = await QRCode.toDataURL(k.guestUrl(token), { margin: 1, width: 360, color: { dark: '#163328', light: '#ffffff' } });
   await page.setContent(qrCameraHtml(qr, tableName));
   await pause(page, 300);
 };
+/** The owner's screen (1280×800), Masalar first, as after signing in. */
+const ownerScreen = () => k.staffScreen('isletme', 'desktop');
+async function goSettings(page: Page, rec: Recorder, topic: string, part?: string) {
+  await rec.tap(page, 'ayarlar', page.getByRole('button', { name: 'Ayarlar', exact: true }), { hold: 1100 });
+  await rec.tap(page, 'topic', page.getByRole('button', { name: topic, exact: true }).first(), { hold: 1100 });
+  if (part) await rec.tap(page, 'part', page.getByRole('button', { name: part, exact: true }).last(), { hold: 1100 });
+}
+const settingRow = (page: Page, label: string) => page.locator('.settings-row', { has: page.getByText(label, { exact: true }) }).first();
+/** Ayarlar → Sipariş ve mutfak → Sipariş ve onay, the switch of `label` turned on. */
+async function switchOn(page: Page, rec: Recorder, label: string) {
+  await goSettings(page, rec, 'Sipariş ve mutfak');
+  await page.getByText(label, { exact: true }).first().evaluate(e => e.scrollIntoView({ block: 'center' }));
+  await pause(page, 900);
+  await rec.look(page, 'row', settingRow(page, label), 2200);
+  await rec.tap(page, 'toggle', settingRow(page, label).locator('.settings-toggle'), { hold: 300 });
+  await page.waitForFunction(l => { const el = [...document.querySelectorAll('label')].find(x => x.textContent === l); const box = el && document.getElementById(el.htmlFor) as HTMLInputElement | null; return !!box?.checked; }, label);
+  rec.mark('on');
+  await pause(page, 1000);
+}
 
 // ---------- The clips ----------
-type Clip = { name: string; group: string; play: (browser: Browser) => Promise<void> };
+type Clip = { name: string; play: (browser: Browser) => Promise<void> };
 const clips: Clip[] = [];
-const clip = (name: string, group: string, play: Clip['play']) => clips.push({ name, group, play });
+const clip = (name: string, play: Clip['play']) => clips.push({ name, play });
+let changeTable = '';
 
-clip('ana', 'ana', async browser => {
-  await setPrefs(browser, { waiterApproval: false, changeSeconds: 30, qrOpen: true });
+clip('a-siparis', async browser => {
+  await setPrefs(browser, { waiterApproval: false, changeSeconds: 0, qrOpen: true });
+  await calm(browser, true);
   const table = await k.freeTable(browser, 'Masa 04');
-  const waiter = await k.staffScreen('garson', 'phone');
   const kitchen = await k.staffScreen('mutfak', 'desktop');
-  const kasa = await k.staffScreen('kasiyer', 'desktop');
-  const ctx = await k.phoneContext(), page = await ctx.newPage();
+  const { ctx, page } = await guestPhone();
   await camera(page, table.token, table.name);
-  const rec = new Recorder(page, join(OUT, 'ana'), PHONE);
-  const recW = new Recorder(waiter.page, join(OUT, 'ana-garson'), PHONE);
-  const recK = new Recorder(kitchen.page, join(OUT, 'ana-mutfak'), DESKTOP);
-  const recC = new Recorder(kasa.page, join(OUT, 'ana-kasa'), DESKTOP);
-  for (const r of [rec, recW, recK, recC]) await r.start();
+  const rec = new Recorder(page, join(OUT, 'a-siparis'), PHONE), recK = new Recorder(kitchen.page, join(OUT, 'a-mutfak'), DESKTOP);
+  await rec.start(); await recK.start();
   await pause(page, 3400);
-  // 1. The menu
   rec.mark('menu');
   await page.goto(k.guestUrl(table.token));
   await page.getByRole('button', { name: /Türk Kahvesi/ }).first().waitFor();
   await imagesOnScreen(page);
   rec.mark('menuReady');
-  await pause(page, 3000);
-  rec.mark('categories');
-  await press(page, page.getByRole('button', { name: 'Tatlılar', exact: true }), { hold: 600 });
-  await imagesOnScreen(page);
-  await pause(page, 1200);
-  await smoothScroll(page, 420, 1400); await pause(page, 1600);
-  await smoothScroll(page, -420, 1000); await pause(page, 400);
-  await press(page, page.getByRole('button', { name: 'Tümü', exact: true }), { hold: 1200 });
-  rec.mark('search');
-  const search = page.getByPlaceholder(/Ürün adı veya kodu/);
-  await press(page, search, { hold: 300 });
-  await search.pressSequentially('limon', { delay: 170 });
-  await pause(page, 600); await imagesOnScreen(page); await pause(page, 1800);
-  await search.fill(''); await pause(page, 300);
-  await page.mouse.click(5, 5); await pause(page, 900);
-  rec.mark('english');
-  await press(page, page.getByRole('button', { name: 'EN', exact: true }), { hold: 2600 });
-  rec.mark('turkish');
-  await press(page, page.getByRole('button', { name: 'TR', exact: true }), { hold: 1600 });
-  await smoothScroll(page, 330, 1100); await pause(page, 700);
-  // 2. The order
-  await orderCoffee(page, rec);
+  await pause(page, 2800);
+  await smoothScroll(page, 330, 1300); await pause(page, 1200);
+  rec.mark('products');
+  await addCoffee(page, rec, true);
+  rec.mark('cartOpen');
   await send(page, rec);
-  await waiter.page.getByRole('button', { name: new RegExp(`^${table.name} · .*Yeni sipariş`) }).first().waitFor({ timeout: 15000 }).catch(() => {});
-  rec.mark('waiterOrder');
-  await recW.box('tile', waiter.page.getByRole('button', { name: new RegExp(`^${table.name} · `) }).first());
-  await recC.box('tileOrder', kasa.page.locator('.table-card', { hasText: table.name }).first());
-  await pause(page, 2600);
-  rec.mark('track');
-  await press(page, page.getByRole('button', { name: 'Siparişimi takip et' }), { hold: 2000 });
-  await rec.box('change', page.getByRole('button', { name: /Siparişi değiştir/ }));
-  rec.mark('change');
-  await press(page, page.getByRole('button', { name: /Siparişi değiştir/ }), { hold: 1600 });
+  await kitchen.page.locator('.kitchen-card', { hasText: table.name }).first().waitFor({ timeout: 20000 });
+  rec.mark('kitchen');
+  await recK.box('ticket', kitchen.page.locator('.kitchen-card', { hasText: table.name }).first());
+  await pause(page, 3000);
+  await rec.tap(page, 'track', page.getByRole('button', { name: 'Siparişimi takip et' }), { hold: 1200 });
+  rec.mark('orders');
+  await rec.look(page, 'order', page.locator('article, section, div', { has: page.getByText(/^Sipariş #\d+$/) }).filter({ hasText: 'Türk Kahvesi' }).last(), 2600);
+  await pause(page, 800);
+  await recK.stop(); await rec.stop();
+  writeFileSync(join(OUT, 'a-siparis', 'masa.txt'), table.name);
+  await ctx.close(); await kitchen.ctx.close();
+});
+
+clip('a-ayar-sure', async browser => {
+  await setPrefs(browser, { waiterApproval: false, changeSeconds: 0 });
+  const owner = await ownerScreen(), page = owner.page;
+  const rec = new Recorder(page, join(OUT, 'a-ayar-sure'), DESKTOP);
+  await rec.start();
+  await pause(page, 1400);
+  await switchOn(page, rec, 'Müşteri siparişini değiştirip iptal edebilsin');
+  await rec.look(page, 'seconds', settingRow(page, 'Sipariş değişiklik süresi (saniye)'), 3000);
+  await pause(page, 600);
+  await rec.stop();
+  await owner.ctx.close();
+});
+
+clip('b-degistir', async browser => {
+  await setPrefs(browser, { waiterApproval: false, changeSeconds: 30 });
+  await calm(browser, true);
+  const table = await k.freeTable(browser); changeTable = table.token;
+  const kitchen = await k.staffScreen('mutfak', 'desktop');
+  const { ctx, page } = await guestPhone();
+  await menuAt(page, table.token);
+  const rec = new Recorder(page, join(OUT, 'b-degistir'), PHONE), recK = new Recorder(kitchen.page, join(OUT, 'b-mutfak'), DESKTOP);
+  await rec.start(); await recK.start();
+  await pause(page, 1200);
+  await addCoffee(page, rec);
+  await send(page, rec);
+  await pause(page, 500);
+  await rec.look(page, 'window', page.getByText(/sn içinde değiştirebilirsiniz/).first(), 2000);
+  await rec.tap(page, 'track', page.getByRole('button', { name: 'Siparişimi takip et' }), { hold: 900 });
+  rec.mark('orders');
+  await rec.tap(page, 'change', page.getByRole('button', { name: /Siparişi değiştir/ }), { hold: 1100 });
   const qty = page.getByRole('dialog').getByLabel('Adet').first();
-  rec.mark('qty');
-  await press(page, qty, { hold: 300 });
-  await qty.fill('2'); await pause(page, 1500);
-  rec.mark('save');
-  await press(page, page.getByRole('button', { name: 'Değişiklikleri kaydet' }), { hold: 200 });
+  await rec.tap(page, 'qty', qty, { hold: 200 });
+  await qty.fill('2'); await pause(page, 1100);
+  await rec.tap(page, 'save', page.getByRole('button', { name: 'Değişiklikleri kaydet' }), { hold: 200 });
   await page.getByText(/Siparişiniz güncellendi/).first().waitFor({ timeout: 10000 }).catch(() => {});
   rec.mark('changed');
-  await pause(page, 1200);
-  await page.evaluate(`new Promise(function (done) { var start = scrollY, t0 = performance.now(); function step(t) { var k = Math.min(1, (t - t0) / 900); scrollTo(0, start * (1 - (k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2))); if (k < 1) requestAnimationFrame(step); else done(); } requestAnimationFrame(step); })`);
-  rec.mark('top');
-  // The window ends: the order reaches the kitchen screen.
-  await kitchen.page.getByText(table.name).first().waitFor({ timeout: 60000 });
+  await pause(page, 900);
+  await page.evaluate('scrollTo({ top: 0, behavior: "smooth" })'); await pause(page, 1200);
+  const cancel = page.getByRole('button', { name: /Siparişi iptal et/ }).first();
+  if (await cancel.isVisible().catch(() => false)) await rec.look(page, 'cancel', cancel, 2200);
+  await kitchen.page.locator('.kitchen-card', { hasText: table.name }).first().waitFor({ timeout: 60000 });
   rec.mark('kitchen');
   await recK.box('ticket', kitchen.page.locator('.kitchen-card', { hasText: table.name }).first());
   await pause(page, 3500);
-  // 3. Garson çağır
-  await page.evaluate('scrollTo(0, 0)'); await pause(page, 600);
-  rec.mark('call');
-  await press(page, page.getByRole('button', { name: 'Garson çağır' }), { hold: 300 });
-  await page.getByRole('button', { name: 'Garson çağrıldı' }).waitFor();
-  rec.mark('called');
-  await waiter.page.locator('.service-call-chip').first().waitFor({ timeout: 15000 });
-  rec.mark('waiterSees');
-  await recW.box('chip', waiter.page.locator('.service-call-chip').first());
-  await pause(page, 4500);
-  const close = waiter.page.getByRole('button', { name: new RegExp(`${table.name} çağrısını kapat`) });
-  rec.mark('answer');
-  if (await close.isVisible().catch(() => false)) await close.click();
-  await page.getByRole('button', { name: 'Garson çağır' }).waitFor({ timeout: 15000 }).catch(() => {});
-  rec.mark('answered');
-  await pause(page, 2500);
-  // 4. Hesabı iste → Kart
-  rec.mark('bill');
-  await press(page, page.getByRole('button', { name: 'Hesabı iste' }), { hold: 1600 });
-  rec.mark('pay');
-  await press(page, page.getByRole('group', { name: 'Nasıl ödeyeceksiniz?' }).getByRole('button', { name: 'Kart' }), { hold: 300 });
-  await page.getByRole('button', { name: 'Hesap istendi' }).waitFor();
-  rec.mark('billAsked');
-  await kasa.page.locator('.service-call-chip').first().waitFor({ timeout: 15000 });
-  rec.mark('kasaSees');
-  await recC.box('chip', kasa.page.locator('.service-call-chip').first());
-  await recC.box('tile', kasa.page.locator('.table-card', { hasText: table.name }).first());
-  await recK.box('ticketEnd', kitchen.page.locator('.kitchen-card', { hasText: table.name }).first());
-  await pause(page, 6000);
-  for (const r of [recC, recK, recW, rec]) await r.stop();
-  writeFileSync(join(OUT, 'ana', 'masa.txt'), table.name);
-  await ctx.close(); await waiter.ctx.close(); await kitchen.ctx.close(); await kasa.ctx.close();
+  await recK.stop(); await rec.stop();
+  writeFileSync(join(OUT, 'b-degistir', 'masa.txt'), table.name);
+  await ctx.close(); await kitchen.ctx.close();
 });
 
-/** The owner's screen (1280×800, with the pointer): Masalar first, as after signing in. */
-async function ownerScreen() {
-  const s = await k.staffScreen('isletme', 'desktop', true);
-  await s.page.mouse.move(700, 420);
-  return s;
-}
-async function goSettings(page: Page, rec: Recorder, topic: string, part?: string) {
-  rec.mark('nav');
-  await press(page, page.getByRole('button', { name: 'Ayarlar', exact: true }), { hold: 1400, steps: 24 });
-  rec.mark('topic');
-  await press(page, page.getByRole('button', { name: topic, exact: true }).first(), { hold: 1400, steps: 24 });
-  if (part) { rec.mark('part'); await press(page, page.getByRole('button', { name: part, exact: true }).last(), { hold: 1200, steps: 24 }); }
-}
-
-clip('ayar-qr', 'qr', async browser => {
-  await setPrefs(browser, { qrOpen: true });
+clip('c-ayar-onay', async browser => {
+  await setPrefs(browser, { waiterApproval: false, changeSeconds: 0 });
   const owner = await ownerScreen(), page = owner.page;
-  const rec = new Recorder(page, join(OUT, 'ayar-qr'), DESKTOP);
+  const rec = new Recorder(page, join(OUT, 'c-ayar-onay'), DESKTOP);
   await rec.start();
-  await pause(page, 1800);
-  await rec.box('card', page.getByTestId('qr-ordering-card'));
-  rec.mark('card');
-  await page.mouse.move(150, 150, { steps: 24 }); await pause(page, 2200);
-  rec.mark('stop');
-  await press(page, page.getByTestId('qr-ordering-stop'), { hold: 1600 });
-  await rec.box('dialog', page.getByRole('dialog'));
-  rec.mark('confirm');
-  await press(page, page.getByRole('dialog').getByRole('button', { name: 'Durdur', exact: true }), { hold: 600 });
-  await page.getByTestId('qr-ordering-open').waitFor();
-  rec.mark('stopped');
-  await rec.box('cardClosed', page.getByTestId('qr-ordering-card'));
-  await pause(page, 3800);
-  rec.mark('reopen');
-  await press(page, page.getByTestId('qr-ordering-open'), { hold: 600 });
-  await page.getByTestId('qr-ordering-stop').waitFor();
-  rec.mark('reopened');
-  await pause(page, 2500);
+  await pause(page, 1400);
+  await switchOn(page, rec, 'QR siparişlerinde garson onayı');
+  await pause(page, 1600);
   await rec.stop();
   await owner.ctx.close();
 });
 
-/** Guest orders a Türk kahvesi and tries to send it (QR ordering open or stopped). */
-async function guestOrderClip(browser: Browser, name: string, o: { qrOpen?: boolean; staff?: { user: string; kind: 'phone' | 'desktop'; after?: (p: Page, rec: Recorder, table: string) => Promise<void> } ; afterSend?: (p: Page, rec: Recorder) => Promise<void>; tail?: number }) {
+clip('c-onay', async browser => {
+  await setPrefs(browser, { waiterApproval: true, changeSeconds: 0 });
   await calm(browser, true);
   const table = await k.freeTable(browser);
-  const watcher = await k.staffScreen(o.staff?.user ?? 'mutfak', o.staff?.kind ?? 'desktop');
-  if (o.qrOpen === false) await setPrefs(browser, { qrOpen: false });
-  const ctx = await k.phoneContext(), page = await ctx.newPage();
-  await k.openMenu(page, table.token);
-  await smoothScroll(page, 330, 10); await pause(page, 600); await imagesOnScreen(page);
-  const rec = new Recorder(page, join(OUT, name), PHONE);
-  const recS = o.staff ? new Recorder(watcher.page, join(OUT, `${name}-personel`), o.staff.kind === 'phone' ? PHONE : DESKTOP) : undefined;
-  await rec.start(); await recS?.start();
-  await pause(page, 1500);
-  await orderCoffee(page, rec);
-  if (o.qrOpen === false) {
-    rec.mark('send');
-    await rec.box('notice', page.getByText(/Şu an sipariş almıyoruz/).last());
-    await rec.box('sendButton', page.getByRole('button', { name: 'Siparişi gönder', exact: true }));
-    await page.getByRole('button', { name: 'Siparişi gönder', exact: true }).hover(); await pause(page, 600);
-    rec.mark('sent');
-  } else await send(page, rec);
-  await o.afterSend?.(page, rec);
-  if (o.staff?.after) await o.staff.after(watcher.page, rec, table.name);
-  await pause(page, o.tail ?? 4000);
-  await recS?.stop(); await rec.stop();
-  writeFileSync(join(OUT, name, 'masa.txt'), table.name);
-  if (o.qrOpen === false) await setPrefs(browser, { qrOpen: true });
-  await ctx.close(); await watcher.ctx.close();
-}
-clip('qr-acik', 'qr', browser => guestOrderClip(browser, 'qr-acik', { qrOpen: true }));
-clip('qr-durdu', 'qr', browser => guestOrderClip(browser, 'qr-durdu', { qrOpen: false }));
+  const waiter = await k.staffScreen('garson', 'tablet');
+  const { ctx, page } = await guestPhone();
+  await menuAt(page, table.token);
+  const rec = new Recorder(page, join(OUT, 'c-onay'), PHONE), recW = new Recorder(waiter.page, join(OUT, 'c-garson'), TABLET);
+  await rec.start(); await recW.start();
+  await pause(page, 1200);
+  await addCoffee(page, rec);
+  await send(page, rec);
+  await pause(page, 500);
+  await rec.look(page, 'waiting', page.getByText(/garson onayına gönderildi/).last(), 2400);
+  // The waiter's tablet: the order waiting for approval.
+  const compact = waiter.page.getByTestId('approval-compact');
+  const approve = waiter.page.getByRole('button', { name: 'Onayla ve mutfağa gönder' }).first();
+  await approve.or(compact).first().waitFor({ timeout: 20000 });
+  rec.mark('waiter');
+  await pause(waiter.page, 700);
+  if (await compact.isVisible().catch(() => false)) await recW.tap(waiter.page, 'show', compact, { hold: 1200 });
+  await recW.look(waiter.page, 'queue', waiter.page.locator('section, .panel, article', { has: approve }).last(), 2200);
+  await recW.tap(waiter.page, 'approve', approve, { hold: 1200 });
+  rec.mark('approved');
+  await page.getByText(/Onaylandı/).first().waitFor({ timeout: 15000 }).catch(() => {});
+  rec.mark('guestApproved');
+  await pause(page, 600);
+  await rec.look(page, 'ok', page.getByText(/Onaylandı/).last(), 2400);
+  await recW.stop(); await rec.stop();
+  await setPrefs(browser, { waiterApproval: false });
+  await ctx.close(); await waiter.ctx.close();
+});
 
-/** Owner turns a switch on in Ayarlar → Sipariş ve mutfak → Sipariş ve onay. */
-async function switchClip(browser: Browser, name: string, label: string, before: { waiterApproval: boolean; changeSeconds: number }) {
-  await setPrefs(browser, before);
+clip('d-ayar-qr', async browser => {
+  await setPrefs(browser, { qrOpen: true, waiterApproval: false, changeSeconds: 0 });
+  await calm(browser, true);
+  const table = await k.freeTable(browser);
   const owner = await ownerScreen(), page = owner.page;
-  const rec = new Recorder(page, join(OUT, name), DESKTOP);
+  const rec = new Recorder(page, join(OUT, 'd-ayar-qr'), DESKTOP);
   await rec.start();
-  await pause(page, 1500);
-  await goSettings(page, rec, 'Sipariş ve mutfak', 'Sipariş ve onay');
-  const sw = page.getByRole('checkbox', { name: label });
-  // The row in the middle of the screen.
-  await page.getByText(label, { exact: true }).first().evaluate(e => e.scrollIntoView({ block: 'center', behavior: 'smooth' }));
   await pause(page, 1400);
-  rec.mark('row');
-  const row = page.locator('.settings-row', { has: page.getByText(label, { exact: true }) }).first();
-  await rec.box('row', row);
-  await page.mouse.move(420, (await row.boundingBox())!.y + 20, { steps: 30 }); await pause(page, 2600);
-  rec.mark('toggle');
-  await press(page, sw, { hold: 300, steps: 30 });
-  await page.waitForFunction(l => { const el = [...document.querySelectorAll('label')].find(x => x.textContent === l); const box = el && document.getElementById(el.htmlFor) as HTMLInputElement | null; return !!box?.checked; }, label);
-  rec.mark('on');
-  await pause(page, 900);
-  const card = page.locator('.settings-card', { has: page.getByText(label, { exact: true }) }).first();
-  await rec.box('rowOn', row); await rec.box('card', card);
-  await pause(page, 4200);
+  await rec.look(page, 'card', page.getByTestId('qr-ordering-card'), 2200);
+  await rec.tap(page, 'stop', page.getByTestId('qr-ordering-stop'), { hold: 1400 });
+  await rec.tap(page, 'confirm', page.getByRole('dialog').getByRole('button', { name: 'Durdur', exact: true }), { hold: 600 });
+  await page.getByTestId('qr-ordering-open').waitFor();
+  rec.mark('stopped');
+  await pause(page, 400);
+  await rec.look(page, 'closed', page.getByTestId('qr-ordering-card'), 2600);
+  rec.mark('guestFrom');
+  // Meanwhile the guest's phone.
+  const { ctx, page: g } = await guestPhone();
+  await menuAt(g, table.token);
+  const recG = new Recorder(g, join(OUT, 'd-durdu'), PHONE);
+  await recG.start();
+  await pause(g, 1200);
+  await addCoffee(g, recG);
+  await recG.look(g, 'notice', g.getByText(/Şu an sipariş almıyoruz/).last(), 1400);
+  await recG.look(g, 'sendOff', g.getByRole('button', { name: 'Siparişi gönder', exact: true }), 2200);
+  await pause(g, 500);
+  await recG.stop();
+  await ctx.close();
+  rec.mark('guestTo');
+  await pause(page, 800);
+  await rec.tap(page, 'reopen', page.getByTestId('qr-ordering-open'), { hold: 600 });
+  await page.getByTestId('qr-ordering-stop').waitFor();
+  rec.mark('reopened');
+  await pause(page, 400);
+  await rec.look(page, 'open', page.getByTestId('qr-ordering-card'), 2200);
   await rec.stop();
   await owner.ctx.close();
-}
-clip('ayar-onay', 'onay', browser => switchClip(browser, 'ayar-onay', 'QR siparişlerinde garson onayı', { waiterApproval: false, changeSeconds: 0 }));
-const waiterSees = (approve: boolean) => async (w: Page, rec: Recorder, table: string) => {
-  if (approve) {
-    const show = w.getByTestId('approval-compact');
-    await show.waitFor({ timeout: 15000 });
-    rec.mark('waiterSees');
-    await pause(w, 2600);
-    rec.mark('waiterOpen');
-    await w.evaluate('window.__molaNoFinger = false');
-    await press(w, show, { hold: 1800 });
-    rec.mark('approve');
-    await press(w, w.getByRole('button', { name: 'Onayla ve mutfağa gönder' }).first(), { hold: 600 });
-    rec.mark('approved');
-  } else {
-    await w.getByRole('button', { name: new RegExp(`^${table} · .*Yeni sipariş`) }).first().waitFor({ timeout: 15000 });
-    await rec.box('tile', w.getByRole('button', { name: new RegExp(`^${table} · `) }).first());
-    rec.mark('waiterSees');
-    await pause(w, 4400);
-    rec.mark('approved');
-  }
-};
-clip('onay-kapali', 'onay', async browser => { await setPrefs(browser, { waiterApproval: false, changeSeconds: 0 }); await guestOrderClip(browser, 'onay-kapali', { staff: { user: 'garson', kind: 'phone', after: waiterSees(false) }, tail: 3000 }); });
-clip('onay-acik', 'onay', async browser => { await setPrefs(browser, { waiterApproval: true, changeSeconds: 0 }); await guestOrderClip(browser, 'onay-acik', { staff: { user: 'garson', kind: 'phone', after: waiterSees(true) }, tail: 3000 }); await setPrefs(browser, { waiterApproval: false }); });
+});
 
-clip('ayar-sure', 'sure', browser => switchClip(browser, 'ayar-sure', 'Müşteri siparişini değiştirip iptal edebilsin', { waiterApproval: false, changeSeconds: 0 }));
-const kitchenGets = async (kpage: Page, rec: Recorder, table: string) => {
-  await kpage.getByText(table).first().waitFor({ timeout: 60000 });
-  rec.mark('kitchen');
-  await rec.box('ticket', kpage.locator('.kitchen-card', { hasText: table }).first());
-};
-clip('sure-kapali', 'sure', async browser => { await setPrefs(browser, { waiterApproval: false, changeSeconds: 0 }); await guestOrderClip(browser, 'sure-kapali', { staff: { user: 'mutfak', kind: 'desktop', after: kitchenGets },
-  afterSend: async (p, rec) => { await pause(p, 1500); rec.mark('track'); await press(p, p.getByRole('button', { name: 'Siparişimi takip et' }), { hold: 600 }); }, tail: 4000 }); });
-clip('sure-acik', 'sure', async browser => { await setPrefs(browser, { waiterApproval: false, changeSeconds: 30 }); await guestOrderClip(browser, 'sure-acik', { staff: { user: 'mutfak', kind: 'desktop', after: kitchenGets },
-  afterSend: async (p, rec) => { await pause(p, 1500); rec.mark('track'); await press(p, p.getByRole('button', { name: 'Siparişimi takip et' }), { hold: 600 }); await rec.box('change', p.getByRole('button', { name: /Siparişi değiştir/ })); }, tail: 4000 }); });
-
-clip('ayar-yazdir', 'yazdir', async browser => {
-  const owner = await ownerScreen(), page = owner.page;
-  const rec = new Recorder(page, join(OUT, 'ayar-yazdir'), DESKTOP);
-  await rec.start();
-  await pause(page, 1500);
-  await goSettings(page, rec, 'Masalar ve QR', 'QR kodlarını yazdır');
+clip('e-cagri', async browser => {
+  await setPrefs(browser, { qrOpen: true });
+  await calm(browser, true);
+  // The table of the change example (its order is on the bill).
+  const token = changeTable || (await k.freeTable(browser)).token;
+  const api = await k.ownerApi(browser), st = await k.state(api.req); await api.close();
+  const table = st.tables.find(t => t.token === token)!;
+  const waiter = await k.staffScreen('garson', 'tablet');
+  const kasa = await k.staffScreen('kasiyer', 'desktop');
+  const { ctx, page } = await guestPhone();
+  await k.openMenu(page, token); await page.evaluate('scrollTo(0, 0)'); await pause(page, 600);
+  const rec = new Recorder(page, join(OUT, 'e-cagri'), PHONE), recW = new Recorder(waiter.page, join(OUT, 'e-garson'), TABLET), recC = new Recorder(kasa.page, join(OUT, 'e-kasa'), DESKTOP);
+  await rec.start(); await recW.start(); await recC.start();
   await pause(page, 1200);
-  rec.mark('options');
-  await rec.box('card', page.locator('.qr-print-card').first());
-  await rec.box('layout', page.locator('.qr-per-page').first());
-  await press(page, page.getByRole('button', { name: /A6 masa standı/ }), { hold: 1800, steps: 30 });
-  await rec.box('layoutA6', page.locator('.qr-per-page').first());
-  await rec.box('paper', page.locator('.qr-stand-paper').first());
-  await rec.box('actions', page.locator('.qr-print-card .settings-actions').first());
-  rec.mark('a6');
-  await pause(page, 2600);
-  await page.getByRole('button', { name: 'Yazdır', exact: true }).hover(); await pause(page, 2400);
-  rec.mark('print');
+  await rec.tap(page, 'call', page.getByRole('button', { name: 'Garson çağır' }), { hold: 300 });
+  await page.getByRole('button', { name: 'Garson çağrıldı' }).waitFor();
+  rec.mark('called');
+  await pause(page, 1800);
+  await waiter.page.locator('.service-call-chip').first().waitFor({ timeout: 15000 });
+  rec.mark('waiter');
+  await pause(waiter.page, 600);
+  await recW.look(waiter.page, 'chip', waiter.page.locator('.service-call-chip').first(), 2400);
+  await recW.tap(waiter.page, 'close', waiter.page.getByRole('button', { name: new RegExp(`${table.name} çağrısını kapat`) }), { hold: 1200 });
+  rec.mark('answered');
+  await page.getByRole('button', { name: 'Garson çağır' }).waitFor({ timeout: 15000 }).catch(() => {});
+  await pause(page, 1200);
+  rec.mark('billFrom');
+  await rec.tap(page, 'bill', page.getByRole('button', { name: 'Hesabı iste' }), { hold: 1000 });
+  await rec.tap(page, 'card', page.getByRole('group', { name: 'Nasıl ödeyeceksiniz?' }).getByRole('button', { name: 'Kart' }), { hold: 300 });
+  await page.getByRole('button', { name: 'Hesap istendi' }).waitFor();
+  rec.mark('billAsked');
+  await pause(page, 1800);
+  await kasa.page.locator('.service-call-chip').first().waitFor({ timeout: 15000 });
+  rec.mark('kasa');
+  await pause(kasa.page, 600);
+  await recC.look(kasa.page, 'chip', kasa.page.locator('.service-call-chip').first(), 2600);
+  await recC.look(kasa.page, 'tile', kasa.page.locator('.table-card', { hasText: table.name }).first(), 2200);
+  await pause(page, 600);
+  for (const r of [recC, recW, rec]) await r.stop();
+  writeFileSync(join(OUT, 'e-cagri', 'masa.txt'), table.name);
+  await ctx.close(); await waiter.ctx.close(); await kasa.ctx.close();
+});
+
+clip('f-yazdir', async browser => {
+  const owner = await ownerScreen(), page = owner.page;
+  const rec = new Recorder(page, join(OUT, 'f-yazdir'), DESKTOP);
+  await rec.start();
+  await pause(page, 1200);
+  await goSettings(page, rec, 'Masalar ve QR', 'QR kodlarını yazdır');
+  await pause(page, 600);
+  await rec.tap(page, 'a6', page.getByRole('button', { name: /A6 masa standı/ }), { hold: 1200 });
+  await rec.look(page, 'paper', page.locator('.qr-stand-paper').first(), 2000);
+  await rec.look(page, 'print', page.locator('.qr-print-card .settings-actions').first(), 2000);
   await rec.stop();
   await owner.ctx.close();
   // The printed sheets (the page as Chrome prints it): A4 with 6 codes and the A6 table stand card.
@@ -372,18 +360,31 @@ clip('ayar-yazdir', 'yazdir', async browser => {
     await pause(s.page, 1500);
     await s.page.emulateMedia({ media: 'print' });
     await pause(s.page, 800);
-    const sheet = s.page.locator(paper ? '.qr-stand-page' : '.qr-sheet').first();
-    await sheet.screenshot({ path: join(OUT, 'baski', `${file}.png`) });
+    await s.page.locator(paper ? '.qr-stand-page' : '.qr-sheet').first().screenshot({ path: join(OUT, 'baski', `${file}.png`) });
     await s.ctx.close();
   }
+});
+
+clip('g-rapor', async () => {
+  const owner = await ownerScreen(), page = owner.page;
+  const rec = new Recorder(page, join(OUT, 'g-rapor'), DESKTOP);
+  await rec.start();
+  await pause(page, 900);
+  await rec.tap(page, 'rapor', page.getByRole('button', { name: 'Satış ve Raporlar', exact: true }), { lead: 1100, hold: 900 });
+  await rec.tap(page, 'range', page.getByRole('button', { name: '30 gün', exact: true }), { lead: 1100, hold: 700 });
+  await rec.tap(page, 'detail', page.getByRole('button', { name: 'Detaylı göster' }), { lead: 1100, hold: 700 });
+  await rec.tap(page, 'staff', page.getByRole('button', { name: 'Personel', exact: true }).last(), { lead: 1100, hold: 1200 });
+  await rec.look(page, 'donut', page.locator('.self-service-report').first(), 3600);
+  await rec.stop();
+  await owner.ctx.close();
 });
 
 async function main() {
   const browser = await k.launch();
   try {
-    if (!attach) { await k.startServers(); await k.prepareMenu(browser, { waiterApproval: false, changeSeconds: 30 }); await calm(browser); }
+    if (!attach) { await k.startServers(); await k.prepareMenu(browser, { waiterApproval: false, changeSeconds: 0 }); await calm(browser); }
     if (serverOnly) { console.log(`Hazır: ${k.KAFE} (kafe), ${k.MERKEZ} (Merkez). Klasör: ${run}`); await new Promise(() => {}); }
-    const chosen = only.length ? clips.filter(c => only.includes(c.name) || only.includes(c.group)) : clips;
+    const chosen = only.length ? clips.filter(c => only.includes(c.name)) : clips;
     for (const c of chosen) { console.log(`Kayıt: ${c.name}`); await c.play(browser); }
   } finally { await k.close(); }
 }

@@ -53,6 +53,10 @@ export const POINTER = `(() => {
 })()`;
 export const PHONE = { width: 390, height: 844, scale: 3 };
 export const DESKTOP = { width: 1280, height: 800, scale: 2 };
+/** A landscape tablet (10–11 inch) for the waiter's screen. */
+export const TABLET = { width: 1180, height: 820, scale: 2 };
+/** A tap the edit shows: the box (CSS px of this screen), when the highlight starts (`on`) and when the tap happens. */
+export type Tap = { name: string; box: { x: number; y: number; width: number; height: number }; on: number; tap?: number; off?: number };
 
 export type Frame = { file: string; t: number };
 export class Recorder {
@@ -75,11 +79,32 @@ export class Recorder {
   /** Saves a box (CSS px of this screen) for the edit's zoom callouts. */
   boxes: Record<string, { x: number; y: number; width: number; height: number } | null> = {};
   async box(name: string, target: Locator) { this.boxes[name] = await target.boundingBox().catch(() => null); }
+  taps: Tap[] = [];
+  /**
+   * A tap the viewer can follow without a pointer: the control is brought into view, its box saved and the screen held still
+   * for `lead` ms (the edit zooms in and draws the highlight meanwhile), then it is clicked.
+   */
+  async tap(page: Page, name: string, target: Locator, o: { lead?: number; hold?: number } = {}) {
+    await target.scrollIntoViewIfNeeded(); await pause(page, 350);
+    const box = await target.boundingBox();
+    const t: Tap = { name, box: box ?? { x: 0, y: 0, width: 0, height: 0 }, on: Date.now() / 1000 };
+    await pause(page, o.lead ?? 1500);
+    t.tap = Date.now() / 1000; this.taps.push(t);
+    await target.click();
+    await pause(page, o.hold ?? 900);
+  }
+  /** Highlights a part of the screen without tapping it (for `ms`). */
+  async look(page: Page, name: string, target: Locator, ms = 2500) {
+    const box = await target.boundingBox();
+    const t: Tap = { name, box: box ?? { x: 0, y: 0, width: 0, height: 0 }, on: Date.now() / 1000 };
+    await pause(page, ms);
+    t.off = Date.now() / 1000; this.taps.push(t);
+  }
   async stop() {
     this.mark('end');
     await this.session?.send('Page.stopScreencast').catch(() => {});
     this.stopped = true;
-    writeFileSync(join(this.dir, 'meta.json'), JSON.stringify({ size: this.size, frames: this.frames, marks: this.marks, boxes: this.boxes }, null, 1));
+    writeFileSync(join(this.dir, 'meta.json'), JSON.stringify({ size: this.size, frames: this.frames, marks: this.marks, boxes: this.boxes, taps: this.taps }, null, 1));
     console.log(`  ${this.dir}: ${this.frames.length} kare, ${(this.marks.end - this.marks.start).toFixed(1)} sn`);
   }
 }
@@ -208,6 +233,9 @@ export function kit(o: KitOptions) {
     await ctx.addInitScript(POINTER);
     return ctx;
   }
+  async function tabletContext() {
+    return deskBrowser.newContext({ viewport: { width: TABLET.width, height: TABLET.height }, deviceScaleFactor: TABLET.scale, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' });
+  }
   async function desktopContext(_browser?: Browser, finger = false) {
     const ctx = await deskBrowser.newContext({ viewport: { width: DESKTOP.width, height: DESKTOP.height }, deviceScaleFactor: DESKTOP.scale, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' });
     if (finger) await ctx.addInitScript(POINTER);
@@ -233,15 +261,15 @@ export function kit(o: KitOptions) {
     await pause(page, 600);
   }
   /** A staff screen that sees the guests (the café's rule: QR orders and calls need one connected). */
-  async function staffScreen(user: string, kind: 'phone' | 'desktop', finger = false) {
-    const ctx = kind === 'phone' ? await phoneContext() : await desktopContext(undefined, finger);
+  async function staffScreen(user: string, kind: 'phone' | 'desktop' | 'tablet', finger = false) {
+    const ctx = kind === 'phone' ? await phoneContext() : kind === 'tablet' ? await tabletContext() : await desktopContext(undefined, finger);
     const page = await ctx.newPage();
     // No finger on the staff screen unless asked; Mola Yardım's one-time hint stays closed (as in playwright.config.ts).
     await page.addInitScript(`${finger ? '' : 'window.__molaNoFinger = true;'} try { localStorage.setItem('mola-yardim-ipucu', 'off'); localStorage.setItem('mola-campaign-ended', 'off'); } catch (e) {}`);
     await login(page, user);
     await page.goto(`${KAFE}/`); await pause(page, 1200);
     // A click on the page header unlocks the sounds (the "Ses kapalı" note goes away), as on a working counter.
-    if (kind === 'desktop') { await page.mouse.click(640, 20); await pause(page, 500); }
+    if (kind !== 'phone') { await page.mouse.click(640, 20); await pause(page, 500); }
     const sound = page.getByText(/Ses kapalı/).first();
     if (await sound.isVisible().catch(() => false)) { await sound.click(); await pause(page, 500); }
     // The demo's older calls are answered first, so the clip's own call is the one that appears.
@@ -252,7 +280,7 @@ export function kit(o: KitOptions) {
     }
     return { ctx, page };
   }
-  return { KAFE, MERKEZ, run: o.run, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, launch, close, phoneContext, desktopContext, freeTable, guestUrl, openMenu, staffScreen,
+  return { KAFE, MERKEZ, run: o.run, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 export type Kit = ReturnType<typeof kit>;
