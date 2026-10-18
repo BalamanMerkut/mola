@@ -10,8 +10,8 @@
  *   SOSYAL_CIKTI=<klasör> …                                another output folder
  *
  * The owner's rules (18 Ekim): one linear story, one subject on screen at a time (the only exception: the before/after split
- * after each setting); no pointer: before every tap the camera eases in on the control and a red outline marks it, the tap
- * happens, the camera eases back; a label at the top right says whose screen it is and the guest's step; no speed notes;
+ * after each setting); no pointer and steady framing (sürüm 3): an ordinary tap shows only a soft touch ripple; a red outline
+ * and a slight (1.2×) camera move only on the setting's own switch or field; a label at the top right says whose screen it is and the guest's step; no speed notes;
  * plain captions that only say what happens; a closing report scene (QR sipariş payı). Opening: the word "mola" and its dot gliding in from the start of the word.
  *
  * Every scene is an HTML stage drawn for every frame at 30 fps from the recorded frames, each frame a screenshot piped to
@@ -65,7 +65,7 @@ type Key = { t: number; x: number; y: number; s?: number; o?: number };
 /** [scene time, clip time] points; straight lines between them, slope 1 outside. Two points with the same clip time hold a frame. */
 type TimeMap = [number, number][];
 type Cam = { t: number; x: number; y: number; w: number };
-type Ring = { box: Box; from: number; to: number; tap?: number };
+type Ring = { box: Box; from: number; to: number; tap?: number; ripple?: boolean };
 type Layer =
   | { kind: 'phone'; clip: string; h: number; keys: Key[]; map: TimeMap; rings: Ring[]; crop?: { x: number; y: number; w: number; h: number } }
   | { kind: 'screen'; clip: string; w: number; h: number; keys: Key[]; map: TimeMap; cam: Cam[]; rings: Ring[]; frame: 'none' | 'window' | 'tablet' | 'display'; title?: string }
@@ -123,6 +123,13 @@ function stageHtml(scene: Scene) {
   function rings(container, list, t, tx) {
     let html = '';
     for (const r of list) {
+      if (r.ripple) {
+        // An ordinary tap: a soft translucent circle at the touch point, growing and fading in ~0.45 s.
+        const k = (t - r.from) / (r.to - r.from); if (k < 0 || k > 1) continue;
+        const b = tx(r.box), z = b.w / Math.max(1, r.box.width), R = 30 * z * (.55 + .65 * k), cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+        html += '<b style="opacity:' + ((1 - k) * .9) + ';left:' + (cx - R) + 'px;top:' + (cy - R) + 'px;width:' + (2 * R) + 'px;height:' + (2 * R) + 'px"></b>';
+        continue;
+      }
       const o = Math.min(clamp((t - r.from) / .3, 0, 1), clamp((r.to - t) / .3, 0, 1)); if (o <= 0) continue;
       const b = tx(r.box), p = 9, pulse = 1 + .035 * Math.sin((t - r.from) * 2 * Math.PI * 1.1);
       const press = r.tap !== undefined ? clamp(1 - Math.abs(t - r.tap) / .18, 0, 1) : 0;
@@ -196,6 +203,7 @@ function stageHtml(scene: Scene) {
   .dev.display .view{border-radius:6px}
   .rings{position:absolute;inset:0;pointer-events:none;overflow:visible}
   .rings i{position:absolute;border:5px solid ${C.red};border-radius:14px;box-shadow:0 0 0 6px rgba(216,50,42,.18),0 6px 18px rgba(216,50,42,.25);transform-origin:50% 50%}
+  .rings b{position:absolute;border-radius:50%;background:rgba(255,255,255,.38);border:2px solid rgba(35,76,62,.32);box-shadow:0 0 0 5px rgba(35,76,62,.07)}
   .phone .rings i{border-width:3px;border-radius:10px;box-shadow:0 0 0 4px rgba(216,50,42,.18)}
   .paper{background:#fff;border-radius:6px;box-shadow:0 40px 80px -30px rgba(22,51,40,.55),0 0 0 1px ${C.line}}.paper img{display:block;border-radius:6px}
   .tag{position:absolute;right:34px;top:26px;display:flex;align-items:center;gap:14px;padding:13px 26px 13px 20px;border-radius:999px;background:rgba(246,241,232,.96);box-shadow:0 10px 26px -12px rgba(22,51,40,.5),0 0 0 2px ${C.line};font:600 26px/1 ${SANS};color:${C.green900};z-index:7;white-space:nowrap}
@@ -273,26 +281,49 @@ const introCard = logoCard({ dot0: .9, dot1: 2.7, lift: [3.6, 4.5], extraIn: 4.3
   extra: `<h1>QR menü ve QR sipariş</h1><p>Misafirin telefonu, işletmenin ekranları ve bunları belirleyen ayarlar.</p>` });
 const endCard = logoCard({ dot0: .6, dot1: 2.0, lift: [2.6, 3.4], extraIn: 3.2, extraClass: 'site', extra: `<b>molayazilim.com.tr</b><span>30 gün ücretsiz deneme</span>` });
 
-// ---------- Camera helpers ----------
+// ---------- Taps, cuts and the (rare) camera moves ----------
+/*
+ * Version 3 (owner, 18 Ekim): steady framing, no zoom on ordinary taps. An ordinary tap shows only a soft touch ripple, and
+ * the still moment the recorder held before it is cut short. A red outline (and a slight 1.2× camera move) only where the
+ * viewer must find something: the setting's switch or field ("!" in front of the tap's name).
+ */
 type Focus = { box: Box; on: number; tap?: number; off?: number };
-/** Recorded taps (clip time) inside a clip window, as scene times through `at`. */
-function focusesOf(clip: string, names: string[], at: (c: number) => number): Focus[] {
-  const t = taps(clip);
-  return names.filter(n => t[n] && t[n].box.width > 0).map(n => ({ box: t[n].box, on: at(t[n].on), tap: t[n].tap !== undefined ? at(t[n].tap!) : undefined, off: t[n].off !== undefined ? at(t[n].off!) : undefined }));
+/** A clip window with the still lead-ins of ordinary taps cut out; `at` turns clip time into scene time. */
+function cutLeads(clip: string, from: number, to: number, names: string[]) {
+  const t = taps(clip), plain = names.filter(n => !n.startsWith('!'));
+  const cuts = plain.map(n => t[n]).filter(x => x && x.tap !== undefined && x.on >= from && x.tap <= to)
+    .map(x => [x.on + .15, x.tap! - .4] as [number, number]).filter(([a, b]) => b - a > .2).sort((p, q) => p[0] - q[0]);
+  const parts: { c0: number; c1: number; s0: number }[] = []; let c = from, sc = 0;
+  for (const [a, b] of cuts) { parts.push({ c0: c, c1: a, s0: sc }); sc += a - c; c = b; }
+  parts.push({ c0: c, c1: to, s0: sc }); sc += to - c;
+  const map: TimeMap = parts.flatMap(p => [[p.s0, p.c0], [p.s0 + (p.c1 - p.c0) - .0005, p.c1]] as [number, number][]);
+  const at = (x: number) => { for (const p of parts) if (x <= p.c1) return p.s0 + Math.max(0, x - p.c0); return sc; };
+  return { map, at, d: sc };
 }
-const ringsOf = (fs: Focus[]): Ring[] => fs.map(f => ({ box: f.box, from: f.on + .4, to: f.tap !== undefined ? f.tap + .22 : f.off! + .1, tap: f.tap }));
-/** Camera keys: ease in on each focus while the screen holds still, back out after the tap (or straight to the next focus). */
+/** Ripples for the ordinary taps, outlines (Focus) for the marked ones and marked looks. */
+function tapMarks(clip: string, names: string[], at: (c: number) => number, d: number) {
+  const t = taps(clip), ripples: Ring[] = [], focuses: Focus[] = [];
+  for (const raw of names) {
+    const marked = raw.startsWith('!'), x = t[raw.replace('!', '')];
+    if (!x || x.box.width <= 0) continue;
+    if (marked) { const f = { box: x.box, on: at(x.on), tap: x.tap !== undefined ? at(x.tap) : undefined, off: x.off !== undefined ? at(x.off) : undefined }; if (f.on >= 0 && f.on < d) focuses.push(f); }
+    else if (x.tap !== undefined) { const s0 = at(x.tap); if (s0 >= 0 && s0 < d) ripples.push({ box: x.box, from: s0, to: s0 + .45, ripple: true }); }
+  }
+  return { ripples, focuses };
+}
+const outlinesOf = (fs: Focus[]): Ring[] => fs.map(f => ({ box: f.box, from: f.on + .3, to: f.tap !== undefined ? f.tap + .2 : f.off!, tap: f.tap }));
+/** Camera keys for the marked focuses only: a slight, gentle move in and back. */
 function focusKeys<T extends { t: number }>(rest: Omit<T, 't'>, fs: Focus[], zoomed: (f: Focus) => Omit<T, 't'>): T[] {
   const keys: T[] = [{ t: 0, ...rest } as T];
   let prev = rest, last = 0;
   fs.forEach((f, i) => {
-    const end = f.tap !== undefined ? f.tap + .45 : f.off! - .15;
-    const tIn = Math.max(last + .01, f.on - .15);
-    keys.push({ t: tIn, ...prev } as T, { t: Math.max(tIn + .3, f.on + .6), ...zoomed(f) } as T, { t: Math.max(tIn + .35, end), ...zoomed(f) } as T);
-    last = Math.max(tIn + .35, end);
+    const end = f.tap !== undefined ? f.tap + .5 : f.off! - .1;
+    const tIn = Math.max(last + .01, f.on - .3);
+    keys.push({ t: tIn, ...prev } as T, { t: Math.max(tIn + .5, f.on + .7), ...zoomed(f) } as T, { t: Math.max(tIn + .55, end), ...zoomed(f) } as T);
+    last = Math.max(tIn + .55, end);
     const next = fs[i + 1];
-    if (next && next.on - .15 - last < .9) prev = zoomed(f);
-    else { keys.push({ t: last + .7, ...rest } as T); last += .7; prev = rest; }
+    if (next && next.on - .3 - last < 1.2) prev = zoomed(f);
+    else { keys.push({ t: last + 1, ...rest } as T); last += 1; prev = rest; }
   });
   return keys.sort((a, b) => a.t - b.t);
 }
@@ -301,56 +332,39 @@ function around(b: Box, rw: number, aspect: number, sw: number, sh: number) {
   const rh = rw / aspect;
   return { x: Math.max(0, Math.min(sw - rw, b.x + b.width / 2 - rw / 2)), y: Math.max(0, Math.min(sh - rh, b.y + b.height / 2 - rh / 2)), w: rw };
 }
-/** Phone placement while zoomed: the control near the frame's centre, the phone kept clear of the captions. */
-function phoneZoom(rest: { x: number; y: number }, h: number, f: Focus, z: number, maxRight: number) {
-  const k = h / 844, sw = h * 390 / 844 * 1.07, dx = (f.box.x + f.box.width / 2 - 195) * k, dy = (f.box.y + f.box.height / 2 - 422) * k;
-  const half = sw * z / 2;
-  return { x: Math.max(half + 30, Math.min(maxRight - half, rest.x - z * dx)), y: Math.max(540 - (h * z / 2 - 80), Math.min(540 + (h * z / 2 - 80), 540 - z * dy)), s: z };
-}
 
 // ---------- Scene builders ----------
 const PHONE_REST = { x: 590, y: 540 }, PHONE_H = 930;
-/** One guest phone, big, captions at the side; the clip window [from, to] (clip time). */
-function guestScene(name: string, clip: string, from: number, to: number, focusNames: string[], captions: (at: (c: number) => number, d: number) => Caption[], toc?: string): Scene {
-  const at = (c: number) => c - from, d = to - from, map: TimeMap = [[0, from]];
-  const fs = focusesOf(clip, focusNames, at).filter(f => f.on >= 0 && f.on < d);
-  const keys = focusKeys<Key>({ ...PHONE_REST, s: 1 }, fs, f => phoneZoom(PHONE_REST, PHONE_H, f, 1.5, 1010));
+type CaptionsOf = (at: (c: number) => number, d: number) => Caption[];
+/** One guest phone, big and steady, captions at the side; the clip window [from, to] (clip time). */
+function guestScene(name: string, clip: string, from: number, to: number, names: string[], captions: CaptionsOf, toc?: string): Scene {
+  const { map, at, d } = cutLeads(clip, from, to, names), { ripples } = tapMarks(clip, names, at, d);
   return { name, duration: d, capPos: 'side', tag: 'guest', side: 'guest', toc, captions: captions(at, d),
-    layers: [{ kind: 'phone', clip, h: PHONE_H, keys, map, rings: ringsOf(fs) }] };
+    layers: [{ kind: 'phone', clip, h: PHONE_H, keys: [{ t: 0, ...PHONE_REST, s: 1 }], map, rings: ripples }] };
 }
-/** The owner's desktop full screen, the camera easing in on each tap. */
-function ownerScene(name: string, clip: string, from: number, to: number, focusNames: string[], captions: (at: (c: number) => number, d: number) => Caption[], toc?: string): Scene {
-  const at = (c: number) => c - from, d = to - from;
-  const fs = focusesOf(clip, focusNames, at).filter(f => f.on >= 0 && f.on < d);
-  const cam = focusKeys<Cam>({ x: 0, y: 40, w: 1280 }, fs, f => around(f.box, Math.max(660, Math.min(1100, f.box.width * 2.2)), 16 / 9, 1280, 800));
+/** The owner's desktop full screen; the camera moves (1.2×) only for the marked control. */
+function ownerScene(name: string, clip: string, from: number, to: number, names: string[], captions: CaptionsOf, toc?: string): Scene {
+  const { map, at, d } = cutLeads(clip, from, to, names), { ripples, focuses } = tapMarks(clip, names, at, d);
+  const cam = focusKeys<Cam>({ x: 0, y: 40, w: 1280 }, focuses, f => around(f.box, 1280 / 1.2, 16 / 9, 1280, 800));
   return { name, duration: d, capPos: 'overlay', tag: 'İşletme tarafı <b>· Ayarlar</b>', side: 'business', toc, captions: captions(at, d),
-    layers: [{ kind: 'screen', clip, w: W, h: H, keys: [{ t: 0, x: W / 2, y: H / 2 }], map: [[0, from]], cam, rings: ringsOf(fs), frame: 'none' }] };
+    layers: [{ kind: 'screen', clip, w: W, h: H, keys: [{ t: 0, x: W / 2, y: H / 2 }], map, cam, rings: [...ripples, ...outlinesOf(focuses)], frame: 'none' }] };
 }
-/** A staff device (tablet, kitchen display, counter window), large and alone, captions below. */
-function staffScene(name: string, clip: string, from: number, to: number, o: { frame: 'tablet' | 'display' | 'window'; title?: string; tag: string; focus?: string[]; looks?: Focus[] }, captions: (at: (c: number) => number, d: number) => Caption[], toc?: string): Scene {
-  const at = (c: number) => c - from, d = to - from, size = meta(clip).size;
+/** A staff device (tablet, kitchen display, counter window), large, steady and alone, captions below. */
+function staffScene(name: string, clip: string, from: number, to: number, o: { frame: 'tablet' | 'display' | 'window'; title?: string; tag: string; taps?: string[] }, captions: CaptionsOf, toc?: string): Scene {
+  const size = meta(clip).size, names = o.taps ?? [];
+  const { map, at, d } = cutLeads(clip, from, to, names), { ripples } = tapMarks(clip, names, at, d);
   const w = o.frame === 'tablet' ? 1160 : 1150, h = w * size.height / size.width;
-  const fs = [...focusesOf(clip, o.focus ?? [], at).filter(f => f.on >= 0 && f.on < d), ...(o.looks ?? [])].sort((a, b) => a.on - b.on);
-  const cam = focusKeys<Cam>({ x: 0, y: 0, w: size.width }, fs, f => around(f.box, Math.max(560, Math.min(size.width * .8, f.box.width * 1.9)), w / h, size.width, size.height));
   const y = o.frame === 'window' ? 512 : 505;
   return { name, duration: d, capPos: 'bottom', tag: o.tag, side: 'business', toc, captions: captions(at, d),
-    layers: [{ kind: 'screen', clip, w, h, keys: [{ t: 0, x: W / 2, y }], map: [[0, from]], cam, rings: ringsOf(fs), frame: o.frame, title: o.title }] };
+    layers: [{ kind: 'screen', clip, w, h, keys: [{ t: 0, x: W / 2, y }], map, cam: [{ t: 0, x: 0, y: 0, w: size.width }], rings: ripples, frame: o.frame, title: o.title }] };
 }
-/**
- * Before / after: two guest phones side by side, each holding one moment of its clip; after a beat both ease in on the part
- * that differs (`focus`, CSS px of the phone), each inside its own half.
- */
-type Side = { clip: string; t: number; label: string; tone?: 'off' | 'on'; play?: number; focus: Box; ring?: Box };
-function splitScene(name: string, title: string, left: Side, right: Side, caption: string, d = 8): Scene {
+/** Before / after: two guest phones side by side at normal size, each holding one moment of its clip; labels only. */
+type Side = { clip: string; t: number; label: string; tone?: 'off' | 'on'; play?: number };
+function splitScene(name: string, title: string, left: Side, right: Side, caption: string, d = 7.5): Scene {
   const hold = (t: number, play = 0): TimeMap => [[0, t], [play + .01, t + play], [d + 5, t + play]];
-  const PH = 760, Z = 1.9, crop = { y: 186, h: 780 };
-  const side = (s: Side, cx: number, delay: number): Layer => {
-    const k = PH / 844, cy = crop.y + crop.h / 2;
-    const dx = (s.focus.x + s.focus.width / 2 - 195) * k, dy = (s.focus.y + s.focus.height / 2 - 422) * k;
-    const zoomed = { x: cx - Z * dx, y: cy - Z * dy, s: Z };
-    return { kind: 'phone', clip: s.clip, h: PH, map: hold(s.t, s.play ?? 0), rings: s.ring ? [{ box: s.ring, from: 3.6 + delay, to: d + 1 }] : [], crop: { x: cx - 450, y: crop.y, w: 900, h: crop.h },
-      keys: [{ t: 0, x: cx, y: cy + 20, s: .96, o: 0 }, { t: .4 + delay, x: cx, y: cy + 20, s: .96, o: 0 }, { t: .9 + delay, x: cx, y: cy + 20, s: .96, o: 1 }, { t: 2 + delay, x: cx, y: cy + 20, s: .96, o: 1 }, { t: 3.2 + delay, ...zoomed, o: 1 }] };
-  };
+  const PH = 770, cy = 582;
+  const side = (s: Side, cx: number, delay: number): Layer => ({ kind: 'phone', clip: s.clip, h: PH, map: hold(s.t, s.play ?? 0), rings: [],
+    keys: [{ t: 0, x: cx, y: cy + 14, s: .98, o: 0 }, { t: .3 + delay, x: cx, y: cy + 14, s: .98, o: 0 }, { t: .9 + delay, x: cx, y: cy, s: 1, o: 1 }] });
   return { name, duration: d, capPos: 'split', tag: 'Karşılaştırma', side: 'compare', split: { title, left: left.label, right: right.label, leftTone: left.tone ?? 'off', rightTone: right.tone ?? 'on' },
     captions: [{ from: .6, to: d + 1, text: caption }],
     layers: [side(left, 480, 0), side(right, 1440, .15)] };
@@ -373,8 +387,7 @@ function scenes(): Scene[] {
     { from: at(At.send.on), to: at(A.sent), step: 5, text: '“Siparişi gönder” siparişi<br>işletmeye iletir.' },
     { from: at(A.sent), to: 999, step: 5, text: 'Sipariş alındı;<br>numarası ekranda görünür.' },
   ]));
-  list.push(staffScene('a2-mutfak', 'a-mutfak', A.sent - 1.2, A.sent + 4.6, { frame: 'display', tag: 'İşletme tarafı <b>· Mutfak ekranı</b>',
-    looks: [{ box: box('a-mutfak', 'ticket', { x: 31, y: 149, width: 379, height: 297 }), on: 1.6, off: 9 }] }, () => [
+  list.push(staffScene('a2-mutfak', 'a-mutfak', A.sent - 1.2, A.sent + 4.6, { frame: 'display', tag: 'İşletme tarafı <b>· Mutfak ekranı</b>' }, () => [
     { from: .2, to: 99, text: 'Varsayılan ayarlarda sipariş<br>mutfak ekranına hemen düşer.' },
   ]));
   list.push(guestScene('a3-siparislerim', 'a-siparis', At.track.on - .4, A.end - .2, ['track', 'order'], at => [
@@ -384,7 +397,7 @@ function scenes(): Scene[] {
 
   // ===== 2. Müşteri siparişini değiştirip iptal edebilsin =====
   const S = taps('a-ayar-sure'), Sm = marks('a-ayar-sure');
-  list.push(ownerScene('b1-ayar-sure', 'a-ayar-sure', .1, Sm.end - .2, ['ayarlar', 'topic', 'row', 'toggle', 'seconds'], at => [
+  list.push(ownerScene('b1-ayar-sure', 'a-ayar-sure', .1, Sm.end - .2, ['ayarlar', 'topic', '!toggle', '!seconds'], at => [
     { from: .2, to: at(S.ayarlar.on), text: 'Misafirin sipariş ekranı işletmenin ayarlarına göre değişir.' },
     { from: at(S.ayarlar.on), to: at(S.row.on), text: 'Ayarlar → Sipariş ve mutfak → Sipariş ve onay.' },
     { from: at(S.row.on), to: at(S.seconds.on), text: '“Müşteri siparişini değiştirip iptal edebilsin” açılır.' },
@@ -400,17 +413,16 @@ function scenes(): Scene[] {
     { from: at(Bt.save.on), to: Bt.cancel ? at(Bt.cancel.on) : 999, step: 7, text: '“Değişiklikleri kaydet”<br>siparişi günceller.' },
     ...(Bt.cancel ? [{ from: at(Bt.cancel.on), to: 999, step: 7, text: 'Süre içinde “Siparişi iptal et”<br>de kullanılabilir.' }] : []),
   ]));
-  list.push(staffScene('b3-mutfak', 'b-mutfak', B.kitchen - 1.6, B.kitchen + 4.4, { frame: 'display', tag: 'İşletme tarafı <b>· Mutfak ekranı</b>',
-    looks: [{ box: box('b-mutfak', 'ticket', { x: 31, y: 149, width: 379, height: 297 }), on: 1.6, off: 9 }] }, () => [
+  list.push(staffScene('b3-mutfak', 'b-mutfak', B.kitchen - 1.6, B.kitchen + 4.4, { frame: 'display', tag: 'İşletme tarafı <b>· Mutfak ekranı</b>' }, () => [
     { from: .2, to: 99, text: 'Mutfak ekranı siparişi<br>süre dolunca alır.' },
   ]));
   list.push(splitScene('b4-karsilastirma', 'Müşteri siparişini değiştirip iptal edebilsin',
-    { clip: 'a-siparis', t: At.order.on + .3, label: 'Varsayılan · kapalı', focus: At.order.box }, { clip: 'b-degistir', t: Bt.track.tap! + .9, label: 'Açık · 30 sn', play: Math.min(2.5, Bt.change.tap! - Bt.track.tap! - 1.1), focus: { x: 17, y: Bt.change.box.y - 140, width: 356, height: 200 }, ring: Bt.change.box },
+    { clip: 'a-siparis', t: At.order.on + .3, label: 'Varsayılan · kapalı' }, { clip: 'b-degistir', t: Bt.track.tap! + .9, label: 'Açık · 30 sn', play: Math.min(2.5, Bt.change.tap! - Bt.track.tap! - 1.1) },
     'Kapalıyken değiştirme düğmesi yoktur; açıkken süre boyunca görünür.'));
 
   // ===== 3. QR siparişlerinde garson onayı =====
   const O = taps('c-ayar-onay'), Om = marks('c-ayar-onay');
-  list.push(ownerScene('c1-ayar-onay', 'c-ayar-onay', .1, Om.end - .2, ['ayarlar', 'topic', 'row', 'toggle'], at => [
+  list.push(ownerScene('c1-ayar-onay', 'c-ayar-onay', .1, Om.end - .2, ['ayarlar', 'topic', '!toggle'], at => [
     { from: .2, to: at(O.ayarlar.on), text: 'Sonraki örnekte değiştirme süresi kapalıdır.' },
     { from: at(O.ayarlar.on), to: at(O.row.on), text: 'Ayarlar → Sipariş ve mutfak → Sipariş ve onay.' },
     { from: at(O.row.on), to: 999, text: '“QR siparişlerinde garson onayı” açılır.' },
@@ -422,7 +434,7 @@ function scenes(): Scene[] {
     { from: at(Ct.waiting.on), to: 999, step: 8, text: 'Sipariş önce garsonun<br>onayına gider.' },
   ]));
   const Gt = taps('c-garson');
-  list.push(staffScene('c3-onay-tablet', 'c-garson', Gt.queue.on - 1.2, Gt.approve.tap! + 1.8, { frame: 'tablet', tag: 'İşletme tarafı <b>· Garson tableti</b>', focus: ['queue', 'approve'] }, at => [
+  list.push(staffScene('c3-onay-tablet', 'c-garson', Gt.queue.on - 1.2, Gt.approve.tap! + 1.8, { frame: 'tablet', tag: 'İşletme tarafı <b>· Garson tableti</b>', taps: ['approve'] }, at => [
     { from: .2, to: at(Gt.approve.on), text: 'Garson tabletinde onay bekleyen sipariş görünür.' },
     { from: at(Gt.approve.on), to: 99, text: '“Onayla ve mutfağa gönder” siparişi mutfağa geçirir.' },
   ]));
@@ -430,12 +442,12 @@ function scenes(): Scene[] {
     { from: .1, to: 999, step: 8, text: 'Misafirin ekranında<br>“Onaylandı, hazırlanıyor” yazar.' },
   ]));
   list.push(splitScene('c5-karsilastirma', 'QR siparişlerinde garson onayı',
-    { clip: 'a-siparis', t: A.sent + 1.6, label: 'Varsayılan · kapalı', focus: { x: 20, y: 300, width: 350, height: 260 } }, { clip: 'c-onay', t: Ct.waiting.on + .3, label: 'Açık', focus: { x: 20, y: 300, width: 350, height: 260 }, ring: Ct.waiting.box },
+    { clip: 'a-siparis', t: A.sent + 1.6, label: 'Varsayılan · kapalı' }, { clip: 'c-onay', t: Ct.waiting.on + .3, label: 'Açık' },
     'Kapalıyken sipariş doğrudan alınır; açıkken önce garson onaylar.'));
 
   // ===== 4. QR siparişlerini durdur =====
   const Q = taps('d-ayar-qr'), Qm = marks('d-ayar-qr');
-  list.push(ownerScene('d1-durdur', 'd-ayar-qr', .1, Qm.guestFrom + .1, ['card', 'stop', 'confirm', 'closed'], at => [
+  list.push(ownerScene('d1-durdur', 'd-ayar-qr', .1, Qm.guestFrom + .1, ['!card', 'stop', 'confirm'], at => [
     { from: .2, to: at(Q.stop.on), text: 'Kenar çubuğundaki kart QR siparişlerinin durumunu gösterir.' },
     { from: at(Q.stop.on), to: at(Q.confirm.on), text: '“Durdur” QR siparişlerini geçici olarak kapatır.' },
     { from: at(Q.confirm.on), to: at(Q.closed.on), text: 'Bir kez daha “Durdur” ile onaylanır.' },
@@ -449,9 +461,9 @@ function scenes(): Scene[] {
     { from: at(Dt.notice.on), to: 999, step: 9, text: 'Sepette “Şu an sipariş almıyoruz”<br>yazar; sipariş gönderilemez.' },
   ]));
   list.push(splitScene('d3-karsilastirma', 'QR siparişleri',
-    { clip: 'a-siparis', t: At.send.on + .2, label: 'Açık', tone: 'on', focus: { x: 20, y: 520, width: 350, height: 160 } }, { clip: 'd-durdu', t: Dt.sendOff.on + .3, label: 'Durduruldu', tone: 'off', focus: { x: 20, y: 540, width: 350, height: 150 }, ring: { x: Dt.notice.box.x, y: Dt.notice.box.y, width: Dt.notice.box.width, height: Dt.sendOff.box.y + Dt.sendOff.box.height - Dt.notice.box.y } },
+    { clip: 'a-siparis', t: At.send.on + .2, label: 'Açık', tone: 'on' }, { clip: 'd-durdu', t: Dt.sendOff.on + .3, label: 'Durduruldu', tone: 'off' },
     'Açıkken sipariş gönderilir; durdurulunca gönderilemez.'));
-  list.push(ownerScene('d4-ac', 'd-ayar-qr', Qm.guestTo + .2, Qm.end - .2, ['reopen', 'open'], at => [
+  list.push(ownerScene('d4-ac', 'd-ayar-qr', Qm.guestTo + .2, Qm.end - .2, ['reopen'], at => [
     { from: .2, to: 999, text: '“Siparişleri aç” QR siparişlerini yeniden açar.' },
   ]));
   list[list.length - 1].tag = 'İşletme tarafı <b>· Kenar çubuğu</b>';
@@ -462,7 +474,7 @@ function scenes(): Scene[] {
     { from: 0, to: at(Em.called), step: 10, text: '“Garson çağır”<br>garsona bildirim gönderir.' },
     { from: at(Em.called), to: 999, step: 10, text: 'Düğme “Garson çağrıldı”<br>olarak görünür.' },
   ], 'Garson çağırma ve hesap isteme'));
-  list.push(staffScene('e2-cagri-tablet', 'e-garson', Wt.chip.on - 1, Wt.close.tap! + 1.6, { frame: 'tablet', tag: 'İşletme tarafı <b>· Garson tableti</b>', focus: ['chip', 'close'] }, at => [
+  list.push(staffScene('e2-cagri-tablet', 'e-garson', Wt.chip.on - 1, Wt.close.tap! + 1.6, { frame: 'tablet', tag: 'İşletme tarafı <b>· Garson tableti</b>', taps: ['close'] }, at => [
     { from: .2, to: at(Wt.close.on), text: 'Çağrı garson tabletinde masa adıyla görünür.' },
     { from: at(Wt.close.on), to: 99, text: 'Garson ilgilenince çağrıyı kapatır.' },
   ]));
@@ -470,14 +482,14 @@ function scenes(): Scene[] {
     { from: 0, to: at(Et.card.on), step: 11, text: '“Hesabı iste”: misafir<br>ödeme şeklini seçer.' },
     { from: at(Et.card.on), to: 999, step: 11, text: '“Kart” seçilir; düğme<br>“Hesap istendi” olur.' },
   ]));
-  list.push(staffScene('e4-kasa', 'e-kasa', Kt.chip.on - 1, Kt.tile.off! + .4, { frame: 'window', title: 'Kasa ekranı', tag: 'İşletme tarafı <b>· Kasa ekranı</b>', focus: ['chip', 'tile'] }, at => [
+  list.push(staffScene('e4-kasa', 'e-kasa', Kt.chip.on - 1, Kt.tile.off! + .4, { frame: 'window', title: 'Kasa ekranı', tag: 'İşletme tarafı <b>· Kasa ekranı</b>' }, at => [
     { from: .2, to: at(Kt.tile.on), text: 'İstek kasa ekranına düşer; ödeme şekli “Kart” yanında yazar.' },
     { from: at(Kt.tile.on), to: 99, text: 'Masanın kartında hesap isteği işareti görünür.' },
   ]));
 
   // ===== 6. QR kodlarını yazdır =====
   const Y = taps('f-yazdir'), Ym = marks('f-yazdir');
-  list.push(ownerScene('f1-yazdir', 'f-yazdir', .1, Ym.end - .1, ['ayarlar', 'topic', 'part', 'a6', 'paper', 'print'], at => [
+  list.push(ownerScene('f1-yazdir', 'f-yazdir', .1, Ym.end - .1, ['ayarlar', 'topic', 'part', '!a6'], at => [
     { from: .2, to: at(Y.a6.on), text: 'Ayarlar → Masalar ve QR → QR kodlarını yazdır.' },
     { from: at(Y.a6.on), to: at(Y.paper.on), text: 'Baskı: A4’e 6 ya da 12 QR ya da A6 masa standı.' },
     { from: at(Y.paper.on), to: 999, text: 'Masa standı A4’e 4’lü ya da A6 kâğıda tek basılır.' },
@@ -492,7 +504,7 @@ function scenes(): Scene[] {
   // The chart card runs below the screen's edge: the outline keeps to the donut and its legend.
   for (const t of meta('g-rapor').taps ?? []) if (t.name === 'donut') t.box = { ...t.box, height: Math.min(t.box.height, 330) };
   const R = taps('g-rapor'), Rm = marks('g-rapor');
-  list.push(ownerScene('f3-rapor', 'g-rapor', .1, Rm.end - .1, ['rapor', 'range', 'detail', 'staff', 'donut'], at => [
+  list.push(ownerScene('f3-rapor', 'g-rapor', .1, Rm.end - .1, ['rapor', 'range', 'detail', 'staff', '!donut'], at => [
     { from: .2, to: at(R.donut.on), text: 'Satış ve Raporlar → 30 gün → Personel.' },
     { from: at(R.donut.on), to: 999, text: 'Siparişlerinizin ne kadarını QR ile alıyorsunuz? 30 günde görün.' },
   ], 'Rapor: QR sipariş payı'));
