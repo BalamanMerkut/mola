@@ -32,78 +32,20 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { APIRequestContext, Browser, Page } from '@playwright/test';
-import { DESKTOP, NO_HINTS, PASSWORD, ROOT, Recorder, kit, pause, typeIn, type Product, type StaffState } from './kayit-ortak';
+import { DESKTOP, NO_HINTS, PASSWORD, ROOT, Recorder, istanbul, kit, pause, typeIn, type StaffState } from './kayit-ortak';
 
 const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'kasiyer');
 const OUT = join(BASE, 'kayit');
 const run = join(BASE, `run-${new Date().toISOString().replace(/[:.]/g, '-')}`);
-/** A time of the Istanbul day `day` days from today's (real) date, as ms. */
-function istanbul(day: number, hh: number, mm: number) {
-  const d = new Date(Date.now() + 3 * 3600e3), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + day * 86400e3;
-  return start + (hh - 3) * 3600e3 + mm * 60e3;
-}
 const k = kit({ run, kafePort: 3742, merkezPort: 3798, saat: istanbul(-1, 22, 10) });
 mkdirSync(OUT, { recursive: true });
 const info: Record<string, unknown> = {};
 
 // ---------- Off-camera helpers ----------
-type Account = { id: string; version: number; balance: number; total: number; paid: number };
-type Tbl = { id: string; name: string; epoch: number; token: string; needsCleaning?: boolean; account: Account | null };
-type Group = { id: string; required: boolean; options: { id: string; extra: number }[] };
-type State = Omit<StaffState, 'tables' | 'orders' | 'products'> & { tables: Tbl[]; paymentContext: string; takeaways?: Tbl[]; products: (Omit<Product, 'groups'> & { groups: Group[] })[];
-  orders: (StaffState['orders'][number] & { tableName?: string })[] };
-/** A signed-in request context of one of the demo's accounts (isletme, kasiyer, garson). */
-async function as(user: string) {
-  const ctx = await k.deskBrowser.newContext(), page = await ctx.newPage();
-  await k.login(page, user);
-  return { req: page.request, close: () => ctx.close() };
-}
+type Tbl = { id: string; name: string; token: string; account: { balance: number } | null };
+type State = Omit<StaffState, 'tables'> & { tables: Tbl[] };
+const { as, order, advance, pays, settleAll } = k;
 const stateOf = async (req: APIRequestContext) => (await (await req.get(`${k.KAFE}/api/staff/state`)).json()) as State;
-/** A waiter's order (the first option of each required choice), as the waiter's tablet sends it. */
-async function order(table: string, lines: [string, number][]) {
-  const w = await as('garson'), s = await stateOf(w.req), t = s.tables.find(x => x.name === table)!;
-  const cart = lines.map(([name, quantity]) => {
-    const p = s.products.find(x => x.name === name);
-    if (!p) throw new Error(`Ürün yok: ${name}`);
-    const selections = p.groups.filter(g => g.required).map(g => ({ groupId: g.id, optionId: g.options[0].id }));
-    const unit = p.price + p.groups.filter(g => g.required).reduce((n, g) => n + g.options[0].extra, 0);
-    return { line: { productId: p.id, quantity, selections }, total: unit * quantity };
-  });
-  await k.post(w.req, '/api/staff/orders', { requestId: randomUUID(), tableId: t.id, lines: cart.map(c => c.line), expectedTotal: cart.reduce((n, c) => n + c.total, 0) });
-  await w.close();
-}
-/** The kitchen's steps through the owner's API (the kitchen screen is never on camera). `table`: undefined = every order. */
-async function advance(to: ('preparing' | 'ready' | 'served')[], table?: string) {
-  const api = await k.ownerApi(k.deskBrowser);
-  for (const step of to) {
-    const s = await stateOf(api.req);
-    for (const o of s.orders.filter(o => (!table || o.tableName === table) && !['served', 'cancelled', 'rejected', 'awaiting_approval'].includes(o.status) && o.status !== step))
-      await k.post(api.req, '/api/staff/status', { requestId: randomUUID(), orderId: o.id, version: o.version, status: step }).catch(() => {});
-  }
-  await api.close();
-}
-/** The cashier takes a whole bill (off camera). */
-async function pays(table: string, method: 'cash' | 'card') {
-  const c = await as('kasiyer'), s = await stateOf(c.req), a = [...s.tables, ...(s.takeaways ?? [])].find(t => t.name === table)!.account!;
-  await k.post(c.req, '/api/staff/payments', { requestId: randomUUID(), paymentContext: s.paymentContext, accountId: a.id, version: a.version, method, amount: a.balance, tendered: method === 'cash' ? Math.ceil(a.balance / 10000) * 10000 : a.balance });
-  await c.close();
-}
-/** Every open bill paid (cash and card by turns), every order served, empty bills closed, every table cleaned. */
-async function settleAll() {
-  await advance(['preparing', 'ready', 'served']);
-  const api = await k.ownerApi(k.deskBrowser);
-  let s = await stateOf(api.req), n = 0;
-  for (const t of [...s.tables, ...(s.takeaways ?? [])]) if (t.account && t.account.balance > 0) await pays(t.name, n++ % 3 === 1 ? 'cash' : 'card');
-  s = await stateOf(api.req);
-  for (const t of [...s.tables, ...(s.takeaways ?? [])]) if (t.account && !t.account.balance) await k.post(api.req, '/api/staff/close-empty', { requestId: randomUUID(), accountId: t.account.id }).catch(() => {});
-  await api.close();
-  await cleanAll();
-}
-async function cleanAll() {
-  const w = await as('garson'), s = await stateOf(w.req);
-  for (const t of s.tables.filter(t => t.needsCleaning)) await k.post(w.req, '/api/staff/tables/clean', { requestId: randomUUID(), tableId: t.id, epoch: t.epoch });
-  await w.close();
-}
 /** The guest at `table` asks for the bill and says "Kart" (a phone never on camera). */
 async function guestBill(table: string) {
   const api = await k.ownerApi(k.deskBrowser), token = (await stateOf(api.req)).tables.find(t => t.name === table)!.token; await api.close();

@@ -1,7 +1,7 @@
 /*
  * Shared stage of the YouTube videos (scripts/sosyal/youtube-kurgu.ts "QR menü ve QR sipariş", scripts/sosyal/youtube-kurulum-kurgu.ts
  * "Kurulum", and the training series: youtube-garson-kurgu.ts "Garson eğitimi", youtube-kasiyer-kurgu.ts "Kasiyer eğitimi",
- * youtube-mutfak-kurgu.ts "Mutfak eğitimi"): the
+ * youtube-mutfak-kurgu.ts "Mutfak eğitimi", youtube-mudur-kurgu.ts "Müdür eğitimi"): the
  * brand, the recorded clips (meta.json of scripts/sosyal/kayit-ortak.ts Recorder), the scene model and its HTML stage drawn for every frame, the logo cards, taps without a pointer (soft ripple; a red outline and a slight 1.2× camera move
  * only where marked "!"), the scene builders, rendering (Chrome screenshots piped to ffmpeg), joining with the music, chapters.
  *

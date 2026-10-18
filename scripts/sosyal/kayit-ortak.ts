@@ -1,6 +1,6 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
- * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts).
+ * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -352,8 +352,80 @@ export function kit(o: KitOptions) {
     if (patch.qrOpen !== undefined) await post(api.req, '/api/staff/qr-ordering', { requestId: randomUUID(), open: patch.qrOpen });
     await api.close();
   }
+
+  // ---------- Off-camera work of the demo's staff (the training videos' recorders) ----------
+  /** A signed-in request context of one of the demo's accounts (isletme, kasiyer, garson, mutfak, or one made by the run). */
+  async function as(user: string) {
+    const ctx = await deskBrowser.newContext(), page = await ctx.newPage();
+    await login(page, user);
+    return { req: page.request, close: () => ctx.close() };
+  }
+  const floorOf = async (req: APIRequestContext) => (await (await req.get(`${KAFE}/api/staff/state`)).json()) as Floor;
+  /** The waiter's order, as the tablet sends it (`Want`: a required choice without a named option takes its first). */
+  async function order(table: string, wants: Want[]) {
+    const w = await as('garson'), s = await floorOf(w.req), t = s.tables.find(x => x.name === table)!;
+    const cart = wants.map(x => cartLine(s, x));
+    await post(w.req, '/api/staff/orders', { requestId: randomUUID(), tableId: t.id, lines: cart.map(c => c.line), expectedTotal: cart.reduce((n, c) => n + c.total, 0) });
+    await w.close();
+  }
+  /** The kitchen's steps through the owner's API (no kitchen screen on camera). `table`: undefined = every order. */
+  async function advance(to: ('preparing' | 'ready' | 'served')[], table?: string) {
+    const api = await ownerApi(deskBrowser);
+    for (const step of to) {
+      const s = await floorOf(api.req);
+      for (const o of s.orders.filter(o => (!table || o.tableName === table) && !['served', 'cancelled', 'rejected', 'awaiting_approval'].includes(o.status) && o.status !== step))
+        await post(api.req, '/api/staff/status', { requestId: randomUUID(), orderId: o.id, version: o.version, status: step }).catch(() => {});
+    }
+    await api.close();
+  }
+  /** The cashier takes a whole bill (off camera). */
+  async function pays(table: string, method: 'cash' | 'card') {
+    const c = await as('kasiyer'), s = await floorOf(c.req), a = [...s.tables, ...(s.takeaways ?? [])].find(t => t.name === table)!.account!;
+    await post(c.req, '/api/staff/payments', { requestId: randomUUID(), paymentContext: s.paymentContext, accountId: a.id, version: a.version, method, amount: a.balance, tendered: method === 'cash' ? Math.ceil(a.balance / 10000) * 10000 : a.balance });
+    await c.close();
+  }
+  /** Every table waiting for cleaning cleaned (as the waiter does). */
+  async function cleanAll() {
+    const w = await as('garson'), s = await floorOf(w.req);
+    for (const t of s.tables.filter(t => t.needsCleaning)) await post(w.req, '/api/staff/tables/clean', { requestId: randomUUID(), tableId: t.id, epoch: t.epoch });
+    await w.close();
+  }
+  /** Every open bill paid (cash and card by turns), every order served, empty bills closed, every table cleaned. */
+  async function settleAll() {
+    await advance(['preparing', 'ready', 'served']);
+    const api = await ownerApi(deskBrowser);
+    let s = await floorOf(api.req), n = 0;
+    for (const t of [...s.tables, ...(s.takeaways ?? [])]) if (t.account && t.account.balance > 0) await pays(t.name, n++ % 3 === 1 ? 'cash' : 'card');
+    s = await floorOf(api.req);
+    for (const t of [...s.tables, ...(s.takeaways ?? [])]) if (t.account && !t.account.balance) await post(api.req, '/api/staff/close-empty', { requestId: randomUUID(), accountId: t.account.id }).catch(() => {});
+    await api.close();
+    await cleanAll();
+  }
   return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
+    as, order, advance, pays, cleanAll, settleAll,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
+}
+/** [product, quantity, option names, note] of a waiter's order line. */
+export type Want = [string, number, string[]?, string?];
+type FloorAccount = { id: string; version: number; balance: number; total: number; paid: number };
+type FloorTable = { id: string; name: string; epoch: number; token: string; needsCleaning?: boolean; account: FloorAccount | null };
+/** One line of a waiter's order and its total (a required choice without a named option takes its first). */
+export function cartLine(s: { products: FloorProduct[] }, [name, quantity, opts = [], note]: Want) {
+  const p = s.products.find(x => x.name === name);
+  if (!p) throw new Error(`Ürün yok: ${name}`);
+  const picked = p.groups.flatMap(g => { const o = g.options.find(o => opts.includes(o.name)) ?? (g.required ? g.options[0] : undefined); return o ? [{ g, o }] : []; });
+  const unit = p.price + picked.reduce((n, x) => n + x.o.extra, 0);
+  return { line: { productId: p.id, quantity, selections: picked.map(x => ({ groupId: x.g.id, optionId: x.o.id })), ...(note ? { note } : {}) }, total: unit * quantity };
+}
+type FloorProduct = { id: string; name: string; price: number; groups: { id: string; required: boolean; options: { id: string; name: string; extra: number }[] }[] };
+/** The staff snapshot as these helpers read it. */
+type Floor = { paymentContext: string; tables: FloorTable[]; takeaways?: FloorTable[];
+  products: FloorProduct[];
+  orders: { id: string; status: string; version: number; tableName?: string }[] };
+/** A time of the Istanbul day `day` days from today's (real) date, as ms (for kit({ saat }) and setClock). */
+export function istanbul(day: number, hh: number, mm: number) {
+  const d = new Date(Date.now() + 3 * 3600e3), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + day * 86400e3;
+  return start + (hh - 3) * 3600e3 + mm * 60e3;
 }
 export type Kit = ReturnType<typeof kit>;
 

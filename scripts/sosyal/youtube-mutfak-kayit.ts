@@ -33,16 +33,11 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
-import { DESKTOP, NO_HINTS, PASSWORD, PHONE, ROOT, Recorder, TABLET, kit, pause, typeIn, type StaffState } from './kayit-ortak';
+import { DESKTOP, NO_HINTS, PASSWORD, PHONE, ROOT, Recorder, TABLET, cartLine, istanbul, kit, pause, typeIn, type StaffState } from './kayit-ortak';
 
 const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'mutfak');
 const OUT = join(BASE, 'kayit');
 const run = join(BASE, `run-${new Date().toISOString().replace(/[:.]/g, '-')}`);
-/** A time of the Istanbul day `day` days from today's (real) date, as ms. */
-function istanbul(day: number, hh: number, mm: number) {
-  const d = new Date(Date.now() + 3 * 3600e3), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + day * 86400e3;
-  return start + (hh - 3) * 3600e3 + mm * 60e3;
-}
 const k = kit({ run, kafePort: 3752, merkezPort: 3797, saat: istanbul(0, 11, 40) });
 mkdirSync(OUT, { recursive: true });
 const info: Record<string, unknown> = {};
@@ -53,29 +48,8 @@ type Group = { id: string; name: string; required: boolean; options: Option[] };
 type Line = { id: string; productId: string; quantity: number; name: string };
 type State = Omit<StaffState, 'products' | 'orders'> & { products: { id: string; name: string; price: number; groups: Group[] }[];
   orders: (StaffState['orders'][number] & { tableName?: string; number: number; lines: Line[] })[] };
-/** A signed-in request context of one of the demo's accounts (isletme, garson, mutfak). */
-async function as(user: string) {
-  const ctx = await k.deskBrowser.newContext(), page = await ctx.newPage();
-  await k.login(page, user);
-  return { req: page.request, close: () => ctx.close() };
-}
+const { as, order, cleanAll } = k;
 const stateOf = async (req: APIRequestContext) => (await (await req.get(`${k.KAFE}/api/staff/state`)).json()) as State;
-/** [product, quantity, option names, note]: a required choice without a named option takes its first. */
-type Want = [string, number, string[]?, string?];
-function cartLine(s: State, [name, quantity, opts = [], note]: Want) {
-  const p = s.products.find(x => x.name === name);
-  if (!p) throw new Error(`Ürün yok: ${name}`);
-  const picked = p.groups.flatMap(g => { const o = g.options.find(o => opts.includes(o.name)) ?? (g.required ? g.options[0] : undefined); return o ? [{ g, o }] : []; });
-  const unit = p.price + picked.reduce((n, x) => n + x.o.extra, 0);
-  return { line: { productId: p.id, quantity, selections: picked.map(x => ({ groupId: x.g.id, optionId: x.o.id })), ...(note ? { note } : {}) }, total: unit * quantity };
-}
-/** The waiter's order, as the tablet sends it. */
-async function order(table: string, wants: Want[]) {
-  const w = await as('garson'), s = await stateOf(w.req), t = s.tables.find(x => x.name === table)!;
-  const cart = wants.map(x => cartLine(s, x));
-  await k.post(w.req, '/api/staff/orders', { requestId: randomUUID(), tableId: t.id, lines: cart.map(c => c.line), expectedTotal: cart.reduce((n, c) => n + c.total, 0) });
-  await w.close();
-}
 const ordersOf = async (table: string) => { const api = await k.ownerApi(k.deskBrowser), s = await stateOf(api.req); await api.close(); return s.orders.filter(o => o.tableName === table && !['served', 'cancelled', 'rejected'].includes(o.status)); };
 /** Kitchen steps (as the kitchen account) and "Teslim edildi" (as the waiter), off camera. */
 async function advance(table: string, to: ('preparing' | 'ready' | 'served')[]) {
@@ -85,13 +59,6 @@ async function advance(table: string, to: ('preparing' | 'ready' | 'served')[]) 
       await k.post(who.req, '/api/staff/status', { requestId: randomUUID(), orderId: o.id, version: o.version, status: step });
     await who.close();
   }
-}
-
-/** Every table waiting for cleaning cleaned (as the waiter does): the clips' tables take orders. */
-async function cleanAll() {
-  const w = await as('garson'), s = await stateOf(w.req) as unknown as { tables: { id: string; epoch: number; needsCleaning?: boolean }[] };
-  for (const t of s.tables.filter(t => t.needsCleaning)) await k.post(w.req, '/api/staff/tables/clean', { requestId: randomUUID(), tableId: t.id, epoch: t.epoch });
-  await w.close();
 }
 
 /** The owner's Stok, set up off camera: ingredients with what is on the shelf now, and five recipes. */
