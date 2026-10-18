@@ -200,7 +200,8 @@ function downloadsOf(config: Config, dist: string, warnings: string[]): Download
   }
   return { enabled: !!d.enabled, version: d.version || '', files: d.files ?? {}, ...(d.builtAt ? { builtAt: d.builtAt } : {}) };
 }
-const megabytes = (n: number) => `${(n / 1048576).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} MB`;
+// Under 1 MB (the Android app, ~100 KB) in KB: rounding to whole MB showed "0 MB".
+const megabytes = (n: number) => n < 1048576 ? `${Math.max(1, Math.round(n / 1024)).toLocaleString('tr-TR')} KB` : `${(n / 1048576).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} MB`;
 function downloadsHtml(d: Downloads) {
   const cards = PLATFORMS.map(p => {
     const c = PLATFORM_COPY[p], f = d.enabled ? d.files[p] : undefined;
