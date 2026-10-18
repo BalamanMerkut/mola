@@ -65,6 +65,14 @@ test('owner: grouped menu, the bell, Kasa ve giderler (two tab levels), Personel
   await expect(page.getByLabel('Tek seferde (TL)', { exact: true })).toBeVisible();
   await openCash(page, 'Kasa ayarları', 'Kart ve yazar kasa');
   await expect(page.getByLabel('POS komisyon oranı (%)', { exact: true })).toBeVisible();
+  // 19 Ekim: the rate's hint sits under the box, not beside it (the box's "%" read into it: "%₺1,75 komisyon …").
+  const rate = page.getByLabel('POS komisyon oranı (%)', { exact: true });
+  const before = await rate.inputValue();
+  await rate.fill('1,75');
+  const hint = page.getByTestId('commission-hint');
+  await expect(hint).toBeVisible();
+  expect((await hint.boundingBox())!.y).toBeGreaterThan((await rate.boundingBox())!.y + (await rate.boundingBox())!.height - 1);
+  await rate.fill(before); await rate.blur();
   await openCash(page, 'Kasa ayarları', 'Gün sonu');
   await expect(page.getByLabel('Kapanış saati', { exact: true })).toBeVisible();
   await shot(page, 'yeni-duzen-kasa-ayarlari.png', info.outputPath('kasa-ayarlari.png'));
