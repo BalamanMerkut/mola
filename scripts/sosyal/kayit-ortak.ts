@@ -1,5 +1,6 @@
 /*
- * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, scripts/sosyal/youtube-qr-kayit.ts).
+ * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
+ * youtube-garson-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -110,6 +111,15 @@ export class Recorder {
 }
 
 export const pause = (page: Page, ms: number) => page.waitForTimeout(ms);
+/** Types like a person after a tap on the field (the edit keeps it at this speed). */
+export async function typeIn(page: Page, rec: Recorder, name: string, field: Locator, text: string, o: { lead?: number; delay?: number } = {}) {
+  await rec.tap(page, name, field, { lead: o.lead ?? 700, hold: 150 });
+  await field.pressSequentially(text, { delay: o.delay ?? 55 });
+  await pause(page, 250);
+}
+/** An init script: no spell-check squiggles under typed names; Mola Yardım's one-time hint stays closed (as in playwright.config.ts). */
+export const NO_HINTS = `try { localStorage.setItem('mola-yardim-ipucu', 'off'); localStorage.setItem('mola-campaign-ended', 'off'); } catch (e) {}
+  document.addEventListener('focusin', function (e) { if (e.target && e.target.setAttribute) e.target.setAttribute('spellcheck', 'false'); }, true);`;
 /** Glides the finger to the target, then taps it. */
 export async function press(page: Page, target: Locator, o: { hold?: number; steps?: number } = {}) {
   await target.scrollIntoViewIfNeeded();
@@ -280,7 +290,41 @@ export function kit(o: KitOptions) {
     }
     return { ctx, page };
   }
-  return { KAFE, MERKEZ, run: o.run, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
+  /**
+   * The demo's live floor calmed (scripts/sosyal/youtube-qr-kayit.ts, youtube-garson-kayit.ts): pending QR approvals and cancel
+   * requests answered, open orders served (`keepOrders`: left as they are, the floor keeps its mixed states), calls answered,
+   * "İlk adımlar" dismissed; unless `quiet`, the cash day opened by the cashier too (the counter screen's "Kasa açılışı" card
+   * goes away). Then only a clip's own orders and calls appear.
+   */
+  async function calm(browser: Browser, quiet = false, opt: { keepOrders?: boolean } = {}) {
+    const api = await ownerApi(browser), req = api.req;
+    const s = await state(req);
+    const tryPost = async (path: string, body: unknown) => { try { await post(req, path, body); return true; } catch { return false; } };
+    for (const o of s.orders.filter(o => o.status === 'awaiting_approval')) await tryPost('/api/staff/orders/review', { requestId: randomUUID(), orderId: o.id, version: o.version, approve: true });
+    for (const o of (await state(req)).orders.filter(o => o.cancelRequested)) await tryPost('/api/staff/cancel', { requestId: randomUUID(), orderId: o.id, version: o.version, stockUsed: false });
+    if (!opt.keepOrders) for (const step of ['preparing', 'ready', 'served'] as const)
+      for (const o of (await state(req)).orders.filter(o => !['served', 'cancelled', 'rejected'].includes(o.status)))
+        await tryPost('/api/staff/status', { requestId: randomUUID(), orderId: o.id, version: o.version, status: step });
+    for (const c of (await state(req)).serviceCalls) await tryPost('/api/staff/calls/resolve', { callId: c.id });
+    await tryPost('/api/staff/first-steps', { step: 'dismiss' });
+    await api.close();
+    if (quiet) return;
+    const ctx = await browser.newContext(), p = await ctx.newPage();
+    await login(p, 'kasiyer');
+    await post(p.request, '/api/staff/cash/open', { requestId: randomUUID(), amount: 50000 }).catch(() => {});
+    await ctx.close();
+    const check = await ownerApi(browser), after = await state(check.req);
+    await check.close();
+    console.log(`Salon sakin: açık sipariş ${after.orders.filter(o => !['served', 'cancelled', 'rejected'].includes(o.status)).length}, çağrı ${after.serviceCalls.length}`);
+  }
+  /** Ayarlar values changed through the owner's API between the clips (garson onayı, change window, QR siparişleri açık/kapalı). */
+  async function setPrefs(browser: Browser, patch: { waiterApproval?: boolean; changeSeconds?: number; qrOpen?: boolean }) {
+    const api = await ownerApi(browser);
+    if (patch.waiterApproval !== undefined || patch.changeSeconds !== undefined) await settings(api.req, patch);
+    if (patch.qrOpen !== undefined) await post(api.req, '/api/staff/qr-ordering', { requestId: randomUUID(), open: patch.qrOpen });
+    await api.close();
+  }
+  return { KAFE, MERKEZ, run: o.run, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 export type Kit = ReturnType<typeof kit>;

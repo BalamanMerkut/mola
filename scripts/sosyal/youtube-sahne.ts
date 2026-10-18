@@ -1,6 +1,6 @@
 /*
  * Shared stage of the YouTube videos (scripts/sosyal/youtube-kurgu.ts "QR menü ve QR sipariş", scripts/sosyal/youtube-kurulum-kurgu.ts
- * "Kurulum"): the brand, the recorded clips (meta.json of scripts/sosyal/kayit-ortak.ts Recorder), the scene model and its HTML
+ * "Kurulum", scripts/sosyal/youtube-garson-kurgu.ts "Garson eğitimi"): the brand, the recorded clips (meta.json of scripts/sosyal/kayit-ortak.ts Recorder), the scene model and its HTML
  * stage drawn for every frame, the logo cards, taps without a pointer (soft ripple; a red outline and a slight 1.2× camera move
  * only where marked "!"), the scene builders, rendering (Chrome screenshots piped to ffmpeg), joining with the music, chapters.
  *
@@ -316,8 +316,10 @@ export function logoCard(o: { dot0: number; dot1: number; lift?: [number, number
 }
 /** The opening: the logo, then the video's title (and a line under it). */
 export const introCard = (title: string, line: string) => logoCard({ dot0: .9, dot1: 2.7, lift: [3.6, 4.5], extraIn: 4.3, extraClass: 'title', extra: `<h1>${title}</h1><p>${line}</p>` });
-/** The closing: the logo, the address and "30 gün ücretsiz deneme". */
-export const endCard = logoCard({ dot0: .6, dot1: 2.0, lift: [2.6, 3.4], extraIn: 3.2, extraClass: 'site', extra: `<b>molayazilim.com.tr</b><span>30 gün ücretsiz deneme</span>` });
+/** The closing: the logo, the address and a line under it (the training series: "Mola eğitim serisi"). */
+export const endCardWith = (line: string) => logoCard({ dot0: .6, dot1: 2.0, lift: [2.6, 3.4], extraIn: 3.2, extraClass: 'site', extra: `<b>molayazilim.com.tr</b><span>${line}</span>` });
+/** The closing of the introduction videos: "30 gün ücretsiz deneme". */
+export const endCard = endCardWith('30 gün ücretsiz deneme');
 
 // ---------- Taps, cuts and the (rare) camera moves ----------
 /*
@@ -509,6 +511,9 @@ export async function uret(o: { scenes: () => Scene[]; mp4: string; music: strin
   const args = process.argv.slice(2), only = args.filter(a => !a.startsWith('--'));
   const stills = args.includes('--kare'), coverOnly = args.includes('--kapak');
   const list = o.scenes();
+  // SAHNE_DOKUM=<file>: every scene's stage page written to one JSON file, nothing rendered (to check that a change to this
+  // shared module leaves another video's scenes as they were).
+  if (process.env.SAHNE_DOKUM) { writeFileSync(process.env.SAHNE_DOKUM, JSON.stringify(list.map(s => ({ name: s.name, duration: s.duration, toc: s.toc ?? null, html: stageHtml(s) })), null, 1)); return; }
   const pick = (s: Scene) => !only.length || only.includes(s.name) || only.some(x => s.name.startsWith(x));
   const browser = await chromium.launch({ channel: 'chrome' });
   try {

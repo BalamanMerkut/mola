@@ -286,3 +286,23 @@ test('phones: the bottom bar and "Daha fazla" hold every page, Destek is a menu 
   await expect(reportTabs(page).getByRole('button', { name: 'Özet', exact: true })).toHaveAttribute('aria-current', 'page');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test('18 Ekim: a sent waiter order does not come back in the basket when the same table is chosen again', async ({ page }) => {
+  // "Sipariş al": sending lets go of the table (the order screen closes), so the basket kept for a reload used to stay and
+  // the sent lines were back the next time that table was chosen, ready to be sent twice.
+  await login(page.request, 'garson'); await ensureSetup(page.request);
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await page.goto('/');
+  await openView(page, 'Sipariş al');
+  await page.getByLabel('Sipariş masası').selectOption('table-3');
+  await page.getByRole('button', { name: 'Demleme Çay · bir adet ekle' }).click();
+  await expect(page.locator('.staff-basket-bar')).toContainText('1 ürün');
+  await page.locator('.staff-basket-open').click();
+  await page.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
+  await expect(page.getByText(/Sipariş #\d+ mutfağa gönderildi/)).toBeVisible();
+  expect(await page.evaluate(() => Object.keys(sessionStorage).filter(k => k.includes('basket')))).toEqual([]);
+  await openView(page, 'Sipariş al');
+  await page.getByLabel('Sipariş masası').selectOption('table-3');
+  await expect(page.getByRole('button', { name: 'Demleme Çay · bir adet ekle' })).toBeVisible();
+  await expect(page.locator('.staff-basket-bar')).toHaveCount(0);
+});

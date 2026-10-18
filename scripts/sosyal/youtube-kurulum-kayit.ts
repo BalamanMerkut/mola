@@ -31,7 +31,7 @@ import { extname, join, normalize } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { chromium, request as pwRequest, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { validVkn } from '../../packages/domain/invoice';
-import { ROOT, Recorder, TABLET, imagesOnScreen, pause, smoothScroll } from './kayit-ortak';
+import { NO_HINTS, ROOT, Recorder, TABLET, imagesOnScreen, pause, smoothScroll, typeIn } from './kayit-ortak';
 
 const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'kurulum');
 const OUT = join(BASE, 'kayit');
@@ -120,9 +120,6 @@ async function approve(name: string) {
 
 // ---------- Screens ----------
 let desk: Browser;
-// No spell-check squiggles under typed names; Mola Yardım's one-time hint stays closed (as in playwright.config.ts).
-const NO_HINTS = `try { localStorage.setItem('mola-yardim-ipucu', 'off'); localStorage.setItem('mola-campaign-ended', 'off'); } catch (e) {}
-  document.addEventListener('focusin', function (e) { if (e.target && e.target.setAttribute) e.target.setAttribute('spellcheck', 'false'); }, true);`;
 async function deskContext() {
   const ctx = await desk.newContext({ viewport: { width: DESK.width, height: DESK.height }, deviceScaleFactor: DESK.scale, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' });
   await ctx.addInitScript(NO_HINTS);
@@ -143,12 +140,6 @@ async function sampleLan(ctx: BrowserContext) {
 const shots = join(RUN, 'ekran'); mkdirSync(shots, { recursive: true });
 let shotN = 0;
 async function shot(page: Page, name: string) { await page.screenshot({ path: join(shots, `${String(++shotN).padStart(2, '0')}-${name}.png`) }); }
-/** Types like a person (the edit keeps it at this speed). */
-async function typeIn(page: Page, rec: Recorder, name: string, field: ReturnType<Page['locator']>, text: string, o: { lead?: number; delay?: number } = {}) {
-  await rec.tap(page, name, field, { lead: o.lead ?? 700, hold: 150 });
-  await field.pressSequentially(text, { delay: o.delay ?? 55 });
-  await pause(page, 250);
-}
 const meta: Record<string, unknown> = {};
 
 // ---------- The clips ----------

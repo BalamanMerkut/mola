@@ -220,6 +220,9 @@ export function Composer({ billLines = [], sentOrders, canAdd = false, sentExtra
     try {
       const result = await api<SentOrder>(guest ? '/api/guest/orders' : takeaway ? '/api/staff/takeaway/orders' : '/api/staff/orders', pending.current, guest);
       clearSubmission(); setCart([]); setShowCart(false); setPacked(false);
+      // 18 Ekim: the saved basket goes now, not in the effect above: `onSent` may close this screen first (the staff order
+      // window), the effect never ran, and the sent lines came back the next time the table's "Sipariş al" opened.
+      if (basketKey) try { sessionStorage.removeItem(basketKey); } catch { /* storage refused: nothing was kept */ }
       // Waiting for the waiter is not "received" yet; the guest is told so, and how long the order can still be changed.
       if (guest) { const approval = result.status === 'awaiting_approval'; setSentForApproval(approval); setSentNumber(result.number); setSuccess(approval ? (en ? `Order #${result.number} was sent for waiter approval. It will be prepared once approved.` : `Sipariş #${result.number} garson onayına gönderildi. Onaylandığında hazırlanmaya başlanacak.`) : (en ? `Order #${result.number} received.` : `Sipariş #${result.number} alındı.`)); } else setStaffSent(result.takeawayNumber ? `Masasız #${result.takeawayNumber} mutfağa gönderildi.` : `Sipariş #${result.number} mutfağa gönderildi.`);
       onSent(result);

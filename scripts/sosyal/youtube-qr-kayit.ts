@@ -27,7 +27,6 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
 import type { Browser, Page } from '@playwright/test';
 import QRCode from 'qrcode';
 import { DESKTOP, PHONE, ROOT, Recorder, TABLET, imagesOnScreen, kit, pause, qrCameraHtml, smoothScroll } from './kayit-ortak';
@@ -40,35 +39,8 @@ const run = reuse ?? join(ROOT, '.local', 'sosyal', 'youtube', `run-${new Date()
 const k = kit({ run, reuse: !!reuse || attach, kafePort: 3721, merkezPort: 3797 });
 mkdirSync(OUT, { recursive: true });
 
-// ---------- The demo's live floor, calmed ----------
-async function calm(browser: Browser, quiet = false) {
-  const api = await k.ownerApi(browser), req = api.req;
-  const s = await k.state(req);
-  const tryPost = async (path: string, body: unknown) => { try { await k.post(req, path, body); return true; } catch { return false; } };
-  for (const o of s.orders.filter(o => o.status === 'awaiting_approval')) await tryPost('/api/staff/orders/review', { requestId: randomUUID(), orderId: o.id, version: o.version, approve: true });
-  for (const o of (await k.state(req)).orders.filter(o => o.cancelRequested)) await tryPost('/api/staff/cancel', { requestId: randomUUID(), orderId: o.id, version: o.version, stockUsed: false });
-  for (const step of ['preparing', 'ready', 'served'] as const)
-    for (const o of (await k.state(req)).orders.filter(o => !['served', 'cancelled', 'rejected'].includes(o.status)))
-      await tryPost('/api/staff/status', { requestId: randomUUID(), orderId: o.id, version: o.version, status: step });
-  for (const c of (await k.state(req)).serviceCalls) await tryPost('/api/staff/calls/resolve', { callId: c.id });
-  await tryPost('/api/staff/first-steps', { step: 'dismiss' });
-  await api.close();
-  if (quiet) return;
-  // The cash day opened by the cashier (the counter screen's "Kasa açılışı" card goes away).
-  const ctx = await browser.newContext(), p = await ctx.newPage();
-  await k.login(p, 'kasiyer');
-  await k.post(p.request, '/api/staff/cash/open', { requestId: randomUUID(), amount: 50000 }).catch(() => {});
-  await ctx.close();
-  const check = await k.ownerApi(browser), after = await k.state(check.req);
-  await check.close();
-  console.log(`Salon sakin: açık sipariş ${after.orders.filter(o => !['served', 'cancelled', 'rejected'].includes(o.status)).length}, çağrı ${after.serviceCalls.length}`);
-}
-async function setPrefs(browser: Browser, patch: { waiterApproval?: boolean; changeSeconds?: number; qrOpen?: boolean }) {
-  const api = await k.ownerApi(browser);
-  if (patch.waiterApproval !== undefined || patch.changeSeconds !== undefined) await k.settings(api.req, patch);
-  if (patch.qrOpen !== undefined) await k.post(api.req, '/api/staff/qr-ordering', { requestId: randomUUID(), open: patch.qrOpen });
-  await api.close();
-}
+// The demo's live floor calmed and the settings between the clips: shared (scripts/sosyal/kayit-ortak.ts).
+const { calm, setPrefs } = k;
 
 // ---------- Guest steps ----------
 const NO_POINTER = 'window.__molaNoFinger = true';
