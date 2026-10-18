@@ -1,6 +1,6 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
- * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts).
+ * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).

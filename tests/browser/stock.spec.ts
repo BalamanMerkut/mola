@@ -197,6 +197,8 @@ test('Stok: ingredients → recipe with options → sales lower the stock → Ü
   await expect(dialog.locator('.stock-count-row').filter({ hasText: 'Kahve' }).locator('.stock-count-diff')).toHaveText('−27 g');
   await dialog.getByRole('button', { name: /^Sayımı kaydet/ }).click();
   await expect(page.getByText(/Sayım kaydedildi \(1 malzeme\)/)).toBeVisible();
+  // A count writes no expense (18 Ekim: the notice offered "Giderlerde gör").
+  await expect(page.getByRole('link', { name: 'Giderlerde gör' })).toHaveCount(0); await expect(page.getByRole('button', { name: 'Giderlerde gör' })).toHaveCount(0);
   const moves = page.getByRole('region', { name: 'Son hareketler' });
   await expect(moves.locator('.stock-entry').first()).toContainText('Fark −27 g');
   await expect(moves).toContainText('Gider olarak kaydedildi'); await expect(moves).toContainText('Ödenmedi (veresiye)');
@@ -372,6 +374,7 @@ test('Stok: ingredients → recipe with options → sales lower the stock → Ü
   await dialog.getByLabel('Atılan miktar *', { exact: true }).fill('100');
   await dialog.getByRole('button', { name: 'Fireyi kaydet' }).click();
   await expect(kitchen.getByText('Süt: 100 ml fire kaydedildi.')).toBeVisible();
+  await expect(kitchen.getByText('Giderlerde gör')).toHaveCount(0);
   await shot(kitchen, 'stok-mutfak.png', info.outputPath('stok-mutfak.png'));
   for (const [width, height] of VIEWPORTS) { await kitchen.setViewportSize({ width, height }); expect(await noSideScroll(kitchen), `Stok (mutfak) ${width}×${height}`).toBe(true); }
   await kitchen.setViewportSize({ width: 1280, height: 860 });

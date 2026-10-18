@@ -1,6 +1,7 @@
 /*
  * Shared stage of the YouTube videos (scripts/sosyal/youtube-kurgu.ts "QR menü ve QR sipariş", scripts/sosyal/youtube-kurulum-kurgu.ts
- * "Kurulum", and the training series: youtube-garson-kurgu.ts "Garson eğitimi", youtube-kasiyer-kurgu.ts "Kasiyer eğitimi"): the
+ * "Kurulum", and the training series: youtube-garson-kurgu.ts "Garson eğitimi", youtube-kasiyer-kurgu.ts "Kasiyer eğitimi",
+ * youtube-mutfak-kurgu.ts "Mutfak eğitimi"): the
  * brand, the recorded clips (meta.json of scripts/sosyal/kayit-ortak.ts Recorder), the scene model and its HTML stage drawn for every frame, the logo cards, taps without a pointer (soft ripple; a red outline and a slight 1.2× camera move
  * only where marked "!"), the scene builders, rendering (Chrome screenshots piped to ffmpeg), joining with the music, chapters.
  *
@@ -506,10 +507,12 @@ async function joinWithMusic(list: Scene[], o: { mp4: string; music: string }) {
 
 /**
  * The training series' thumbnail (E1, E2 …): "EĞİTİM", the title on two lines, a short line and the brand at the left; a screen of
- * the app (`shot`, a PNG in the work folder) tilted at the right, in its device: the waiter's tablet or the counter's window.
+ * the app (`shot`, a PNG in the work folder) tilted at the right, in its device: the waiter's tablet, the counter's window or
+ * the kitchen display.
  */
-export function trainingThumb(o: { title: string; line: string; shot: string; device: 'tablet' | 'window' }) {
+export function trainingThumb(o: { title: string; line: string; shot: string; device: 'tablet' | 'window' | 'display' }) {
   const device = o.device === 'tablet' ? `<div class="tab"><div class="screen"><img src="${img(o.shot)}"></div></div>`
+    : o.device === 'display' ? `<div class="disp"><div class="screen"><img src="${img(o.shot)}"></div></div>`
     : `<div class="win"><div class="winbar">${mark(18)}<em>Mola · İşletme yönetimi</em></div><div class="screen"><img src="${img(o.shot)}"></div></div>`;
   return base(1280, 720, `
   <div class="left"><small>EĞİTİM</small><h1 class="serif">${o.title}</h1><p>${o.line}</p>
@@ -526,7 +529,9 @@ export function trainingThumb(o: { title: string; line: string; shot: string; de
   .win{position:absolute;left:600px;top:150px;width:720px;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.25);transform:rotate(-3deg)}
   .win .winbar{display:flex;align-items:center;gap:10px;height:34px;padding-left:12px;background:#f3f3f3;border-bottom:1px solid #e3e3e3;font:400 15px/1 'Segoe UI',system-ui,sans-serif;color:#1f1f1f}
   .win .winbar svg{border-radius:4px}.win .winbar em{font-style:normal}
-  .win .screen{background:${C.paper}}.win img{display:block;width:100%}`);
+  .win .screen{background:${C.paper}}.win img{display:block;width:100%}
+  .disp{position:absolute;left:600px;top:140px;width:720px;padding:12px 12px 24px;border-radius:16px;background:#222c27;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),inset 0 0 0 2px #3a4a41;transform:rotate(-3deg)}
+  .disp .screen{border-radius:5px;overflow:hidden;background:${C.paper}}.disp img{display:block;width:100%}`);
 }
 /** A 1280×720 HTML page as the thumbnail (kapak.jpg) and a small copy to see how it reads in YouTube's list. */
 export async function shootThumb(browser: Browser, html: string) {

@@ -178,7 +178,8 @@ function CountForm({ view, onClose, onSaved }: { view: StockView; onClose: () =>
   const list = [...view.items].sort((a, b) => Number(a.kind === 'product') - Number(b.kind === 'product') || a.name.localeCompare(b.name, 'tr'));
   // Each row starts in the unit its "Beklenen" is shown in (904 g → g, 2,4 kg → kg): 850 typed there means 850 g.
   const [drafts, setDrafts] = useState<Record<string, AmountDraft>>(() => Object.fromEntries(list.map(i => [i.id, amountLike(i.stock, i.unit)]))), [check, setCheck] = useState('');
-  const { send, busy, error, uncertain, setError } = useSend(onSaved);
+  // Only the message: the API answer is not an expense id (18 Ekim: a count or fire showed "Giderlerde gör").
+  const { send, busy, error, uncertain, setError } = useSend(message => onSaved(message));
   const filled = list.filter(i => drafts[i.id].text.trim());
   const bad = filled.filter(i => !(amountOf(drafts[i.id]) >= 0));
   const save = (confirmed = false) => { if (!filled.length) { setError('En az bir malzemenin sayılan miktarını yazın.'); return; } if (bad.length) { setError(`${bad[0].name}: sayıyı doğru yazın.`); return; }
@@ -203,7 +204,8 @@ function CountForm({ view, onClose, onSaved }: { view: StockView; onClose: () =>
 function WasteForm({ view, onClose, onSaved }: { view: StockView; onClose: () => void; onSaved: (message: string) => void }) {
   const [itemId, setItemId] = useState(''), item = view.items.find(i => i.id === itemId);
   const [quantity, setQuantity] = useState<AmountDraft>(emptyAmount('g', true)), [reason, setReason] = useState(WASTE_REASONS[0]), [other, setOther] = useState(''), [check, setCheck] = useState('');
-  const { send, busy, error, uncertain, setError } = useSend(onSaved);
+  // Only the message: the API answer is not an expense id (18 Ekim: a count or fire showed "Giderlerde gör").
+  const { send, busy, error, uncertain, setError } = useSend(message => onSaved(message));
   const q = amountOf(quantity), text = reason === 'Diğer' ? other.trim() : reason;
   // A fire ten times the shelf is almost always the wrong unit; a small one is normal (only the upward check).
   const save = (confirmed = false) => { if (!item) return setError('Malzemeyi seçin.'); if (!(q > 0)) return setError('Atılan miktarı yazın.'); if (!text) return setError('Nedenini yazın.'); const odd = unlikely(q, item.stock, item.unit, false); if (odd && !confirmed) return setCheck(odd); setCheck(''); void send({ path: '/api/staff/stock/waste', body: { requestId: requestId(), itemId, quantity: q, reason: text }, message: `${item.name}: ${formatAmount(q, item.unit)} fire kaydedildi.` }); };
@@ -223,7 +225,8 @@ function WasteForm({ view, onClose, onSaved }: { view: StockView; onClose: () =>
 function ReturnForm({ data, view, onClose, onSaved }: { data: StaffSnapshot; view: StockView; onClose: () => void; onSaved: (message: string) => void }) {
   const tracked = data.products.filter(p => view.products[p.id] && view.products[p.id].status !== 'none');
   const [productId, setProductId] = useState(''), [quantity, setQuantity] = useState('1'), product = tracked.find(p => p.id === productId);
-  const { send, busy, error, uncertain, setError } = useSend(onSaved);
+  // Only the message: the API answer is not an expense id (18 Ekim: a count or fire showed "Giderlerde gör").
+  const { send, busy, error, uncertain, setError } = useSend(message => onSaved(message));
   const q = Number(quantity.replace(',', '.'));
   const save = () => { if (!product) return setError('Ürünü seçin.'); if (!(q > 0)) return setError('Adedi yazın.'); void send({ path: '/api/staff/stock/return', body: { requestId: requestId(), productId, quantity: q }, message: `${product.name} stoğa geri eklendi.` }); };
   return <Modal title="İade stoğa döndü" className="stock-modal" onClose={() => { if (!busy) onClose(); }}><form className="modal-body stock-form" onSubmit={e => { e.preventDefault(); save(); }}>
