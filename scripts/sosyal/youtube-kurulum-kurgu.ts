@@ -19,15 +19,13 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
 import sharp from 'sharp';
-import { C, H, ROOT, W, base, chapters, cutLeads, dirs, endCard, focusKeys, frameFile, img, introCard, mark, marks, meta, outlinesOf, around, shootThumb, staffScene, tapMarks, taps, uret, yer, type Blur, type Cam, type Caption, type CaptionsOf, type Scene } from './youtube-sahne';
+import { C, H, ROOT, W, base, chapters, cutLeads, dirs, endCard, focusKeys, frameFile, img, introCard, mark, marks, meta, outlinesOf, around, shootThumb, staffScene, stepped, tapMarks, taps, uret, yer, type Blur, type Cam, type Caption, type CaptionsOf, type Scene } from './youtube-sahne';
 import { EX, FOLDER_ROWS, ZIP_ROW, contextMenu, drawn, explorer, extractDialog, installer, smartScreen, uac, windowsCss, type Piece } from './youtube-kurulum-cizim';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'kurulum', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'kurulum', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', '06 Kurulum')) });
 const STEPS = 10;
 const side = (who: string) => `${who} <b>· Adım {adim} / ${STEPS}</b>`;
-/** Every caption of a scene carries its step (the top-right label reads it). */
-const stepped = (n: number, list: Caption[]) => list.map(c => ({ step: n, ...c }));
 
 // ---------- The Mola window (the café computer: Edge's app window, as Mola.exe opens it) ----------
 const VIEW_W = 1376, VIEW_H = 774, BAR = 40;

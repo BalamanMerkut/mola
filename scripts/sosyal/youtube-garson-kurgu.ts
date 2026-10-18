@@ -20,29 +20,16 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
 import sharp from 'sharp';
-import { C, ROOT, base, chapters, dirs, endCardWith, frameFile, img, introCard, mark, marks, shootThumb, staffScene, taps, uret, yer, type Caption, type CaptionsOf, type Scene, type TimeMap } from './youtube-sahne';
+import { ROOT, chapters, dirs, endCardWith, frameFile, held, introCard, marks, shootThumb, staffScene, stepped, taps, trainingThumb, uret, yer, type CaptionsOf, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'garson', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'garson', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', 'E1 Garson eğitimi')) });
 const STEPS = 9;
 const side = (who: string) => `${who} <b>· Adım {adim} / ${STEPS}</b>`;
-const stepped = (n: number, list: Caption[]) => list.map(c => ({ step: n, ...c }));
 /** The waiter's tablet (or the kitchen screen, once), every caption carrying the step for the top-right label. */
 function tablet(name: string, clip: string, from: number, to: number, o: { step: number; taps?: string[]; gaps?: [number, number][]; toc?: string; kitchen?: boolean }, captions: CaptionsOf): Scene {
   return staffScene(name, clip, from, to, { frame: o.kitchen ? 'display' : 'tablet', tag: side(o.kitchen ? 'Mutfak ekranı' : 'Garson tableti'), taps: o.taps, gaps: o.gaps },
     (at, d) => stepped(o.step, captions(at, d)), o.toc);
-}
-/** A clip without taps held still at some moments (clip time, extra seconds): time to read about a screen that stands. */
-function held(scene: Scene, from: number, to: number, holds: [number, number][], captions: CaptionsOf, step: number) {
-  const list = [...holds].sort((a, b) => a[0] - b[0]), map: TimeMap = [[0, from]];
-  let extra = 0;
-  for (const [h, e] of list) { map.push([h - from + extra, h], [h - from + extra + e, h]); extra += e; }
-  const d = to - from + extra;
-  map.push([d, to]);
-  const at = (c: number) => c - from + list.filter(([h]) => h < c).reduce((n, [, e]) => n + e, 0);
-  const layer = scene.layers![0] as Extract<NonNullable<Scene['layers']>[number], { kind: 'screen' }>;
-  layer.map = map;
-  return { ...scene, duration: d, captions: stepped(step, captions(at, d)) };
 }
 
 function scenes(): Scene[] {
@@ -181,26 +168,11 @@ garson eğitimi, garson tableti, adisyon programı, kafe adisyon, restoran adisy
   writeFileSync(join(dirs.out, 'aciklama.txt'), text.replace(/\n/g, '\r\n'));
   console.log(lines.join('\n'));
 }
-function thumbHtml() {
-  const shot = join(dirs.work, 'kapak-masalar.png');
-  return base(1280, 720, `
-  <div class="left"><small>EĞİTİM</small><h1 class="serif">Garson<br>eğitimi</h1><p>Tablette sipariş, onay,<br>çağrı ve servis.</p>
-    <div class="brand">${mark(60)}<span class="serif">mola<i>.</i></span></div></div>
-  <div class="tab"><div class="screen"><img src="${img(shot)}"></div></div>`, `
-  body{background:radial-gradient(80% 90% at 25% 40%,#2a5848 0%,${C.green} 58%,#1d4134 100%);color:${C.cup}}
-  .left{position:absolute;left:64px;top:0;bottom:0;width:520px;display:flex;flex-direction:column;justify-content:center}
-  .left small{font:700 24px/1 'Segoe UI',system-ui,sans-serif;letter-spacing:.3em;color:rgba(207,224,211,.9)}
-  h1{margin-top:18px;font-weight:400;font-size:118px;line-height:.98;letter-spacing:-.03em}
-  .left p{margin-top:24px;font:600 32px/1.25 'Segoe UI',system-ui,sans-serif;color:rgba(243,235,221,.9)}
-  .brand{display:flex;align-items:center;gap:16px;margin-top:36px;font-size:48px}.brand svg{border-radius:14px;box-shadow:0 0 0 2px rgba(243,235,221,.3)}.brand i{font-style:normal;color:${C.dot}}
-  .tab{position:absolute;left:600px;top:130px;width:700px;padding:16px;border-radius:30px;background:#1c2721;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),inset 0 0 0 2px #3a4a41;transform:rotate(-3deg)}
-  .tab .screen{border-radius:14px;overflow:hidden;background:${C.paper}}.tab img{display:block;width:100%}`);
-}
 async function thumbnail(browser: Browser) {
   // The waiter's Masalar: the table cards and their states (İç salon).
   const M = marks('g2-masalar');
   await sharp(frameFile('g2-masalar', M.grid + .5)).resize(1180).png().toFile(join(dirs.work, 'kapak-masalar.png'));
-  await shootThumb(browser, thumbHtml());
+  await shootThumb(browser, trainingThumb({ title: 'Garson<br>eğitimi', line: 'Tablette sipariş, onay,<br>çağrı ve servis.', shot: join(dirs.work, 'kapak-masalar.png'), device: 'tablet' }));
 }
 
 await uret({ mp4: 'Garson eğitimi.mp4', music: 'cesit-1', description, thumbnail, scenes,

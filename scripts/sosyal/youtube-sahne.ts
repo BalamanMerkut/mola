@@ -1,7 +1,7 @@
 /*
  * Shared stage of the YouTube videos (scripts/sosyal/youtube-kurgu.ts "QR menü ve QR sipariş", scripts/sosyal/youtube-kurulum-kurgu.ts
- * "Kurulum", scripts/sosyal/youtube-garson-kurgu.ts "Garson eğitimi"): the brand, the recorded clips (meta.json of scripts/sosyal/kayit-ortak.ts Recorder), the scene model and its HTML
- * stage drawn for every frame, the logo cards, taps without a pointer (soft ripple; a red outline and a slight 1.2× camera move
+ * "Kurulum", and the training series: youtube-garson-kurgu.ts "Garson eğitimi", youtube-kasiyer-kurgu.ts "Kasiyer eğitimi"): the
+ * brand, the recorded clips (meta.json of scripts/sosyal/kayit-ortak.ts Recorder), the scene model and its HTML stage drawn for every frame, the logo cards, taps without a pointer (soft ripple; a red outline and a slight 1.2× camera move
  * only where marked "!"), the scene builders, rendering (Chrome screenshots piped to ffmpeg), joining with the music, chapters.
  *
  * A video sets its folders once with `yer(...)`, builds its Scene list and calls `uret(...)`.
@@ -393,15 +393,32 @@ export function ownerScene(name: string, clip: string, from: number, to: number,
   return { name, duration: d, capPos: 'overlay', tag: o.tag ?? 'İşletme tarafı <b>· Ayarlar</b>', side: 'business', toc, captions: captions(at, d),
     layers: [{ kind: 'screen', clip, w: W, h: H, keys: [{ t: 0, x: W / 2, y: H / 2 }], map, cam, rings: [...ripples, ...outlinesOf(focuses)], frame: 'none' }] };
 }
-/** A staff device (tablet, kitchen display, counter window), large, steady and alone, captions below. */
-export function staffScene(name: string, clip: string, from: number, to: number, o: { frame: 'tablet' | 'display' | 'window'; title?: string; tag: string; taps?: string[]; gaps?: [number, number][] }, captions: CaptionsOf, toc?: string): Scene {
+/** A staff device (tablet, kitchen display, counter window; `win`: the café computer's Mola window), large, steady and alone, captions below. */
+export function staffScene(name: string, clip: string, from: number, to: number, o: { frame: 'tablet' | 'display' | 'window' | 'win'; title?: string; tag: string; taps?: string[]; gaps?: [number, number][] }, captions: CaptionsOf, toc?: string): Scene {
   const size = meta(clip).size, names = o.taps ?? [];
   const { map, at, d } = cutLeads(clip, from, to, names, o.gaps), { ripples, focuses } = tapMarks(clip, names, at, d);
   const w = o.frame === 'tablet' ? 1160 : 1150, h = w * size.height / size.width;
-  const y = o.frame === 'window' ? 512 : 505;
+  const y = o.frame === 'window' || o.frame === 'win' ? 512 : 505;
   const cam = focuses.length ? focusKeys<Cam>({ x: 0, y: 0, w: size.width }, focuses, f => around(f.box, size.width / 1.2, size.width / size.height, size.width, size.height)) : [{ t: 0, x: 0, y: 0, w: size.width }];
   return { name, duration: d, capPos: 'bottom', tag: o.tag, side: 'business', toc, captions: captions(at, d),
     layers: [{ kind: 'screen', clip, w, h, keys: [{ t: 0, x: W / 2, y }], map, cam, rings: [...ripples, ...outlinesOf(focuses)], frame: o.frame, title: o.title }] };
+}
+/** Every caption of a scene carries its step (the top-right label "… · Adım {adim} / N" reads it). */
+export const stepped = (n: number, list: Caption[]) => list.map(c => ({ step: n, ...c }));
+/**
+ * A screen scene (one clip, as staffScene builds it) held still at some moments: `holds` are [clip time, extra seconds], time to
+ * read about a screen that stands. `captions` get the clip-to-scene time and the new length; every caption carries `step`.
+ */
+export function held(scene: Scene, from: number, to: number, holds: [number, number][], captions: CaptionsOf, step: number) {
+  const list = [...holds].sort((a, b) => a[0] - b[0]), map: TimeMap = [[0, from]];
+  let extra = 0;
+  for (const [h, e] of list) { map.push([h - from + extra, h], [h - from + extra + e, h]); extra += e; }
+  const d = to - from + extra;
+  map.push([d, to]);
+  const at = (c: number) => c - from + list.filter(([h]) => h < c).reduce((n, [, e]) => n + e, 0);
+  const layer = scene.layers![0] as Extract<Layer, { kind: 'screen' }>;
+  layer.map = map;
+  return { ...scene, duration: d, captions: stepped(step, captions(at, d)) };
 }
 /** Before / after: two guest phones side by side at normal size, each holding one moment of its clip; labels only. */
 export type Side = { clip: string; t: number; label: string; tone?: 'off' | 'on'; play?: number };
@@ -487,6 +504,30 @@ async function joinWithMusic(list: Scene[], o: { mp4: string; music: string }) {
   console.log(`Video: ${mp4} · ${fmt(total)} · müzik ${lufs.toFixed(1)} LUFS → -20 (${gain} dB)`);
 }
 
+/**
+ * The training series' thumbnail (E1, E2 …): "EĞİTİM", the title on two lines, a short line and the brand at the left; a screen of
+ * the app (`shot`, a PNG in the work folder) tilted at the right, in its device: the waiter's tablet or the counter's window.
+ */
+export function trainingThumb(o: { title: string; line: string; shot: string; device: 'tablet' | 'window' }) {
+  const device = o.device === 'tablet' ? `<div class="tab"><div class="screen"><img src="${img(o.shot)}"></div></div>`
+    : `<div class="win"><div class="winbar">${mark(18)}<em>Mola · İşletme yönetimi</em></div><div class="screen"><img src="${img(o.shot)}"></div></div>`;
+  return base(1280, 720, `
+  <div class="left"><small>EĞİTİM</small><h1 class="serif">${o.title}</h1><p>${o.line}</p>
+    <div class="brand">${mark(60)}<span class="serif">mola<i>.</i></span></div></div>
+  ${device}`, `
+  body{background:radial-gradient(80% 90% at 25% 40%,#2a5848 0%,${C.green} 58%,#1d4134 100%);color:${C.cup}}
+  .left{position:absolute;left:64px;top:0;bottom:0;width:520px;display:flex;flex-direction:column;justify-content:center}
+  .left small{font:700 24px/1 'Segoe UI',system-ui,sans-serif;letter-spacing:.3em;color:rgba(207,224,211,.9)}
+  h1{margin-top:18px;font-weight:400;font-size:118px;line-height:.98;letter-spacing:-.03em}
+  .left p{margin-top:24px;font:600 32px/1.25 'Segoe UI',system-ui,sans-serif;color:rgba(243,235,221,.9)}
+  .brand{display:flex;align-items:center;gap:16px;margin-top:36px;font-size:48px}.brand svg{border-radius:14px;box-shadow:0 0 0 2px rgba(243,235,221,.3)}.brand i{font-style:normal;color:${C.dot}}
+  .tab{position:absolute;left:600px;top:130px;width:700px;padding:16px;border-radius:30px;background:#1c2721;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),inset 0 0 0 2px #3a4a41;transform:rotate(-3deg)}
+  .tab .screen{border-radius:14px;overflow:hidden;background:${C.paper}}.tab img{display:block;width:100%}
+  .win{position:absolute;left:600px;top:150px;width:720px;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.25);transform:rotate(-3deg)}
+  .win .winbar{display:flex;align-items:center;gap:10px;height:34px;padding-left:12px;background:#f3f3f3;border-bottom:1px solid #e3e3e3;font:400 15px/1 'Segoe UI',system-ui,sans-serif;color:#1f1f1f}
+  .win .winbar svg{border-radius:4px}.win .winbar em{font-style:normal}
+  .win .screen{background:${C.paper}}.win img{display:block;width:100%}`);
+}
 /** A 1280×720 HTML page as the thumbnail (kapak.jpg) and a small copy to see how it reads in YouTube's list. */
 export async function shootThumb(browser: Browser, html: string) {
   const htmlFile = join(dirs.work, 'kapak.html'); writeFileSync(htmlFile, html);

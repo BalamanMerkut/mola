@@ -1,6 +1,6 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
- * youtube-garson-kayit.ts).
+ * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -12,6 +12,7 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { chromium, type APIRequestContext, type Browser, type BrowserContext, type Locator, type Page } from '@playwright/test';
 
@@ -138,7 +139,11 @@ export async function imagesOnScreen(page: Page) {
   await page.waitForFunction(`[...document.images].filter(function (i) { var r = i.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }).every(function (i) { return i.complete && i.naturalWidth > 0; })`, undefined, { timeout: 15000 }).catch(() => {});
 }
 
-export type KitOptions = { run: string; reuse?: boolean; kafePort: number; merkezPort: number };
+/**
+ * `saat`: the run plays at another time of day (ms, the shifted "now" at the start; scripts/sosyal/kayit-saat.mjs in the
+ * run's own servers, Playwright's clock in its screens). `setClock` moves it forward later (a gün sonu at night).
+ */
+export type KitOptions = { run: string; reuse?: boolean; kafePort: number; merkezPort: number; saat?: number };
 /** Servers, the demo café and the screens of one run. */
 export function kit(o: KitOptions) {
   const KAFE = `http://127.0.0.1:${o.kafePort}`, MERKEZ = `http://127.0.0.1:${o.merkezPort}`;
@@ -147,23 +152,46 @@ export function kit(o: KitOptions) {
   const stopAll = () => { for (const c of children) if (c.exitCode === null && c.pid) { if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(c.pid), '/T', '/F'], { stdio: 'ignore' }); else c.kill(); } };
   process.on('exit', stopAll);
   for (const s of ['SIGINT', 'SIGTERM'] as const) process.on(s, () => { stopAll(); process.exit(1); });
-  const quiet = { ...process.env, MOLA_AUTO_BACKUP: '0', MOLA_BACKUP_DISCOVERY: '0' };
+  // The recording clock (only with `saat`): one offset file every process of the run reads.
+  const clockFile = join(o.run, 'saat.txt');
+  let offset = 0;
+  if (o.saat !== undefined) { offset = o.saat - Date.now(); writeFileSync(clockFile, String(offset)); }
+  const pre = o.saat !== undefined ? ['--import', pathToFileURL(join(ROOT, 'scripts', 'sosyal', 'kayit-saat.mjs')).href] : [];
+  const quiet = { ...process.env, MOLA_AUTO_BACKUP: '0', MOLA_BACKUP_DISCOVERY: '0', ...(o.saat !== undefined ? { MOLA_KAYIT_SAAT: clockFile } : {}) };
+  /** The run's "now" (shifted with `saat`). */
+  const now = () => Date.now() + offset;
+  const clocked = new Set<BrowserContext>();
+  /** A screen of the run on the run's clock (time flows as usual from there). */
+  async function clockOn(ctx: BrowserContext) {
+    if (o.saat === undefined) return ctx;
+    await ctx.clock.install({ time: now() }); clocked.add(ctx); ctx.on('close', () => clocked.delete(ctx));
+    return ctx;
+  }
+  /** Moves the run's clock forward to `at` (ms): the servers and every open screen (their due timers fire once). */
+  async function setClock(at: number) {
+    if (o.saat === undefined) throw new Error('setClock: kit({ saat }) gerekir.');
+    const d = Math.round(at - now());
+    if (d <= 0) throw new Error('Saat yalnız ileri alınır.');
+    offset += d; writeFileSync(clockFile, String(offset));
+    await new Promise(r => setTimeout(r, 900));
+    for (const c of clocked) await c.clock.fastForward(d);
+  }
   async function waitFor(url: string, what: string) {
     for (let i = 0; i < 400; i++) { try { if ((await fetch(url)).ok) return; } catch { /* starting */ } await new Promise(r => setTimeout(r, 150)); }
     throw new Error(`${what} açılmadı.`);
   }
   async function startServers() {
     const merkezDir = join(o.run, 'merkez'), kafeDir = join(o.run, 'kafe');
-    const merkez = spawn(process.execPath, ['--import', 'tsx', 'server/merkez/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, MERKEZ_PORT: String(o.merkezPort), MERKEZ_DATA_DIR: merkezDir, SERVE_BUILD: '1', MERKEZ_INITIAL_PASSWORD: ADMIN_PASSWORD } });
+    const merkez = spawn(process.execPath, [...pre, '--import', 'tsx', 'server/merkez/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, MERKEZ_PORT: String(o.merkezPort), MERKEZ_DATA_DIR: merkezDir, SERVE_BUILD: '1', MERKEZ_INITIAL_PASSWORD: ADMIN_PASSWORD } });
     children.push(merkez);
     await waitFor(`${MERKEZ}/api/merkez/v1/health`, 'Mola Merkez');
     if (!o.reuse) {
       console.log('Örnek işletme hazırlanıyor…');
-      const demo = spawnSync(process.execPath, ['--import', 'tsx', 'scripts/demo-template.ts', kafeDir, '--gun=5'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], env: { ...quiet,
+      const demo = spawnSync(process.execPath, [...pre, '--import', 'tsx', 'scripts/demo-template.ts', kafeDir, '--gun=5'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], env: { ...quiet,
         MOLA_MERKEZ_URL: MERKEZ, MERKEZ_DATA_DIR: merkezDir, MERKEZ_ADMIN_PASSWORD: ADMIN_PASSWORD } });
       if (!/Örnek işletme hazır:/.test(demo.stdout ?? '')) { process.stdout.write(demo.stdout ?? ''); throw new Error('Örnek işletme hazırlanamadı.'); }
     }
-    const kafe = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, PORT: String(o.kafePort), SERVE_BUILD: '1', DATA_DIR: kafeDir,
+    const kafe = spawn(process.execPath, [...pre, '--import', 'tsx', 'server/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, PORT: String(o.kafePort), SERVE_BUILD: '1', DATA_DIR: kafeDir,
       MOLA_CLEAN_INSTALL: '1', MOLA_MERKEZ_URL: MERKEZ, MOLA_MERKEZ_PUBLIC_KEY: join(merkezDir, 'merkez-public-key.txt'), MOLA_SYNC_SOON_MS: '1000', MOLA_HEARTBEAT_MS: '2000' } });
     children.push(kafe);
     await waitFor(`${KAFE}/api/health`, 'Kafe sunucusu');
@@ -241,15 +269,15 @@ export function kit(o: KitOptions) {
   async function phoneContext(_browser?: Browser) {
     const ctx = await phoneBrowser.newContext({ viewport: { width: PHONE.width, height: PHONE.height }, deviceScaleFactor: PHONE.scale, isMobile: false, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light', reducedMotion: 'no-preference' });
     await ctx.addInitScript(POINTER);
-    return ctx;
+    return clockOn(ctx);
   }
   async function tabletContext() {
-    return deskBrowser.newContext({ viewport: { width: TABLET.width, height: TABLET.height }, deviceScaleFactor: TABLET.scale, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' });
+    return clockOn(await deskBrowser.newContext({ viewport: { width: TABLET.width, height: TABLET.height }, deviceScaleFactor: TABLET.scale, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' }));
   }
   async function desktopContext(_browser?: Browser, finger = false) {
     const ctx = await deskBrowser.newContext({ viewport: { width: DESKTOP.width, height: DESKTOP.height }, deviceScaleFactor: DESKTOP.scale, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' });
     if (finger) await ctx.addInitScript(POINTER);
-    return ctx;
+    return clockOn(ctx);
   }
   /** A clean table nobody sits at; `used` keeps each clip on its own table. */
   const used = new Set<string>();
@@ -324,7 +352,7 @@ export function kit(o: KitOptions) {
     if (patch.qrOpen !== undefined) await post(api.req, '/api/staff/qr-ordering', { requestId: randomUUID(), open: patch.qrOpen });
     await api.close();
   }
-  return { KAFE, MERKEZ, run: o.run, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
+  return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 export type Kit = ReturnType<typeof kit>;
