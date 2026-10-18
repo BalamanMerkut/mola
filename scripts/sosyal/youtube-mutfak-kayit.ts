@@ -33,7 +33,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
-import { DESKTOP, NO_HINTS, PASSWORD, PHONE, ROOT, Recorder, TABLET, cartLine, istanbul, kit, pause, typeIn, type StaffState } from './kayit-ortak';
+import { DESKTOP, NO_HINTS, PASSWORD, PHONE, ROOT, Recorder, TABLET, cartLine, choose, istanbul, kit, pause, typeIn, type StaffState } from './kayit-ortak';
 
 const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'mutfak');
 const OUT = join(BASE, 'kayit');
@@ -94,14 +94,6 @@ const kcard = (page: Page, table: string) => page.locator('.kitchen-card', { has
 const tcard = (page: Page, table: string) => page.locator('.table-card', { has: page.locator('h3', { hasText: new RegExp(`^${table}$`) }) }).first();
 const dialog = (page: Page) => page.getByRole('dialog').last();
 const nav = (page: Page, name: string) => page.locator('aside nav').getByRole('button', { name: new RegExp(`^${name}`) });
-/** A native select: the tap on the field is recorded, then the choice (its list is not in the picture). */
-async function choose(page: Page, rec: Recorder, name: string, select: Locator, label: string) {
-  await select.scrollIntoViewIfNeeded(); await pause(page, 300);
-  const box = await select.boundingBox(); const t = Date.now() / 1000; rec.taps.push({ name, box: box!, on: t - .2, tap: t });
-  await select.focus(); await pause(page, 500);
-  await select.selectOption({ label });
-  await pause(page, 1200);
-}
 
 /**
  * Works around an app bug seen while recording (reported, not fixed here): after "Sayımı kaydet" / "Fireyi kaydet" the

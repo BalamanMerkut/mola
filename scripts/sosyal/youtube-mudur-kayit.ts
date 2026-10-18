@@ -42,7 +42,7 @@ const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'mudur');
 const OUT = join(BASE, 'kayit');
 const run = join(BASE, `run-${new Date().toISOString().replace(/[:.]/g, '-')}`);
 const k = kit({ run, kafePort: 3762, merkezPort: 3796, saat: istanbul(-1, 22, 10) });
-const { as, order, advance, pays, cleanAll, settleAll } = k;
+const { as, order, advance, settleAll } = k;
 mkdirSync(OUT, { recursive: true });
 const info: Record<string, unknown> = {};
 const ist = (ms: number) => new Date(ms).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
@@ -71,20 +71,16 @@ async function main() {
     // ===== Yesterday evening (off camera): the floor settled, the kasa closed (count = expected), ₺500 left =====
     await settleAll();
     { const api = await k.ownerApi(desk);
-      const exp = (await (await api.req.get(`${k.KAFE}/api/staff/cash/expected`)).json() as { expected: number }).expected;
       // The Müdür account, as the owner opens it in Personel → Çalışanlar.
       await k.post(api.req, '/api/staff/users', { username: 'mudur', name: 'Selin Koç', role: 'manager', password: PASSWORD });
       await api.close();
-      const c = await as('kasiyer');
-      const counted = await k.post(c.req, '/api/staff/cash/count', { requestId: randomUUID(), mode: 'final', counted: exp > 50000 ? exp : 386500, pos: null }) as { id: string };
-      await k.post(c.req, '/api/staff/cash/finish', { id: counted.id, left: 50000 });
-      await c.close();
-      info.yesterdayCash = exp; console.log('Dün beklenen nakit:', exp / 100); }
+      const exp = await k.closeKasa({ count: e => e > 50000 ? e : 386500 });
+      info.yesterdayCash = exp; console.log('Dün beklenen nakit:', Number(exp) / 100); }
     console.log('Dün kapandı:', ist(k.now()));
 
     // ===== This morning (off camera): the kasa opened, the morning's tables served and paid =====
     await k.setClock(istanbul(0, 8, 2));
-    { const c = await as('kasiyer'); await k.post(c.req, '/api/staff/cash/open', { requestId: randomUUID(), amount: 50000 }); await c.close(); }
+    await k.openKasa();
     const morning: [string, number, [string, number][], 'cash' | 'card'][] = [
       ['Masa 02', 8 * 60 + 40, [['Türk Kahvesi', 2], ['Fırın Sütlaç', 1]], 'cash'],
       ['Masa 05', 9 * 60 + 25, [['San Sebastian', 2], ['Americano', 2]], 'cash'],
@@ -93,14 +89,7 @@ async function main() {
       ['Masa 12', 12 * 60 + 10, [['Ayran', 2], ['Kazandibi', 2]], 'cash'],
       ['Masa 15', 12 * 60 + 50, [['Demleme Çay', 3], ['Fıstıklı Baklava', 1]], 'card'],
     ];
-    for (const [table, at, lines, method] of morning) {
-      await k.setClock(istanbul(0, Math.floor(at / 60), at % 60));
-      await order(table, lines);
-      await advance(['preparing', 'ready', 'served'], table);
-      await k.setClock(istanbul(0, Math.floor(at / 60), at % 60 + 35));
-      await pays(table, method);
-    }
-    await cleanAll();
+    await k.serveDay(morning.map(([table, at, lines, method]) => ({ table, at, lines, method })));
     // The floor at lunch: served, ready, in the kitchen, new; Masa 08's order has one Limonata too many.
     await k.setClock(istanbul(0, 13, 30));
     await order('Masa 03', [['Caffè Latte', 1], ['San Sebastian', 1]]);

@@ -1,6 +1,6 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
- * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts).
+ * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts, youtube-sahip-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -117,6 +117,14 @@ export async function typeIn(page: Page, rec: Recorder, name: string, field: Loc
   await rec.tap(page, name, field, { lead: o.lead ?? 700, hold: 150 });
   await field.pressSequentially(text, { delay: o.delay ?? 55 });
   await pause(page, 250);
+}
+/** A native select: the tap on the field is recorded, then the choice (its list is not in the picture). */
+export async function choose(page: Page, rec: Recorder, name: string, select: Locator, label: string) {
+  await select.scrollIntoViewIfNeeded(); await pause(page, 300);
+  const box = await select.boundingBox(); const t = Date.now() / 1000; rec.taps.push({ name, box: box!, on: t - .2, tap: t });
+  await select.focus(); await pause(page, 500);
+  await select.selectOption({ label });
+  await pause(page, 1200);
 }
 /** An init script: no spell-check squiggles under typed names; Mola Yardım's one-time hint stays closed (as in playwright.config.ts). */
 export const NO_HINTS = `try { localStorage.setItem('mola-yardim-ipucu', 'off'); localStorage.setItem('mola-campaign-ended', 'off'); } catch (e) {}
@@ -401,8 +409,80 @@ export function kit(o: KitOptions) {
     await api.close();
     await cleanAll();
   }
+  /** The cashier opens the kasa with `amount` (kuruş) in the drawer (off camera). */
+  async function openKasa(amount = 50000) {
+    const c = await as('kasiyer');
+    await post(c.req, '/api/staff/cash/open', { requestId: randomUUID(), amount });
+    await c.close();
+  }
+  /**
+   * The cashier's gün sonu (off camera): the drawer counted (`count` from the expected cash, default exactly that, never below 0) and `left`
+   * kept in it for tomorrow. Returns the expected cash (null: no kasa was open).
+   */
+  async function closeKasa(o: { count?: (expected: number) => number; left?: number } = {}) {
+    const api = await ownerApi(deskBrowser);
+    const expected = (await (await api.req.get(`${KAFE}/api/staff/cash/expected`)).json() as { expected: number | null }).expected;
+    await api.close();
+    // null: no kasa open (that day's gün sonu is done already), nothing to close.
+    if (expected === null) return null;
+    const c = await as('kasiyer');
+    const counted = await post(c.req, '/api/staff/cash/count', { requestId: randomUUID(), mode: 'final', counted: o.count ? o.count(expected) : Math.max(0, expected), pos: null }) as { id: string };
+    await post(c.req, '/api/staff/cash/finish', { id: counted.id, left: o.left ?? 50000 });
+    await c.close();
+    return expected;
+  }
+  /**
+   * A guest's QR order from the table's phone (never on camera): `wants` are product names, one each (a required choice keeps
+   * its ready-selected option). Needs a staff screen connected (the café's rule for QR orders).
+   */
+  async function guestOrder(table: string, wants: string[]) {
+    const api = await ownerApi(deskBrowser), token = (await state(api.req)).tables.find(t => t.name === table)!.token; await api.close();
+    const ctx = await phoneContext(), page = await ctx.newPage();
+    await openMenu(page, token);
+    const add = page.getByRole('button', { name: /Sepete ekle/ });
+    for (const name of wants) {
+      await page.locator('.product-card', { hasText: name }).first().locator('.add-circle').click(); await pause(page, 700);
+      if (await add.isVisible().catch(() => false)) { await add.click(); await pause(page, 500); }
+    }
+    await page.getByRole('button', { name: /Sepet(imi|i) görüntüle/ }).click(); await pause(page, 600);
+    await page.getByRole('button', { name: 'Siparişi gönder', exact: true }).click();
+    await page.getByText(/gönderildi|alındı/).first().waitFor({ timeout: 15000 });
+    await ctx.close();
+  }
+  /**
+   * A day of the floor (off camera, on the recording clock): each visit is ordered at its minute of the day (by the waiter, or
+   * by the guest's phone with `qr`), goes through the kitchen and is paid 35 minutes later. Tables are cleaned at the end.
+   */
+  async function serveDay(visits: { table: string; at: number; lines: Want[]; method: 'cash' | 'card'; qr?: boolean }[]) {
+    for (const v of visits) {
+      await setClock(istanbul(0, Math.floor(v.at / 60), v.at % 60));
+      if (v.qr) await guestOrder(v.table, v.lines.flatMap(([name, n]) => Array<string>(n).fill(name)));
+      else await order(v.table, v.lines);
+      await advance(['preparing', 'ready', 'served'], v.table);
+      await setClock(istanbul(0, Math.floor(v.at / 60), v.at % 60 + 35));
+      await pays(v.table, v.method);
+    }
+    await cleanAll();
+  }
+  /** The owner's Bildirimler all read (the bell has no count, no toast comes on the next screen). */
+  async function readNotifications() {
+    const api = await ownerApi(deskBrowser);
+    await post(api.req, '/api/staff/notifications/read', {});
+    await api.close();
+  }
+  /** Mola Yönetim → Ayarlar → "Mola ekibi iletişim bilgileri" on the run's Merkez (the cafés get it with their next heartbeat). */
+  async function molaContact(c: { phone?: string; whatsapp?: string; email?: string; hours?: string; web?: string }) {
+    const jar: string[] = [];
+    const call = async (path: string, body: unknown) => {
+      const r = await fetch(`${MERKEZ}/api/merkez/admin${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: jar.join('; ') }, body: JSON.stringify(body) });
+      for (const v of r.headers.getSetCookie()) jar.push(v.split(';')[0]);
+      if (!r.ok) throw new Error(`Mola Merkez ${path}: ${r.status} ${await r.text()}`);
+    };
+    await call('/login', { username: 'admin', password: ADMIN_PASSWORD });
+    await call('/contact', { phone: '', whatsapp: '', email: '', hours: '', web: '', ...c });
+  }
   return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
-    as, order, advance, pays, cleanAll, settleAll,
+    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, serveDay, molaContact, readNotifications,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 /** [product, quantity, option names, note] of a waiter's order line. */
