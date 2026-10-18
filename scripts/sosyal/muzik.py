@@ -213,13 +213,116 @@ def uret_uzun(saniye: float, aralar=(), bpm: float = 100) -> np.ndarray:
     return st / np.max(np.abs(st)) * 10 ** (-3 / 20)
 
 
+def ton(f: float, sure: float, guc: float, renk) -> np.ndarray:
+    """piyano() gibi, ama tını (harmonik ağırlıkları ve sönme süreleri) parçaya göre değişir."""
+    t = np.arange(int(SR * (sure + 2.5))) / SR
+    ses = np.zeros_like(t)
+    for h, (a, tau) in enumerate(renk, 1):
+        if a:
+            for sapma in (-.0015, .0015):
+                ses += a * np.sin(2 * np.pi * f * h * (1 + sapma) * t) * np.exp(-t / tau)
+    birak = np.where(t > sure, np.exp(-(t - sure) / .35), 1)
+    return guc * ses * np.minimum(1, t / .008) * birak / 2
+
+
+def uret_cesit(saniye: float, tohum: int, aralar=()) -> np.ndarray:
+    """Her video için ayrı parça (18 Ekim, sahibin isteği: aynı tarz, farklı şarkı). `tohum` tonu (majör), tempoyu (96–108),
+    akor dizisini, ezgiyi, davul düzenini ve piyano tınısını seçer; aynı tohum her zaman aynı parçayı verir. Yapı uret_uzun
+    gibi: 4 ölçülük cümleler A · A' · B · ara (ezgisiz arpej), bölüm geçişlerinde yumuşak ara, sonda tonik ve 3 sn kısılma."""
+    r = np.random.default_rng(1000 + tohum)
+    kok = int(r.choice([0, 2, -3, 5, -5, -1]))  # C, D, A, F, G, B (ezgi C5 civarında kalsın)
+    bpm = float(r.choice([96, 100, 104, 108]))
+    vurus, olcu = 60 / bpm, 240 / bpm
+    dizi = [[0, 4, 5, 3], [0, 5, 3, 4], [0, 3, 5, 4], [5, 3, 0, 4], [0, 2, 3, 4], [3, 4, 0, 5]][int(r.integers(6))]  # derece (0 = I)
+    renk = [[(1, 1.6), (.32, .9), (.1, .5), (.04, .3)], [(1, 1.9), (.2, 1.0), (.05, .5), (.02, .3)],
+            [(1, 1.1), (0, 1), (.28, .35), (0, 1), (.08, .2)]][int(r.integers(3))]
+    tekme = [[0, 2, 2.5], [0, 1.5, 2], [0, 2], [0, .75, 2, 2.5]][int(r.integers(4))]
+    alkis = [[1, 3], [3], [1, 3]][int(r.integers(3))]
+    olcek = [0, 2, 4, 5, 7, 9, 11]
+    hz = lambda s: 261.63 * 2 ** ((s + kok) / 12)
+    def akor(d):  # derece → üçlü (C4 civarı), kök (bas)
+        notalar = [olcek[(d + k) % 7] + 12 * ((d + k) // 7) for k in (0, 2, 4)]
+        notalar = [n - 12 if n > 9 else n for n in notalar]
+        return sorted(notalar), olcek[d] - 24
+    pentatonik = [0, 2, 4, 7, 9]
+    yakin = [p + 12 * o for o in (0, 1, 2) for p in pentatonik]  # ezgi notaları (C4–A6, 12 ile yukarı alınarak)
+    ritimler = [[(0, .5), (.5, .5), (1, 1), (2, .5), (2.5, .5), (3, 1)], [(0, 1), (1, .5), (1.5, .5), (2, 2)],
+                [(0, .5), (.5, .5), (1, 1.5), (2.5, .5), (3, 1)], [(0, 1.5), (1.5, .5), (2, 1), (3, 1)], [(.5, .5), (1, 1), (2, .5), (2.5, 1.5)]]
+    def ezgi_olc(d, ritim, son_nota):
+        tonlar = [n + 12 for n in akor(d)[0]]
+        out, n = [], son_nota
+        for k, (v, u) in enumerate(ritim):
+            if v in (0, 2) or k == 0:
+                n = min(tonlar + [t + 12 for t in tonlar], key=lambda x: abs(x - n) + r.uniform(0, 3))
+            else:
+                aday = [y + 12 for y in yakin if abs(y + 12 - n) <= 4 and y + 12 != n]
+                n = int(r.choice(aday)) if aday else n
+            n = max(14, min(26, n))
+            out.append((v, u, n))
+        return out, n
+    def cumle_uret():
+        notalar, n = [], 16
+        rit = [ritimler[int(r.integers(len(ritimler)))] for _ in range(4)]
+        for i in range(4):
+            m, n = ezgi_olc(dizi[i], rit[i], n)
+            notalar.append(m)
+        return notalar, rit
+    A, ritA = cumle_uret()
+    A2 = A[:2] + [ezgi_olc(dizi[2], ritA[2], A[1][-1][2])[0], ezgi_olc(dizi[3], ritA[3], A[2][-1][2])[0]]
+    B, _ = cumle_uret()
+    B[3] = [(0, 1, 12 + akor(dizi[3])[0][-1]), (1, 1, 12 + akor(dizi[3])[0][1]), (2, 2, 12 + akor(dizi[3])[0][0])]
+    iz = np.zeros(int(SR * (saniye + 4)))
+    olcu_sayisi = int(np.ceil(saniye / olcu))
+    ara_olculer = {int(round(a / olcu)) for a in aralar if 0 < a < saniye - olcu}
+    cumle = -1
+    for o in range(olcu_sayisi):
+        b, son = o * olcu, o == olcu_sayisi - 1
+        if o % 4 == 0:
+            cumle += 1
+        ak, bas = akor(0 if son else dizi[o % 4])
+        ekle(iz, pad([hz(n) for n in ak], olcu, .055), b)
+        if o in ara_olculer or o == 0 or son:
+            ekle(iz, ton(hz(bas), 3 * vurus, .22, renk), b)
+            for k, n in enumerate(ak):
+                ekle(iz, ton(hz(n), 3 * vurus, .08, renk), b + k * .09)
+            if not son:
+                for k, n in enumerate(ak + [ak[0] + 12]):
+                    ekle(iz, ton(hz(n + 12), vurus, .05, renk), b + (2 + k * .5) * vurus)
+            continue
+        for v, u in [(0, 1), (1.5, .5), (2, 1), (3, .5)]:
+            ekle(iz, ton(hz(bas), u * vurus, .28, renk), b + v * vurus)
+        for v, u, g in [(0, 1, .09), (1.5, .4, .06), (2.5, .4, .06), (3.5, .4, .05)]:
+            for k, n in enumerate(ak):
+                ekle(iz, ton(hz(n), u * vurus, g, renk), b + v * vurus + k * .012)
+        for v in tekme:
+            ekle(iz, davul() * (.3 if v % 1 else .55), b + v * vurus)
+        for v in alkis:
+            ekle(iz, gurultu(.15, .045, False) * .12, b + v * vurus)
+        for k in range(8):
+            ekle(iz, gurultu(.06, .015, True) * (.05 if k % 2 else .025), b + k * vurus / 2)
+        tur = cumle % 4
+        if tur == 3:
+            for k in range(8):
+                ekle(iz, ton(hz(ak[k % 3] + 12), .45 * vurus, .06 * r.uniform(.85, 1), renk), b + k * vurus / 2 + r.uniform(0, .006))
+            continue
+        for v, u, n in (A, A2, B)[tur][o % 4]:
+            ekle(iz, ton(hz(n), u * vurus * .9, .2 * r.uniform(.9, 1.0), renk), b + v * vurus + r.uniform(0, .008))
+    iz = iz[:int(SR * saniye)]
+    sol, sag = yanki(iz, oran=.18), yanki(np.roll(iz, int(.004 * SR)), oran=.18)
+    st = np.stack([sol, sag], axis=1)
+    t = np.arange(len(st)) / SR
+    st *= np.minimum(1, t / .3)[:, None] * np.clip((saniye - t) / 3.0, 0, 1)[:, None]
+    return st / np.max(np.abs(st)) * 10 ** (-3 / 20)
+
+
 if __name__ == '__main__':
     cikti = sys.argv[1]
     saniye = float(sys.argv[2]) if len(sys.argv) > 2 else 17
     tarz = sys.argv[3] if len(sys.argv) > 3 else 'sakin'
-    # canli-uzun: 4. bağımsız değişken bölüm geçişleri (saniye, virgülle), ör. 12.5,85,150
+    # canli-uzun / cesit-N: 4. bağımsız değişken bölüm geçişleri (saniye, virgülle), ör. 12.5,85,150
     aralar = [float(a) for a in sys.argv[4].split(',') if a] if len(sys.argv) > 4 else []
-    ses = uret_uzun(saniye, aralar) if tarz == 'canli-uzun' else uret_canli(saniye) if tarz == 'canli' else uret(saniye)
+    ses = (uret_cesit(saniye, int(tarz.split('-')[1]), aralar) if tarz.startswith('cesit-') else uret_uzun(saniye, aralar) if tarz == 'canli-uzun'
+           else uret_canli(saniye) if tarz == 'canli' else uret(saniye))
     veri = (ses * 32767).astype('<i2')
     with wave.open(cikti, 'wb') as w:
         w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes(veri.tobytes())
