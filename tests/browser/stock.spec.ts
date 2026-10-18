@@ -521,12 +521,14 @@ test('18 Ekim: Reçete → "Toplu üretimden hesapla" divides one batch into one
   await page.getByRole('button', { name: `${name} reçetesi yok` }).click();
   const dialog = page.getByRole('dialog', { name: `${name} · Reçete` });
   const toggle = dialog.getByRole('button', { name: 'Toplu üretimden hesapla' });
-  // Nothing chosen yet: a short hint, no fields.
+  // Nothing chosen yet (19 Ekim): the panel has its own ingredient line to choose in.
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   const panel = dialog.getByRole('region', { name: 'Bir seferde ne kadar hazırladınız?' });
-  await expect(panel).toContainText('Önce malzemeleri seçin.');
-  await expect(panel.getByRole('button', { name: 'Reçeteye yaz' })).toHaveCount(0);
+  await expect(panel.getByLabel('Toplu üretimde 1. malzeme', { exact: true })).toHaveValue('');
+  await panel.getByRole('button', { name: 'Reçeteye yaz' }).click();
+  const result = panel.locator('.stock-batch-result');
+  await expect(result).toHaveText('En az bir malzemeyi seçip toplam miktarını yazın.');
   await panel.getByRole('button', { name: 'Kapat', exact: true }).click();
   await expect(panel).toHaveCount(0);
 
@@ -534,14 +536,17 @@ test('18 Ekim: Reçete → "Toplu üretimden hesapla" divides one batch into one
   await dialog.getByRole('button', { name: 'Malzeme ekle' }).click();
   await dialog.getByLabel('2. malzeme', { exact: true }).selectOption({ label: 'Tereyağı (deneme)' });
   await dialog.getByLabel('2. malzemenin miktarı', { exact: true }).fill('30');
-  await dialog.getByRole('button', { name: 'Malzeme ekle' }).click();
-  await dialog.getByLabel('3. malzeme', { exact: true }).selectOption({ label: 'Yumurta (deneme)' });
+  // The panel starts with the recipe's two ingredients; Yumurta is added in the panel only.
   await toggle.click();
-  await expect(panel).toContainText('Kullandığınız toplam malzemeyi ve kaç porsiyon çıktığını yazın; porsiyon başını hesaplayalım.');
+  await expect(panel).toContainText('Kullandığınız malzemeleri seçip toplam miktarlarını ve kaç porsiyon çıktığını yazın; porsiyon başını hesaplayalım.');
+  await expect(panel.getByLabel('Toplu üretimde 2. malzeme', { exact: true })).toHaveValue(/.+/);
+  await panel.getByRole('button', { name: 'Malzeme ekle' }).click();
+  await panel.getByLabel('Toplu üretimde 3. malzeme', { exact: true }).selectOption({ label: 'Un (deneme)' });
+  await expect(result).toHaveText('Un (deneme) iki kez yazılmış; toplamını tek satırda yazın.');
+  await panel.getByLabel('Toplu üretimde 3. malzeme', { exact: true }).selectOption({ label: 'Yumurta (deneme)' });
   // Validation in place: nothing typed, then a portion count that is not a number.
   await panel.getByRole('button', { name: 'Reçeteye yaz' }).click();
-  const result = panel.locator('.stock-batch-result');
-  await expect(result).toHaveText('En az bir malzemenin toplam miktarını yazın.');
+  await expect(result).toHaveText('En az bir malzemeyi seçip toplam miktarını yazın.');
   await panel.getByLabel('Un (deneme) toplam miktarı', { exact: true }).fill('1,25');
   await panel.getByLabel('Un (deneme) toplam miktarı birimi').selectOption('kg');
   await panel.getByLabel('Yumurta (deneme) toplam miktarı', { exact: true }).fill('3');
@@ -561,6 +566,8 @@ test('18 Ekim: Reçete → "Toplu üretimden hesapla" divides one batch into one
   await expect(dialog.getByLabel('1. malzemenin miktarı', { exact: true })).toHaveValue('125');
   await expect(dialog.getByLabel('1. malzemenin miktarı birimi')).toHaveValue('g');
   await expect(dialog.getByLabel('2. malzemenin miktarı', { exact: true })).toHaveValue('30');
+  // Yumurta was not in the recipe: "Reçeteye yaz" added it as a new row.
+  await expect(dialog.getByLabel('3. malzeme', { exact: true })).toHaveValue(/.+/);
   await expect(dialog.getByLabel('3. malzemenin miktarı', { exact: true })).toHaveValue('0,3');
   // Nothing is saved until "Reçeteyi kaydet".
   const productId = (await (await page.request.get('/api/staff/state')).json()).products.find((p: any) => p.name === name).id;

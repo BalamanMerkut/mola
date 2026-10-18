@@ -655,7 +655,7 @@
       "konu": "personel",
       "kitle": ["owner", "manager"],
       "soru": "Toplu yapılan ürünün reçetesini nasıl yazarım?",
-      "cevap": ["Stok → Reçeteler’de ürünü açın, malzemeleri seçin ve “Toplu üretimden hesapla”ya basın. Bir seferde kullandığınız toplam malzemeyi ve kaç porsiyon çıktığını yazın; “Reçeteye yaz” porsiyon başını doldurur. Sonra “Reçeteyi kaydet”e basın."],
+      "cevap": ["Stok → Reçeteler’de ürünü açıp “Toplu üretimden hesapla”ya basın. Bir seferde kullandığınız malzemeleri seçip toplam miktarlarını ve kaç porsiyon çıktığını yazın; “Reçeteye yaz” porsiyon başını reçeteye doldurur. Sonra “Reçeteyi kaydet”e basın."],
       "anahtar": ["toplu", "toplu üretim", "toplu yapım", "toplu hesapla", "porsiyon", "porsiyon başı", "kaç porsiyon", "tepsi", "kazan", "börek", "pasta", "kek", "çorba", "reçete hesapla", "gramaj", "bölme"]
     },
     {
