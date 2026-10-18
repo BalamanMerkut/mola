@@ -1,5 +1,5 @@
 // Sosyal medya profil fotoğrafı: sitedeki Mola işareti (public/favicon.svg) 1080×1080, yuvarlak kırpmaya uygun.
-// Kullanım: node scripts/sosyal/profil-fotografi.mjs <çıktı klasörü>
+// Kullanım: node scripts/sosyal/profil-fotografi.mjs <çıktı klasörü> [boyut, varsayılan 1080; YouTube için 800]
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,10 +26,12 @@ const surumler = {
   'profil-fincan-yazi.png': sayfa(`${fincan(400, '#f3ebdd')}<div class="yazi">mola<i>.</i></div>`),
 };
 
+// Başka boyut: aynı 1080'lik tasarım, ölçeklenerek (YouTube profil fotoğrafı 800×800).
+const boyut = Number(process.argv[3] ?? 1080);
 const tarayici = await chromium.launch({ channel: 'chrome' }).catch(() => chromium.launch());
-const s = await tarayici.newPage({ viewport: { width: 1080, height: 1080 } });
+const s = await tarayici.newPage({ viewport: { width: boyut, height: boyut } });
 for (const [ad, html] of Object.entries(surumler)) {
-  await s.setContent(html);
+  await s.setContent(boyut === 1080 ? html : html.replace('</style>', `html{zoom:${boyut / 1080}}</style>`));
   await s.screenshot({ path: join(cikti, ad) });
   console.log('yazıldı', ad);
 }
