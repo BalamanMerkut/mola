@@ -1,8 +1,8 @@
 import { PlaceLink } from './Moved';
-import { useMemo, useState } from 'react';
-import { BookOpenText, Boxes, CircleSlash, Package, Plus, Search, Trash2, X } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
+import { BookOpenText, Boxes, Calculator, CircleSlash, Package, Plus, Search, Trash2, X } from 'lucide-react';
 import type { Product, StaffSnapshot } from '../packages/domain/types';
-import { formatAmount, LOW_MARGIN, optionCosts, recipeCost, recipeUsage, type OptionRule, type Recipe } from '../packages/domain/stock';
+import { batchShare, formatAmount, LOW_MARGIN, optionCosts, parseAmount, recipeCost, recipeUsage, type OptionRule, type Recipe, type StockUnit } from '../packages/domain/stock';
 import { api, money } from './api';
 import { Modal, Notice } from './components';
 import { HelpTip } from './HelpTip';
@@ -68,6 +68,41 @@ export default function RecipeSection({ product }: { product: Product }) {
   return <div className="stock-recipe-inline">{notice && <Notice tone="success">{notice}</Notice>}<RecipeEditor key={view.recipes?.find(r => r.productId === product.id)?.id ?? 'none'} product={product} view={view} onSaved={message => { setNotice(message); void reload(); }} /></div>;
 }
 
+const shareText = (n: number, unit: StockUnit) => unit === 'piece' ? `${n.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} adet` : formatAmount(n, unit);
+
+/**
+ * Reçete → "Toplu üretimden hesapla" (18 Ekim): what one batch took and how many portions (or kg) came out, divided into
+ * one portion. "Reçeteye yaz" only fills the rows (blank lines stay as they are); the recipe is saved with "Reçeteyi kaydet".
+ */
+function BatchHelper({ id, rows, items, kg, onWrite, onClose }: { id: string; rows: Row[]; items: Map<string, ItemView>; kg: boolean; onWrite: (amounts: Map<number, AmountDraft>) => void; onClose: () => void }) {
+  const [totals, setTotals] = useState<Record<number, AmountDraft>>({}), [portions, setPortions] = useState(''), [tried, setTried] = useState(false);
+  const portionsId = useId(), count = parseAmount(portions, 'adet');
+  const lines = rows.flatMap(r => { const it = items.get(r.itemId); if (!it) return []; const d = totals[r.key] ?? emptyAmount(it.unit, true), total = d.text.trim() ? amountOf(d) : null; return [{ key: r.key, it, d, total, share: total === null ? null : batchShare(total, count, it.unit) }]; });
+  const typed = lines.filter(l => l.total !== null), wrong = typed.find(l => !(l.total! > 0)), tiny = typed.find(l => l.share === null);
+  const problem = !typed.length ? 'En az bir malzemenin toplam miktarını yazın.' : wrong ? `${wrong.it.name}: toplam miktarı sayı olarak yazın.`
+    : !portions.trim() ? (kg ? 'Kaç kg ürün çıktığını yazın.' : 'Kaç porsiyon çıktığını yazın.') : !(count > 0) ? (kg ? 'Çıkan miktarı 0’dan büyük bir sayı olarak yazın.' : 'Porsiyon sayısını 0’dan büyük bir sayı olarak yazın.')
+    : tiny ? `${tiny.it.name}: ${kg ? '1 kg için' : 'porsiyon başına'} çok az kalıyor; toplamı kontrol edin.` : '';
+  const write = () => { if (problem) { setTried(true); return; } onWrite(new Map(typed.map(l => [l.key, draftOf(l.share!, l.it.unit)]))); };
+  return <section id={id} className="stock-batch" aria-labelledby={`${id}-title`}>
+    <div><h5 id={`${id}-title`}>Bir seferde ne kadar hazırladınız?</h5><p className="stock-hint">Kullandığınız toplam malzemeyi ve kaç {kg ? 'kg ürün' : 'porsiyon'} çıktığını yazın; {kg ? '1 kg için miktarı' : 'porsiyon başını'} hesaplayalım.</p></div>
+    {!lines.length ? <p className="stock-batch-empty" role="status">Önce malzemeleri seçin.</p> : <>
+      {lines.map(l => <div className="stock-batch-line" key={l.key}>
+        <span className="stock-batch-name" aria-hidden="true">{l.it.name}</span>
+        <AmountInput label={`${l.it.name} toplam miktarı`} hideLabel smallFirst placeholder="Toplam" value={l.d} unit={l.it.unit} invalid={!!wrong && wrong.key === l.key} onChange={d => setTotals(t => ({ ...t, [l.key]: d }))} />
+      </div>)}
+      <div className="stock-batch-line">
+        <label className="stock-batch-name" htmlFor={portionsId}>{kg ? 'Kaç kg ürün çıktı?' : 'Kaç porsiyon çıktı?'}</label>
+        <div className="stock-amount-row"><input id={portionsId} inputMode="decimal" autoComplete="off" value={portions} placeholder="0" aria-invalid={(!!portions.trim() && !(count > 0)) || undefined} onKeyDown={noEnter} onChange={e => setPortions(e.target.value)} /><span className="stock-unit-fixed" aria-hidden="true">{kg ? 'kg' : 'porsiyon'}</span></div>
+      </div>
+      <p className={`stock-batch-result ${problem ? 'warn' : ''}`} aria-live="polite">{problem ? (tried || portions.trim() ? problem : '') : `${kg ? '1 kg ürün' : '1 porsiyon'}: ${typed.map(l => `${l.it.name} ${shareText(l.share!, l.it.unit)}`).join(' · ')}`}</p>
+    </>}
+    <div className="stock-batch-actions">
+      {lines.length > 0 && <button type="button" className="btn secondary small-btn" onClick={write}>Reçeteye yaz</button>}
+      <button type="button" className="text-btn" onClick={onClose}>Kapat</button>
+    </div>
+  </section>;
+}
+
 function rulesOf(product: Product, recipe: Recipe | undefined, units: Map<string, ItemView>) {
   const out: Record<string, RuleDraft> = {};
   for (const g of product.groups) for (const o of g.options) {
@@ -85,8 +120,8 @@ export function RecipeEditor({ product, view, onSaved, onCancel }: { product: Pr
   const [mode, setMode] = useState<Mode>(current?.ready ? 'ready' : 'recipe');
   const [rows, setRows] = useState<Row[]>(() => current && !current.ready ? current.items.map(i => ({ key: ++rowKey, itemId: i.itemId, amount: draftOf(i.amount, items.get(i.itemId)?.unit ?? 'g') })) : [{ key: ++rowKey, itemId: '', amount: emptyAmount('g', true) }]);
   const [rules, setRules] = useState(() => rulesOf(product, current, items));
-  const [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const kg = product.unit === 'kg';
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [batch, setBatch] = useState(false);
+  const kg = product.unit === 'kg', batchId = useId();
   const setRow = (key: number, change: Partial<Row>) => setRows(rs => rs.map(r => r.key === key ? { ...r, ...change } : r));
   const setRule = (key: string, change: Partial<RuleDraft>) => setRules(rs => ({ ...rs, [key]: { ...rs[key], ...change } }));
   const chosen = rows.filter(r => r.itemId);
@@ -128,7 +163,7 @@ export function RecipeEditor({ product, view, onSaved, onCancel }: { product: Pr
     {mode === 'none' && <div className="stock-mode-note quiet"><CircleSlash size={20} aria-hidden="true" /><p>Bu ürün satılınca stoktan bir şey düşmez{current ? '; bundan önceki satışlar eski reçeteyle kalır' : ''}.</p></div>}
     {mode === 'recipe' && <>
       {!ingredients.length ? <div className="stock-empty"><Boxes size={26} aria-hidden="true" /><strong>Önce malzeme ekleyin</strong><span>Stok → Malzemeler'den kahve, süt gibi malzemeleri ekleyince burada seçebilirsiniz.</span></div> : <>
-        <div className="stock-recipe-head"><h4>{kg ? '1 kg ürün için' : '1 adet için'}</h4><span className="muted small">Malzeme ve miktar</span></div>
+        <div className="stock-recipe-head"><h4>{kg ? '1 kg ürün için' : '1 adet için'}</h4><span className="stock-recipe-head-side"><span className="muted small">Malzeme ve miktar</span><button type="button" className="text-btn stock-batch-toggle" aria-expanded={batch} aria-controls={batch ? batchId : undefined} disabled={busy} onClick={() => setBatch(b => !b)}><Calculator size={14} aria-hidden="true" />Toplu üretimden hesapla</button></span></div>
         <ul className="stock-recipe-rows">{rows.map((r, i) => {
           const unit = items.get(r.itemId)?.unit ?? 'g';
           return <li key={r.key} className="stock-recipe-row">
@@ -137,6 +172,7 @@ export function RecipeEditor({ product, view, onSaved, onCancel }: { product: Pr
             <button type="button" className="icon-btn stock-row-remove" aria-label={`${items.get(r.itemId)?.name ?? `${i + 1}. malzeme`} satırını kaldır`} disabled={busy || rows.length === 1} onClick={() => setRows(rs => rs.filter(x => x.key !== r.key))}><Trash2 size={16} /></button>
           </li>;
         })}</ul>
+        {batch && <BatchHelper id={batchId} rows={rows} items={items} kg={kg} onClose={() => setBatch(false)} onWrite={amounts => { setRows(rs => rs.map(r => amounts.has(r.key) ? { ...r, amount: amounts.get(r.key)! } : r)); setBatch(false); }} />}
         <button type="button" className="text-btn stock-add-row" disabled={busy || rows.length >= 30} onClick={() => setRows(rs => [...rs, { key: ++rowKey, itemId: '', amount: emptyAmount('g', true) }])}><Plus size={15} />Malzeme ekle</button>
         {product.groups.length > 0 && <details className="stock-options" open={!!current?.options?.length || undefined}><summary><span>Seçenekler stoktan düşen miktarı değiştiriyor mu?</span><HelpTip title="Seçenek kuralları">Değişmez: seçenek stoktan düşeni değiştirmez. Miktar değişir (%): reçetedeki bütün malzemeler bu oranda düşer (Büyük boy %150 = her malzemeden 1,5 kat). Malzeme eklenir: reçeteye ek olarak bir malzeme düşer (Ekstra shot +9 g kahve). Yerine başka malzeme: reçetedeki bir malzemenin yerine başkası düşer, miktar aynı kalır (Yulaf sütü, sütün yerine).</HelpTip> <small>Müşteriye görünmez · {product.groups.map(g => g.name).join(', ')}</small></summary>
           <p className="stock-hint">Örnek: Büyük boy %150 · Yulaf sütü, sütün yerine · Ekstra shot, +9 g kahve. Seçilmeyen seçenek reçeteyi değiştirmez.</p>

@@ -19,7 +19,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as lucide from 'lucide-react';
 import sharp from 'sharp';
 import { defaultPackages, featureById, features, type FeatureId } from '../packages/domain/features.js';
-import { lira, priceFor } from '../packages/domain/service-pricing.js';
+import { DEFAULT_VAT_RATE, lira, priceFor, vatOf } from '../packages/domain/service-pricing.js';
 import { SITE_CONSENT_VERSION, SITE_LEAD_LIMITS, SITE_LEAD_TYPE_NAMES, SITE_LEAD_TYPES } from '../packages/domain/site-lead.js';
 import { yardimScript } from './site-yardim.js';
 
@@ -102,13 +102,18 @@ function servicesHtml() {
  * defaultPackages' discount), worked out the way Mola Merkez does it (service-pricing.ts priceFor; yearly = 10 months), never
  * typed here. Mola Yönetim → Paketler / Hizmet fiyatları changes only Mola Merkez's own copy: when the owner changes a price
  * or a package there, the defaults in features.ts must be changed too (and the site built again), or the site keeps showing
- * the old price. Always without KDV, "+ KDV" beside every price; no pilot or launch discount here.
+ * the old price. 18 Ekim (sahibin isteği): the big price is what the café pays, KDV dahil (%20, DEFAULT_VAT_RATE, to whole
+ * lira); the struck list price and the yearly line too. The service fee without KDV ("Hizmet bedeli ₺1.375 + KDV") stays
+ * small under them, as on the invoice. No pilot or launch discount here.
  */
+const withVat = (k: number) => Math.round((k + vatOf(k, DEFAULT_VAT_RATE)) / 100) * 100;
 function packagePriceHtml(p: typeof defaultPackages[number]) {
   const price = priceFor(p.features, {}, p.discount), off = price.listMonthly !== price.monthly;
   // Without a discount the struck line's place stays empty, so the three prices line up side by side.
-  const was = off ? `<s class="was"><span class="visually-hidden">Liste fiyatı </span>${lira(price.listMonthly)}</s>` : '<span class="was" aria-hidden="true"></span>';
-  return `<div class="package-price">${was}<p class="now">${off ? '<span class="visually-hidden">Paket fiyatı </span>' : ''}<b>${lira(price.monthly)}</b> <span class="per">/ay + KDV</span></p><p class="year">Yıllık ödemede 2 ay bedava: <span class="nowrap">${lira(price.yearly)} + KDV</span></p></div>`;
+  const was = off ? `<s class="was"><span class="visually-hidden">KDV dahil liste fiyatı </span>${lira(withVat(price.listMonthly))}</s>` : '<span class="was" aria-hidden="true"></span>';
+  return `<div class="package-price">${was}<p class="now">${off ? '<span class="visually-hidden">Paket fiyatı </span>' : ''}<b>${lira(withVat(price.monthly))}</b> <span class="per">/ay · KDV dahil</span></p>`
+    + `<p class="year">Yıllık ödemede 2 ay bedava: <span class="nowrap">${lira(withVat(price.yearly))} KDV dahil</span></p>`
+    + `<p class="net">Hizmet bedeli <span class="nowrap">${lira(price.monthly)} + KDV</span> · <span class="nowrap">yıllık ${lira(price.yearly)} + KDV</span></p></div>`;
 }
 function packagesHtml() {
   const cards = defaultPackages.map(p => {

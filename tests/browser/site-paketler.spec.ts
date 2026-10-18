@@ -3,13 +3,13 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { join, resolve } from 'node:path';
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
 import { defaultPackages, features } from '../../packages/domain/features';
-import { lira, priceFor } from '../../packages/domain/service-pricing';
+import { DEFAULT_VAT_RATE, lira, priceFor, vatOf } from '../../packages/domain/service-pricing';
 import { MERKEZ } from './helpers';
 
 /*
  * molayazilim.com.tr → Özellikler → Paketler (scripts/site-build.ts packagePriceHtml): the three packages' prices from the
- * code's defaults (packages/domain/features.ts), "+ KDV" beside each, the package discount's list price struck above,
- * "Yıllık ödemede 2 ay bedava", "İlk 30 gün ücretsiz · Kurulum ücretsiz" above the cards, the Özel card without prices.
+ * code's defaults (packages/domain/features.ts), KDV dahil (18 Ekim) with "/ay · KDV dahil" beside each, the package
+ * discount's list price struck above, "Yıllık ödemede 2 ay bedava", the service fee "+ KDV" small under them, "İlk 30 gün ücretsiz · Kurulum ücretsiz" above the cards, the Özel card without prices.
  * The site is built into a scratch folder (never site/dist) and served as Caddy does (scripts/site-dev.ts). Port: E2E_PORT + 44.
  * Screenshots also go to $env:SITE_EKRAN when it is set (e.g. docs/ekran/site).
  */
@@ -37,8 +37,8 @@ async function shot(page: Page, info: TestInfo, name: string) {
 }
 const card = (page: Page, id: string) => page.locator(`#paketler article[data-paket="${id}"]`);
 
-for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [360, 780, 'paketler-telefon.png']] as const) {
-  test(`Paketler (${width} px): three prices + KDV, Restoran Pro's struck list price, the yearly line, "İlk 30 gün ücretsiz", Özel without prices`, async ({ page }, info) => {
+for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [390, 844, 'paketler-telefon-390.png'], [360, 780, 'paketler-telefon.png']] as const) {
+  test(`Paketler (${width} px): three prices KDV dahil (service fee + KDV under them), Restoran Pro's struck list price, the yearly line, "İlk 30 gün ücretsiz", Özel without prices`, async ({ page }, info) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.setViewportSize({ width, height });
@@ -48,30 +48,43 @@ for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [360,
     const offer = section.locator('.package-offer');
     await expect(offer).toHaveText('İlk 30 gün ücretsiz · Kurulum ücretsiz');
     expect((await offer.boundingBox())!.y).toBeLessThan((await section.locator('.packages').boundingBox())!.y);
-    // The owner's prices (17 Ekim), KDV hariç, "+ KDV" always beside the price.
-    const expected = { 'cay-bahcesi': ['₺750', '₺7.500'], 'kafe-standart': ['₺1.375', '₺13.750'], 'restoran-pro': ['₺1.875', '₺18.750'] } as const;
-    for (const [id, [monthly, yearly]] of Object.entries(expected)) {
+    // The owner's prices (17 Ekim) with %20 KDV to whole lira (18 Ekim): big and yearly KDV dahil, the service fee + KDV under them.
+    const expected = {
+      'cay-bahcesi': ['₺900', '₺9.000', '₺750', '₺7.500'],
+      'kafe-standart': ['₺1.650', '₺16.500', '₺1.375', '₺13.750'],
+      'restoran-pro': ['₺2.250', '₺22.500', '₺1.875', '₺18.750'],
+    } as const;
+    for (const [id, [monthly, yearly, net, netYearly]] of Object.entries(expected)) {
       const c = card(page, id), now = c.locator('.package-price .now');
       await expect(now.locator('b')).toHaveText(monthly);
-      await expect(now.locator('.per')).toHaveText('/ay + KDV'); await expect(now.locator('.per')).toBeVisible();
-      // "+ KDV" on the price's own line (not wrapped under it), also at 360 px.
+      await expect(now.locator('.per')).toHaveText('/ay · KDV dahil'); await expect(now.locator('.per')).toBeVisible();
+      // "KDV dahil" on the price's own line (not wrapped under it), also at 360 px.
       const [b, per] = [(await now.locator('b').boundingBox())!, (await now.locator('.per').boundingBox())!];
-      expect(per.y, `${id}: + KDV fiyatın yanında`).toBeLessThan(b.y + b.height); expect(per.x).toBeGreaterThan(b.x);
-      await expect(c.locator('.package-price .year')).toHaveText(`Yıllık ödemede 2 ay bedava: ${yearly} + KDV`);
+      expect(per.y, `${id}: KDV dahil fiyatın yanında`).toBeLessThan(b.y + b.height); expect(per.x).toBeGreaterThan(b.x);
+      await expect(c.locator('.package-price .year')).toHaveText(`Yıllık ödemede 2 ay bedava: ${yearly} KDV dahil`);
+      const fee = c.locator('.package-price .net');
+      await expect(fee).toHaveText(`Hizmet bedeli ${net} + KDV · yıllık ${netYearly} + KDV`); await expect(fee).toBeVisible();
+      // Small and quiet under the yearly line.
+      expect(await fee.evaluate(e => parseFloat(getComputedStyle(e).fontSize))).toBeLessThan(await c.locator('.package-price .year').evaluate(e => parseFloat(getComputedStyle(e).fontSize)));
+      expect((await fee.boundingBox())!.y).toBeGreaterThan((await c.locator('.package-price .year').boundingBox())!.y);
     }
-    // Restoran Pro: ₺1.910 struck through above ₺1.875, read out as "Liste fiyatı ₺1.910", then "Paket fiyatı ₺1.875".
+    // Restoran Pro: ₺2.292 (₺1.910 KDV dahil) struck through above ₺2.250, read out as "KDV dahil liste fiyatı ₺2.292", then "Paket fiyatı ₺2.250".
     const pro = card(page, 'restoran-pro'), was = pro.locator('s.was');
-    await expect(was).toHaveText('Liste fiyatı ₺1.910'); await expect(was).toBeVisible();
-    await expect(pro.locator('.package-price .now')).toHaveText('Paket fiyatı ₺1.875 /ay + KDV');
+    await expect(was).toHaveText('KDV dahil liste fiyatı ₺2.292'); await expect(was).toBeVisible();
+    await expect(pro.locator('.package-price .now')).toHaveText('Paket fiyatı ₺2.250 /ay · KDV dahil');
     expect(await was.evaluate(e => getComputedStyle(e).textDecorationLine)).toBe('line-through');
     expect((await was.boundingBox())!.y + (await was.boundingBox())!.height).toBeLessThanOrEqual((await pro.locator('.now b').boundingBox())!.y + 1);
     for (const id of ['cay-bahcesi', 'kafe-standart']) await expect(card(page, id).locator('s')).toHaveCount(0);
-    // Worked out from the code (no price typed into the page): the same as Mola Merkez's priceFor on the defaults.
+    // Worked out from the code (no price typed into the page): the same as Mola Merkez's priceFor on the defaults, + %20 KDV.
+    const gross = (k: number) => Math.round((k + vatOf(k, DEFAULT_VAT_RATE)) / 100) * 100;
     for (const p of defaultPackages) {
       const price = priceFor(p.features, {}, p.discount);
-      await expect(card(page, p.id).locator('.now b')).toHaveText(lira(price.monthly));
-      await expect(card(page, p.id).locator('.year')).toContainText(lira(price.yearly));
+      await expect(card(page, p.id).locator('.now b')).toHaveText(lira(gross(price.monthly)));
+      await expect(card(page, p.id).locator('.year')).toContainText(lira(gross(price.yearly)));
+      await expect(card(page, p.id).locator('.net')).toContainText(lira(price.monthly));
     }
+    // The note under the cards says which price is which.
+    await expect(section.locator('.package-note')).toContainText('Büyük yazan fiyatlara %20 KDV dahildir; KDV hariç hizmet bedeli altında yazar.');
     // Özel: no per-service prices, a way to İletişim.
     const custom = card(page, 'ozel');
     await expect(custom).toContainText('İhtiyacınız olan hizmetleri birlikte seçelim');
@@ -155,5 +168,5 @@ test('Destek ve İletişim: "Fiyatlar ne kadar?" points to the packages, no type
   const answer = page.locator('details').filter({ hasText: 'Fiyatlar ne kadar?' });
   await answer.locator('summary').click();
   await expect(answer.getByRole('link', { name: /Paketler/ })).toHaveAttribute('href', '/ozellikler/#paketler');
-  await expect(answer).toContainText('İlk 30 gün ücretsiz'); await expect(answer).not.toContainText('₺');
+  await expect(answer).toContainText('İlk 30 gün ücretsiz'); await expect(answer).toContainText('KDV dahil'); await expect(answer).not.toContainText('₺');
 });

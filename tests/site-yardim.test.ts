@@ -126,6 +126,8 @@ test('Mola Yardım audiences: known names only, at least one each; every role ha
   assert.ok(!waiter.search('iade').some(h => h.id === 'iade'));
   assert.equal(createYardimSearch(forAudience(data, appAudience('kitchen'))).search('fiş modu')[0]?.id, 'fis-modu');
   assert.equal(createYardimSearch(forAudience(data, appAudience('cashier'))).search('iade')[0]?.id, 'iade');
+  // 18 Ekim: Reçete → "Toplu üretimden hesapla", for the owner and the Müdür (not the site).
+  for (const role of ['owner', 'manager'] as const) for (const q of ['toplu üretim reçete', 'kaç porsiyon çıktı']) assert.equal(createYardimSearch(forAudience(data, appAudience(role))).search(q)[0]?.id, 'recete-toplu', `${role}: ${q}`);
   // Mistakes in yardim.json stop the build with the question's id.
   const one = (kitle: unknown) => ({ konular: [{ id: 'kasa', ad: 'Kasa' }], sikSorulanlar: [], sorular: [{ id: 'bir', konu: 'kasa', kitle, soru: 'Soru?', cevap: ['Cevap.'], anahtar: ['soru'] }] }) as never;
   assert.throws(() => checkYardim(one([])), /bir.*kitle/);

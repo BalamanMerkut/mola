@@ -502,3 +502,70 @@ test('8 Ekim: Reçete options say what leaves the stock and cost each option; İ
     expect(await noSideScroll(cook)).toBe(true);
   } finally { await kitchen.close(); }
 });
+
+test('18 Ekim: Reçete → "Toplu üretimden hesapla" divides one batch into one portion and only fills the rows', async ({ page }, info) => {
+  test.setTimeout(180000);
+  await page.request.post('/api/login', { data: { username: 'isletme', password: 'MolaDemo!2026' } });
+  await ensureSetup(page.request);
+  // A börek made ten at a time: 1,25 kg un, 250 g tereyağı, 3 yumurta.
+  const name = 'Börek (deneme)';
+  const state = await (await page.request.get('/api/staff/state')).json();
+  if (!state.products.some((p: any) => p.name === name)) expect((await page.request.post('/api/staff/products', { data: { product: { code: '188', name, nameEn: '', category: 'Tatlılar', description: '', price: 9000, soldOut: false, art: 'cake', photo: null, groups: [] } } })).ok()).toBe(true);
+  const stock = await (await page.request.get('/api/staff/stock')).json();
+  for (const item of [{ name: 'Un (deneme)', unit: 'g', initial: 10000, unitCost: 3 }, { name: 'Tereyağı (deneme)', unit: 'g', initial: 2000, unitCost: 40 }, { name: 'Yumurta (deneme)', unit: 'piece', initial: 60, unitCost: 600 }])
+    if (!stock.items.some((i: any) => i.name === item.name)) expect((await page.request.post('/api/staff/stock/items', { data: item })).ok()).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto('/');
+  await nav(page, 'Stok').click();
+  await tab(page, 'Reçeteler').click();
+  await page.getByRole('button', { name: `${name} reçetesi yok` }).click();
+  const dialog = page.getByRole('dialog', { name: `${name} · Reçete` });
+  const toggle = dialog.getByRole('button', { name: 'Toplu üretimden hesapla' });
+  // Nothing chosen yet: a short hint, no fields.
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  const panel = dialog.getByRole('region', { name: 'Bir seferde ne kadar hazırladınız?' });
+  await expect(panel).toContainText('Önce malzemeleri seçin.');
+  await expect(panel.getByRole('button', { name: 'Reçeteye yaz' })).toHaveCount(0);
+  await panel.getByRole('button', { name: 'Kapat', exact: true }).click();
+  await expect(panel).toHaveCount(0);
+
+  await dialog.getByLabel('1. malzeme', { exact: true }).selectOption({ label: 'Un (deneme)' });
+  await dialog.getByRole('button', { name: 'Malzeme ekle' }).click();
+  await dialog.getByLabel('2. malzeme', { exact: true }).selectOption({ label: 'Tereyağı (deneme)' });
+  await dialog.getByLabel('2. malzemenin miktarı', { exact: true }).fill('30');
+  await dialog.getByRole('button', { name: 'Malzeme ekle' }).click();
+  await dialog.getByLabel('3. malzeme', { exact: true }).selectOption({ label: 'Yumurta (deneme)' });
+  await toggle.click();
+  await expect(panel).toContainText('Kullandığınız toplam malzemeyi ve kaç porsiyon çıktığını yazın; porsiyon başını hesaplayalım.');
+  // Validation in place: nothing typed, then a portion count that is not a number.
+  await panel.getByRole('button', { name: 'Reçeteye yaz' }).click();
+  const result = panel.locator('.stock-batch-result');
+  await expect(result).toHaveText('En az bir malzemenin toplam miktarını yazın.');
+  await panel.getByLabel('Un (deneme) toplam miktarı', { exact: true }).fill('1,25');
+  await panel.getByLabel('Un (deneme) toplam miktarı birimi').selectOption('kg');
+  await panel.getByLabel('Yumurta (deneme) toplam miktarı', { exact: true }).fill('3');
+  await expect(result).toHaveText('Kaç porsiyon çıktığını yazın.');
+  const portions = panel.getByLabel('Kaç porsiyon çıktı?', { exact: true });
+  await portions.fill('0');
+  await expect(result).toHaveText('Porsiyon sayısını 0’dan büyük bir sayı olarak yazın.');
+  await portions.fill('10');
+  // Tereyağı is left blank: it keeps its 30 g.
+  await expect(result).toHaveText('1 porsiyon: Un (deneme) 125 g · Yumurta (deneme) 0,3 adet');
+  for (const [width, height] of [[360, 800], [390, 844], [768, 1024]] as const) { await page.setViewportSize({ width, height }); expect(await noSideScroll(page), `batch panel ${width}`).toBe(true); await fieldsAtLeast16(page, '.stock-batch'); if (width === 390) { await panel.scrollIntoViewIfNeeded(); await panel.screenshot({ path: info.outputPath('recete-toplu-uretim-telefon.png') }); } }
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await panel.scrollIntoViewIfNeeded();
+  await shot(page, 'recete-toplu-uretim.png', info.outputPath('recete-toplu-uretim.png'), false);
+  await panel.getByRole('button', { name: 'Reçeteye yaz' }).click();
+  await expect(panel).toHaveCount(0);
+  await expect(dialog.getByLabel('1. malzemenin miktarı', { exact: true })).toHaveValue('125');
+  await expect(dialog.getByLabel('1. malzemenin miktarı birimi')).toHaveValue('g');
+  await expect(dialog.getByLabel('2. malzemenin miktarı', { exact: true })).toHaveValue('30');
+  await expect(dialog.getByLabel('3. malzemenin miktarı', { exact: true })).toHaveValue('0,3');
+  // Nothing is saved until "Reçeteyi kaydet".
+  const productId = (await (await page.request.get('/api/staff/state')).json()).products.find((p: any) => p.name === name).id;
+  expect((await (await page.request.get('/api/staff/stock')).json()).recipes.some((r: any) => r.productId === productId)).toBe(false);
+  await dialog.getByRole('button', { name: 'Reçeteyi kaydet' }).click();
+  await expect(page.getByText(`${name} reçetesi kaydedildi.`)).toBeVisible();
+  await expect(page.locator('.stock-row').filter({ hasText: name })).toContainText('Un (deneme) 125 g · Tereyağı (deneme) 30 g · Yumurta (deneme) 0,3 adet');
+});

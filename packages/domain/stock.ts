@@ -319,6 +319,17 @@ export function parseAmount(text: string, unit: string) {
   const value = Number(normal);
   return unit === 'kg' || unit === 'L' ? Math.round(value * 1000 * 1000) / 1000 : value;
 }
+/**
+ * Reçete → "Toplu üretimden hesapla": one portion (or one kg of a kg product) of a batch. `total` in base units (g, ml,
+ * adet), `portions` how many came out. Rounded as a recipe is written: g and ml to 0,1 under 10, whole above; adet to
+ * 0,01. null when the total or the portions are not a positive number, or the share rounds to nothing.
+ */
+export function batchShare(total: number, portions: number, unit: StockUnit) {
+  if (!(total > 0) || !(portions > 0) || !Number.isFinite(total) || !Number.isFinite(portions)) return null;
+  const n = total / portions;
+  const rounded = unit === 'piece' ? Math.round(n * 100) / 100 : n < 10 ? Math.round(n * 10) / 10 : Math.round(n);
+  return rounded > 0 ? rounded : null;
+}
 /** Unit cost in kuruş per base unit as a person reads it: per kg, per L or per piece (kuruş). */
 export const perBigUnit = (unitCost: number, unit: StockUnit) => unitCost * bigUnit(unit).factor;
 /** The input units offered for an item: big first (purchases, counts) or small first (recipes). */

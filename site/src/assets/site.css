@@ -300,13 +300,15 @@ html.bolumlu { scroll-padding-top: 140px; }
 .package li .icon { color: var(--green-500); width: 18px; height: 18px; margin-top: 2px; }
 .package ul { margin-bottom: 24px; }
 .package .btn { margin-top: auto; }
-/* Price (scripts/site-build.ts packagePriceHtml): a package discount's list price small and struck above, "+ KDV" always beside. */
+/* Price (scripts/site-build.ts packagePriceHtml): KDV dahil, a package discount's list price small and struck above, "KDV dahil"
+   always beside; the service fee without KDV small and quiet under the yearly line. */
 .package-price { margin: 4px 0 14px; }
 .package-price .was { display: block; min-height: 1.45em; font: 600 16px/1.45 var(--sans); color: var(--muted); text-decoration-thickness: 1.5px; text-decoration-color: rgba(90,106,97,.75); }
 .package-price .now { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; color: var(--ink); }
 .package-price .now b { font: 700 40px/1.05 var(--sans); letter-spacing: -.02em; color: var(--green); }
 .package-price .per { font-size: 16px; font-weight: 600; color: var(--muted); white-space: nowrap; }
 .package-price .year { margin: 6px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--muted); }
+.package-price .net { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
 .nowrap { white-space: nowrap; }
 .package-offer { display: flex; align-items: center; justify-content: center; gap: 10px; width: fit-content; max-width: 100%; margin: 0 auto 30px; padding: 10px 20px; border-radius: 999px; background: var(--green-100); color: var(--green-900); font-size: 16.5px; line-height: 1.4; text-align: center; }
 .package-offer .icon { flex: none; color: var(--green); }

@@ -148,6 +148,21 @@ button.stock-item-main:focus-visible{outline:2px solid var(--green);outline-offs
 .stock-mode-note.quiet{background:var(--stk-soft);color:#5d6a5b}
 .stock-recipe-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid var(--stk-line);padding-bottom:6px}
 .stock-recipe-head h4{margin:0;font-size:13.5px;color:var(--ink)}
+/* 18 Ekim: "Toplu üretimden hesapla": a quiet link in the head (findable, not a button that competes), a small panel under the rows. */
+.stock-recipe-head{flex-wrap:wrap}
+.stock-recipe-head-side{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:2px 14px;margin-left:auto}
+.stock-batch-toggle{display:inline-flex;align-items:center;gap:5px;padding:4px 0;color:var(--stk-muted);font-size:12px;text-decoration:none}
+.stock-batch-toggle svg{flex:none;align-self:center}
+.stock-batch-toggle:hover:not(:disabled),.stock-batch-toggle[aria-expanded=true]{color:var(--green);text-decoration:underline}
+.stock-batch{display:grid;gap:10px;min-width:0;padding:12px 14px;border:1px solid var(--stk-line);border-radius:12px;background:var(--stk-soft)}
+.stock-batch h5{margin:0 0 2px;font-size:13px;color:var(--ink)}
+.stock-batch-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px;align-items:center}
+.stock-batch-name{font-size:13px;color:#40523f;overflow-wrap:anywhere}
+.stock-batch-empty{margin:0;font-size:13px;color:#40523f}
+.stock-batch-result{margin:0;min-height:1.5em;font-size:13px;line-height:1.5;color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.stock-batch-result.warn{color:var(--stk-warn);font-weight:400}
+.stock-batch-actions{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.stock-batch-actions .text-btn{font-size:13px}
 .stock-recipe-rows{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .stock-recipe-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 44px;gap:8px;align-items:center}
 .stock-row-remove{margin:0!important;width:44px;height:44px;color:#8a9487}
@@ -295,6 +310,8 @@ button.stock-item-main:focus-visible{outline:2px solid var(--green);outline-offs
   .stock-recipe-row>.stock-field{grid-area:item}
   .stock-recipe-row>.stock-amount{grid-area:amount}
   .stock-recipe-row>.stock-row-remove{grid-area:remove}
+  .stock-batch-line{grid-template-columns:minmax(0,1fr)}
+  .stock-batch-line .stock-batch-name{margin-bottom:-2px}
   .stock-option-row{grid-template-columns:minmax(0,1fr)}
   .stock-option-inputs,.stock-option-inputs.replace{grid-template-columns:minmax(0,1fr)}
   .stock-arrow{display:none}

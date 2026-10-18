@@ -10,7 +10,7 @@ import { balances, cancelByStaff, recordPayment, submitOrder } from '../packages
 import { stateRecords, summarize, Totals } from '../packages/domain/history.js';
 import { profitReport, type ProfitDay } from '../packages/domain/profit.js';
 import {
-  DAY, formatAmount, optionCosts, parseAmount, productStock, recipeUsage, selectionKey, stockDay, stockDayStart, stockLevels,
+  batchShare, DAY, formatAmount, optionCosts, parseAmount, productStock, recipeUsage, selectionKey, stockDay, stockDayStart, stockLevels,
   type MixEntry, type Recipe, type SalesFeed, type SoldLine, type StockData, type StockEntry, type StockItem,
 } from '../packages/domain/stock.js';
 import { filterStockHistory, stockHistory } from '../packages/domain/stock-history.js';
@@ -52,6 +52,26 @@ test('Stok: option rules (bigger size, other milk, extra shot) and plain words f
   assert.equal(selectionKey([{ groupId: 'size', optionId: 'large' }, { groupId: 'milk', optionId: 'oat' }]), selectionKey([{ groupId: 'milk', optionId: 'oat' }, { groupId: 'size', optionId: 'large' }]), 'the key does not depend on the order of choices');
   assert.equal(formatAmount(2400, 'g'), '2,4 kg'); assert.equal(formatAmount(850, 'g'), '850 g'); assert.equal(formatAmount(1200, 'ml'), '1,2 L'); assert.equal(formatAmount(48, 'piece'), '48 adet'); assert.equal(formatAmount(-120, 'g'), '−120 g');
   assert.equal(parseAmount('1,5', 'kg'), 1500); assert.equal(parseAmount('250', 'g'), 250); assert.equal(parseAmount('2', 'L'), 2000); assert.ok(Number.isNaN(parseAmount('abc', 'kg')));
+});
+
+test('Reçete → "Toplu üretimden hesapla": one portion (or one kg) of a batch, rounded as a recipe is written', () => {
+  // 1,25 kg un, 250 g tereyağı, 500 g peynir for 10 börek: 125 g, 25 g, 50 g each.
+  assert.equal(batchShare(parseAmount('1,25', 'kg'), 10, 'g'), 125);
+  assert.equal(batchShare(parseAmount('250', 'g'), 10, 'g'), 25);
+  // 1,5 L süt for 12 portions: 125 ml; 2 L for 3 kg of product: 666,67 → 667 ml per kg.
+  assert.equal(batchShare(parseAmount('1,5', 'L'), 12, 'ml'), 125);
+  assert.equal(batchShare(parseAmount('2', 'L'), 3, 'ml'), 667);
+  // Under 10 g/ml to 0,1; above whole.
+  assert.equal(batchShare(25, 8, 'g'), 3.1);
+  assert.equal(batchShare(99, 8, 'g'), 12);
+  assert.equal(batchShare(9.99, 1, 'g'), 10);
+  // Adet to 0,01: 3 yumurta for 10 portions, 2 for 3.
+  assert.equal(batchShare(3, 10, 'piece'), 0.3);
+  assert.equal(batchShare(2, 3, 'piece'), 0.67);
+  assert.equal(batchShare(12, 2.5, 'piece'), 4.8, 'a kg product can yield 2,5 kg');
+  // Nothing to write: no total, no portions, not a number, or a share that rounds to nothing.
+  for (const [total, portions] of [[0, 10], [100, 0], [100, -2], [NaN, 10], [100, NaN], [100, Infinity], [0.01, 1000]] as const) assert.equal(batchShare(total, portions, 'g'), null, `${total} / ${portions}`);
+  assert.equal(batchShare(1, 1000, 'piece'), null);
 });
 
 test('Stok math: count + purchases − waste − consumption; recipe versions, options, kg products, days by summary or line by line', () => {

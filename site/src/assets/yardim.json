@@ -28,8 +28,8 @@
       "konu": "tanisma",
       "kitle": ["site"],
       "soru": "Fiyatlar ne kadar?",
-      "cevap": ["Üst menüdeki Fiyatlar’a tıklayın; paketler ve fiyatlar orada. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
-      "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı"]
+      "cevap": ["Üst menüdeki Fiyatlar’a tıklayın; paketler ve fiyatlar orada, büyük yazan fiyatlara KDV dahildir. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
+      "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı", "kdv", "kdv dahil"]
     },
     {
       "id": "paket-karsilastirma",
@@ -649,6 +649,14 @@
         ["Stok → Malzemeler’de malzemeleri ve uyarı sınırını girin.", "Reçetede ürünün içini yazın; satıldıkça stoktan düşer.", "Alış, sayım ve fireyi kaydedin."]
       ],
       "anahtar": ["stok", "malzeme", "reçete", "recete", "fire", "sayım", "alış", "envanter", "depo", "azalan stok", "kârlılık", "maliyet"]
+    },
+    {
+      "id": "recete-toplu",
+      "konu": "personel",
+      "kitle": ["owner", "manager"],
+      "soru": "Toplu yapılan ürünün reçetesini nasıl yazarım?",
+      "cevap": ["Stok → Reçeteler’de ürünü açın, malzemeleri seçin ve “Toplu üretimden hesapla”ya basın. Bir seferde kullandığınız toplam malzemeyi ve kaç porsiyon çıktığını yazın; “Reçeteye yaz” porsiyon başını doldurur. Sonra “Reçeteyi kaydet”e basın."],
+      "anahtar": ["toplu", "toplu üretim", "toplu yapım", "toplu hesapla", "porsiyon", "porsiyon başı", "kaç porsiyon", "tepsi", "kazan", "börek", "pasta", "kek", "çorba", "reçete hesapla", "gramaj", "bölme"]
     },
     {
       "id": "stok-mutfak",
