@@ -22,7 +22,7 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
 import sharp from 'sharp';
-import { C, ROOT, base, chapters, dirs, endCard, img, introCard, mark, marks, meta, ownerScene, guestScene, setGuestSteps, shootThumb, splitScene, staffScene, taps, uret, yer, type Scene } from './youtube-sahne';
+import { ROOT, chapters, dirs, endCard, img, introCard, introThumb, marks, meta, ownerScene, guestScene, qrBadge, setGuestSteps, shootThumb, splitScene, staffScene, taps, uret, yer, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', '01 QR menü ve QR sipariş')) });
@@ -203,27 +203,12 @@ QR menü, QR sipariş, adisyon programı, kafe adisyon, restoran adisyon, kafe y
   writeFileSync(join(OUT, 'aciklama.txt'), text.replace(/\n/g, '\r\n'));
   console.log(lines.join('\n'));
 }
-function thumbHtml() {
-  const shot = join(WORK, 'kapak-menu.png');
-  return base(1280, 720, `
-  <div class="left"><h1 class="serif">QR menü<br>ve QR sipariş</h1>
-    <div class="brand">${mark(64)}<span class="serif">mola<i>.</i></span></div></div>
-  <div class="phone"><div class="screen"><img src="${img(shot)}"></div></div>
-  <div class="qr"><svg viewBox="0 0 24 24" width="74" height="74" fill="none" stroke="${C.green}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg></div>`, `
-  body{background:radial-gradient(80% 90% at 25% 40%,#2a5848 0%,${C.green} 58%,#1d4134 100%);color:${C.cup}}
-  .left{position:absolute;left:70px;top:0;bottom:0;width:690px;display:flex;flex-direction:column;justify-content:center}
-  h1{font-weight:400;font-size:120px;line-height:1.0;letter-spacing:-.03em}
-  .brand{display:flex;align-items:center;gap:16px;margin-top:46px;font-size:52px}.brand svg{border-radius:14px;box-shadow:0 0 0 2px rgba(243,235,221,.3)}.brand i{font-style:normal;color:${C.dot}}
-  .phone{position:absolute;left:820px;top:52px;width:318px;height:672px;padding:12px;border-radius:44px;background:#1c2721;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),inset 0 0 0 2px #3a4a41;transform:rotate(4deg)}
-  .phone .screen{width:294px;height:636px;border-radius:33px;overflow:hidden;background:${C.paper}}.phone img{width:100%;display:block}
-  .qr{position:absolute;left:744px;top:470px;width:120px;height:120px;border-radius:30px;background:${C.cup};display:grid;place-items:center;box-shadow:0 24px 50px -16px rgba(0,0,0,.55)}`);
-}
 async function thumbnail(browser: Browser) {
   // The menu as the guest sees it (a phone frame of the recording, top part).
   const m = meta('a-siparis'), mk = marks('a-siparis'), at = mk.menuReady + 2.2;
   const i = m.frames.findLastIndex(x => x.t - m.marks.start <= at);
   await sharp(join(REC, 'a-siparis', m.frames[i].file)).png().toFile(join(WORK, 'kapak-menu.png'));
-  await shootThumb(browser, thumbHtml());
+  await shootThumb(browser, introThumb({ title: 'QR menü<br>ve QR sipariş', shot: join(WORK, 'kapak-menu.png'), badge: qrBadge }));
 }
 
 await uret({ mp4: 'QR menü ve QR sipariş.mp4', music: 'canli-uzun', description, thumbnail,

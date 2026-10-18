@@ -533,6 +533,27 @@ export function trainingThumb(o: { title: string; line: string; shot: string; de
   .disp{position:absolute;left:600px;top:140px;width:720px;padding:12px 12px 24px;border-radius:16px;background:#222c27;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),inset 0 0 0 2px #3a4a41;transform:rotate(-3deg)}
   .disp .screen{border-radius:5px;overflow:hidden;background:${C.paper}}.disp img{display:block;width:100%}`);
 }
+/** The QR symbol of the introduction thumbnail's round badge (video 01). */
+export const qrBadge = `<svg viewBox="0 0 24 24" width="74" height="74" fill="none" stroke="${C.green}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>`;
+/**
+ * The introduction series' thumbnail (01 "QR menü ve QR sipariş", 00 "Mola'yı 2 dakikada tanıyın" …): the title and the brand at
+ * the left, a phone screen of the app (`shot`, a PNG of a recorded phone frame) tilted at the right, and optionally a round badge
+ * (`badge`: its symbol, e.g. qrBadge) at the phone's lower left.
+ */
+export function introThumb(o: { title: string; shot: string; badge?: string }) {
+  return base(1280, 720, `
+  <div class="left"><h1 class="serif">${o.title}</h1>
+    <div class="brand">${mark(64)}<span class="serif">mola<i>.</i></span></div></div>
+  <div class="phone"><div class="screen"><img src="${img(o.shot)}"></div></div>${o.badge ? `
+  <div class="qr">${o.badge}</div>` : ''}`, `
+  body{background:radial-gradient(80% 90% at 25% 40%,#2a5848 0%,${C.green} 58%,#1d4134 100%);color:${C.cup}}
+  .left{position:absolute;left:70px;top:0;bottom:0;width:690px;display:flex;flex-direction:column;justify-content:center}
+  h1{font-weight:400;font-size:120px;line-height:1.0;letter-spacing:-.03em}
+  .brand{display:flex;align-items:center;gap:16px;margin-top:46px;font-size:52px}.brand svg{border-radius:14px;box-shadow:0 0 0 2px rgba(243,235,221,.3)}.brand i{font-style:normal;color:${C.dot}}
+  .phone{position:absolute;left:820px;top:52px;width:318px;height:672px;padding:12px;border-radius:44px;background:#1c2721;box-shadow:0 40px 80px -20px rgba(0,0,0,.55),inset 0 0 0 2px #3a4a41;transform:rotate(4deg)}
+  .phone .screen{width:294px;height:636px;border-radius:33px;overflow:hidden;background:${C.paper}}.phone img{width:100%;display:block}
+  .qr{position:absolute;left:744px;top:470px;width:120px;height:120px;border-radius:30px;background:${C.cup};display:grid;place-items:center;box-shadow:0 24px 50px -16px rgba(0,0,0,.55)}`);
+}
 /** A 1280×720 HTML page as the thumbnail (kapak.jpg) and a small copy to see how it reads in YouTube's list. */
 export async function shootThumb(browser: Browser, html: string) {
   const htmlFile = join(dirs.work, 'kapak.html'); writeFileSync(htmlFile, html);

@@ -1,6 +1,7 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
- * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts, youtube-sahip-kayit.ts).
+ * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts, youtube-sahip-kayit.ts,
+ * youtube-tanitim-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -10,11 +11,15 @@
  * 2× (desktop). JPEG frames with their timestamps plus named marks in <klip>/meta.json.
  */
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { createServer, type Server } from 'node:http';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { extname, join, normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { chromium, type APIRequestContext, type Browser, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import QRCode from 'qrcode';
+import { totp } from '../../server/totp';
+import { decodeParts, fakeSmtp } from '../../tests/fake-smtp';
 
 export const ROOT = resolve('.');
 export const PASSWORD = 'MolaDemo!2026';
@@ -470,8 +475,8 @@ export function kit(o: KitOptions) {
     await post(api.req, '/api/staff/notifications/read', {});
     await api.close();
   }
-  /** Mola Yönetim → Ayarlar → "Mola ekibi iletişim bilgileri" on the run's Merkez (the cafés get it with their next heartbeat). */
-  async function molaContact(c: { phone?: string; whatsapp?: string; email?: string; hours?: string; web?: string }) {
+  /** Mola Yönetim's admin API on the run's Merkez, signed in as its admin: `call(path, body)` posts to /api/merkez/admin<path>. */
+  async function merkezAdmin() {
     const jar: string[] = [];
     const call = async (path: string, body: unknown) => {
       const r = await fetch(`${MERKEZ}/api/merkez/admin${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: jar.join('; ') }, body: JSON.stringify(body) });
@@ -479,10 +484,54 @@ export function kit(o: KitOptions) {
       if (!r.ok) throw new Error(`Mola Merkez ${path}: ${r.status} ${await r.text()}`);
     };
     await call('/login', { username: 'admin', password: ADMIN_PASSWORD });
+    return call;
+  }
+  /**
+   * İşletmemi yönet made ready off camera, as Ayarlar → Uzaktan erişim does it: step 1, the owner's phone code (TOTP; `code()`
+   * gives the next unused code on the run's clock, waiting when needed) and step 2, the e-mail (Mola Merkez sends its code to a
+   * fake SMTP server here, then Merkez's e-mail is switched off again); `admin`: step 5 "Uzaktan yönetim" turned on too.
+   * Returns once Mola Merkez lets the owner's phone in (the café's heartbeat brought the key). From then on the owner's sign-in
+   * asks for the phone code: ownerApi, readNotifications, advance and the owner's staffScreen no longer sign in (call this last).
+   */
+  async function ownerRemote(o: { email: string; admin?: boolean }) {
+    const api = await ownerApi(deskBrowser), req = api.req;
+    const { secret } = await post(req, '/api/staff/report-security/setup', { password: PASSWORD }) as { secret: string };
+    let used = Math.floor(now() / 30000) - 2;
+    const code = async () => {
+      for (;;) {
+        const current = Math.floor(now() / 30000), step = Math.max(current - 1, used + 1);
+        if (step <= current + 1) { used = step; return totp(secret, step * 30000); }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    };
+    await post(req, '/api/staff/report-security/enable', { code: await code() });
+    const smtp = await fakeSmtp('kullanilmaz'), call = await merkezAdmin();
+    const mail = (on: boolean) => call('/email', { enabled: on, host: on ? '127.0.0.1' : 'smtp.gmail.com', port: on ? smtp.port : 465, security: on ? 'none' : 'tls', user: '', to: 'bildirim@ornekkafe.com', from: on ? 'mola@ornekkafe.com' : '' });
+    await mail(true);
+    try {
+      const { ticket } = await post(req, '/api/staff/owner-email/new-code', { email: o.email, password: PASSWORD }) as { ticket: string };
+      const got = () => smtp.received.filter(m => m.to.some(t => t.includes(o.email)));
+      for (let i = 0; !got().length && i < 150; i++) await new Promise(r => setTimeout(r, 100));
+      const sent = /\b(\d{6})\b/.exec(decodeParts(got().at(-1)?.data ?? '').find(p => !p.name)?.text ?? '')?.[1];
+      if (!sent) throw new Error('İşletmemi yönet: e-posta kodu gelmedi.');
+      await post(req, '/api/staff/owner-email/confirm', { ticket, code: sent });
+    } finally { await mail(false); await smtp.close(); }
+    if (o.admin) await post(req, '/api/staff/remote-admin', { on: true, password: PASSWORD, code: await code() }).catch(e => console.warn(`Uzaktan yönetim açılamadı: ${(e as Error).message}`));
+    await api.close();
+    for (let i = 0; i < 30; i++) {
+      const r = await fetch(`${MERKEZ}/api/merkez/v1/phone/login/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: o.email }) });
+      if (r.status === 200) break;
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    return { code };
+  }
+  /** Mola Yönetim → Ayarlar → "Mola ekibi iletişim bilgileri" on the run's Merkez (the cafés get it with their next heartbeat). */
+  async function molaContact(c: { phone?: string; whatsapp?: string; email?: string; hours?: string; web?: string }) {
+    const call = await merkezAdmin();
     await call('/contact', { phone: '', whatsapp: '', email: '', hours: '', web: '', ...c });
   }
   return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
-    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, serveDay, molaContact, readNotifications,
+    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, serveDay, merkezAdmin, ownerRemote, molaContact, readNotifications,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 /** [product, quantity, option names, note] of a waiter's order line. */
@@ -509,6 +558,27 @@ export function istanbul(day: number, hh: number, mm: number) {
 }
 export type Kit = ReturnType<typeof kit>;
 
+/** The built site (site/dist) as molayazilim.com.tr serves it (/indir/ → indir/index.html; downloads are never sent), on 127.0.0.1:`port`. */
+export function siteServer(port: number) {
+  const root = join(ROOT, 'site', 'dist');
+  const types: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.webm': 'video/webm', '.woff2': 'font/woff2', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8' };
+  const s = createServer((req, res) => {
+    const path = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(/^([/\\])+/, '');
+    let file = join(root, path);
+    if (!file.startsWith(root)) { res.writeHead(403).end(); return; }
+    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
+    if (!existsSync(file)) { res.writeHead(404).end(); return; }
+    if (/\.(zip|gz|apk)$/.test(file)) { res.writeHead(204).end(); return; }  // the downloads are never sent
+    res.writeHead(200, { 'Content-Type': types[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file));
+  });
+  return new Promise<Server>(r => s.listen(port, '127.0.0.1', () => r(s)));
+}
+/** The phone's camera on the table's QR stand, its code reading `url` (qrCameraHtml below). */
+export async function qrStand(page: Page, url: string, tableName: string) {
+  const qr = await QRCode.toDataURL(url, { margin: 1, width: 360, color: { dark: '#163328', light: '#ffffff' } });
+  await page.setContent(qrCameraHtml(qr, tableName));
+  await pause(page, 300);
+}
 /** The phone's camera on the table's QR stand (a drawing: the café's own stand looks like this, Ayarlar → Masalar ve QR). */
 export function qrCameraHtml(qrDataUrl: string, tableName: string, pill = 'Mola Örnek Kafe · Menü açılıyor') {
   const masa = tableName.replace(/^Masa\s*/, '');

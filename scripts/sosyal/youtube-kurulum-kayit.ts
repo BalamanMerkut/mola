@@ -24,14 +24,14 @@
  * (the recording server listens on 127.0.0.1 only; a real install shows its own 192.168.… address there).
  */
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { createServer, type Server } from 'node:http';
+import type { Server } from 'node:http';
 import { createServer as netServer } from 'node:net';
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { extname, join, normalize } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { chromium, request as pwRequest, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { validVkn } from '../../packages/domain/invoice';
-import { NO_HINTS, ROOT, Recorder, TABLET, imagesOnScreen, pause, smoothScroll, typeIn } from './kayit-ortak';
+import { NO_HINTS, ROOT, Recorder, TABLET, imagesOnScreen, pause, siteServer, smoothScroll, typeIn } from './kayit-ortak';
 
 const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'kurulum');
 const OUT = join(BASE, 'kayit');
@@ -66,23 +66,6 @@ async function waitFor(url: string, what: string) {
   throw new Error(`${what} açılmadı.`);
 }
 const quiet = { ...process.env, MOLA_AUTO_BACKUP: '0', MOLA_BACKUP_DISCOVERY: '0' };
-/** The built site (site/dist) as molayazilim.com.tr serves it: /indir/ → indir/index.html. */
-function siteServer(port: number) {
-  const root = join(ROOT, 'site', 'dist');
-  const types: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.webm': 'video/webm', '.woff2': 'font/woff2', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8' };
-  const s = createServer((req, res) => {
-    let path = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(/^([/\\])+/, '');
-    let file = join(root, path);
-    if (!file.startsWith(root)) { res.writeHead(403).end(); return; }
-    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
-    if (!existsSync(file)) { res.writeHead(404).end(); return; }
-    if (/\.(zip|gz|apk)$/.test(file)) { res.writeHead(204).end(); return; }  // the downloads are never sent
-    res.writeHead(200, { 'Content-Type': types[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file));
-  });
-  servers.push(s);
-  return new Promise<void>(r => s.listen(port, '127.0.0.1', () => r()));
-}
-
 let KAFE = '', MERKEZ = '', SITE = '', TOKEN = '';
 async function startServers() {
   const [mp, kp, sp] = [await freePort(), await freePort(), await freePort()];
@@ -97,7 +80,7 @@ async function startServers() {
     MOLA_MERKEZ_URL: MERKEZ, MOLA_MERKEZ_PUBLIC_KEY: join(merkezDir, 'merkez-public-key.txt'), MOLA_SYNC_SOON_MS: '1000', MOLA_HEARTBEAT_MS: '2000' } }));
   await waitFor(`${KAFE}/api/health`, 'Kafe sunucusu');
   TOKEN = readFileSync(keyFile, 'utf8');
-  await siteServer(sp);
+  servers.push(await siteServer(sp));
   console.log(`Merkez ${MERKEZ} · kafe ${KAFE} · site ${SITE} · ${RUN}`);
 }
 

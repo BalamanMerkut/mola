@@ -28,8 +28,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Browser, Page } from '@playwright/test';
-import QRCode from 'qrcode';
-import { DESKTOP, PHONE, ROOT, Recorder, TABLET, imagesOnScreen, kit, pause, qrCameraHtml, smoothScroll } from './kayit-ortak';
+import { DESKTOP, PHONE, ROOT, Recorder, TABLET, imagesOnScreen, kit, pause, qrStand, smoothScroll } from './kayit-ortak';
 
 const OUT = join(ROOT, '.local', 'sosyal', 'youtube', 'kayit');
 const args = process.argv.slice(2), serverOnly = args.includes('--sunucu'), only = args.filter(a => !a.startsWith('--'));
@@ -63,11 +62,7 @@ async function menuAt(page: Page, token: string) {
   await k.openMenu(page, token);
   await smoothScroll(page, 330, 10); await pause(page, 600); await imagesOnScreen(page);
 }
-const camera = async (page: Page, token: string, tableName: string) => {
-  const qr = await QRCode.toDataURL(k.guestUrl(token), { margin: 1, width: 360, color: { dark: '#163328', light: '#ffffff' } });
-  await page.setContent(qrCameraHtml(qr, tableName));
-  await pause(page, 300);
-};
+const camera = (page: Page, token: string, tableName: string) => qrStand(page, k.guestUrl(token), tableName);
 /** The owner's screen (1280×800), Masalar first, as after signing in. */
 const ownerScreen = () => k.staffScreen('isletme', 'desktop');
 async function goSettings(page: Page, rec: Recorder, topic: string, part?: string) {
