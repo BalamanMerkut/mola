@@ -343,8 +343,9 @@ export function kit(o: KitOptions) {
     await ctx.addInitScript(POINTER);
     return clockOn(ctx);
   }
-  async function tabletContext() {
-    return clockOn(await deskBrowser.newContext({ viewport: { width: TABLET.width, height: TABLET.height }, deviceScaleFactor: TABLET.scale, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' }));
+  /** `size`: another tablet than TABLET (Instagram blok 2: a 1024×768 iPad, larger on a phone's screen). */
+  async function tabletContext(size: { width: number; height: number } = TABLET) {
+    return clockOn(await deskBrowser.newContext({ viewport: { width: size.width, height: size.height }, deviceScaleFactor: TABLET.scale, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' }));
   }
   async function desktopContext(_browser?: Browser, finger = false) {
     const ctx = await deskBrowser.newContext({ viewport: { width: DESKTOP.width, height: DESKTOP.height }, deviceScaleFactor: DESKTOP.scale, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light' });
@@ -371,8 +372,8 @@ export function kit(o: KitOptions) {
     await pause(page, 600);
   }
   /** A staff screen that sees the guests (the café's rule: QR orders and calls need one connected). */
-  async function staffScreen(user: string, kind: 'phone' | 'desktop' | 'tablet', finger = false) {
-    const ctx = kind === 'phone' ? await phoneContext() : kind === 'tablet' ? await tabletContext() : await desktopContext(undefined, finger);
+  async function staffScreen(user: string, kind: 'phone' | 'desktop' | 'tablet', finger = false, size: { width: number; height: number } = TABLET) {
+    const ctx = kind === 'phone' ? await phoneContext() : kind === 'tablet' ? await tabletContext(size) : await desktopContext(undefined, finger);
     const page = await ctx.newPage();
     // No finger on the staff screen unless asked; Mola Yardım's one-time hint stays closed (as in playwright.config.ts).
     await page.addInitScript(`${finger ? '' : 'window.__molaNoFinger = true;'} try { localStorage.setItem('mola-yardim-ipucu', 'off'); localStorage.setItem('mola-campaign-ended', 'off'); } catch (e) {}`);
