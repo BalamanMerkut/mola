@@ -149,6 +149,15 @@ export const contactSchema = z.object({
   web: z.string().trim().max(200).refine(v => !v || /^https:\/\/[^\s<>"]{3,190}$/.test(v), 'Web adresi https:// ile başlamalı.'),
 }).strict();
 export const emptyContact = (c: ContactInfo) => !c.phone && !c.whatsapp && !c.email && !c.hours && !c.web;
+/**
+ * Mola's own social media accounts (19 Ekim): typed beside the contact in Mola Yönetim, shown only in the web site's footer
+ * (GET /api/site/iletisim). Never signed nor sent to the cafés. Full https addresses; an empty one is hidden on the site.
+ */
+export const SITE_SOCIAL = { instagram: 'Instagram', facebook: 'Facebook', x: 'X', youtube: 'YouTube' } as const;
+export type SiteSocial = Record<keyof typeof SITE_SOCIAL, string>;
+const socialUrl = (name: string) => z.string().trim().max(200, `${name} adresi en çok 200 karakter olabilir.`)
+  .refine(v => { if (!v) return true; if (!/^https:\/\/[^\s<>"'`]{3,190}$/.test(v)) return false; try { return new URL(v).hostname.includes('.'); } catch { return false; } }, `${name} adresi https:// ile başlayan tam bir adres olmalı.`);
+export const siteSocialSchema = z.object({ instagram: socialUrl('Instagram'), facebook: socialUrl('Facebook'), x: socialUrl('X'), youtube: socialUrl('YouTube') }).strict();
 export function signContact(claims: ContactClaims, key: KeyObject): SignedContact {
   const payload = Buffer.from(JSON.stringify(claims), 'utf8').toString('base64url');
   return { format: CONTACT, payload, signature: sign(null, Buffer.from(CONTACT_DOMAIN + payload), key).toString('base64url') };

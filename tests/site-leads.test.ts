@@ -180,7 +180,7 @@ test('Mola Yönetim: Arandı, not, Kapandı, yeniden aç, işletmeye bağla, sil
   assert.equal((await m.admin('/site-leads/delete', { requestId: rid(), id: second.id })).status, 404);
 });
 
-test('the site shows Mola Yönetim’s contact: GET /api/site/iletisim, only the four public fields, empty ones left out; a lead without e-mail is refused', async t => {
+test('the site shows Mola Yönetim’s contact: GET /api/site/iletisim, only the four public fields, empty ones left out, and the social links (19 Ekim); a lead without e-mail is refused', async t => {
   const m = await merkez('site-contact'); t.after(() => m.close());
   // Nothing saved yet: an empty answer (the site keeps its own).
   const none = await m.site('/iletisim');
@@ -191,6 +191,37 @@ test('the site shows Mola Yönetim’s contact: GET /api/site/iletisim, only the
   const c = (await m.site('/iletisim')).data.contact;
   assert.deepEqual(Object.keys(c).sort(), ['email', 'phone', 'whatsapp'], 'no web, no empty hours');
   assert.equal(c.email, 'destek@example.com'); assert.match(c.phone, /538/);
+  assert.equal((await m.site('/iletisim')).data.social, undefined, 'no social links saved: the site keeps its own');
+  // 19 Ekim: the footer's social links. https only, at most 200 characters, trimmed; another field is refused.
+  const contact = { phone: '0538 049 20 02', whatsapp: '0538 049 20 02', email: 'destek@example.com', hours: '', web: '' };
+  const social = { instagram: '', facebook: '', x: '', youtube: '' };
+  for (const wrong of [{ instagram: 'http://instagram.com/mola' }, { x: 'x.com/mola' }, { youtube: 'javascript:alert(1)' }, { facebook: `https://facebook.com/${'a'.repeat(200)}` }, { instagram: 'https://instagram.com/<b>' }, { tiktok: 'https://tiktok.com/@mola' }]) {
+    const r = await m.admin('/contact', { ...contact, social: { ...social, ...wrong } });
+    assert.equal(r.status, 400, JSON.stringify(wrong)); assert.equal(r.data.code, 'CONTACT_INVALID');
+  }
+  assert.match((await m.admin('/contact', { ...contact, social: { ...social, instagram: 'http://instagram.com/mola' } })).data.message, /Instagram adresi https:\/\//);
+  // All empty while never filled: still "not set".
+  assert.equal((await m.admin('/contact', { ...contact, social })).status, 200);
+  assert.equal((await m.site('/iletisim')).data.social, undefined);
+  const filled = await m.admin('/contact', { ...contact, social: { ...social, instagram: '  https://www.instagram.com/molayazilim/  ', youtube: 'https://www.youtube.com/@molayazilim' } });
+  assert.equal(filled.status, 200, JSON.stringify(filled.data));
+  const pub = await m.site('/iletisim');
+  assert.equal(pub.headers.get('cache-control'), 'public, max-age=60');
+  assert.deepEqual(pub.data.social, { instagram: 'https://www.instagram.com/molayazilim/', facebook: '', x: '', youtube: 'https://www.youtube.com/@molayazilim' });
+  assert.deepEqual(Object.keys(pub.data.contact).sort(), ['email', 'phone', 'whatsapp'], 'the contact is unchanged');
+  // İşlem kayıtları: which ones changed, old → new.
+  const line = ((await m.admin('/journal?action=contact.updated')).data.rows as { detail?: string; changes?: { field: string; from: string; to: string }[] }[])[0]!;
+  assert.match(line.detail ?? '', /Değişen: Instagram, YouTube/);
+  assert.deepEqual(line.changes?.find(c => c.field === 'Instagram'), { field: 'Instagram', from: '—', to: 'https://www.instagram.com/molayazilim/' });
+  // A request without `social` (an older Mola Yönetim) leaves them alone; emptied once set: "" (hidden on the site).
+  assert.equal((await m.admin('/contact', { ...contact, hours: 'Hafta içi 09:00–18:00' })).status, 200);
+  assert.equal((await m.site('/iletisim')).data.social.youtube, 'https://www.youtube.com/@molayazilim');
+  assert.equal((await m.admin('/contact', { ...contact, social })).status, 200);
+  assert.deepEqual((await m.site('/iletisim')).data.social, social);
+  // Never in what the cafés get (the signed contact).
+  await m.admin('/contact', { ...contact, social: { ...social, x: 'https://x.com/molayazilim' } });
+  const signed = (await (await fetch(`${m.base}/api/merkez/v1/contact`)).json()).contact as { payload: string };
+  assert.doesNotMatch(Buffer.from(signed.payload, 'base64url').toString('utf8'), /x\.com|social/);
   // The e-mail is required on the site form now.
   const bare = await m.send({ email: '' });
   assert.equal(bare.status, 400); assert.equal(bare.data.field, 'email');

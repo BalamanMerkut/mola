@@ -443,6 +443,7 @@ a.contact-item:hover { border-color: var(--green-500); background: var(--paper);
 .footer-grid .footer-social { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; padding: 0; }
 .footer-social a { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(227, 236, 229, .35); color: #e3ece5; transition: background .2s, border-color .2s; }
 .footer-social a:hover { background: rgba(255, 255, 255, .1); border-color: #e3ece5; text-decoration: none; }
+.footer-social[hidden], .footer-social li[hidden] { display: none !important; }
 .footer-bottom { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,.12); margin-top: 40px; padding-top: 22px; font-size: 14px; }
 .studio { display: inline-flex; align-items: center; gap: 11px; color: #d6e3da; }
 .studio img { width: 36px; height: 36px; border-radius: 9px; }

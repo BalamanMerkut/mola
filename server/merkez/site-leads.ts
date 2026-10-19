@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { DomainError } from '../../packages/domain/engine.js';
 import { checkSiteLead, SITE_LEAD_MIN_SECONDS, SITE_LEAD_TYPE_NAMES, type SiteLeadInput } from '../../packages/domain/site-lead.js';
 import { canonicalOrigin, clientKey } from '../http-security.js';
+import { SITE_SOCIAL } from '../license.js';
 import { ExpiringStore } from '../expiring-store.js';
 import { open, seal } from '../sealing.js';
 import { addAlert } from './alerts.js';
@@ -17,7 +18,8 @@ import type { MerkezData, MerkezStore } from './store.js';
  *                                    need no outside service: a hidden "website" field people never fill (a filled one
  *                                    gets a calm 200 and nothing is kept), at least SITE_LEAD_MIN_SECONDS between the form
  *                                    key and sending, and limits per address (clientKey: IPv4, IPv6 /64) and overall.
- *             GET  /api/site/iletisim  the vendor's contact from Mola Yönetim (phone, WhatsApp, e-mail, hours) for the site
+ *             GET  /api/site/iletisim  the vendor's contact from Mola Yönetim (phone, WhatsApp, e-mail, hours) for the site,
+ *                                    and (19 Ekim) Mola's social media links for its footer
  *             The site and Merkez share one origin on the VDS (Caddy passes /api/site/* here; docs/VDS_KURULUM.md).
  *   Stored    own table `site_talepleri` in merkez.sqlite (in Merkez's backup), one row per lead sealed with a key of its own
  *             purpose, bound to the lead's id (like Satışlarım). The KVKK tick is kept with its time and the text version.
@@ -130,7 +132,10 @@ export function siteLeadRoutes(app: Express, o: Deps) {
     if (over(contactReads, clientKey(req), 120, 60_000)) return busy(res);
     const c = o.store.read().contact, out: Record<string, string> = {};
     for (const k of ['phone', 'whatsapp', 'email', 'hours'] as const) if (c?.[k]?.trim()) out[k] = c[k].trim();
-    res.set({ 'Cache-Control': 'public, max-age=60', 'X-Robots-Tag': 'noindex' }).json({ contact: out });
+    // 19 Ekim: the footer's social links, all four once one was filled in Mola Yönetim ("" = hidden on the site); never
+    // filled: no `social`, the site keeps the build's own (site/config.json).
+    const social = c?.social ? Object.fromEntries((Object.keys(SITE_SOCIAL) as (keyof typeof SITE_SOCIAL)[]).map(k => [k, c.social?.[k]?.trim() ?? ''])) : undefined;
+    res.set({ 'Cache-Control': 'public, max-age=60', 'X-Robots-Tag': 'noindex' }).json({ contact: out, ...(social ? { social } : {}) });
   });
 
   app.post('/api/site/talep', (req, res) => {

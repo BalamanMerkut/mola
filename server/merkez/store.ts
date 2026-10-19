@@ -7,7 +7,7 @@ import type { Invoice } from '../../packages/domain/invoice.js';
 import type { Sector } from '../../packages/domain/sector.js';
 import { open, seal } from '../sealing.js';
 import { newAdmin, type AdminRecord } from '../admin-auth.js';
-import { licenseClaims, newSigningPair, privateKeyFrom, signLicense, type ContactInfo, type License, type SignedLicense, type Ticket } from '../license.js';
+import { licenseClaims, newSigningPair, privateKeyFrom, signLicense, type ContactInfo, type License, type SignedLicense, type SiteSocial, type Ticket } from '../license.js';
 import type { FailureReport, SyncRequest } from '../sync-protocol.js';
 import { features, type FeatureId } from '../../packages/domain/features.js';
 import { isFeatureId, LEGACY_FULL, LEGACY_MENU, legacyFeatures, sellableFeatures, serviceOf, type Discount, type ServicePackage, type ServicePrices } from '../../packages/domain/service-pricing.js';
@@ -155,7 +155,7 @@ export type MerkezData = {
   /** Owner password reset codes (hashes only); missing in older records. */
   ownerResets?: OwnerResetCode[];
   /** "Mola ekibi iletişim bilgileri" (Ayarlar), signed for the cafés; missing until the vendor saves it. */
-  contact?: ContactInfo & { updatedAt: string };
+  contact?: ContactInfo & { updatedAt: string; /** 19 Ekim: the web site's social links (never signed); missing until one was filled once. */ social?: SiteSocial };
   /** "Merkez adresi": Mola Merkez moved here (VDS + HTTPS); announced signed to every café (server/signed-notes.ts mola-adres-1). */
   address?: { url: string; issuedAt: string };
   /** Geliştirici erişimi (hashes only); missing until the first token. */

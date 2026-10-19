@@ -52,6 +52,9 @@
 .alert-list li.low strong { color:#5f6b63; }
 .alert-priority { margin-left:6px; font-size:10px; padding:1px 6px; border-radius:8px; background:var(--y-soft,#f1f5ee); color:#5f6b63; font-weight:600; }
 .contact-settings form { display:grid; gap:12px; }
+/* 19 Ekim: Sosyal medya (web sitesinin alt kısmı) under the contact fields. */
+.contact-settings .contact-social-title { margin:8px 0 0; font-size:15px; display:flex; align-items:center; gap:6px; }
+.contact-settings .contact-social-title + p { margin:0; }
 @media (max-width: 760px) {
   .alert-list li { grid-template-columns:10px minmax(0,1fr); }
   .alert-actions { grid-column:2; flex-direction:row; align-items:center; }

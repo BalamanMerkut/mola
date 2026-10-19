@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { cleanKafe, ensureSetup, fillApplication, openYonetim, yonetimSettings } from './helpers';
+import { cleanKafe, ensureSetup, fillApplication, MERKEZ, openYonetim, yonetimSettings } from './helpers';
 
 const base = Number(process.env.E2E_PORT ?? 3100);
 const fits = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -32,7 +32,24 @@ test('Mola ekibi iletişim bilgileri: set in Mola Yönetim → Ayarlar; the caf�
   await card.getByLabel('E-posta').fill('destek@mola.example');
   await card.getByRole('button', { name: 'İletişim bilgilerini kaydet' }).click();
   await expect(card.getByText(/Kaydedildi\. Bağlı işletmelere/)).toBeVisible();
-  await admin.screenshot({ path: info.outputPath('yonetim-contact.png') });
+  // 19 Ekim: Sosyal medya (yalnız web sitesinde) in the same card: never filled, so the site keeps its own (no `social`).
+  expect((await (await admin.request.get(`${MERKEZ}/api/site/iletisim`)).json()).social).toBeUndefined();
+  await card.getByLabel('Instagram').fill('http://instagram.com/mola');
+  await card.getByRole('button', { name: 'İletişim bilgilerini kaydet' }).click();
+  await expect(card.getByText('Instagram adresi https:// ile başlayan tam bir adres olmalı.')).toBeVisible();
+  await card.getByLabel('Instagram').fill('https://www.instagram.com/molayazilim/');
+  await card.getByLabel('YouTube').fill('https://www.youtube.com/@molayazilim');
+  await card.getByRole('button', { name: 'İletişim bilgilerini kaydet' }).click();
+  await expect(card.getByText(/Kaydedildi\. Bağlı işletmelere/)).toBeVisible();
+  await expect(card.getByRole('button', { name: 'İletişim bilgilerini kaydet' })).toBeDisabled();
+  expect((await (await admin.request.get(`${MERKEZ}/api/site/iletisim`)).json()).social).toEqual({ instagram: 'https://www.instagram.com/molayazilim/', facebook: '', x: '', youtube: 'https://www.youtube.com/@molayazilim' });
+  // Kept: the card shows them again after a reload.
+  await admin.reload();
+  await yonetimSettings(admin, 'İletişim bilgileri');
+  await expect(card.getByLabel('Instagram')).toHaveValue('https://www.instagram.com/molayazilim/');
+  await expect(card.getByLabel('X (Twitter)')).toHaveValue('');
+  await expect(card.getByLabel('Telefon', { exact: true })).toHaveValue('0850 123 45 67');
+  await admin.screenshot({ path: info.outputPath('yonetim-contact.png'), fullPage: true });
 
   // A clean café: while its application waits, the Mola team's contact as phone, WhatsApp and e-mail links.
   const kafe = await cleanKafe(base + 25), root = kafe.root;

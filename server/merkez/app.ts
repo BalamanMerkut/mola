@@ -13,7 +13,7 @@ import { clientKey, configureHttpSecurity, directLoopback, loopbackRequest, type
 import { folderPicker, type FolderPicker } from './folder-picker.js';
 import { CLOCK_WINDOW_MS, HEADER, newInstallSecret, requestSignature, responseSignature, sameSignature } from '../install-auth.js';
 import { endFreeze, requestFreeze, reviewFreeze } from '../license-freeze.js';
-import { APP_VERSION, contactSchema, emptyContact, extendMonths, keyFingerprint, licenseSummary, showFingerprint, signContact, signPulse, signRemoval, type License, type Ticket } from '../license.js';
+import { APP_VERSION, contactSchema, emptyContact, SITE_SOCIAL, siteSocialSchema, extendMonths, keyFingerprint, licenseSummary, showFingerprint, signContact, signPulse, signRemoval, type License, type Ticket } from '../license.js';
 import { sameBusinessName } from '../../packages/domain/invoice.js';
 import { addAlert, queueMail, type MailSettings } from './alerts.js';
 import type { MerkezBackups, MerkezRecovery } from './backup.js';
@@ -719,15 +719,21 @@ export function createMerkezApp(store: MerkezStore, options: MerkezOptions = {})
   app.get('/api/merkez/admin/contact', (req, res) => { admin(req); res.json({ contact: store.read().contact ?? null }); });
   app.post('/api/merkez/admin/contact', (req, res) => {
     admin(req);
-    const parsed = contactSchema.safeParse(req.body);
+    // 19 Ekim: `social` (the web site's footer links) is optional: a request without it leaves the saved ones alone.
+    const parsed = contactSchema.extend({ social: siteSocialSchema.optional() }).strict().safeParse(req.body);
     if (!parsed.success) throw new DomainError('CONTACT_INVALID', parsed.error.issues[0]?.message ?? 'Alanları kontrol edin.', 400);
-    const c = parsed.data;
+    const { social: sent, ...c } = parsed.data;
     res.json(store.mutate(d => {
       const before = d.contact, names = { phone: 'telefon', whatsapp: 'WhatsApp', email: 'e-posta', hours: 'çalışma saatleri', web: 'web' } as const;
       const keys = (Object.keys(names) as (keyof typeof names)[]).filter(k => (before?.[k] ?? '') !== c[k]), changed = keys.map(k => names[k]);
-      d.contact = { ...c, updatedAt: at() };
+      // Never filled and all empty now: still "not set", so the site keeps its own (site/config.json) links.
+      const social = sent && (before?.social || Object.values(sent).some(Boolean)) ? sent : before?.social;
+      const socialKeys = (Object.keys(SITE_SOCIAL) as (keyof typeof SITE_SOCIAL)[]).filter(k => (before?.social?.[k] ?? '') !== (social?.[k] ?? ''));
+      d.contact = { ...c, ...(social ? { social } : {}), updatedAt: at() };
       // Which fields changed in the short list; old → new values only in İşlem kayıtları (the vendor's own public contact).
-      d.audit.push({ action: 'contact.updated', target: 'admin', at: at(), by: 'admin', detail: emptyContact(c) ? 'Boş: işletmelerde gösterilmez' : `Değişen: ${changed.join(', ') || 'yok'}`, changes: keys.map(k => ({ field: names[k], from: before?.[k] || '—', to: c[k] || '—' })) });
+      const all = [...changed, ...socialKeys.map(k => SITE_SOCIAL[k])];
+      d.audit.push({ action: 'contact.updated', target: 'admin', at: at(), by: 'admin', detail: emptyContact(c) ? `Boş: işletmelerde gösterilmez${socialKeys.length ? ` · Değişen: ${socialKeys.map(k => SITE_SOCIAL[k]).join(', ')}` : ''}` : `Değişen: ${all.join(', ') || 'yok'}`,
+        changes: [...keys.map(k => ({ field: names[k], from: before?.[k] || '—', to: c[k] || '—' })), ...socialKeys.map(k => ({ field: SITE_SOCIAL[k], from: before?.social?.[k] || '—', to: social?.[k] || '—' }))] });
       return { contact: d.contact };
     }));
   });

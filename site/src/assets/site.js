@@ -155,13 +155,26 @@
   // ---- Mola ekibi iletişim bilgileri: what Mola Yönetim saved (GET /api/site/iletisim) over the build's own ----
   // Written as text; links only from a number's digits or a checked address. No answer: the build's own stays.
   var contactNodes = Array.prototype.slice.call(document.querySelectorAll('[data-iletisim]'));
-  if (contactNodes.length && window.fetch) {
+  // 19 Ekim: the footer's social links too. Never set in Mola Yönetim (no `social`): the build's own stay; "" hides one.
+  var socialList = document.querySelector('[data-sosyal-liste]'), socialNodes = Array.prototype.slice.call(document.querySelectorAll('[data-sosyal]'));
+  var showSocial = function (s) {
+    if (!socialList || !s || typeof s !== 'object') return;
+    socialNodes.forEach(function (li) {
+      var url = s[li.getAttribute('data-sosyal')], a = li.querySelector('a'); if (typeof url !== 'string' || !a) return;
+      var ok = /^https:\/\/[^\s<>"'`]{3,190}$/.test(url);
+      if (ok) a.href = url; else a.removeAttribute('href');
+      li.hidden = !ok;
+    });
+    socialList.hidden = !socialNodes.some(function (li) { return !li.hidden; });
+  };
+  if ((contactNodes.length || socialList) && window.fetch) {
     var intl = function (v) { var d = String(v).replace(/\D/g, ''); return d.indexOf('90') === 0 ? d : d.indexOf('0') === 0 ? '9' + d : '90' + d; };
     var okPhone = function (v) { var d = intl(v); return d.length >= 11 && d.length <= 15; };
     var okMail = function (v) { return /^[^\s@<>"]{1,64}@[^\s@<>"]{1,180}\.[^\s@<>".]{2,}$/.test(v); };
     fetch('/api/site/iletisim', { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
+        showSocial(d && d.social);
         var c = d && d.contact; if (!c) return;
         var links = {
           phone: c.phone && okPhone(c.phone) ? { href: 'tel:+' + intl(c.phone), text: c.phone } : null,

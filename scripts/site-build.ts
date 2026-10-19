@@ -40,7 +40,7 @@ type Social = 'instagram' | 'facebook' | 'x' | 'youtube';
 type Config = { siteUrl: string; phone: string; whatsapp: string; email: string; address: string; hours: string; company: string; legalDraft: boolean; legalUpdated: string; social?: Partial<Record<Social, string>>; downloads?: Downloads };
 /*
  * Sosyal medya (19 Ekim): config.json "social" → footer links under the brand, and schema.org `sameAs` on the home page. An
- * empty address is left out. Brand marks as small inline SVGs (lucide has no brand icons), monochrome like the footer.
+ * empty address is written hidden (Mola Yönetim → İletişim bilgileri may fill it; site.js). Brand marks as small inline SVGs (lucide has no brand icons), monochrome like the footer.
  */
 const SOCIAL: { id: Social; name: string; svg: string }[] = [
   { id: 'instagram', name: 'Instagram', svg: '<rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.6" cy="6.4" r="1.3" fill="currentColor"/>' },
@@ -347,7 +347,9 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
   const pages = readdirSync(join(SRC, 'pages')).filter(f => f.endsWith('.html')).map(file => parsePage(file, readFileSync(join(SRC, 'pages', file), 'utf8')));
   const footerContact = [`<li data-iletisim="phone"${phoneHref ? '' : ' hidden'}><a href="${phoneHref || '#'}">Telefon</a></li>`, `<li data-iletisim="whatsapp"${waHref ? '' : ' hidden'}><a href="${esc(waHref || '#')}" rel="noopener">WhatsApp</a></li>`, `<li data-iletisim="email"><a href="${mailHref}">${esc(config.email)}</a></li>`].join('');
   const socials = socialOf(config);
-  const socialLinks = socials.length ? `<ul class="footer-social" aria-label="Sosyal medya">${socials.map(s => `<li><a href="${esc(s.url)}" rel="noopener" target="_blank" aria-label="Mola ${s.name}" title="${s.name}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">${s.svg}</svg></a></li>`).join('')}</ul>` : '';
+  // 19 Ekim: all four are written, the ones without an address hidden: site.js shows and hides them from Mola Yönetim's
+  // answer (GET /api/site/iletisim `social`), like the phone and WhatsApp.
+  const socialLinks = `<ul class="footer-social" aria-label="Sosyal medya" data-sosyal-liste${socials.length ? '' : ' hidden'}>${SOCIAL.map(s => { const url = socials.find(x => x.id === s.id)?.url; return `<li data-sosyal="${s.id}"${url ? '' : ' hidden'}><a${url ? ` href="${esc(url)}"` : ''} rel="noopener" target="_blank" aria-label="Mola ${s.name}" title="${s.name}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">${s.svg}</svg></a></li>`; }).join('')}</ul>`;
   const cssVersion = version(css), jsVersion = version(js), yardimVersion = version(yardim);
   // The round picture (68 px) with "Yardım" beside it on wider screens (≥ 768 px); its name is "Mola Yardım" (site.css).
   const helpButton = `<button class="yardim-fab" type="button" data-yardim-ac hidden aria-label="Mola Yardım" title="Mola Yardım"><img src="${avatar.src}" srcset="${avatar.srcset}" width="68" height="68" alt="" decoding="async"><span class="yardim-fab-yazi" aria-hidden="true">Yardım</span></button>`;

@@ -122,3 +122,35 @@ test('Mola Yönetim’s contact on the site: the cards, the footer, the hours an
   await expect(page.getByRole('link', { name: 'WhatsApp’tan yazın' }).first()).toHaveAttribute('href', /wa\.me\/905380492002/);
   expect(errors).toEqual([]);
 });
+
+test('the footer’s social links follow Mola Yönetim (GET /api/site/iletisim `social`): never set keeps the build’s own, "" hides one, all empty hides the list', async ({ page }, info) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  let social: Record<string, string> | undefined;
+  await page.route('**/api/site/iletisim', r => r.fulfill({ json: { contact: {}, ...(social ? { social } : {}) } }));
+  const footer = page.locator('footer'), list = footer.getByRole('list', { name: 'Sosyal medya' });
+  const link = (name: string) => footer.getByRole('link', { name: `Mola ${name}`, exact: true });
+  // Never set in Mola Yönetim: the build's own (site/config.json: Instagram only).
+  await page.goto(`${SITE}/`);
+  await expect(link('Instagram')).toHaveAttribute('href', 'https://www.instagram.com/molayazilim/');
+  for (const name of ['Facebook', 'X', 'YouTube']) await expect(link(name)).toHaveCount(0);
+  // Mola Yönetim's links win; an empty one hides the build's; a wrong address is never a link.
+  social = { instagram: '', facebook: 'https://www.facebook.com/molayazilim', x: 'https://x.com/molayazilim', youtube: 'javascript:alert(1)' };
+  await page.goto(`${SITE}/iletisim/`);
+  await expect(link('Facebook')).toHaveAttribute('href', 'https://www.facebook.com/molayazilim');
+  await expect(link('X')).toHaveAttribute('href', 'https://x.com/molayazilim');
+  for (const a of [link('Facebook'), link('X')]) { await expect(a).toHaveAttribute('target', '_blank'); await expect(a).toHaveAttribute('rel', 'noopener'); }
+  await expect(link('Instagram')).toHaveCount(0); await expect(link('YouTube')).toHaveCount(0);
+  await expect(list).toBeVisible();
+  await footer.screenshot({ path: info.outputPath('site-sosyal-merkezden.png') });
+  // All empty: the list goes too (no empty row under the brand text).
+  social = { instagram: '', facebook: '', x: '', youtube: '' };
+  await page.goto(`${SITE}/`);
+  await expect(page.locator('[data-sosyal-liste]')).toBeHidden();
+  for (const name of ['Instagram', 'Facebook', 'X', 'YouTube']) await expect(link(name)).toHaveCount(0);
+  // Merkez does not answer: the build's own stay.
+  await page.unroute('**/api/site/iletisim');
+  await page.route('**/api/site/iletisim', r => r.fulfill({ status: 502, body: '' }));
+  await page.goto(`${SITE}/`);
+  await expect(link('Instagram')).toBeVisible();
+  expect(errors).toEqual([]);
+});
