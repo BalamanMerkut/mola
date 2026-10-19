@@ -16,8 +16,8 @@ import type { Notifications } from './notifications.js';
  * İade (server side): item refunds and amount refunds for the owner (İade ve düzeltme, behind the report code) and for the
  * counter (the "İade" window on Masalar: today's payments only). Who may refund how much is packages/domain/refund-rules.ts
  * refundPower: owner and Müdür every refund, a cashier small ones within the owner's limits (per refund and per cash day);
- * above them the cashier sends an "iade isteği" that the owner does or declines. Every cashier refund and request is a notice
- * in the owner's Bildirimler. "Ürünler kullanılmadan geri döndü (stoğa ekle)" puts the refunded products back into Stok here,
+ * above them the cashier sends an "iade isteği" that the owner or the Müdür does or declines. Every cashier refund and request is a
+ * notice in the owner's Bildirimler; the request in the Müdür's too (20 Ekim), and done by one it is read for both. "Ürünler kullanılmadan geri döndü (stoğa ekle)" puts the refunded products back into Stok here,
  * after the refund is saved (server/stock.ts restock; ids from the refund, so a repeated request adds nothing twice).
  *
  * Registered after reportSecurity (the report code guards /api/staff/payment-adjustments) and before managementRoutes.
@@ -44,10 +44,14 @@ export function refundRoutes(app: Express, store: Store, actorFor: (req: Request
     if (power === 'none' || (need === 'full' && power !== 'full')) throw new DomainError('FORBIDDEN', 'Bu işlem için yetkiniz yok.', 403);
     return { a, s, power };
   };
-  const notify = (tenant: string, key: string, title: string, text: string) => { try { options.notifications?.add(tenant, key, { kind: 'cash', title, text }); } catch (error) { console.warn(`İade bildirimi yazılamadı: ${error instanceof Error ? error.message : error}`); } };
+  const notify = (tenant: string, key: string, title: string, text: string, kind: 'cash' | 'refund' = 'cash') => { try { options.notifications?.add(tenant, key, { kind, title, text }); } catch (error) { console.warn(`İade bildirimi yazılamadı: ${error instanceof Error ? error.message : error}`); } };
   // 9 Ekim kullanıcı testi: the owner did (or declined) the requested refund, but Masalar still said "İade isteği … İadeyi yap".
   const readKey = (tenant: string, owner: string, key: string) => { try { options.notifications?.markKeyRead?.(tenant, owner, key); } catch { /* only the banner */ } };
-  const handled = (tenant: string, owner: string, requestId: string) => readKey(tenant, owner, `refund-request:${requestId}`);
+  // 20 Ekim: the request is for the owner and the Müdür; done (or declined) by one, it is read for all of them.
+  const handled = (tenant: string, _by: string, requestId: string) => {
+    for (const u of store.read(tenant).staffUsers ?? []) if (u.role === 'owner' || u.role === 'manager') readKey(tenant, u.id, `refund-request:${requestId}`);
+    readKey(tenant, _by, `refund-request:${requestId}`);
+  };
   const today = () => businessDay(now().getTime());
   /** The person's refunds of this cash day so far (the cashier's daily limit). */
   function usedToday(tenant: string, s: State, actorId: string) {
@@ -150,7 +154,7 @@ export function refundRoutes(app: Express, store: Store, actorFor: (req: Request
   app.post('/api/staff/refunds/requests', (req, res) => {
     const { a } = who(req), b = refundInput.omit({ revision: true, reason: true, back: true, fromRequest: true }).extend({ reasons: reasonsInput }).parse(req.body);
     const r = store.mutate(a.tenantId, s => { const found = paymentOf(a.tenantId, s, b.paymentId, true); return requestRefund(s, a, b, ctx(), { payment: found.payment, history: found.history, account: found.account, tableName: found.tableName }); });
-    notify(a.tenantId, `refund-request:${r.id}`, `İade isteği: ${r.tableName} · ${money(r.amount)}`, `${r.byName} · ${r.items?.length ? refundItemsText(r.items) : 'tutar olarak'} · ${r.reason} · ${methodName(r.method)} iade · ${clock(r.at)}. Kasa ve giderler → İadeler'in üstündeki “Bekleyen iade istekleri”nden yapın ya da reddedin.`);
+    notify(a.tenantId, `refund-request:${r.id}`, `İade isteği: ${r.tableName} · ${money(r.amount)}`, `${r.byName} · ${r.items?.length ? refundItemsText(r.items) : 'tutar olarak'} · ${r.reason} · ${methodName(r.method)} iade · ${clock(r.at)}. Kasa ve giderler → İadeler'in üstündeki “Bekleyen iade istekleri”nden yapın ya da reddedin.`, 'refund');
     res.json(r);
   });
   // The owner: every waiting request and the last two weeks' answers; a cashier: their own of the last two days.

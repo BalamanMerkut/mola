@@ -144,7 +144,8 @@ export function appAudience(role: Exclude<YardimKitle, 'site'>): YardimKitle[] {
 const HARF: Record<string, string> = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u', 'â': 'a', 'î': 'i', 'û': 'u' };
 const BOS = new Set(('nasil ne neden niye nerede nereden nereye nedir mi mu bir ve veya ya ile icin ben benim bana beni biz bizim bu su o de da ki ' +
   'gibi olur oluyor olmuyor yapilir yapilmali yaparim yapabilirim yapmaliyim yapmak edilir ederim istiyorum lazim gerek gerekir ' +
-  'hangi kac var yok acaba sey mola kafe kafemde kafemiz lutfen merhaba yardim acil').split(' '));
+  'hangi kac var yok acaba sey mola kafe kafemde kafemiz lutfen merhaba yardim acil ' +
+  'uygulama uygulamasi uygulamayi uygulamada program programi programa programda yazilim').split(' '));
 
 export function normalizeYardim(text: unknown) {
   const s = String(text ?? '').slice(0, 200);
@@ -254,13 +255,16 @@ export function createYardimSearch(data: YardimVerisi) {
   const plain = (h: YardimHit): YardimHit => ({ id: h.id, soru: h.soru, score: h.score });
   function search(text: string, limit = 6): YardimHit[] { return rank(text).slice(0, limit).map(plain); }
   /**
-   * What the panel shows for what was typed: the answer when sure (every word matched as written, or the typos still point
+   * What the panel shows for what was typed: the answer when sure (every word matched as written; a partial match ahead of the next one; or the typos still point
    * clearly to one question: all words found and two points ahead of the next), otherwise up to three to choose from.
    */
   function ask(text: string, limit = 4): YardimAsk {
     const found = rank(text), top = found[0], next = found[1];
     if (!top) return { sure: false, hits: [] };
-    const sure = !top.fuzzy || (top.all && (!next || top.score - next.score >= 2));
+    // 20 Ekim: when not every word was found as written, two questions as good as each other ("lasa yönetimi": Menü or
+    // Kafemi yönet?) are a choice, never a guess. Every word found as written still answers (the audience's own first).
+    const lead = next ? top.score - next.score : 99;
+    const sure = (top.all && !top.fuzzy) || (lead > 0 && (!top.fuzzy || (top.all && lead >= 2)));
     return { sure, hits: found.slice(0, sure ? limit : 3).map(plain) };
   }
   return { search, ask, get: (id: string) => byId.get(id) ?? null };

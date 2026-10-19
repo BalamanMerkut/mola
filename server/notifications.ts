@@ -13,12 +13,13 @@ import { endedCampaigns } from '../packages/domain/campaign-ends.js';
 /** 'expense': an "Otomatik gider" was recorded (server/recurring-expenses.ts). 'cash': a cash closing, an opening difference or
  * a cashier's cash expense above the owner's limit (server/cash-closing.ts). 'stock': an item went under its minimum (server/stock.ts).
  * 'report': a period report (gün sonu, hafta, ay, yıl; server/email-reports.ts). 'demo': "Tanıtım" reset (server/demo-reset.ts). */
-/** 'printer': a ticket did not print ("Yazıcıda kâğıt yok · Mutfak") or the roll is nearly out (server/printing.ts PrintService). */
-export type NotificationKind = 'reminder' | 'license' | 'backup' | 'merkez' | 'expense' | 'cash' | 'stock' | 'report' | 'demo' | 'campaign' | 'printer';
+/** 'printer': a ticket did not print ("Yazıcıda kâğıt yok · Mutfak") or the roll is nearly out (server/printing.ts PrintService).
+ * 'refund' (20 Ekim): a cashier's "iade isteği" (server/refunds.ts), for the owner and the Müdür: either may do it. */
+export type NotificationKind = 'reminder' | 'license' | 'backup' | 'merkez' | 'expense' | 'cash' | 'stock' | 'report' | 'demo' | 'campaign' | 'printer' | 'refund';
 /** One message in the owner's Bildirimler (üst çubuktaki zil). `readBy`: owner ids that opened it (read state is per owner). */
 export type CafeNotification = { id: string; kind: NotificationKind; title: string; text: string; at: string; day?: string; readBy: string[]; /** 'campaign': the ended campaign ("Kampanya bitti", packages/domain/campaign-ends.ts). */ campaign?: { id: string; reportId: string; reason: 'time' | 'quota'; endedAt: string; uses?: number } };
 /** What the Müdür sees in Bildirimler: nothing about the drawer, licences or backups (K1 kör kasa), only these. */
-export const MANAGER_KINDS: readonly NotificationKind[] = ['campaign'];
+export const MANAGER_KINDS: readonly NotificationKind[] = ['campaign', 'refund'];
 export type NotificationView = Omit<CafeNotification, 'readBy'> & { read: boolean };
 /** What the café knows about its licence and backups, from app.ts (Mola Merkez link, backup scheduler). */
 export type NotificationSources = {
@@ -142,7 +143,7 @@ export class Notifications {
  */
 export function notificationRoutes(app: Express, store: Store, actorFor: (req: Request) => Actor, now: () => Date, agenda: AgendaBook, sources: NotificationSources = {}, everyMs = 60_000) {
   const book = new Notifications(store, agenda, now, sources);
-  // The owner reads every notification; the Müdür only MANAGER_KINDS ("Kampanya bitti"), never the drawer, licence or backups.
+  // The owner reads every notification; the Müdür only MANAGER_KINDS ("Kampanya bitti", "İade isteği"), never the drawer, licence or backups.
   const owner = (req: Request) => { const a = actorFor(req); requireRole(store.read(a.tenantId), a, ['owner', 'manager']); return { a, kinds: a.role === 'owner' ? undefined : MANAGER_KINDS }; };
   app.get('/api/staff/notifications', (req, res) => {
     const { a, kinds } = owner(req); book.sweep(a.tenantId);

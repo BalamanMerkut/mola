@@ -205,6 +205,16 @@ test('Mola Yardım typos (19 Ekim): in doubt, "Bunu mu demek istediniz?" with tw
   for (const q of ['xqzt blorfmak', 'nasl', 'nsl yapılr', '<img src=x onerror=alert(1)>', '']) assert.deepEqual(JSON.parse(JSON.stringify(api.ask(q))), { sure: false, hits: [] }, q);
 });
 
+// 20 Ekim (owner, on the live site): "kaça bu uygulama" answered how to log in on a tablet ("uygulama" alone matched), and
+// "lasa yönetimi" answered Menü yönetimi though Kafemi yönet scored the same.
+test('Mola Yardım (20 Ekim): "uygulama"/"program" say nothing, a price asked any way is the price, a tie with a missing word is a choice', () => {
+  const site = finderFor(readYardim(SRC), 'site');
+  for (const q of ['kaça bu uygulama', 'program kaç lira', 'uygulama ücretli mi', 'fiyatı ne', 'kaça']) assert.deepEqual([site.ask(q).sure, site.ask(q).hits[0]?.id], [true, 'fiyat'], q);
+  assert.equal(site.ask('lasa yönetimi nasıl olur').sure, false);
+  assert.deepEqual([api.ask('kaça bu uygulama').sure, api.ask('kaça bu uygulama').hits[0]?.id], [true, 'fiyat']);
+  assert.equal(api.ask('lasa yönetimi nasıl olur').sure, false);
+});
+
 /** 19 Ekim: the videos as published on youtube.com/@molayazilim and their lengths (seconds). */
 const VIDEOS: Record<string, [string, number]> = {
   '00': ['wpMZdS5dPgw', 117], '01': ['GXqUnXGY5vo', 233], '02': ['NDYQ_bvUIj0', 297], '03': ['xAMiBM8M89I', 294], '04': ['dSAqQq_d3fE', 292], '05': ['WYMVLdIAsVs', 288],

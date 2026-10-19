@@ -30,7 +30,7 @@
       "kitle": ["site"],
       "soru": "Fiyatlar ne kadar?",
       "cevap": ["Üst menüdeki Fiyatlar’a tıklayın; paketler ve fiyatlar orada, büyük yazan fiyatlara KDV dahildir. Ücret aylık ya da yıllıktır, satışlarınızdan komisyon alınmaz. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
-      "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı", "kdv", "kdv dahil", "komisyon", "satıştan komisyon", "yüzde"]
+      "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "kaça", "kaç lira", "kaç tl", "fiyatı ne", "ücreti ne", "lira", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı", "kdv", "kdv dahil", "komisyon", "satıştan komisyon", "yüzde"]
     },
     {
       "id": "paket-karsilastirma",
@@ -421,8 +421,8 @@
       "konu": "kasa",
       "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "Müşteriye iade nasıl yapılır?",
-      "cevap": ["Kasa çipinden “İade”ye basın, ödemeyi seçin, ürünleri ve nedeni işaretleyin. Kasiyerin sınırını aşan iade işletme sahibine sorulur."],
-      "anahtar": ["iade", "para iadesi", "geri ödeme", "iade et", "iade sınırı", "refund", "ürün iadesi", "müşteri geri istedi"],
+      "cevap": ["Kasa çipinden “İade”ye basın, ödemeyi seçin, ürünleri ve nedeni işaretleyin. Kasiyerin sınırını aşan iade, istek olarak işletme sahibine ve Müdür'e Bildirimler'de gelir; ikisinden biri yapar ya da reddeder."],
+      "anahtar": ["iade", "para iadesi", "geri ödeme", "iade et", "iade sınırı", "iade isteği", "refund", "ürün iadesi", "müşteri geri istedi"],
       "ilgili": ["odeme-turu-duzelt"],
       "video": [{ "id": "JxhE4ESU4H4", "t": 99, "baslik": "Müdür eğitimi · Kasiyerin iade isteği", "kitle": ["owner", "manager"] }, { "id": "n_JDwbQ7peA", "t": 144, "baslik": "Kasiyer eğitimi · İade" }]
     },

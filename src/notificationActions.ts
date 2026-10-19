@@ -1,7 +1,7 @@
 import type { GoTo } from './navigate';
 
 /** A notification of the owner's bell (GET /api/staff/notifications). */
-export type NotificationItem = { id: string; kind: 'reminder' | 'license' | 'backup' | 'merkez' | 'stock' | 'cash' | 'expense' | 'report' | 'demo' | 'campaign' | 'printer'; title: string; text: string; at: string; day?: string; read: boolean; /** 'campaign': the ended campaign (src/CampaignEnded.tsx). */ campaign?: { id: string; reportId: string; reason: 'time' | 'quota'; endedAt: string; uses?: number } };
+export type NotificationItem = { id: string; kind: 'reminder' | 'license' | 'backup' | 'merkez' | 'stock' | 'cash' | 'expense' | 'report' | 'demo' | 'campaign' | 'printer' | 'refund'; title: string; text: string; at: string; day?: string; read: boolean; /** 'campaign': the ended campaign (src/CampaignEnded.tsx). */ campaign?: { id: string; reportId: string; reason: 'time' | 'quota'; endedAt: string; uses?: number } };
 /** The count on the bell: "3", and "9+" above nine (10 Ekim). */
 export const bellCount = (unread: number) => unread > 9 ? '9+' : String(unread);
 /**
@@ -12,6 +12,8 @@ export const bellCount = (unread: number) => unread > 9 ? '9+' : String(unread);
 export function importantNotification(n: Pick<NotificationItem, 'kind' | 'title'>) {
   // A printer out of paper stays until closed too (11 Ekim); "kâğıt azaldı" is only a note.
   if (n.kind === 'license' || n.kind === 'backup' || (n.kind === 'printer' && !/azaldı/.test(n.title))) return true;
+  // A cashier's "İade isteği": 'refund' since 20 Ekim (the Müdür gets it too), 'cash' before.
+  if (n.kind === 'refund') return true;
   if (n.kind !== 'cash') return false;
   const title = n.title.toLocaleLowerCase('tr-TR');
   return /^iade isteği:/.test(title) || /eksi|açı[kğ]/.test(title) || (/fark/.test(title) && !/fark yok/.test(title));
@@ -28,7 +30,7 @@ export function notificationActionOf(n: Pick<NotificationItem, 'kind' | 'title' 
   if (n.kind === 'campaign') return ['Raporu aç', { view: 'reports', tab: 'campaigns', ...(n.campaign ? { campaign: n.campaign.reportId } : {}) }];
   if (n.kind === 'stock') return ['Stoğa git', { view: 'stock', tab: 'items' }];
   if (n.kind === 'expense' || /gider/.test(title)) return ['Giderleri aç', { view: 'cash', tab: 'expenses', part: 'records' }];
-  if (n.kind === 'cash' && /^iade isteği:/.test(title)) return ['İadeyi yap', { view: 'cash', tab: 'refunds' }];
+  if (n.kind === 'refund' || (n.kind === 'cash' && /^iade isteği:/.test(title))) return ['İadeyi yap', { view: 'cash', tab: 'refunds' }];
   if (n.kind === 'cash' && /iade/.test(title)) return ['İadeleri aç', { view: 'cash', tab: 'refunds' }];
   if (n.kind === 'cash') return ['Kapanışları aç', { view: 'cash', tab: 'closings' }];
   if (n.kind === 'merkez' && /mola (ekibi|destek)/.test(title)) return ['Uzaktan erişim', { view: 'support', tab: 'remote' }];

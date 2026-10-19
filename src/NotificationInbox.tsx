@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BellRing, CheckCheck, FileChartColumn, HardDrive, Inbox, Package, RotateCcw, ShieldAlert, Store } from 'lucide-react';
-import { Banknote, Printer, Tag } from 'lucide-react';
+import { Banknote, Printer, Tag, Undo2 } from 'lucide-react';
 import { api } from './api';
 import { Notice } from './components';
 import { notificationsChanged } from './notificationCount';
@@ -9,7 +9,7 @@ import { goTo } from './navigate';
 import { notificationActionOf as actionOf, type NotificationItem as Item } from './notificationActions';
 
 // 'report': a period report (gün sonu, hafta, ay, yıl; also e-mailed when set up); 'demo': a "Tanıtım" business was reset.
-const icons = { reminder: BellRing, license: ShieldAlert, backup: HardDrive, merkez: Store, stock: Package, cash: Banknote, expense: Banknote, report: FileChartColumn, demo: RotateCcw, campaign: Tag, printer: Printer };
+const icons = { reminder: BellRing, license: ShieldAlert, backup: HardDrive, merkez: Store, stock: Package, cash: Banknote, expense: Banknote, report: FileChartColumn, demo: RotateCcw, campaign: Tag, printer: Printer, refund: Undo2 };
 const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
 /**
@@ -27,9 +27,9 @@ export function NotificationInbox({ onAgenda, manager = false }: { onAgenda?: (d
   }
   const unread = items?.filter(n => !n.read).length ?? 0;
   return <section className="panel notification-inbox" aria-label="Bildirimler">
-    <div className="notification-head"><div><h2>Bildirimler</h2><p className="muted small">{manager ? 'Biten kampanyalar burada toplanır.' : 'Kasa farkları, iade istekleri, azalan stok, giderler, biten kampanyalar, raporlar, ajanda hatırlatmaları, lisans ve yedek uyarıları burada toplanır.'}</p></div>{unread > 0 && <button type="button" className="btn secondary" onClick={() => void read()}><CheckCheck size={17} />Tümünü okundu say</button>}</div>
+    <div className="notification-head"><div><h2>Bildirimler</h2><p className="muted small">{manager ? 'Kasiyerin iade istekleri ve biten kampanyalar burada toplanır.' : 'Kasa farkları, iade istekleri, azalan stok, giderler, biten kampanyalar, raporlar, ajanda hatırlatmaları, lisans ve yedek uyarıları burada toplanır.'}</p></div>{unread > 0 && <button type="button" className="btn secondary" onClick={() => void read()}><CheckCheck size={17} />Tümünü okundu say</button>}</div>
     {error && <Notice tone="error">{error}</Notice>}
-    {items === null && !error ? <p className="muted" role="status">Bildirimler yükleniyor…</p> : !items?.length ? <div className="notification-empty"><Inbox size={30} strokeWidth={1.4} aria-hidden="true" /><p>Henüz bildirim yok.</p><span className="muted small">{manager ? 'Bir kampanya bitince burada görünür.' : 'Ajandaya hatırlatıcılı bir not eklediğinizde zamanı gelince burada görünür.'}</span></div>
+    {items === null && !error ? <p className="muted" role="status">Bildirimler yükleniyor…</p> : !items?.length ? <div className="notification-empty"><Inbox size={30} strokeWidth={1.4} aria-hidden="true" /><p>Henüz bildirim yok.</p><span className="muted small">{manager ? 'Kasiyer iade isteği gönderince ya da bir kampanya bitince burada görünür.' : 'Ajandaya hatırlatıcılı bir not eklediğinizde zamanı gelince burada görünür.'}</span></div>
       : <ul className="notification-list">{items.map(n => { const Icon = icons[n.kind] ?? BellRing; return <li key={n.id} className={`notification-item ${n.read ? '' : 'unread'} ${n.kind}`}>
         <button type="button" className="notification-open" aria-label={`${n.title}${n.read ? '' : ' (okunmadı)'}`} onClick={() => { if (!n.read) void read([n.id]); }}>
           <span className="notification-icon" aria-hidden="true"><Icon size={18} /></span>

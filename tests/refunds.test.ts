@@ -190,7 +190,7 @@ async function cafe(t: { after: (fn: () => Promise<void>) => void }, start: stri
       if (r.headers.getSetCookie().length) cookie = r.headers.getSetCookie()[0].split(';')[0];
       return { status: r.status, data: await r.json() as any };
     };
-    return Object.assign(call, { login: (username: string) => call('/login', { username, password: DEMO_PASSWORD }) });
+    return Object.assign(call, { login: (username: string, password = DEMO_PASSWORD) => call('/login', { username, password }) });
   }
   return { store, client, set: (iso: string) => { clock = new Date(iso); } };
 }
@@ -199,6 +199,9 @@ test('over HTTP: the cashier\'s small item refund (owner told, closing line, sto
   const c = await cafe(t, '2026-10-02T09:00:00Z');
   const owner = c.client(), cashier = c.client(), waiter = c.client();
   for (const [who, name] of [[owner, 'isletme'], [cashier, 'kasiyer'], [waiter, 'garson']] as const) assert.equal((await who.login(name)).status, 200);
+  const manager = c.client();
+  assert.equal((await owner('/staff/users', { username: 'mudur.iade', name: 'Müdür Selin', role: 'manager', password: 'MudurIade!2026' })).status, 200);
+  assert.equal((await manager.login('mudur.iade', 'MudurIade!2026')).status, 200);
   await owner('/staff/setup', { requestId: 'refund-setup', version: (await owner('/staff/state')).data.businessRevision ?? 0, name: 'Test Kafe', tableCount: 12, changeSeconds: 0, commissionBps: null });
   assert.equal((await cashier('/staff/cash/open', { requestId: randomUUID(), amount: 10000 })).status, 200);
   // Stock for tea: 100 g of leaves a glass, 1000 g on the shelf.
@@ -244,6 +247,10 @@ test('over HTTP: the cashier\'s small item refund (owner told, closing line, sto
   // 9 Ekim kullanıcı testi: the handled request's notification is read, so Masalar no longer says "İade isteği … İadeyi yap".
   const after = (await owner('/staff/notifications')).data.items.find((n: any) => n.title.startsWith('İade isteği: Masa 01'));
   assert.equal(after.read, true, 'the handled request is no longer unread');
+  // 20 Ekim (sahibin kararı): the Müdür hears of the request too (and of nothing about the drawer); done by the owner, it is
+  // read for the Müdür as well.
+  const managerInbox = (await manager('/staff/notifications')).data.items;
+  assert.deepEqual(managerInbox.map((n: any) => [n.kind, n.title, n.read]), [['refund', `İade isteği: Masa 01 · ₺${latte.unit * 2 / 100}`, true]]);
   // K-A (9 Ekim): the cashier's screen hears of it: "Sahip iadeyi yaptı: Masa 01 · ₺… nakit. Parayı müşteriye verin."
   const strips = (await cashier('/staff/state')).data.tillNotices;
   assert.equal(strips?.length, 1, 'one strip for the cashier');

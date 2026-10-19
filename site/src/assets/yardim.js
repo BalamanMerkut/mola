@@ -14,7 +14,8 @@
   var BOS = Object.create(null);
   ('nasil ne neden niye nerede nereden nereye nedir mi mu bir ve veya ya ile icin ben benim bana beni biz bizim bu su o de da ki ' +
    'gibi olur oluyor olmuyor yapilir yapilmali yaparim yapabilirim yapmaliyim yapmak edilir ederim istiyorum lazim gerek gerekir ' +
-   'hangi kac var yok acaba sey mola kafe kafemde kafemiz lutfen merhaba yardim acil').split(' ').forEach(function (w) { BOS[w] = true; });
+   'hangi kac var yok acaba sey mola kafe kafemde kafemiz lutfen merhaba yardim acil ' +
+   'uygulama uygulamasi uygulamayi uygulamada program programi programa programda yazilim').split(' ').forEach(function (w) { BOS[w] = true; });
 
   function normalize(text) {
     var s = String(text == null ? '' : text).slice(0, 200), low, out = '';
@@ -122,13 +123,14 @@
   /** The best questions for what was typed, best first; [] when nothing fits. */
   function search(text, limit) { return rank(text).slice(0, limit || 6).map(plain); }
   /**
-   * What the panel shows for what was typed: the answer when sure (every word matched as written, or the typos still point
+   * What the panel shows for what was typed: the answer when sure (every word matched as written; a partial match ahead of the next one; or the typos still point
    * clearly to one question: all words found and two points ahead of the next), otherwise up to three to choose from.
    */
   function ask(text, limit) {
     var found = rank(text), top = found[0], next = found[1];
     if (!top) return { sure: false, hits: [] };
-    var sure = !top.fuzzy || (top.all && (!next || top.score - next.score >= 2));
+    var lead = next ? top.score - next.score : 99;
+    var sure = (top.all && !top.fuzzy) || (lead > 0 && (!top.fuzzy || (top.all && lead >= 2)));
     return { sure: sure, hits: found.slice(0, sure ? limit || 4 : 3).map(plain) };
   }
   function get(id) { if (!index) build(); return has.call(byId, id) ? byId[id] : null; }
