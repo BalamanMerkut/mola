@@ -180,6 +180,8 @@ button.stock-item-main:focus-visible{outline:2px solid var(--green);outline-offs
 .stock-option-percent{display:flex!important;align-items:center;gap:6px;max-width:150px;color:var(--stk-muted)}
 .stock-option-inputs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;min-width:0;align-items:center}
 .stock-option-inputs.replace{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+/* 19 Ekim: "Yerine başka malzeme" takes the whole row under the option's name and rule (at 1280 px its two selects were cut to "Hangisinin y…"). */
+.stock-option-row>.stock-option-inputs.replace{grid-column:1/-1}
 .stock-arrow{color:#8a9487;font-size:15px}
 .stock-cost-preview{display:flex;flex-wrap:wrap;gap:6px 18px;padding:12px 14px;border-radius:12px;background:var(--stk-soft);font-size:13px;color:#40523f}
 .stock-cost-preview b{color:var(--ink)}

@@ -33,7 +33,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
-import { DESKTOP, NO_HINTS, PASSWORD, PHONE, ROOT, Recorder, TABLET, cartLine, choose, istanbul, kit, pause, typeIn, type StaffState } from './kayit-ortak';
+import { DESKTOP, NO_HINTS, PASSWORD, PHONE, ROOT, Recorder, TABLET, cartLine, choose, istanbul, kit, pause, typeIn, type RecipeSeed, type StaffState, type StockSeed } from './kayit-ortak';
 
 const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'mutfak');
 const OUT = join(BASE, 'kayit');
@@ -61,33 +61,22 @@ async function advance(table: string, to: ('preparing' | 'ready' | 'served')[]) 
   }
 }
 
-/** The owner's Stok, set up off camera: ingredients with what is on the shelf now, and five recipes. */
-const ITEMS: { name: string; unit: 'g' | 'ml' | 'piece'; initial: number; min?: number }[] = [
+/** The owner's Stok, set up off camera (Kit.setUpStock): ingredients with what is on the shelf now, and five recipes. */
+const ITEMS: StockSeed[] = [
   { name: 'Espresso çekirdeği', unit: 'g', initial: 2400, min: 500 }, { name: 'Süt', unit: 'ml', initial: 16000, min: 4000 },
   { name: 'Yulaf sütü', unit: 'ml', initial: 4000, min: 1000 }, { name: 'Türk kahvesi', unit: 'g', initial: 1200, min: 250 },
   { name: 'Tel kadayıf', unit: 'g', initial: 2000, min: 500 }, { name: 'Künefe peyniri', unit: 'g', initial: 1800, min: 500 },
   { name: 'Dondurma', unit: 'g', initial: 2500, min: 500 }, { name: 'Limon', unit: 'piece', initial: 40, min: 10 },
 ];
-async function setUpStock() {
-  const api = await k.ownerApi(k.deskBrowser), req = api.req, ids: Record<string, string> = {};
-  for (const i of ITEMS) { const r = await k.post(req, '/api/staff/stock/items', { name: i.name, unit: i.unit, min: i.min ?? null, initial: i.initial }) as { item: { id: string } }; ids[i.name] = r.item.id; }
-  const s = await stateOf(req), product = (name: string) => s.products.find(p => p.name === name)!;
-  const opt = (p: string, group: string, option: string) => { const g = product(p).groups.find(x => x.name === group)!; return { groupId: g.id, optionId: g.options.find(o => o.name === option)!.id }; };
-  const recipe = async (name: string, items: [string, number][], options: unknown[] = []) =>
-    k.post(req, '/api/staff/stock/recipes', { productId: product(name).id, mode: 'recipe', items: items.map(([n, amount]) => ({ itemId: ids[n], amount })), options });
-  await recipe('Caffè Latte', [['Espresso çekirdeği', 18], ['Süt', 200]], [{ ...opt('Caffè Latte', 'Süt tercihi', 'Yulaf sütü'), replace: [{ from: ids['Süt'], to: ids['Yulaf sütü'] }] }]);
-  await recipe('Americano', [['Espresso çekirdeği', 18]]);
-  await recipe('Türk Kahvesi', [['Türk kahvesi', 7]]);
-  await recipe('Künefe', [['Tel kadayıf', 60], ['Künefe peyniri', 80]], [{ ...opt('Künefe', 'Servis tercihi', 'Dondurmalı'), add: [{ itemId: ids['Dondurma'], amount: 60 }] }]);
-  await recipe('Ev Yapımı Limonata', [['Limon', 2]]);
-  await api.close();
-}
+const RECIPES: RecipeSeed[] = [
+  { product: 'Caffè Latte', items: [['Espresso çekirdeği', 18], ['Süt', 200]], options: [{ group: 'Süt tercihi', option: 'Yulaf sütü', replace: [['Süt', 'Yulaf sütü']] }] },
+  { product: 'Americano', items: [['Espresso çekirdeği', 18]] },
+  { product: 'Türk Kahvesi', items: [['Türk kahvesi', 7]] },
+  { product: 'Künefe', items: [['Tel kadayıf', 60], ['Künefe peyniri', 80]], options: [{ group: 'Servis tercihi', option: 'Dondurmalı', add: [['Dondurma', 60]] }] },
+  { product: 'Ev Yapımı Limonata', items: [['Limon', 2]] },
+];
 /** What Stok expects on the shelf now (base units), as the kitchen reads it. */
-async function expected() {
-  const m = await as('mutfak'), r = await (await m.req.get(`${k.KAFE}/api/staff/stock`)).json() as { items: { name: string; stock: number }[] };
-  await m.close();
-  return Object.fromEntries(r.items.map(i => [i.name, i.stock]));
-}
+const expected = () => k.stockLevels('mutfak');
 
 // ---------- On the screens ----------
 const kcard = (page: Page, table: string) => page.locator('.kitchen-card', { has: page.locator('h3', { hasText: new RegExp(`^${table}$`) }) }).first();
@@ -112,7 +101,7 @@ async function main() {
     await k.calm(desk, false);
     await k.setPrefs(desk, { qrOpen: true });
     await cleanAll();
-    await setUpStock();
+    await k.setUpStock(ITEMS, RECIPES);
     console.log('Stok hazır:', JSON.stringify(await expected()));
 
     // ===== Off camera: the lunch's first orders =====

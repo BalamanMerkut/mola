@@ -1,5 +1,6 @@
 /*
- * Shared stage of the YouTube videos (scripts/sosyal/youtube-kurgu.ts "QR menü ve QR sipariş", scripts/sosyal/youtube-kurulum-kurgu.ts
+ * Shared stage of the YouTube videos (scripts/sosyal/youtube-tanitim-kurgu.ts "Mola'yı 2 dakikada tanıyın", youtube-kurgu.ts "QR menü ve
+ * QR sipariş", youtube-stok-kurgu.ts "Stok, reçete ve kârlılık", scripts/sosyal/youtube-kurulum-kurgu.ts
  * "Kurulum", and the training series: youtube-garson-kurgu.ts "Garson eğitimi", youtube-kasiyer-kurgu.ts "Kasiyer eğitimi",
  * youtube-mutfak-kurgu.ts "Mutfak eğitimi", youtube-mudur-kurgu.ts "Müdür eğitimi", youtube-sahip-kurgu.ts "İşletme sahibi: ilk gün"): the
  * brand, the recorded clips (meta.json of scripts/sosyal/kayit-ortak.ts Recorder), the scene model and its HTML stage drawn for every frame, the logo cards, taps without a pointer (soft ripple; a red outline and a slight 1.2× camera move
@@ -421,6 +422,20 @@ export function held(scene: Scene, from: number, to: number, holds: [number, num
   layer.map = map;
   return { ...scene, duration: d, captions: stepped(step, captions(at, d)) };
 }
+/** A screen scene's first picture held still for `s` seconds before it plays (time to read the first caption; a caption from .2 stays). */
+export function holdStart(scene: Scene, s: number): Scene {
+  const l = scene.layers![0] as Extract<Layer, { kind: 'screen' }>;
+  l.map = [[0, l.map[0][1]], ...l.map.map(([a, b]) => [a + s, b] as [number, number])];
+  l.cam = l.cam.map((c, i) => i === 0 ? c : { ...c, t: c.t + s });
+  l.rings = l.rings.map(r => ({ ...r, from: r.from + s, to: r.to + s, ...(r.tap !== undefined ? { tap: r.tap + s } : {}) }));
+  return { ...scene, duration: scene.duration + s, captions: (scene.captions ?? []).map(c => ({ ...c, from: c.from === .2 ? .2 : c.from + s, to: c.to + s })) };
+}
+/** A screen scene's last picture held still for `s` more seconds (time to read the last captions). */
+export function holdEnd(scene: Scene, s: number): Scene {
+  const l = scene.layers![0] as Extract<Layer, { kind: 'screen' }>, [s0, c0] = l.map[l.map.length - 1], c = c0 + (scene.duration - s0);
+  l.map = [...l.map, [scene.duration, c], [scene.duration + s, c]];
+  return { ...scene, duration: scene.duration + s };
+}
 /** Before / after: two guest phones side by side at normal size, each holding one moment of its clip; labels only. */
 export type Side = { clip: string; t: number; label: string; tone?: 'off' | 'on'; play?: number };
 export function splitScene(name: string, title: string, left: Side, right: Side, caption: string, d = 7.5): Scene {
@@ -428,6 +443,23 @@ export function splitScene(name: string, title: string, left: Side, right: Side,
   const PH = 770, cy = 582;
   const side = (s: Side, cx: number, delay: number): Layer => ({ kind: 'phone', clip: s.clip, h: PH, map: hold(s.t, s.play ?? 0), rings: [],
     keys: [{ t: 0, x: cx, y: cy + 14, s: .98, o: 0 }, { t: .3 + delay, x: cx, y: cy + 14, s: .98, o: 0 }, { t: .9 + delay, x: cx, y: cy, s: 1, o: 1 }] });
+  return { name, duration: d, capPos: 'split', tag: 'Karşılaştırma', side: 'compare', split: { title, left: left.label, right: right.label, leftTone: left.tone ?? 'off', rightTone: right.tone ?? 'on' },
+    captions: [{ from: .6, to: d + 1, text: caption }],
+    layers: [side(left, 480, 0), side(right, 1440, .15)] };
+}
+/**
+ * Before / after on a desktop screen (video 02 "Stok, reçete ve kârlılık": the Kârlılık table): two app windows side by side,
+ * each holding one moment of its clip and showing only `region` (CSS px of that clip's screen); labels only.
+ */
+export type ScreenSide = { clip: string; t: number; label: string; region: Box; tone?: 'off' | 'on' };
+export function screenSplitScene(name: string, title: string, windowTitle: string, left: ScreenSide, right: ScreenSide, caption: string, d = 7.5): Scene {
+  const SW = 860, cy = 575;
+  const side = (s: ScreenSide, cx: number, delay: number): Layer => {
+    const h = Math.round(SW * s.region.height / s.region.width);
+    return { kind: 'screen', clip: s.clip, w: SW, h, map: [[0, s.t], [d + 5, s.t]], rings: [], frame: 'window', title: windowTitle,
+      cam: [{ t: 0, x: s.region.x, y: s.region.y, w: s.region.width }],
+      keys: [{ t: 0, x: cx, y: cy + 14, s: .98, o: 0 }, { t: .3 + delay, x: cx, y: cy + 14, s: .98, o: 0 }, { t: .9 + delay, x: cx, y: cy, s: 1, o: 1 }] };
+  };
   return { name, duration: d, capPos: 'split', tag: 'Karşılaştırma', side: 'compare', split: { title, left: left.label, right: right.label, leftTone: left.tone ?? 'off', rightTone: right.tone ?? 'on' },
     captions: [{ from: .6, to: d + 1, text: caption }],
     layers: [side(left, 480, 0), side(right, 1440, .15)] };

@@ -24,7 +24,7 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
 import sharp from 'sharp';
-import { ROOT, chapters, dirs, endCardWith, frameFile, guestScene, introCard, marks, shootThumb, staffScene, stepped, taps, trainingThumb, uret, yer, type CaptionsOf, type Layer, type Scene } from './youtube-sahne';
+import { ROOT, chapters, dirs, endCardWith, frameFile, guestScene, holdStart, introCard, marks, shootThumb, staffScene, stepped, taps, trainingThumb, uret, yer, type CaptionsOf, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'sahip', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'sahip', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', 'E5 İşletme sahibi ilk gün')) });
@@ -40,15 +40,6 @@ function screen(name: string, clip: string, from: number, to: number, o: Opts, c
 function phone(name: string, clip: string, from: number, to: number, o: Opts, captions: CaptionsOf): Scene {
   return { ...guestScene(name, clip, from, to, o.taps ?? [], (at, d) => stepped(o.step, captions(at, d)), o.toc), tag: label('Misafir telefonu') };
 }
-/** The scene's first picture held still for `s` seconds before it plays (time to read the first caption). */
-function holdStart(scene: Scene, s: number): Scene {
-  const l = scene.layers![0] as Extract<Layer, { kind: 'screen' }>;
-  l.map = [[0, l.map[0][1]], ...l.map.map(([a, b]) => [a + s, b] as [number, number])];
-  l.cam = l.cam.map((c, i) => i === 0 ? c : { ...c, t: c.t + s });
-  l.rings = l.rings.map(r => ({ ...r, from: r.from + s, to: r.to + s, ...(r.tap !== undefined ? { tap: r.tap + s } : {}) }));
-  return { ...scene, duration: scene.duration + s, captions: (scene.captions ?? []).map(c => ({ ...c, from: c.from === .2 ? .2 : c.from + s, to: c.to + s })) };
-}
-
 function scenes(): Scene[] {
   const list: Scene[] = [];
   list.push({ name: 'a0-giris', duration: 8, card: introCard('İşletme sahibi: ilk gün', 'Kurulumdan sonraki ilk gün, adım adım.'), toc: 'Giriş ve menü' });

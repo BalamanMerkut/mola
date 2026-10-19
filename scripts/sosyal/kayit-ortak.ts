@@ -1,7 +1,7 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
  * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts, youtube-sahip-kayit.ts,
- * youtube-tanitim-kayit.ts).
+ * youtube-tanitim-kayit.ts, youtube-stok-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -525,17 +525,52 @@ export function kit(o: KitOptions) {
     }
     return { code };
   }
+  /**
+   * Stok set up off camera as the owner does it there (Stok → Malzemeler, Reçeteler): the ingredients with what is on the shelf
+   * now, an optional "Uyarı sınırı" and unit price (`price`: TL per kg, L or piece, as the form asks), then the recipes by product
+   * and option names (`scale`: Büyük boy 1.5; `add`: [item, amount]; `replace`: [instead of, item]). Amounts in g, ml or pieces.
+   * Returns the item ids by name.
+   */
+  async function setUpStock(items: StockSeed[], recipes: RecipeSeed[] = []) {
+    const api = await ownerApi(deskBrowser), req = api.req, ids: Record<string, string> = {};
+    for (const i of items) {
+      const unitCost = i.price === undefined ? null : i.price * 100 / (i.unit === 'piece' ? 1 : 1000);
+      const r = await post(req, '/api/staff/stock/items', { name: i.name, unit: i.unit, min: i.min ?? null, initial: i.initial, ...(unitCost === null ? {} : { unitCost }) }) as { item: { id: string } };
+      ids[i.name] = r.item.id;
+    }
+    const s = await floorOf(req), product = (name: string) => { const p = s.products.find(x => x.name === name); if (!p) throw new Error(`Ürün yok: ${name}`); return p; };
+    for (const r of recipes) {
+      const p = product(r.product);
+      const options = (r.options ?? []).map(o => {
+        const g = p.groups.find(x => x.name === o.group)!, opt = g.options.find(x => x.name === o.option)!;
+        return { groupId: g.id, optionId: opt.id, ...(o.scale ? { scale: o.scale } : {}), ...(o.add ? { add: o.add.map(([n, amount]) => ({ itemId: ids[n], amount })) } : {}), ...(o.replace ? { replace: o.replace.map(([from, to]) => ({ from: ids[from], to: ids[to] })) } : {}) };
+      });
+      await post(req, '/api/staff/stock/recipes', { productId: p.id, mode: 'recipe', items: r.items.map(([n, amount]) => ({ itemId: ids[n], amount })), options });
+    }
+    await api.close();
+    return ids;
+  }
+  /** What Stok expects on the shelf now (base units by item name), as `user` reads it (the owner by default). */
+  async function stockLevels(user = 'isletme') {
+    const u = await as(user), r = await (await u.req.get(`${KAFE}/api/staff/stock`)).json() as { items: { name: string; stock: number }[] };
+    await u.close();
+    return Object.fromEntries(r.items.map(i => [i.name, i.stock]));
+  }
   /** Mola Yönetim → Ayarlar → "Mola ekibi iletişim bilgileri" on the run's Merkez (the cafés get it with their next heartbeat). */
   async function molaContact(c: { phone?: string; whatsapp?: string; email?: string; hours?: string; web?: string }) {
     const call = await merkezAdmin();
     await call('/contact', { phone: '', whatsapp: '', email: '', hours: '', web: '', ...c });
   }
   return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
-    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, serveDay, merkezAdmin, ownerRemote, molaContact, readNotifications,
+    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, serveDay, merkezAdmin, ownerRemote, molaContact, readNotifications, setUpStock, stockLevels,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 /** [product, quantity, option names, note] of a waiter's order line. */
 export type Want = [string, number, string[]?, string?];
+/** An ingredient of Kit.setUpStock: `initial` and `min` in g, ml or pieces; `price` in TL per kg, L or piece. */
+export type StockSeed = { name: string; unit: 'g' | 'ml' | 'piece'; initial: number; min?: number; price?: number };
+/** A recipe of Kit.setUpStock: [item, amount] for one piece; options by group and option name. */
+export type RecipeSeed = { product: string; items: [string, number][]; options?: { group: string; option: string; scale?: number; add?: [string, number][]; replace?: [string, string][] }[] };
 type FloorAccount = { id: string; version: number; balance: number; total: number; paid: number };
 type FloorTable = { id: string; name: string; epoch: number; token: string; needsCleaning?: boolean; account: FloorAccount | null };
 /** One line of a waiter's order and its total (a required choice without a named option takes its first). */
@@ -546,7 +581,7 @@ export function cartLine(s: { products: FloorProduct[] }, [name, quantity, opts 
   const unit = p.price + picked.reduce((n, x) => n + x.o.extra, 0);
   return { line: { productId: p.id, quantity, selections: picked.map(x => ({ groupId: x.g.id, optionId: x.o.id })), ...(note ? { note } : {}) }, total: unit * quantity };
 }
-type FloorProduct = { id: string; name: string; price: number; groups: { id: string; required: boolean; options: { id: string; name: string; extra: number }[] }[] };
+type FloorProduct = { id: string; name: string; price: number; groups: { id: string; name: string; required: boolean; options: { id: string; name: string; extra: number }[] }[] };
 /** The staff snapshot as these helpers read it. */
 type Floor = { paymentContext: string; tables: FloorTable[]; takeaways?: FloorTable[];
   products: FloorProduct[];
