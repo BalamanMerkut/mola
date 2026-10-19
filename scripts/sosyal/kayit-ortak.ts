@@ -11,12 +11,13 @@
  * 2× (desktop). JPEG frames with their timestamps plus named marks in <klip>/meta.json.
  */
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { createServer, type Server } from 'node:http';
+import { createServer, request as httpRequest, type Server } from 'node:http';
+import { connect, createServer as tcpServer, type Socket } from 'node:net';
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { chromium, type APIRequestContext, type Browser, type BrowserContext, type Locator, type Page } from '@playwright/test';
+import { chromium, type APIRequestContext, type Browser, type BrowserContext, type Locator, type Page, type Route } from '@playwright/test';
 import QRCode from 'qrcode';
 import { totp } from '../../server/totp';
 import { decodeParts, fakeSmtp } from '../../tests/fake-smtp';
@@ -182,8 +183,15 @@ export async function imagesOnScreen(page: Page) {
  * `saat`: the run plays at another time of day (ms, the shifted "now" at the start; scripts/sosyal/kayit-saat.mjs in the
  * run's own servers, Playwright's clock in its screens). `setClock` moves it forward later (a gün sonu at night).
  * `gun`: days of history the demo café is made with (scripts/demo-template.ts --gun, 3–90; default 5).
+ * Video 05 "Uzaktan erişim ve güvenlik" (all off by default):
+ * `desktop`: the café runs as the café computer's own Mola window starts it (scripts/test-protected-server.ts: the desktop key
+ *   for the side rail, key protection with the test OS lock, automatic backups in the run folder); `desktopHash` opens the rail.
+ * `ownerOrigin`: Mola Merkez names İşletmemi yönet's own address (MERKEZ_OWNER_ORIGIN, e.g. https://isletme.molayazilim.com.tr);
+ *   the owner's devices (ownerDevice) reach it there, answered by the run's Merkez.
+ * `internet`: the café reaches Mola Merkez through a switch (`setInternet(false)` cuts the café's internet; its own network,
+ *   the tablets and screens on 127.0.0.1, keeps working).
  */
-export type KitOptions = { run: string; reuse?: boolean; kafePort: number; merkezPort: number; saat?: number; gun?: number };
+export type KitOptions = { run: string; reuse?: boolean; kafePort: number; merkezPort: number; saat?: number; gun?: number; desktop?: boolean; ownerOrigin?: string; internet?: boolean };
 /** Servers, the demo café and the screens of one run. */
 export function kit(o: KitOptions) {
   const KAFE = `http://127.0.0.1:${o.kafePort}`, MERKEZ = `http://127.0.0.1:${o.merkezPort}`;
@@ -220,9 +228,16 @@ export function kit(o: KitOptions) {
     for (let i = 0; i < 400; i++) { try { if ((await fetch(url)).ok) return; } catch { /* starting */ } await new Promise(r => setTimeout(r, 150)); }
     throw new Error(`${what} açılmadı.`);
   }
+  // The café's internet (only with `internet`): a switch between the café and Mola Merkez.
+  let link: { port: number; set: (on: boolean) => void } | undefined;
+  /** Cuts (false) or brings back (true) the café's internet (kit({ internet })). */
+  function setInternet(on: boolean) { if (!link) throw new Error('setInternet: kit({ internet }) gerekir.'); link.set(on); }
+  /** The desktop key's address part for the café computer's own Mola window (kit({ desktop })): `${KAFE}/${desktopHash()}`. */
+  const desktopHash = () => `#masaustu=${readFileSync(join(o.run, 'kafe', 'masaustu.anahtar'), 'utf8').trim()}`;
   async function startServers() {
     const merkezDir = join(o.run, 'merkez'), kafeDir = join(o.run, 'kafe');
-    const merkez = spawn(process.execPath, [...pre, '--import', 'tsx', 'server/merkez/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, MERKEZ_PORT: String(o.merkezPort), MERKEZ_DATA_DIR: merkezDir, SERVE_BUILD: '1', MERKEZ_INITIAL_PASSWORD: ADMIN_PASSWORD } });
+    if (o.internet) link = await internetSwitch(o.merkezPort);
+    const merkez = spawn(process.execPath, [...pre, '--import', 'tsx', 'server/merkez/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, MERKEZ_PORT: String(o.merkezPort), MERKEZ_DATA_DIR: merkezDir, SERVE_BUILD: '1', MERKEZ_INITIAL_PASSWORD: ADMIN_PASSWORD, ...(o.ownerOrigin ? { MERKEZ_OWNER_ORIGIN: o.ownerOrigin } : {}) } });
     children.push(merkez);
     await waitFor(`${MERKEZ}/api/merkez/v1/health`, 'Mola Merkez');
     if (!o.reuse) {
@@ -231,8 +246,11 @@ export function kit(o: KitOptions) {
         MOLA_MERKEZ_URL: MERKEZ, MERKEZ_DATA_DIR: merkezDir, MERKEZ_ADMIN_PASSWORD: ADMIN_PASSWORD } });
       if (!/Örnek işletme hazır:/.test(demo.stdout ?? '')) { process.stdout.write(demo.stdout ?? ''); throw new Error('Örnek işletme hazırlanamadı.'); }
     }
-    const kafe = spawn(process.execPath, [...pre, '--import', 'tsx', 'server/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, PORT: String(o.kafePort), SERVE_BUILD: '1', DATA_DIR: kafeDir,
-      MOLA_CLEAN_INSTALL: '1', MOLA_MERKEZ_URL: MERKEZ, MOLA_MERKEZ_PUBLIC_KEY: join(merkezDir, 'merkez-public-key.txt'), MOLA_SYNC_SOON_MS: '1000', MOLA_HEARTBEAT_MS: '2000' } });
+    // `desktop`: as Mola.exe starts it (the desktop key beside the data, key protection with the test OS lock); the automatic
+    // backups run, next to the data folder in the run (BackupScheduler's default), never in a real Mola folder.
+    const desktopEnv = o.desktop ? { MOLA_DESKTOP_KEY: join(kafeDir, 'masaustu.anahtar'), MOLA_TEST_OS_USER: 'kafe-pc', MOLA_AUTO_BACKUP: '1' } : {};
+    const kafe = spawn(process.execPath, [...pre, '--import', 'tsx', o.desktop ? 'scripts/test-protected-server.ts' : 'server/index.ts'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...quiet, PORT: String(o.kafePort), SERVE_BUILD: '1', DATA_DIR: kafeDir,
+      MOLA_CLEAN_INSTALL: '1', MOLA_MERKEZ_URL: link ? `http://127.0.0.1:${link.port}` : MERKEZ, MOLA_MERKEZ_PUBLIC_KEY: join(merkezDir, 'merkez-public-key.txt'), MOLA_SYNC_SOON_MS: '1000', MOLA_HEARTBEAT_MS: '2000', ...desktopEnv } });
     children.push(kafe);
     await waitFor(`${KAFE}/api/health`, 'Kafe sunucusu');
   }
@@ -243,11 +261,21 @@ export function kit(o: KitOptions) {
     return r.json();
   }
   const state = async (req: APIRequestContext) => (await (await req.get(`${KAFE}/api/staff/state`)).json()) as StaffState;
+  /** The owner's phone code once it is set up (ownerRemote, or `ownerCodes` after an on-camera setup): the sign-in asks for it. */
+  let ownerCode: (() => Promise<string>) | undefined;
   async function login(page: Page, username: string) {
     await page.goto(`${KAFE}/`);
     await page.getByLabel('Kullanıcı adı', { exact: true }).fill(username);
     await page.getByLabel('Şifre', { exact: true }).fill(PASSWORD);
-    await Promise.all([page.waitForResponse(r => r.url().endsWith('/api/login')), page.getByRole('button', { name: 'Çalışma alanını aç' }).click()]);
+    const [first] = await Promise.all([page.waitForResponse(r => r.url().endsWith('/api/login')), page.getByRole('button', { name: 'Çalışma alanını aç' }).click()]);
+    // "Girişinizi doğrulayın": the owner's phone code (only once it is set up and known to this run).
+    if (!first.ok() && ownerCode && username === 'isletme') {
+      const field = page.getByLabel('Authenticator veya kurtarma kodu');
+      await field.waitFor({ timeout: 10000 });
+      await field.fill(await ownerCode());
+      const second = await Promise.all([page.waitForResponse(r => r.url().endsWith('/api/login')), page.getByRole('button', { name: /Doğrula ve giriş yap/ }).click()]).then(([r]) => r);
+      if (!second.ok()) throw new Error(`Sahip girişi telefon koduyla açılmadı: ${second.status()}`);
+    }
     await page.reload();
     await page.waitForLoadState('networkidle').catch(() => {});
     await pause(page, 800);
@@ -309,8 +337,9 @@ export function kit(o: KitOptions) {
     return phoneBrowser;
   }
   async function close() { await phoneBrowser?.close().catch(() => {}); await deskBrowser?.close().catch(() => {}); stopAll(); }
-  async function phoneContext(_browser?: Browser) {
-    const ctx = await phoneBrowser.newContext({ viewport: { width: PHONE.width, height: PHONE.height }, deviceScaleFactor: PHONE.scale, isMobile: false, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light', reducedMotion: 'no-preference' });
+  /** `userAgent`: the phone's own (video 05: the owner's iPhone; otherwise Chrome's). */
+  async function phoneContext(_browser?: Browser, d: { userAgent?: string } = {}) {
+    const ctx = await phoneBrowser.newContext({ viewport: { width: PHONE.width, height: PHONE.height }, deviceScaleFactor: PHONE.scale, isMobile: false, hasTouch: true, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light', reducedMotion: 'no-preference', ...(d.userAgent ? { userAgent: d.userAgent } : {}) });
     await ctx.addInitScript(POINTER);
     return clockOn(ctx);
   }
@@ -393,11 +422,17 @@ export function kit(o: KitOptions) {
    * unlocked (a click on the header), Mola Yardım's hint off. `campaignWindow`: the "Kampanya bitti" window may open on this
    * screen (the other screens keep it silenced, as the browser tests do).
    */
-  async function ownerWindow(o: { campaignWindow?: boolean } = {}) {
-    const ctx = await desktopContext(); await ctx.addInitScript(o.campaignWindow ? NO_HINTS.replace(` localStorage.setItem('mola-campaign-ended', 'off');`, '') : NO_HINTS);
+  async function ownerWindow(w: { campaignWindow?: boolean } = {}) {
+    const ctx = await desktopContext(); await ctx.addInitScript(w.campaignWindow ? NO_HINTS.replace(` localStorage.setItem('mola-campaign-ended', 'off');`, '') : NO_HINTS);
+    // kit({ desktop }): the café computer's own window with its side rail; the recovery code's one-time window stays put off
+    // ("Sonra kaydedeceğim"), it is opened from the rail when a clip needs it.
+    if (o.desktop) await ctx.addInitScript(`try { sessionStorage.setItem('mola-recovery-later', '1'); } catch (e) {}`);
     const page = await ctx.newPage();
     await login(page, 'isletme');
-    await page.goto(`${KAFE}/`); await pause(page, 1500);
+    await page.goto(`${KAFE}/${o.desktop ? desktopHash() : ''}`);
+    // The key is read when the page starts: after the sign-in's page the address only changed its #part, so it starts again.
+    if (o.desktop) await page.reload();
+    await pause(page, 1500);
     await page.mouse.click(640, 20); await pause(page, 600);
     const sound = page.getByText(/Ses kapalı/).first();
     if (await sound.isVisible().catch(() => false)) { await sound.click(); await pause(page, 600); }
@@ -548,39 +583,81 @@ export function kit(o: KitOptions) {
    * gives the next unused code on the run's clock, waiting when needed) and step 2, the e-mail (Mola Merkez sends its code to a
    * fake SMTP server here, then Merkez's e-mail is switched off again); `admin`: step 5 "Uzaktan yönetim" turned on too.
    * Returns once Mola Merkez lets the owner's phone in (the café's heartbeat brought the key). From then on the owner's sign-in
-   * asks for the phone code: ownerApi, readNotifications, advance and the owner's staffScreen no longer sign in (call this last).
+   * asks for the phone code: login() gives it (phoneCodes), one code per sign-in, so a sign-in may wait up to 30 s for a new one.
    */
   async function ownerRemote(o: { email: string; admin?: boolean }) {
     const api = await ownerApi(deskBrowser), req = api.req;
     const { secret } = await post(req, '/api/staff/report-security/setup', { password: PASSWORD }) as { secret: string };
+    const code = phoneCodes(secret);
+    await post(req, '/api/staff/report-security/enable', { code: await code() });
+    const mail = await merkezMail();
+    try {
+      const { ticket } = await post(req, '/api/staff/owner-email/new-code', { email: o.email, password: PASSWORD }) as { ticket: string };
+      await post(req, '/api/staff/owner-email/confirm', { ticket, code: await mail.code(o.email) });
+    } finally { await mail.close(); }
+    if (o.admin) await post(req, '/api/staff/remote-admin', { on: true, password: PASSWORD, code: await code() }).catch(e => console.warn(`Uzaktan yönetim açılamadı: ${(e as Error).message}`));
+    await api.close();
+    await ownerReady(o.email);
+    return { code };
+  }
+  /**
+   * The owner's phone code from its secret (the authenticator app's side): `code()` gives the next unused code on the run's clock,
+   * waiting when needed. From then on the owner's sign-in on the café's screens answers "Girişinizi doğrulayın" with it.
+   */
+  function phoneCodes(secret: string) {
     let used = Math.floor(now() / 30000) - 2;
     const code = async () => {
       for (;;) {
-        const current = Math.floor(now() / 30000), step = Math.max(current - 1, used + 1);
+        // This window's code first (a code typed on camera takes a few seconds), the next window's when this one is used.
+        const current = Math.floor(now() / 30000), step = Math.max(current, used + 1);
         if (step <= current + 1) { used = step; return totp(secret, step * 30000); }
         await new Promise(r => setTimeout(r, 1000));
       }
     };
-    await post(req, '/api/staff/report-security/enable', { code: await code() });
+    ownerCode = code;
+    return code;
+  }
+  /**
+   * Mola Merkez's e-mail on for a moment (a fake SMTP server of the run, never a real mailbox): `code(email)` waits for the 6-digit
+   * code Merkez sent there; `close()` switches Merkez's e-mail off again.
+   */
+  async function merkezMail() {
     const smtp = await fakeSmtp('kullanilmaz'), call = await merkezAdmin();
     const mail = (on: boolean) => call('/email', { enabled: on, host: on ? '127.0.0.1' : 'smtp.gmail.com', port: on ? smtp.port : 465, security: on ? 'none' : 'tls', user: '', to: 'bildirim@ornekkafe.com', from: on ? 'mola@ornekkafe.com' : '' });
     await mail(true);
-    try {
-      const { ticket } = await post(req, '/api/staff/owner-email/new-code', { email: o.email, password: PASSWORD }) as { ticket: string };
-      const got = () => smtp.received.filter(m => m.to.some(t => t.includes(o.email)));
-      for (let i = 0; !got().length && i < 150; i++) await new Promise(r => setTimeout(r, 100));
-      const sent = /\b(\d{6})\b/.exec(decodeParts(got().at(-1)?.data ?? '').find(p => !p.name)?.text ?? '')?.[1];
-      if (!sent) throw new Error('İşletmemi yönet: e-posta kodu gelmedi.');
-      await post(req, '/api/staff/owner-email/confirm', { ticket, code: sent });
-    } finally { await mail(false); await smtp.close(); }
-    if (o.admin) await post(req, '/api/staff/remote-admin', { on: true, password: PASSWORD, code: await code() }).catch(e => console.warn(`Uzaktan yönetim açılamadı: ${(e as Error).message}`));
-    await api.close();
+    return {
+      async code(email: string) {
+        const got = () => smtp.received.filter(m => m.to.some(t => t.includes(email)));
+        for (let i = 0; !got().length && i < 150; i++) await new Promise(r => setTimeout(r, 100));
+        const sent = /\b(\d{6})\b/.exec(decodeParts(got().at(-1)?.data ?? '').find(p => !p.name)?.text ?? '')?.[1];
+        if (!sent) throw new Error('İşletmemi yönet: e-posta kodu gelmedi.');
+        return sent;
+      },
+      async close() { await mail(false); await smtp.close(); },
+    };
+  }
+  /** Waits until Mola Merkez lets the owner's devices in for `email` (the café's heartbeat brought the key). */
+  async function ownerReady(email: string) {
     for (let i = 0; i < 30; i++) {
-      const r = await fetch(`${MERKEZ}/api/merkez/v1/phone/login/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: o.email }) });
+      const r = await fetch(`${MERKEZ}/api/merkez/v1/phone/login/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
       if (r.status === 200) break;
       await new Promise(r => setTimeout(r, 2000));
     }
-    return { code };
+  }
+  /** İşletmemi yönet's address (`ownerOrigin`'s root, or /yonet on the run's Merkez). */
+  const ownerUrl = () => o.ownerOrigin ? `${o.ownerOrigin}/` : `${MERKEZ}/yonet`;
+  /**
+   * An owner's device for İşletmemi yönet, at its sign-in: no finger, only through Mola Merkez as from outside (the café's own
+   * address is blocked). With `ownerOrigin` the page runs on that name, answered by the run's Merkez (as the real name is).
+   * `userAgent`: the device's own (it names itself after it: "iPhone · 19 Ekim").
+   */
+  async function ownerDevice(d: { userAgent?: string } = {}) {
+    const ctx = await phoneContext(undefined, d); await ctx.addInitScript('window.__molaNoFinger = true');
+    await ctx.route(`${KAFE}/**`, r => r.abort());
+    if (o.ownerOrigin) await ctx.route(`${o.ownerOrigin}/**`, route => viaMerkez(route, o.merkezPort));
+    const page = await ctx.newPage();
+    await page.goto(ownerUrl());
+    return { ctx, page };
   }
   /**
    * İşletmemi yönet on the owner's phone (after ownerRemote; only through Mola Merkez, as from outside: the café's own address
@@ -588,10 +665,7 @@ export function kit(o: KitOptions) {
    * on screen (with Uzaktan yönetim on, from the café's screens through their bar's "Raporlar"). No finger on this phone.
    */
   async function ownerPhone(remote: { code: () => Promise<string> }, email: string) {
-    const ctx = await phoneContext(); await ctx.addInitScript('window.__molaNoFinger = true');
-    await ctx.route(`${KAFE}/**`, r => r.abort());
-    const page = await ctx.newPage();
-    await page.goto(`${MERKEZ}/yonet`);
+    const { ctx, page } = await ownerDevice();
     const login = page.getByRole('form', { name: 'Giriş yap' });
     await login.getByLabel('E-posta').fill(email);
     await login.getByLabel('Şifre', { exact: true }).fill(PASSWORD);
@@ -643,6 +717,7 @@ export function kit(o: KitOptions) {
   }
   return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
     as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, takeaway, serveDay, merkezAdmin, ownerRemote, ownerPhone, molaContact, readNotifications, setUpStock, stockLevels, ownerWindow,
+    setInternet, desktopHash, phoneCodes, merkezMail, ownerReady, ownerUrl, ownerDevice,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 /**
@@ -713,6 +788,48 @@ export function siteServer(port: number) {
     res.writeHead(200, { 'Content-Type': types[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file));
   });
   return new Promise<Server>(r => s.listen(port, '127.0.0.1', () => r(s)));
+}
+/**
+ * The café's internet for kit({ internet }): a plain TCP switch on a free port in front of Mola Merkez (127.0.0.1:`target`).
+ * Off: every open connection is cut and new ones are refused, as when the café's modem loses the line.
+ */
+function internetSwitch(target: number) {
+  const open = new Set<Socket>();
+  let on = true;
+  const server = tcpServer(client => {
+    if (!on) { client.destroy(); return; }
+    const up = connect(target, '127.0.0.1');
+    const drop = () => { client.destroy(); up.destroy(); open.delete(client); open.delete(up); };
+    open.add(client); open.add(up);
+    client.on('error', drop); up.on('error', drop); client.on('close', drop); up.on('close', drop);
+    client.pipe(up); up.pipe(client);
+  });
+  // Never keeps the recorder alive at its end.
+  server.unref();
+  return new Promise<{ port: number; set: (v: boolean) => void }>(done => server.listen(0, '127.0.0.1', () => done({
+    port: (server.address() as { port: number }).port,
+    set(v: boolean) { on = v; if (!v) for (const s of [...open]) s.destroy(); },
+  })));
+}
+/** A request of an owner's device to kit({ ownerOrigin }) answered by the run's Mola Merkez (on its own name, as the real one is). */
+async function viaMerkez(route: Route, port: number) {
+  const req = route.request(), url = new URL(req.url()), body = req.postDataBuffer();
+  // Its own length (Merkez refuses a chunked body on the owner's calls) and no compression (the answer is handed on as it is).
+  const headers: Record<string, string> = { ...req.headers(), host: url.host, ...(body ? { 'content-length': String(body.length) } : {}) };
+  delete headers['accept-encoding']; delete headers['transfer-encoding'];
+  const answer = await new Promise<{ status: number; headers: Record<string, string>; body: Buffer }>((done, fail) => {
+    const r = httpRequest({ host: '127.0.0.1', port, method: req.method(), path: url.pathname + url.search, headers }, res => {
+      const parts: Buffer[] = [];
+      res.on('data', c => parts.push(c)); res.on('error', fail);
+      res.on('end', () => done({ status: res.statusCode ?? 502, body: Buffer.concat(parts),
+        headers: Object.fromEntries(Object.entries(res.headers).filter(([k, v]) => typeof v === 'string' && !['transfer-encoding', 'connection', 'keep-alive'].includes(k))) as Record<string, string> }));
+    });
+    r.on('error', fail);
+    if (body) r.write(body);
+    r.end();
+  }).catch(() => null);
+  if (!answer) { await route.abort('connectionfailed'); return; }
+  await route.fulfill(answer);
 }
 /** The phone's camera on the table's QR stand, its code reading `url` (qrCameraHtml below). */
 export async function qrStand(page: Page, url: string, tableName: string) {
