@@ -36,7 +36,19 @@ export const PLATFORMS = ['windows', 'macos-arm64', 'macos-x64', 'linux-x64', 'a
 export type Platform = typeof PLATFORMS[number];
 export type DownloadFile = { file: string; size: number; sha256: string };
 export type Downloads = { enabled: boolean; version: string; builtAt?: string; files: Partial<Record<Platform, DownloadFile>> };
-type Config = { siteUrl: string; phone: string; whatsapp: string; email: string; address: string; hours: string; company: string; legalDraft: boolean; legalUpdated: string; downloads?: Downloads };
+type Social = 'instagram' | 'facebook' | 'x' | 'youtube';
+type Config = { siteUrl: string; phone: string; whatsapp: string; email: string; address: string; hours: string; company: string; legalDraft: boolean; legalUpdated: string; social?: Partial<Record<Social, string>>; downloads?: Downloads };
+/*
+ * Sosyal medya (19 Ekim): config.json "social" → footer links under the brand, and schema.org `sameAs` on the home page. An
+ * empty address is left out. Brand marks as small inline SVGs (lucide has no brand icons), monochrome like the footer.
+ */
+const SOCIAL: { id: Social; name: string; svg: string }[] = [
+  { id: 'instagram', name: 'Instagram', svg: '<rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.6" cy="6.4" r="1.3" fill="currentColor"/>' },
+  { id: 'facebook', name: 'Facebook', svg: '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>' },
+  { id: 'x', name: 'X', svg: '<path fill="currentColor" d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.78zm-1.08 16.18h1.7L7.4 4.73H5.58z"/>' },
+  { id: 'youtube', name: 'YouTube', svg: '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M2.5 17a24 24 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.6 49.6 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24 24 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.6 49.6 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path fill="currentColor" d="m10 15 5-3-5-3z"/>' },
+];
+const socialOf = (config: Config) => SOCIAL.flatMap(s => { const url = config.social?.[s.id]?.trim(); return url && /^https:\/\//.test(url) ? [{ ...s, url }] : []; });
 type Video = { name: string; caption: string; kind: 'phone' | 'desktop'; seconds?: number; kb?: number };
 /** help: "off" leaves out the round "Yardım" button (no page uses it since 15 Ekim: the home page has it too). */
 type PageMeta = { path: string; title: string; description: string; nav?: string; robots?: string; help?: string; file: string; body: string };
@@ -122,7 +134,7 @@ function packagesHtml() {
   });
   // Özel: services chosen one by one, together; no per-service prices on the site.
   cards.push(`<article class="package package-custom reveal" data-paket="ozel"><div><h3>Özel paket</h3><p>İhtiyacınız olan hizmetleri birlikte seçelim.</p></div><a class="btn btn-ghost" href="/iletisim/#form">İletişime geçin ${icon('ArrowRight', 18)}</a></article>`);
-  return `<p class="package-offer reveal">${icon('Gift', 20)}<span><b>İlk 30 gün ücretsiz</b> · <b>Kurulum ücretsiz</b></span></p><div class="packages">${cards.join('\n')}</div>`;
+  return `<p class="package-offer reveal">${icon('Gift', 20)}<span><b>İlk 30 gün ücretsiz</b> · <b>Kurulum ücretsiz</b> · <b>Satışlardan komisyon yok</b></span></p><div class="packages">${cards.join('\n')}</div>`;
 }
 /*
  * "Hangi pakette ne var?" ({{packageMatrix}}, under the cards; the same table as the Paketler PDF, docs/pdf/kaynak-paketler):
@@ -162,7 +174,7 @@ function packageMatrixHtml() {
       }).join('');
       return `<tr data-hizmet="${f.id}">${name}${cells}<td class="mx-sec">${f.required ? 'her zaman' : 'seçilebilir'}</td></tr>`;
     });
-  return `<div class="package-matrix reveal" id="paket-karsilastirma"><h3 id="paket-karsilastirma-baslik">Hangi pakette ne var?</h3><div class="mx-kutu"><table class="mx" aria-labelledby="paket-karsilastirma-baslik"><thead>${head}</thead><tbody>${rows.join('')}</tbody></table></div><p class="mx-kural">${icon('Infinity', 20)}<span>Bütün paketlerde: sınırsız cihaz, internet kesilse de çalışma, gece otomatik yedek, ilk 30 gün bütün hizmetler açık.</span></p></div>`;
+  return `<div class="package-matrix reveal" id="paket-karsilastirma"><h3 id="paket-karsilastirma-baslik">Hangi pakette ne var?</h3><div class="mx-kutu"><table class="mx" aria-labelledby="paket-karsilastirma-baslik"><thead>${head}</thead><tbody>${rows.join('')}</tbody></table></div><p class="mx-kural">${icon('Infinity', 20)}<span>Bütün paketlerde: sınırsız cihaz, satışlardan komisyon yok, internet kesilse de çalışma, gece otomatik yedek, ilk 30 gün bütün hizmetler açık.</span></p></div>`;
 }
 
 // ---------- "Bu sayfada" ({{bolumler}}, right after a page's hero) ----------
@@ -334,16 +346,18 @@ export async function buildSite(o: { quiet?: boolean; config?: string; dist?: st
   const layout = readFileSync(join(SRC, 'layout.html'), 'utf8');
   const pages = readdirSync(join(SRC, 'pages')).filter(f => f.endsWith('.html')).map(file => parsePage(file, readFileSync(join(SRC, 'pages', file), 'utf8')));
   const footerContact = [`<li data-iletisim="phone"${phoneHref ? '' : ' hidden'}><a href="${phoneHref || '#'}">Telefon</a></li>`, `<li data-iletisim="whatsapp"${waHref ? '' : ' hidden'}><a href="${esc(waHref || '#')}" rel="noopener">WhatsApp</a></li>`, `<li data-iletisim="email"><a href="${mailHref}">${esc(config.email)}</a></li>`].join('');
+  const socials = socialOf(config);
+  const socialLinks = socials.length ? `<ul class="footer-social" aria-label="Sosyal medya">${socials.map(s => `<li><a href="${esc(s.url)}" rel="noopener" target="_blank" aria-label="Mola ${s.name}" title="${s.name}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">${s.svg}</svg></a></li>`).join('')}</ul>` : '';
   const cssVersion = version(css), jsVersion = version(js), yardimVersion = version(yardim);
   // The round picture (68 px) with "Yardım" beside it on wider screens (≥ 768 px); its name is "Mola Yardım" (site.css).
   const helpButton = `<button class="yardim-fab" type="button" data-yardim-ac hidden aria-label="Mola Yardım" title="Mola Yardım"><img src="${avatar.src}" srcset="${avatar.srcset}" width="68" height="68" alt="" decoding="async"><span class="yardim-fab-yazi" aria-hidden="true">Yardım</span></button>`;
   for (const page of pages) {
     const content = fill(page.body, page);
     const canonical = `${config.siteUrl}${page.path === '404' ? '/' : page.path}`;
-    const structured = page.path === '/' ? `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'Mola', applicationCategory: 'BusinessApplication', operatingSystem: 'Windows, Android, iOS (web)', description: page.description, url: config.siteUrl, inLanguage: 'tr', publisher: { '@type': 'Organization', name: config.company, email: config.email, address: { '@type': 'PostalAddress', addressLocality: config.address, addressCountry: 'TR' } } })}</script>` : '';
+    const structured = page.path === '/' ? `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'Mola', applicationCategory: 'BusinessApplication', operatingSystem: 'Windows, Android, iOS (web)', description: page.description, url: config.siteUrl, inLanguage: 'tr', publisher: { '@type': 'Organization', name: config.company, email: config.email, address: { '@type': 'PostalAddress', addressLocality: config.address, addressCountry: 'TR' }, ...(socials.length ? { sameAs: socials.map(s => s.url) } : {}) } })}</script>` : '';
     let html = layout.replace('{{content}}', () => content).replace('{{structuredData}}', () => structured)
       .replace(/\{\{current:([a-z]+)\}\}/g, (_m, nav: string) => nav === page.nav ? 'aria-current="page"' : '')
-      .replace(/\{\{(pageTitle|description|canonical|robots|cssVersion|jsVersion|yardimVersion|helpButton|footerContact|htmlClass)\}\}/g, (_m, k: string) => ({ pageTitle: esc(page.title), description: esc(page.description), canonical: esc(canonical), robots: page.robots ?? 'index, follow', cssVersion, jsVersion, yardimVersion, helpButton: page.help === 'off' ? '' : helpButton, footerContact, htmlClass: page.body.includes('{{bolumler}}') ? ' class="bolumlu"' : '' } as Record<string, string>)[k]);
+      .replace(/\{\{(pageTitle|description|canonical|robots|cssVersion|jsVersion|yardimVersion|helpButton|footerContact|socialLinks|htmlClass)\}\}/g, (_m, k: string) => ({ pageTitle: esc(page.title), description: esc(page.description), canonical: esc(canonical), robots: page.robots ?? 'index, follow', cssVersion, jsVersion, yardimVersion, helpButton: page.help === 'off' ? '' : helpButton, footerContact, socialLinks, htmlClass: page.body.includes('{{bolumler}}') ? ' class="bolumlu"' : '' } as Record<string, string>)[k]);
     html = fill(html, page);
     const out = page.path === '404' ? join(dist, '404.html') : join(dist, page.path, 'index.html');
     mkdirSync(dirname(out), { recursive: true });

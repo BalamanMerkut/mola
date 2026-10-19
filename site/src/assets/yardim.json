@@ -28,8 +28,8 @@
       "konu": "tanisma",
       "kitle": ["site"],
       "soru": "Fiyatlar ne kadar?",
-      "cevap": ["Üst menüdeki Fiyatlar’a tıklayın; paketler ve fiyatlar orada, büyük yazan fiyatlara KDV dahildir. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
-      "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı", "kdv", "kdv dahil"]
+      "cevap": ["Üst menüdeki Fiyatlar’a tıklayın; paketler ve fiyatlar orada, büyük yazan fiyatlara KDV dahildir. Ücret aylık ya da yıllıktır, satışlarınızdan komisyon alınmaz. Size uygun paketi birlikte seçmek için Destek ve İletişim’den yazın."],
+      "anahtar": ["fiyat", "fiyatlar", "ücret", "ücretli", "ne kadar", "kaç para", "paket", "paketler", "abonelik", "aylık", "yıllık", "lisans ücreti", "pahalı", "kdv", "kdv dahil", "komisyon", "satıştan komisyon", "yüzde"]
     },
     {
       "id": "paket-karsilastirma",

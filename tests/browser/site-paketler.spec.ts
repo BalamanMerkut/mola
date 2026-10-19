@@ -9,7 +9,7 @@ import { MERKEZ } from './helpers';
 /*
  * molayazilim.com.tr → Özellikler → Paketler (scripts/site-build.ts packagePriceHtml): the three packages' prices from the
  * code's defaults (packages/domain/features.ts), KDV dahil (18 Ekim) with "/ay · KDV dahil" beside each, the package
- * discount's list price struck above, "Yıllık ödemede 2 ay bedava", the service fee "+ KDV" small under them, "İlk 30 gün ücretsiz · Kurulum ücretsiz" above the cards, the Özel card without prices.
+ * discount's list price struck above, "Yıllık ödemede 2 ay bedava", the service fee "+ KDV" small under them, "İlk 30 gün ücretsiz · Kurulum ücretsiz · Satışlardan komisyon yok" above the cards, the Özel card without prices.
  * The site is built into a scratch folder (never site/dist) and served as Caddy does (scripts/site-dev.ts). Port: E2E_PORT + 44.
  * Screenshots also go to $env:SITE_EKRAN when it is set (e.g. docs/ekran/site).
  */
@@ -46,7 +46,7 @@ for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [390,
     const section = page.locator('#paketler');
     // One clear line above the cards.
     const offer = section.locator('.package-offer');
-    await expect(offer).toHaveText('İlk 30 gün ücretsiz · Kurulum ücretsiz');
+    await expect(offer).toHaveText('İlk 30 gün ücretsiz · Kurulum ücretsiz · Satışlardan komisyon yok');
     expect((await offer.boundingBox())!.y).toBeLessThan((await section.locator('.packages').boundingBox())!.y);
     // The owner's prices (17 Ekim) with %20 KDV to whole lira (18 Ekim): big and yearly KDV dahil, the service fee + KDV under them.
     const expected = {
@@ -146,7 +146,7 @@ for (const [width, height, name] of [[1280, 900, 'paketler-tablo-masaustu.png'],
     // Kafe Standart's column stands out (tinted).
     const standart = table.getByRole('columnheader', { name: 'Kafe Standart' });
     expect(await standart.evaluate(e => getComputedStyle(e).backgroundColor)).not.toBe(await table.getByRole('columnheader', { name: 'Restoran Pro' }).evaluate(e => getComputedStyle(e).backgroundColor));
-    await expect(matrix.locator('.mx-kural')).toHaveText('Bütün paketlerde: sınırsız cihaz, internet kesilse de çalışma, gece otomatik yedek, ilk 30 gün bütün hizmetler açık.');
+    await expect(matrix.locator('.mx-kural')).toHaveText('Bütün paketlerde: sınırsız cihaz, satışlardan komisyon yok, internet kesilse de çalışma, gece otomatik yedek, ilk 30 gün bütün hizmetler açık.');
     // No sideways page scroll; at 360 px the table fits its box too (short column names).
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const box = matrix.locator('.mx-kutu');
