@@ -64,7 +64,8 @@ export function Campaigns({ products, renew, onSaved, onResults }: { products: P
     {/* The four states, one line each: what the owner reads on every card (11 Ekim, "onaya düşüyor" karışıklığı). */}
     <ul className="campaign-states" aria-label="Kampanya durumları">{STATE_ORDER.map(s => <li key={s}><CampaignStateChip state={s} /><span>{CAMPAIGN_STATES[s].line}</span></li>)}</ul>
     {error && <Notice tone="error">{error}</Notice>}
-    {!data?.campaigns.length && <section className="panel">Henüz kampanya yok.</section>}
+    {/* 19 Ekim: only once the list has come (it showed "Henüz kampanya yok." for a moment while loading). */}
+    {data && !data.campaigns.length && <section className="panel">Henüz kampanya yok.</section>}
     {/* Running ones first, then those still to start and the drafts; finished ones are folded away at the bottom. */}
     <div className="campaign-card-grid">{[...of('active'), ...of('planned').sort(byStart), ...of('draft')].map(card)}</div>
     {ended.length > 0 && <details className="campaign-ended"><summary>Biten kampanyalar ({ended.length})</summary><div className="campaign-card-grid">{ended.map(card)}</div></details>}
@@ -193,7 +194,7 @@ function CampaignEditor({ initial, copy = false, revision, products, categories,
       <Choice label="Kampanya neye uygulansın?" value={scope} options={[['products', 'Seçtiğim ürünler'], ['categories', 'Bütün bir bölüm']]} onChange={setScope} />
       {!byCategory ? <><button type="button" className="btn secondary campaign-pick-btn" onClick={() => void openPicker()}>Menüden seç · {ids.length} ürün</button><p className="step-hint">{ids.map(id => products.find(p => p.id === id)?.name ?? 'Ürün').join(' · ') || 'Menü kartlarından veya çok satanlardan seçim yapın.'}</p>{deal && weightRuleError && <p role="alert" className="form-error">{weightRuleError}</p>}</>
       : <><fieldset className="campaign-categories"><legend>Hangi bölüm? Birden fazla seçebilirsiniz.</legend><div>{categories.map(c => { const on = cats.includes(c), count = published.filter(p => p.category === c).length; return <button type="button" key={c} aria-pressed={on} className={on ? 'selected' : ''} onClick={() => setCats(list => on ? list.filter(n => n !== c) : categories.filter(n => n === c || list.includes(n)))}><span>{c}</span><small>{count} ürün</small></button>; })}</div></fieldset>
-        {cats.length > 0 && <p className="campaign-schedule-summary step-result" role="status">{validDiscount ? offerText : categoriesPlace(cats)} · şu an {covered.length} ürün</p>}
+        {cats.length > 0 && <p className="campaign-schedule-summary step-result" role="status">{validDiscount && offerText ? offerText : categoriesPlace(cats)} · şu an {covered.length} ürün</p>}
         {inCats.length > 0 && <details className="campaign-exclude" open={excludeOpen}><summary>Hariç tut <span className="muted small">(isteğe bağlı) · {inCats.filter(p => excluded.includes(p.id)).length} ürün</span></summary><p className="muted small">Dokunduğunuz ürün bu kampanyaya girmez. Tekrar dokunursanız kampanyaya geri girer.</p><div role="group" aria-label="Hariç tutulacak ürünler">{inCats.map(p => { const out = excluded.includes(p.id); return <button type="button" key={p.id} aria-pressed={out} className={out ? 'excluded' : ''} onClick={() => setExcluded(list => out ? list.filter(id => id !== p.id) : [...list, p.id])}><span>{p.name}</span><small>{out ? 'Hariç' : `#${p.code}`}</small></button>; })}</div></details>}
         {weighedSkipped.length > 0 && <p className="step-hint">{deal ? 'Bu kampanya adet sayar; kiloyla satılan ürünlerde geçerli olmaz:' : 'Adet koşulu kiloyla satılan ürünlere uygulanmaz; bu kampanya onlarda geçerli olmaz:'} {weighedSkipped.map(p => p.name).join(', ')}.</p>}</>}
     </Step>

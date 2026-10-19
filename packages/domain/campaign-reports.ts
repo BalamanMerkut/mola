@@ -42,7 +42,9 @@ export function* campaignReportSteps(s: State, now: Date, span: SpanTotals = sta
     const applied = (recurring ? yield* one(start, end) : during).campaigns.get(campaignKey(c));
     // A category campaign lists what is in its categories now plus everything it actually discounted (a product moved
     // out later keeps its line; one never discounted and no longer in the category has nothing to report).
-    const ids = [...new Set([...(c.categories ? [...campaignProducts(c, s.products).map(p => p.id), ...(applied?.keys() ?? [])] : c.productIds), ...(c.kind === 'gift' ? [c.giftProductId] : [])])];
+    // 19 Ekim: a product not on the menu (published: false) is left out, as in the form and on the card ("3 ürün"), unless it
+    // was discounted (then `applied` keeps it); the report listed every product of the section.
+    const ids = [...new Set([...(c.categories ? [...campaignProducts(c, s.products).filter(p => p.published !== false).map(p => p.id), ...(applied?.keys() ?? [])] : c.productIds), ...(c.kind === 'gift' ? [c.giftProductId] : [])])];
     const products = ids.map(id => {
       const b = beforeSpan.products.get(id), d = during.products.get(id), a = applied?.get(id);
       // Name as last ordered in these windows; a product with no orders here keeps its menu name.
