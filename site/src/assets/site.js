@@ -83,8 +83,9 @@
     var parts = [], chipRow = document.querySelector('.bolumler-cubuk ul'), currentPart = null, chosenPart = null, partScroll = 0;
     partLinks.forEach(function (a) { var t = document.getElementById(a.getAttribute('href').slice(1)); if (t && parts.indexOf(t) < 0) parts.push(t); });
     if (chipRow) swipeRow(chipRow, chipRow.parentNode, 'Önceki bölümler', 'Sonraki bölümler');
+    var drawDots = function () {};
     var markPart = function (t) {
-      if (t === currentPart) return; currentPart = t;
+      if (t === currentPart) return; currentPart = t; drawDots();
       partLinks.forEach(function (a) { if (t && a.getAttribute('href') === '#' + t.id) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
       // Keep the marked chip in sight within its row (only the row moves sideways, never the page).
       var chip = chipRow && chipRow.querySelector('a[aria-current]');
@@ -107,6 +108,58 @@
       window.addEventListener('scrollend', pickPart, { passive: true });
       window.addEventListener('resize', pickPart, { passive: true });
     }
+    // ---- Phones (20 Ekim, sahibin kararı): the chips stay on top; on the left, dot · line · dot for the cards of the part on
+    // screen (its own h3 cards; a part with fewer than three, or more than fourteen, gets none). The dot of the card being read
+    // is marked and its name shows for a moment; a dot takes there. The dots fade once the page stands still; small to the eye,
+    // a finger-sized place to tap. Only while the screen is phone-wide (site.css html.noktali).
+    var phone = window.matchMedia ? window.matchMedia('(max-width: 767px)') : null;
+    var cardsOf = function (part) {
+      return Array.prototype.slice.call(part.querySelectorAll('h3')).filter(function (h) { return h.closest('[data-bolum]') === part && h.offsetParent !== null && h.textContent.trim(); });
+    };
+    var dotParts = parts.filter(function (p) { var n = cardsOf(p).length; return n >= 3 && n <= 14; });
+    if (phone && dotParts.length) {
+      document.documentElement.classList.add('noktali');
+      var rail = document.createElement('nav'), tip = document.createElement('span');
+      rail.className = 'nokta-ray'; rail.setAttribute('aria-label', 'Bu bölümdeki kartlar'); rail.hidden = true;
+      tip.className = 'nokta-ad'; tip.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(rail); document.body.appendChild(tip);
+      var shownPart = null, cards = [], dots = [], activeCard = -1, fade = 0, tipOff = 0, dotFrame = 0;
+      var wake = function () { rail.classList.remove('soluk'); clearTimeout(fade); fade = setTimeout(function () { rail.classList.add('soluk'); }, 1500); };
+      var markDot = function () {
+        dotFrame = 0;
+        if (!shownPart) return;
+        var line = window.innerHeight * 0.36, k = -1;
+        cards.forEach(function (h, i) { if (h.getBoundingClientRect().top <= line) k = i; });
+        if (k === activeCard) return; activeCard = k;
+        dots.forEach(function (d, i) { if (i === k) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+        if (k < 0) return;
+        var r = dots[k].getBoundingClientRect();
+        tip.textContent = cards[k].textContent.trim(); tip.style.top = (r.top + r.height / 2) + 'px'; tip.classList.add('acik');
+        clearTimeout(tipOff); tipOff = setTimeout(function () { tip.classList.remove('acik'); }, 1200);
+      };
+      drawDots = function () {
+        var part = phone.matches && dotParts.indexOf(currentPart) >= 0 ? currentPart : null;
+        if (part === shownPart) return;
+        shownPart = part; activeCard = -1; rail.textContent = ''; dots = []; tip.classList.remove('acik');
+        rail.hidden = !part;
+        if (!part) return;
+        cards = cardsOf(part);
+        cards.forEach(function (h) {
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'nokta'; b.setAttribute('aria-label', h.textContent.trim());
+          b.addEventListener('click', function () {
+            var card = h.closest('article, li, .card');
+            (card && card !== part && part.contains(card) ? card : h).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+          });
+          rail.appendChild(b); dots.push(b);
+        });
+        markDot(); wake();
+      };
+      window.addEventListener('scroll', function () { if (!shownPart) return; wake(); if (!dotFrame) dotFrame = requestAnimationFrame(markDot); }, { passive: true });
+      rail.addEventListener('focusin', wake);
+      if (phone.addEventListener) phone.addEventListener('change', function () { shownPart = undefined; drawDots(); });
+      drawDots();
+    }
+
     partLinks.forEach(function (a) {
       a.addEventListener('click', function (e) {
         if (e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return; // a new tab or window: the browser's own

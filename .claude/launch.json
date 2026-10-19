@@ -48,6 +48,12 @@
       "runtimeExecutable": "cmd.exe",
       "runtimeArgs": ["/c", "npm.cmd run merkez:dev"],
       "port": 4000
+    },
+    {
+      "name": "mola-site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4180", "--directory", "site/dist"],
+      "port": 4180
     }
   ]
 }

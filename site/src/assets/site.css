@@ -251,6 +251,23 @@ html.bolumlu { scroll-padding-top: 140px; }
   .bolumler-ray { position: sticky; top: 104px; max-height: calc(100vh - 128px); overflow-y: auto; scrollbar-width: thin; pointer-events: auto; }
   .bolumler-cubuk { display: none; }
 }
+/* Phones (20 Ekim, site.js): dot · line · dot on the left for the cards of the part on screen, under the chips. The dots are
+ * small, the place to tap is not (44 × 30 px); they fade once the page stands still. The parts move right to make room. */
+.nokta-ray, .nokta-ad { display: none; }
+@media (max-width: 767px) {
+  html.noktali main section[data-bolum] .wrap { padding-left: 34px; }
+  .nokta-ray { display: flex; position: fixed; z-index: 39; left: 0; top: calc(62px + 50vh); transform: translateY(-50%); flex-direction: column; align-items: center; width: 30px; transition: opacity .3s; }
+  .nokta-ray[hidden] { display: none; }
+  .nokta-ray.soluk { opacity: .35; }
+  .nokta { position: relative; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .nokta + .nokta::before { content: ""; position: absolute; bottom: 50%; left: 14px; width: 2px; height: 22px; margin-bottom: 4px; background: var(--line-strong); }
+  .nokta::after { content: ""; position: relative; z-index: 1; width: 8px; height: 8px; border-radius: 50%; background: rgba(22,51,40,.38); transition: width .2s, height .2s, background .2s, box-shadow .2s; }
+  .nokta[aria-current="true"]::after { width: 12px; height: 12px; background: var(--green); box-shadow: 0 0 0 4px rgba(35,76,62,.18); }
+  .nokta:focus-visible { outline-offset: -4px; }
+  .nokta-ad { display: block; position: fixed; z-index: 39; left: 32px; transform: translateY(-50%); max-width: calc(100vw - 48px); padding: 4px 9px; border-radius: 7px; background: var(--green); color: #fff; font: 600 12.5px/1.3 var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .nokta-ad.acik { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .nokta-ray, .nokta::after, .nokta-ad { transition: none; } }
 
 /* ---------- Roles ---------- */
 .roles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }

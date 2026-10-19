@@ -149,6 +149,33 @@ test('Özellikler at 390 px: the chips under the hero stay under the header, swi
   expect(problems).toEqual([]);
 });
 
+// 20 Ekim (sahibin kararı): on a phone the chips stay on top and dots on the left show the cards of the part on screen.
+test('Özellikler at 390 px: dots for the cards of the part on screen (three or more), the card being read marked, a dot takes there; none on wide screens', async ({ page }, info) => {
+  const problems = watch(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${SITE}/ozellikler/`);
+  const rail = page.getByRole('navigation', { name: 'Bu bölümdeki kartlar' });
+  await expect(rail).toBeHidden(); // the hero: no part yet
+  await page.evaluate(() => window.scrollTo(0, document.getElementById('roller')!.getBoundingClientRect().top + scrollY + 200));
+  await expect(rail).toBeVisible();
+  await expect(rail.getByRole('button')).toHaveCount(6);
+  await expect(rail.getByRole('button').first()).toHaveAccessibleName('Garson');
+  // Finger-sized, on the left, never over a card.
+  const dot = await box(rail.getByRole('button').first()), card = await box(page.locator('#roller h3').first().locator('xpath=ancestor::article[1]'));
+  expect(dot.height).toBeGreaterThanOrEqual(30); expect(dot.x + dot.width).toBeLessThanOrEqual(card.x + 1);
+  await rail.getByRole('button', { name: 'Müdür' }).click();
+  await expect(rail.getByRole('button', { name: 'Müdür' })).toHaveAttribute('aria-current', 'true');
+  await shot(page, info, 'gezinme-noktalar-390.png');
+  // Kasa ve stok has two cards: no dots there.
+  await page.evaluate(() => window.scrollTo(0, document.getElementById('kasa-ve-stok')!.getBoundingClientRect().top + scrollY - 200));
+  await expect(rail).toBeHidden();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.evaluate(() => window.scrollTo(0, document.getElementById('roller')!.getBoundingClientRect().top + scrollY + 200));
+  await expect(rail).toBeHidden();
+  expect(problems).toEqual([]);
+});
+
 test('Mola Yardım\'s bubble and button never meet the rail or the chip bar', async ({ browser }) => {
   for (const [width, height, part] of [[1280, 720, '.bolumler-ray'], [390, 700, '.bolumler-cubuk'], [1000, 700, '.bolumler-cubuk']] as const) {
     const page = await browser.newPage({ viewport: { width, height }, reducedMotion: 'reduce' });
