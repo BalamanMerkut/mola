@@ -8,6 +8,7 @@ import { MERKEZ } from './helpers';
  * molayazilim.com.tr → Mola Yardım (site/src/assets/yardim.js, questions from yardim.json): hazır cevaplar, no AI, no request
  * while asking, plain text only, keyboard and phone friendly; the button on every page (the home page too) and its speech
  * bubble once a visit (site.js; page.clock stands in for the 20 s). Also the "Bilgi ve deneme talebi" form without "Masa sayısı".
+ * 19 Ekim: typos (or "Bunu mu demek istediniz?") and "Videoda izleyin" (YouTube in a new tab, answered locally in the test).
  * The site is built into a scratch folder (never site/dist) and served the way Caddy does it (scripts/site-dev.ts, same
  * CSP). Port: E2E_PORT + 43. Screenshots also go to $env:SITE_EKRAN when it is set (e.g. docs/ekran/site).
  */
@@ -164,6 +165,68 @@ test('Mola Yardım: answers "gün sonu" and ASCII "odeme", falls back to Destek,
   await expect(fab).toHaveAttribute('aria-expanded', 'false');
   expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
   expect(await page.context().cookies()).toEqual([]);
+  expect(requests).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
+test('Mola Yardım (390 px, 19 Ekim): a typo still answers, with "Videoda izleyin" opening YouTube in a new tab; in doubt "Bunu mu demek istediniz?"', async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const problems = watch(page);
+  // YouTube is answered here (nothing leaves the test computer); the popup still opens at the address the link names.
+  await page.context().route(/^https:\/\/www\.youtube\.com\//, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>YouTube</title>' }));
+  await page.goto(`${SITE}/indir/`);
+  await page.getByRole('button', { name: 'Mola Yardım' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Mola Yardım' }), box = dialog.getByRole('searchbox', { name: 'Sorunuzu yazın' });
+  const send = async (text: string) => { await box.fill(text); await box.press('Enter'); };
+  const requests: string[] = [];
+  page.on('request', r => requests.push(r.url()));
+
+  // Typos and missing Turkish letters: still the answer, at once.
+  await send('giderr nasl kaydedlr');
+  const answer = dialog.locator('.yardim-cevap').last();
+  await expect(answer.getByRole('heading', { level: 3 })).toHaveText('Ekmek, süt gibi bir gideri nasıl kaydederim?');
+  // The video moment under the text: a clear link, YouTube at 2:54, a new tab, no opener.
+  const video = answer.getByRole('link', { name: /Videoda izleyin: Kasiyer eğitimi · 2:54/ });
+  await expect(video).toBeVisible();
+  await expect(video).toContainText('Gider kaydetme');
+  await expect(video).toHaveAttribute('href', 'https://www.youtube.com/watch?v=n_JDwbQ7peA&t=174s');
+  await expect(video).toHaveAttribute('target', '_blank');
+  await expect(video).toHaveAttribute('rel', 'noopener noreferrer');
+  // Separate from the text: the answer's own paragraph has no link.
+  await expect(answer.locator('p a')).toHaveCount(0);
+  const v = (await video.boundingBox())!;
+  expect(v.height).toBeGreaterThanOrEqual(44); expect(v.x + v.width).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(requests).toEqual([]);
+  await answer.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await shot(page, info, 'yardim-video-telefon.png');
+  const [tab] = await Promise.all([page.waitForEvent('popup'), video.click()]);
+  await expect.poll(() => tab.url()).toBe('https://www.youtube.com/watch?v=n_JDwbQ7peA&t=174s');
+  expect(await tab.evaluate(() => window.opener)).toBeNull();
+  await tab.close();
+  // The panel stays open where it was.
+  await expect(dialog).toBeVisible();
+
+  // The website's own videos: the short introduction for "Mola nedir?".
+  await send('Mola nedir?');
+  await expect(dialog.locator('.yardim-cevap').last().getByRole('link', { name: /Videoda izleyin: Mola’yı 2 dakikada tanıyın · 0:00/ })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=wpMZdS5dPgw&t=0s');
+
+  // Not sure what was meant: two or three questions to choose from, never a wrong answer.
+  requests.length = 0;
+  await send('kurulm');
+  const guess = dialog.locator('.yardim-tahmin').last();
+  await expect(guess).toContainText('Bunu mu demek istediniz?');
+  await expect(dialog.locator('.yardim-bot').last().locator('.yardim-cevap')).toHaveCount(0);
+  const choices = guess.getByRole('button');
+  expect(await choices.count()).toBeGreaterThanOrEqual(2); expect(await choices.count()).toBeLessThanOrEqual(3);
+  await expect(guess.getByRole('button', { name: 'Mola’yı bilgisayara nasıl kurarım?' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.waitForTimeout(300);
+  await shot(page, info, 'yardim-tahmin-telefon.png');
+  await guess.getByRole('button', { name: 'Mola’yı bilgisayara nasıl kurarım?' }).click();
+  await expect(dialog.locator('.yardim-cevap').last().getByRole('heading', { level: 3 })).toHaveText('Mola’yı bilgisayara nasıl kurarım?');
+  await expect(dialog.locator('.yardim-cevap').last().getByRole('link', { name: /Videoda izleyin: Kurulum · 0:08/ })).toBeVisible();
   expect(requests).toEqual([]);
   expect(problems).toEqual([]);
 });

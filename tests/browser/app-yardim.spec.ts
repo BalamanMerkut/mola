@@ -11,7 +11,9 @@ import { ensureSetup, openView } from './helpers';
  * - the waiter (phone) and the kitchen (its bar): only the eagle, no hint, their own answers (a refund is the cashier's), no
  *   floating button, nothing that pops up by itself, "İşletme sahibinize sorun." when nothing fits;
  * - the topic row: ‹ › for a mouse when it overflows;
- * - asking sends nothing: no request but the screen's usual polling, and never the typed words.
+ * - asking sends nothing: no request but the screen's usual polling, and never the typed words;
+ * - 19 Ekim (the cashier): a typo still answers; "Videoda izleyin" (the role's own training video at that moment) opens YouTube
+ *   in a new window; in doubt "Bunu mu demek istediniz?" (-video.png, -tahmin.png).
  * The hint is off on the test devices (playwright.config.ts: mola-yardim-ipucu = off); the hint test starts with an empty one.
  * Screens also go to $env:KAFE_EKRAN (e.g. docs/ekran/kafe): mola-yardim-destek.png, -sahip.png, -ust-cubuk.png, -ipucu.png,
  * -garson.png, -mutfak.png.
@@ -149,6 +151,51 @@ test('the owner: the eagle "Yardım" pill and Destek → Yardım, a conversation
   await page.keyboard.press('Escape');
   await expect(sheet(page)).toHaveCount(0);
   await expect(help).toBeFocused();
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
+test('the cashier (19 Ekim): a typo still answers, with the cashier\'s own training video at that moment in a new window; in doubt "Bunu mu demek istediniz?"', async ({ browser }, info) => {
+  const page = await signedIn(browser, 'kasiyer', { width: 1280, height: 860 });
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  // YouTube is answered here (nothing leaves the test computer); the new window still opens at the address the link names.
+  await page.context().route(/^https:\/\/www\.youtube\.com\//, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>YouTube</title>' }));
+  await page.locator('header.topbar').getByRole('button', { name: 'Mola Yardım' }).click();
+  await expect(sheet(page)).toBeVisible();
+  const net = watchRequests(page, ['giderr', 'kaydedlr', 'vardya']);
+  await ask(page, 'giderr nasl kaydedlr');
+  await expect(lastAnswer(page).locator('h3')).toHaveText('Ekmek, süt gibi bir gideri nasıl kaydederim?');
+  const video = lastAnswer(page).getByRole('link', { name: /Videoda izleyin: Kasiyer eğitimi · 2:54/ });
+  await expect(video).toBeVisible();
+  await expect(video).toContainText('Gider kaydetme');
+  await expect(video).toHaveAttribute('href', 'https://www.youtube.com/watch?v=n_JDwbQ7peA&t=174s');
+  await expect(video).toHaveAttribute('target', '_blank');
+  await expect(video).toHaveAttribute('rel', 'noopener noreferrer');
+  await expect(lastAnswer(page).locator('p a')).toHaveCount(0);
+  await page.waitForTimeout(300);
+  await shot(page, info, 'mola-yardim-video.png');
+  const [tab] = await Promise.all([page.waitForEvent('popup'), video.click()]);
+  await expect.poll(() => tab.url()).toBe('https://www.youtube.com/watch?v=n_JDwbQ7peA&t=174s');
+  await tab.close();
+  await expect(sheet(page)).toBeVisible();
+  // "Eğitim videoları nerede?": the cashier's own training.
+  await ask(page, 'egitim videosu');
+  await expect(lastAnswer(page).locator('h3')).toHaveText('Eğitim videoları nerede?');
+  await expect(lastAnswer(page).getByRole('link', { name: /Videoda izleyin: Kasiyer eğitimi · 0:00/ })).toHaveCount(1);
+  await expect(lastAnswer(page).locator('.help-video')).toHaveCount(1);
+  // Not sure what was meant: the closest questions to choose from; one tap answers.
+  await ask(page, 'vardya');
+  const guess = sheet(page).locator('.help-guess').last();
+  await expect(guess).toContainText('Bunu mu demek istediniz?');
+  const choices = guess.getByRole('button');
+  expect(await choices.count()).toBeGreaterThanOrEqual(2); expect(await choices.count()).toBeLessThanOrEqual(3);
+  await page.waitForTimeout(300);
+  await shot(page, info, 'mola-yardim-tahmin.png');
+  await guess.getByRole('button', { name: 'Vardiyayı nasıl başlatır ve bitiririm?' }).click();
+  await expect(lastAnswer(page).locator('h3')).toHaveText('Vardiyayı nasıl başlatır ve bitiririm?');
+  await page.waitForTimeout(1000);
+  expect(net.bad.filter(u => !u.includes('youtube.com'))).toEqual([]);
   expect(errors).toEqual([]);
   await page.context().close();
 });

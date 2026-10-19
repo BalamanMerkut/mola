@@ -21,7 +21,8 @@
       "kitle": ["site"],
       "soru": "Mola ne işe yarar?",
       "cevap": ["Mola, kafe ve restoranlar için adisyon ve QR menü programıdır. Masadaki QR menüden mutfağa, kasadan rapora kadar işi tek yerde toplar."],
-      "anahtar": ["mola nedir", "ne işe yarar", "adisyon", "adisyon programı", "pos", "kafe programı", "restoran programı", "neler yapar", "özellikler"]
+      "anahtar": ["mola nedir", "ne işe yarar", "adisyon", "adisyon programı", "pos", "kafe programı", "restoran programı", "neler yapar", "özellikler"],
+      "video": [{ "id": "wpMZdS5dPgw", "t": 0, "baslik": "Mola’yı 2 dakikada tanıyın · Kısa tanıtım" }]
     },
     {
       "id": "fiyat",
@@ -46,7 +47,8 @@
       "soru": "Ücretsiz deneme nasıl başlar?",
       "cevap": ["Destek ve İletişim’deki kısa formu doldurun ya da programı indirip kurun. Başvurunuz onaylanınca 30 günlük ücretsiz deneme başlar."],
       "anahtar": ["deneme", "ücretsiz", "ücretsiz deneme", "30 gün", "denemek", "demo", "başvuru", "nasıl başlarım", "deneme süresi"],
-      "ilgili": ["kurulum-kim", "kurulum-indir"]
+      "ilgili": ["kurulum-kim", "kurulum-indir"],
+      "video": [{ "id": "d49M0PuJO94", "t": 62, "baslik": "Kurulum · Başvuru ve onay" }]
     },
     {
       "id": "internetsiz",
@@ -54,7 +56,8 @@
       "kitle": ["site"],
       "soru": "İnternet olmazsa çalışır mı?",
       "cevap": ["Evet. Mola kafenizin kendi bilgisayarında çalışır; internet kesilse de sipariş, mutfak, kasa ve yazıcı çalışır. QR’dan sipariş ve telefondan uzaktan bakmak internet gelince devam eder."],
-      "anahtar": ["internet", "internetsiz", "internet olmazsa", "internet kesilirse", "çevrimdışı", "offline", "bağlantı", "wifi"]
+      "anahtar": ["internet", "internetsiz", "internet olmazsa", "internet kesilirse", "çevrimdışı", "offline", "bağlantı", "wifi"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 119, "baslik": "Uzaktan erişim ve güvenlik · İnternet kesilince" }]
     },
     {
       "id": "veriler",
@@ -62,7 +65,8 @@
       "kitle": ["site"],
       "soru": "Verilerim nerede durur?",
       "cevap": ["Verileriniz kafenizdeki bilgisayarda durur. Yedekler aynı bilgisayarda ve isterseniz bir USB bellekte saklanır; bulut yedek hizmetinde de uçtan uca şifreli bir kopya tutulur."],
-      "anahtar": ["veri", "veriler", "verilerim", "nerede durur", "bulut", "güvenlik", "kvkk", "gizlilik", "kim görür", "şifreli"]
+      "anahtar": ["veri", "veriler", "verilerim", "nerede durur", "bulut", "güvenlik", "kvkk", "gizlilik", "kim görür", "şifreli"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 219, "baslik": "Uzaktan erişim ve güvenlik · Yedek ve kurtarma kodu" }]
     },
     {
       "id": "kurulum-kim",
@@ -70,7 +74,8 @@
       "kitle": ["site"],
       "soru": "Kurulumu kim yapar?",
       "cevap": ["Kurulumu birkaç dakikada kendiniz yapabilirsiniz. İsterseniz Mola ekibi kurulumda yanınızda olur; Elazığ’da yerinde destek veriyoruz."],
-      "anahtar": ["kurulumu kim yapar", "kurulum", "kurulum desteği", "yerinde destek", "teknik servis", "elazığ", "kim kuracak", "eğitim"]
+      "anahtar": ["kurulumu kim yapar", "kurulum", "kurulum desteği", "yerinde destek", "teknik servis", "elazığ", "kim kuracak", "eğitim"],
+      "video": [{ "id": "d49M0PuJO94", "t": 0, "baslik": "Kurulum · İndirme ve kurulum" }]
     },
     {
       "id": "cihazlar",
@@ -86,7 +91,8 @@
       "kitle": ["site"],
       "soru": "Yazar kasanın yerine geçer mi?",
       "cevap": ["Hayır. Mola bir adisyon programıdır; mali belge kesmez ve yazar kasanın yerine geçmez. Yasal fişi yazar kasanız keser; Mola her ödemede yazar kasaya girilecek tutarı gösterebilir."],
-      "anahtar": ["yazar kasa", "yazarkasa", "ökc", "e-adisyon", "mali fiş", "yasal fiş", "fatura", "fiş keser mi", "yerine geçer mi"]
+      "anahtar": ["yazar kasa", "yazarkasa", "ökc", "e-adisyon", "mali fiş", "yasal fiş", "fatura", "fiş keser mi", "yerine geçer mi"],
+      "video": [{ "id": "2lbq7fz6BXs", "t": 157, "baslik": "İşletme sahibi ilk gün · Yazar kasa yardımcısı" }]
     },
 
     {
@@ -99,7 +105,8 @@
         "Mac ve Linux’ta klasördeki BENIOKU.txt’yi izleyin."
       ],
       "anahtar": ["kurulum", "kur", "kurmak", "yükleme", "yüklemek", "yukle", "indir", "indirme", "setup", "install", "exe", "zip", "windows", "mac", "linux", "program kurma", "bilgisayara kurma"],
-      "ilgili": ["smartscreen", "etkinlestirme", "ilk-gun"]
+      "ilgili": ["smartscreen", "etkinlestirme", "ilk-gun"],
+      "video": [{ "id": "d49M0PuJO94", "t": 8, "baslik": "Kurulum · İndirme ve kurulum" }]
     },
     {
       "id": "smartscreen",
@@ -107,7 +114,8 @@
       "kitle": ["site", "owner"],
       "soru": "Windows “Bilgisayarınız korundu” diyor.",
       "cevap": ["Dosyayı molayazilim.com.tr/indir/ sayfasından indirdiyseniz “Ek bilgi”ye, sonra “Yine de çalıştır”a tıklayın. Emin değilseniz bize ulaşın."],
-      "anahtar": ["bilgisayarınız korundu", "smartscreen", "smart screen", "windows uyarı", "yine de çalıştır", "ek bilgi", "virüs", "güvenlik uyarısı", "kurulum açılmıyor", "engellendi"]
+      "anahtar": ["bilgisayarınız korundu", "smartscreen", "smart screen", "windows uyarı", "yine de çalıştır", "ek bilgi", "virüs", "güvenlik uyarısı", "kurulum açılmıyor", "engellendi"],
+      "video": [{ "id": "d49M0PuJO94", "t": 38, "baslik": "Kurulum · “Bilgisayarınız korundu” uyarısı" }]
     },
     {
       "id": "etkinlestirme",
@@ -115,7 +123,8 @@
       "kitle": ["site", "owner"],
       "soru": "İlk açılışta “Mola’yı etkinleştir” ekranı geldi.",
       "cevap": ["Mola ekibi kod verdiyse “Etkinleştirme kodum var”ı seçip kodu yazın. Kodunuz yoksa “Kodum yok, başvuru yapacağım” deyin ve formu doldurun; onaylanınca deneme başlar."],
-      "anahtar": ["etkinleştir", "etkinleştirme", "etkinlestirme kodu", "aktivasyon", "aktive", "lisans kodu", "kod", "başvuru", "basvuru", "ilk açılış", "kodum yok", "deneme başlat"]
+      "anahtar": ["etkinleştir", "etkinleştirme", "etkinlestirme kodu", "aktivasyon", "aktive", "lisans kodu", "kod", "başvuru", "basvuru", "ilk açılış", "kodum yok", "deneme başlat"],
+      "video": [{ "id": "d49M0PuJO94", "t": 62, "baslik": "Kurulum · Mola’yı etkinleştir ve başvuru" }]
     },
     {
       "id": "ilk-gun",
@@ -126,7 +135,8 @@
         ["Sahip hesabınızı açın, kurtarma kodunu kâğıda yazın.", "Menü yönetimi’nde ürünleri ve fiyatları düzeltin; Personel → Çalışanlar’da herkese hesap açın.", "Ayarlar → Cihazlar’da yazıcıları ve kafe içi cihazları bağlayın.", "Ayarlar → Masalar ve QR’dan QR kodlarını basın ve bir deneme siparişi verin."]
       ],
       "anahtar": ["ilk gün", "ilk adımlar", "ilk açılış", "başlangıç", "baslarken", "yeni kurdum", "nereden başlamalı", "kurulumdan sonra", "sırayla", "yapılacaklar", "ilk kurulum"],
-      "ilgili": ["kurtarma-kodu", "urun-ekle", "qr-bas"]
+      "ilgili": ["kurtarma-kodu", "urun-ekle", "qr-bas"],
+      "video": [{ "id": "2lbq7fz6BXs", "t": 0, "baslik": "İşletme sahibi ilk gün · Menü, çalışanlar ve ayarlar", "kitle": ["owner"] }, { "id": "d49M0PuJO94", "t": 102, "baslik": "Kurulum · Sahip hesabı ve ilk kurulum" }]
     },
     {
       "id": "kurtarma-kodu",
@@ -135,7 +145,8 @@
       "soru": "Kurtarma kodu nedir, nerede saklamalıyım?",
       "cevap": ["Kurtarma kodu verilerinizin anahtarıdır; kurulumda bir kez gösterilir. Kâğıda yazıp bilgisayardan ve yedek belleğinden ayrı saklayın. Mola ekibi bu kodu ya da şifrenizi asla istemez."],
       "anahtar": ["kurtarma kodu", "kurtarma", "recovery", "anahtar", "kod kaybettim", "kodu sakla", "veri anahtarı", "kurtarma kodunu kaybettim"],
-      "ilgili": ["yeni-bilgisayar", "sahip-sifre"]
+      "ilgili": ["yeni-bilgisayar", "sahip-sifre"],
+      "video": [{ "id": "d49M0PuJO94", "t": 115, "baslik": "Kurulum · Kurtarma kodu" }, { "id": "WYMVLdIAsVs", "t": 245, "baslik": "Uzaktan erişim ve güvenlik · Kurtarma kodu" }]
     },
     {
       "id": "gorunum",
@@ -143,7 +154,8 @@
       "kitle": ["site", "owner"],
       "soru": "Kafemin adını, logosunu ve rengini nasıl değiştiririm?",
       "cevap": ["Ayarlar → İşletme → Görünüm’den adı, logoyu ve rengi değiştirin. Kaydedince QR menüye ve ekranlara hemen gelir."],
-      "anahtar": ["görünüm", "logo", "renk", "renk paleti", "tema", "işletme adı", "kafe adı", "isim değiştir", "karşılama yazısı", "renkler", "marka"]
+      "anahtar": ["görünüm", "logo", "renk", "renk paleti", "tema", "işletme adı", "kafe adı", "isim değiştir", "karşılama yazısı", "renkler", "marka"],
+      "video": [{ "id": "2lbq7fz6BXs", "t": 98, "baslik": "İşletme sahibi ilk gün · Görünüm: ad, logo ve renk" }]
     },
     {
       "id": "pakette-yok",
@@ -163,7 +175,8 @@
         ["“Sipariş al”a dokunun, üstten masayı seçin.", "Ürünün yanındaki +’ya basın.", "İsterseniz sepete not yazın (“az şekerli”).", "“Gönder”e basın; sipariş mutfağa gider."]
       ],
       "anahtar": ["sipariş", "sipariş al", "sipariş alma", "sparis", "siparis girme", "adisyon", "garson", "masaya sipariş", "ürün ekle sepete", "not ekle", "az şekerli", "paket yapılsın", "gönder"],
-      "ilgili": ["siparis-degistir", "masasiz"]
+      "ilgili": ["siparis-degistir", "masasiz"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 46, "baslik": "Garson eğitimi · Sipariş alma" }]
     },
     {
       "id": "siparis-degistir",
@@ -171,7 +184,8 @@
       "kitle": ["site", "owner", "manager", "waiter"],
       "soru": "Siparişi nasıl değiştirir ya da iptal ederim?",
       "cevap": ["Masaya dokunun, siparişin altındaki “Değiştir”e basın ve “Değişikliği kaydet” deyin. Mutfak başladıysa ürünü “İptal et” ile çıkarıp yenisini girin."],
-      "anahtar": ["iptal", "sipariş iptal", "değiştir", "degistir", "fikrini değiştirdi", "yanlış sipariş", "ürün çıkar", "siparişi sil", "düzelt", "vazgeçti"]
+      "anahtar": ["iptal", "sipariş iptal", "değiştir", "degistir", "fikrini değiştirdi", "yanlış sipariş", "ürün çıkar", "siparişi sil", "düzelt", "vazgeçti"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 37, "baslik": "Müdür eğitimi · Sipariş iptali" }]
     },
     {
       "id": "iptal-kasiyer",
@@ -187,7 +201,8 @@
       "kitle": ["site", "owner", "manager", "cashier", "waiter"],
       "soru": "Masayı nasıl taşırım ya da birleştiririm?",
       "cevap": ["Masaya dokunun, “Taşı / birleştir”e basın ve yeni masayı seçin. İki masanın hesabını tek yapmak için “Hesapları birleştir” deyin."],
-      "anahtar": ["masa taşı", "taşıma", "tasi", "birleştir", "masa birleştirme", "hesap birleştir", "masa değiştir", "başka masaya geçti", "iki masa"]
+      "anahtar": ["masa taşı", "taşıma", "tasi", "birleştir", "masa birleştirme", "hesap birleştir", "masa değiştir", "başka masaya geçti", "iki masa"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 145, "baslik": "Garson eğitimi · Masa taşıma ve birleştirme" }]
     },
     {
       "id": "masasiz",
@@ -197,7 +212,8 @@
       "cevap": [
         ["Sipariş al’da “Masasız sipariş”i seçin, müşterinin adını yazın.", "Ürünleri ekleyip gönderin.", "Siparişi verince “Teslim edildi”ye basın."]
       ],
-      "anahtar": ["al götür", "al gotur", "masasız", "masasiz", "paket", "gel al", "takeaway", "tezgah", "masa yok", "dışarı satış", "sonra öde"]
+      "anahtar": ["al götür", "al gotur", "masasız", "masasiz", "paket", "gel al", "takeaway", "tezgah", "masa yok", "dışarı satış", "sonra öde"],
+      "video": [{ "id": "n_JDwbQ7peA", "t": 109, "baslik": "Kasiyer eğitimi · Masasız satış" }]
     },
     {
       "id": "qr-onay",
@@ -206,7 +222,8 @@
       "soru": "QR siparişi onay bekliyor, ne yapmalıyım?",
       "cevap": ["Sipariş doğruysa “Onayla ve mutfağa gönder”e, yanlışsa “Reddet”e basın."],
       "anahtar": ["onay", "onay bekliyor", "qr siparişi", "qr onay", "onayla", "reddet", "müşteri siparişi", "garson onayı"],
-      "ilgili": ["qr-otomatik-onay"]
+      "ilgili": ["qr-otomatik-onay"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 88, "baslik": "Garson eğitimi · QR siparişi onayı", "kitle": ["manager", "waiter", "kitchen"] }, { "id": "GXqUnXGY5vo", "t": 93, "baslik": "QR menü ve QR sipariş · Ayar: garson onayı", "kitle": ["site", "owner"] }]
     },
     {
       "id": "qr-otomatik-onay",
@@ -214,7 +231,8 @@
       "kitle": ["site", "owner"],
       "soru": "QR siparişleri onaysız mutfağa gitsin istiyorum.",
       "cevap": ["Ayarlar → Sipariş ve mutfak’tan QR siparişlerini otomatik onaya alın."],
-      "anahtar": ["otomatik onay", "onaysız", "onay istemiyorum", "qr onay kapat", "doğrudan mutfağa", "sipariş ve onay"]
+      "anahtar": ["otomatik onay", "onaysız", "onay istemiyorum", "qr onay kapat", "doğrudan mutfağa", "sipariş ve onay"],
+      "video": [{ "id": "GXqUnXGY5vo", "t": 93, "baslik": "QR menü ve QR sipariş · Ayar: garson onayı" }]
     },
     {
       "id": "garson-cagri",
@@ -222,7 +240,8 @@
       "kitle": ["site", "owner", "manager", "cashier", "waiter"],
       "soru": "Müşteri garson çağırdı ya da hesabı istedi.",
       "cevap": ["Üstte “Masa 15 · Garson çağırıyor” ya da “Hesap istiyor” şeridi çıkar. Masaya gidin ve “Tamam”a basın."],
-      "anahtar": ["garson çağır", "garson çağırıyor", "çağrı", "çağırdı", "hesap istiyor", "hesabı iste", "şerit", "zil", "tamam"]
+      "anahtar": ["garson çağır", "garson çağırıyor", "çağrı", "çağırdı", "hesap istiyor", "hesabı iste", "şerit", "zil", "tamam"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 101, "baslik": "Garson eğitimi · Garson çağrısı", "kitle": ["manager", "waiter"] }, { "id": "n_JDwbQ7peA", "t": 53, "baslik": "Kasiyer eğitimi · Hesap isteği", "kitle": ["cashier"] }, { "id": "GXqUnXGY5vo", "t": 170, "baslik": "QR menü ve QR sipariş · Garson çağırma ve hesap isteme", "kitle": ["site", "owner", "cashier"] }]
     },
     {
       "id": "garson-uyarilari",
@@ -232,7 +251,8 @@
       "cevap": [
         ["“Masa 3 · #5 hazır”: siparişi götürün, “Teslim edildi”ye basın.", "“45 dakikadır yeni sipariş yok”: masaya uğrayın, “Gittim”e basın.", "“QR siparişleri kapalı”: siparişi siz alın."]
       ],
-      "anahtar": ["uyarı", "bildirim", "hazır", "titredi", "telefon titriyor", "45 dakika", "teslim edildi", "gittim", "servise hazır", "qr kapalı"]
+      "anahtar": ["uyarı", "bildirim", "hazır", "titredi", "telefon titriyor", "45 dakika", "teslim edildi", "gittim", "servise hazır", "qr kapalı"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 111, "baslik": "Garson eğitimi · Servise hazır ve teslim" }]
     },
     {
       "id": "servise-hazir",
@@ -240,7 +260,8 @@
       "kitle": ["waiter"],
       "soru": "Hazır siparişleri nerede görürüm?",
       "cevap": ["Alttaki “Servise hazır”da size ait hazır siparişler durur. Masaya götürünce “Teslim edildi”ye basın."],
-      "anahtar": ["servise hazır", "hazır sipariş", "hazır", "teslim", "teslim edildi", "götür", "servis"]
+      "anahtar": ["servise hazır", "hazır sipariş", "hazır", "teslim", "teslim edildi", "götür", "servis"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 111, "baslik": "Garson eğitimi · Servise hazır ve teslim" }]
     },
     {
       "id": "qr-kapali-garson",
@@ -248,7 +269,8 @@
       "kitle": ["waiter", "kitchen"],
       "soru": "“QR siparişleri kapalı” yazıyor.",
       "cevap": ["Bu sürede müşterinin siparişini garson alır. Yeniden açmak için kasiyere, müdüre ya da işletme sahibine söyleyin."],
-      "anahtar": ["qr kapalı", "qr siparişleri kapalı", "sipariş almıyoruz", "qr durdu", "siparişleri aç", "sarı satır"]
+      "anahtar": ["qr kapalı", "qr siparişleri kapalı", "sipariş almıyoruz", "qr durdu", "siparişleri aç", "sarı satır"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 127, "baslik": "Müdür eğitimi · QR siparişlerini durdurma" }]
     },
     {
       "id": "oturum-kapandi",
@@ -256,7 +278,8 @@
       "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
       "soru": "Sabah oturumum kapanmış, neden?",
       "cevap": ["Oturumlar her gün 05:00’te kapanır. Kendi kullanıcı adınız ve şifrenizle yeniden girin; sepetteki ürünler kaybolmaz."],
-      "anahtar": ["oturum kapandı", "çıkış yaptı", "giriş istiyor", "sabah giriş", "05:00", "oturum", "atıldım", "yeniden giriş", "login"]
+      "anahtar": ["oturum kapandı", "çıkış yaptı", "giriş istiyor", "sabah giriş", "05:00", "oturum", "atıldım", "yeniden giriş", "login"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 194, "baslik": "Uzaktan erişim ve güvenlik · Açık oturumlar", "kitle": ["site", "owner", "manager"] }]
     },
     {
       "id": "masa-ekle",
@@ -264,7 +287,8 @@
       "kitle": ["site", "owner"],
       "soru": "Masa nasıl eklenir ya da çıkarılır?",
       "cevap": ["Masalar ekranındaki “Masa ekle” ve “Masa çıkar”ı kullanın; bölümleri (İç, Bahçe) Ayarlar → Masalar ve QR’da düzenleyin. Yeni masanın QR kodunu basmayı unutmayın."],
-      "anahtar": ["masa ekle", "masa ekleme", "masa çıkar", "masa sil", "yeni masa", "bölüm", "bahçe", "salon", "masa sayısı", "geçici masa", "etkinlik"]
+      "anahtar": ["masa ekle", "masa ekleme", "masa çıkar", "masa sil", "yeni masa", "bölüm", "bahçe", "salon", "masa sayısı", "geçici masa", "etkinlik"],
+      "video": [{ "id": "2lbq7fz6BXs", "t": 112, "baslik": "İşletme sahibi ilk gün · Masalar ve QR" }]
     },
 
     {
@@ -277,7 +301,8 @@
         "10 dakikayı geçen kart turuncu, 20 dakikayı geçen kırmızı olur."
       ],
       "anahtar": ["mutfak", "mutfak ekranı", "mutfak tableti", "hazır", "hazırla", "hazırlamaya başla", "geri al", "kart", "turuncu", "kırmızı", "bekleyen sipariş", "aşçı", "servis"],
-      "ilgili": ["mutfak-iptal", "mutfak-ses", "degistirme-suresi"]
+      "ilgili": ["mutfak-iptal", "mutfak-ses", "degistirme-suresi"],
+      "video": [{ "id": "wpMZdS5dPgw", "t": 26, "baslik": "Mola’yı 2 dakikada tanıyın · Mutfak, garson ve kasa", "kitle": ["site"] }, { "id": "H5iJWKpwtBY", "t": 27, "baslik": "Mutfak eğitimi · Mutfak panosu" }]
     },
     {
       "id": "mutfak-iptal",
@@ -285,7 +310,8 @@
       "kitle": ["site", "owner", "manager", "kitchen"],
       "soru": "Mutfakta iptal ve değişiklik nasıl görünür?",
       "cevap": ["İptal edilen siparişte kırmızı “İPTAL”, değişen üründe turuncu “Değişti” satırı çıkar. Müşteri iptal isterse kartta “İptali onayla” çıkar; kartın altındaki “İptal et” ile siz de iptal edebilirsiniz."],
-      "anahtar": ["iptal", "mutfak iptal", "iptal şeridi", "değişti", "değişiklik", "iptali onayla", "iptal talebi", "müşteri iptal istiyor", "iptal et"]
+      "anahtar": ["iptal", "mutfak iptal", "iptal şeridi", "değişti", "değişiklik", "iptali onayla", "iptal talebi", "müşteri iptal istiyor", "iptal et"],
+      "video": [{ "id": "H5iJWKpwtBY", "t": 99, "baslik": "Mutfak eğitimi · Değişiklik ve iptal" }]
     },
     {
       "id": "degistirme-suresi",
@@ -294,7 +320,8 @@
       "soru": "QR siparişi mutfak ekranına neden hemen düşmüyor?",
       "cevap": ["Müşterinin değiştirme süresi açıksa sipariş bu süre bitince mutfak ekranına düşer; ses o an çalar, fiş de o an basılır. Bu sırada müşteri siparişini değiştirebilir ya da iptal edebilir, garson siparişi hemen görür. Süreyi işletme sahibi Ayarlar → Sipariş ve mutfak → Sipariş ve onay’da açıp kapatır; açınca 30 saniyeyle başlar."],
       "anahtar": ["değiştirme süresi", "değişiklik süresi", "müşteri değiştirebilir", "sipariş mutfağa düşmedi", "mutfağa gelmedi", "geç düşüyor", "geç geldi", "saniye", "bekleme süresi", "qr siparişi mutfakta yok", "sipariş görünmüyor"],
-      "ilgili": ["mutfak-ekran", "qr-onay"]
+      "ilgili": ["mutfak-ekran", "qr-onay"],
+      "video": [{ "id": "H5iJWKpwtBY", "t": 81, "baslik": "Mutfak eğitimi · QR siparişleri", "kitle": ["kitchen"] }, { "id": "GXqUnXGY5vo", "t": 40, "baslik": "QR menü ve QR sipariş · Ayar: sipariş değiştirme süresi" }]
     },
     {
       "id": "fis-modu",
@@ -322,7 +349,8 @@
       "kitle": ["site", "owner", "manager", "kitchen"],
       "soru": "Mutfak tabletinde ses gelmiyor ya da ekran kararıyor.",
       "cevap": ["“Ses kapalı · açmak için dokunun” yazısına dokunun ve tabletin kendi sesini açın. Ekran kararıyorsa “Ekranı açık tut”u açın ve tableti şarjda tutun."],
-      "anahtar": ["ses", "ses yok", "ses gelmiyor", "sessiz", "zil sesi", "kararıyor", "ekran kapanıyor", "uyku", "ekranı açık tut", "şarj", "bildirim sesi"]
+      "anahtar": ["ses", "ses yok", "ses gelmiyor", "sessiz", "zil sesi", "kararıyor", "ekran kapanıyor", "uyku", "ekranı açık tut", "şarj", "bildirim sesi"],
+      "video": [{ "id": "H5iJWKpwtBY", "t": 19, "baslik": "Mutfak eğitimi · Ekran ve sipariş sesi" }]
     },
     {
       "id": "fis-cikmiyor",
@@ -343,7 +371,8 @@
       "soru": "Kasa açılışı nasıl yapılır?",
       "cevap": ["Sabah ilk girişte “Kasa açılışı” çıkar: kasadaki nakdi sayın, yazın ve “Açılışı kaydet”e basın. Vardiya değişiminde devralan kişi “Vardiya devrini al” ile sayar."],
       "anahtar": ["kasa açılışı", "kasa aç", "kasa acma", "açılış", "sabah", "kasa sayımı", "devir", "vardiya devri", "nakit sayımı", "açılışı kaydet"],
-      "ilgili": ["gun-sonu"]
+      "ilgili": ["gun-sonu"],
+      "video": [{ "id": "n_JDwbQ7peA", "t": 19, "baslik": "Kasiyer eğitimi · Kasa açılışı" }]
     },
     {
       "id": "odeme-al",
@@ -354,7 +383,8 @@
         ["Masaya dokunun, “Ödeme al”a basın.", "Tamamını, bir kısmını ya da ürün seçerek ödemeyi seçin.", "“Nakit” ya da “Kart”ı seçin; nakitte para üstü görünür.", "“Ödemeyi kaydet”e basın."]
       ],
       "anahtar": ["ödeme", "ödeme al", "ödeme alma", "odeme", "hesap", "hesap kapat", "hesap kapatma", "nakit", "kart", "kredi kartı", "para üstü", "bahşiş", "tahsilat", "hesap öde"],
-      "ilgili": ["hesap-bol", "iade"]
+      "ilgili": ["hesap-bol", "iade"],
+      "video": [{ "id": "wpMZdS5dPgw", "t": 43, "baslik": "Mola’yı 2 dakikada tanıyın · Kasada ödeme", "kitle": ["site"] }, { "id": "n_JDwbQ7peA", "t": 31, "baslik": "Kasiyer eğitimi · Nakit ve kart ödeme" }]
     },
     {
       "id": "odeme-garson",
@@ -362,7 +392,8 @@
       "kitle": ["waiter", "kitchen"],
       "soru": "Müşteri ödemek istiyor.",
       "cevap": ["Ödemeyi kasiyer alır. Müşteriyi kasaya yönlendirin ya da kasiyere hangi masa olduğunu söyleyin."],
-      "anahtar": ["ödeme", "ödeme al", "hesap", "hesap kapat", "nakit", "kart", "tahsilat", "para"]
+      "anahtar": ["ödeme", "ödeme al", "hesap", "hesap kapat", "nakit", "kart", "tahsilat", "para"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 161, "baslik": "Garson eğitimi · Hesap ve temizlik", "kitle": ["waiter"] }]
     },
     {
       "id": "hesap-bol",
@@ -370,7 +401,8 @@
       "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "Hesabı nasıl bölerim?",
       "cevap": ["“Ödeme al”da tamamı yerine bir kısmını ya da ürün seçerek ödemeyi seçin. Her kişinin payını ayrı kaydedin; son ödemede masa kapanır."],
-      "anahtar": ["hesap böl", "hesap bölme", "hesabi bol", "ayrı ödeme", "bölünmüş", "kişi başı", "parçalı ödeme", "yarısı nakit", "ürün seçerek", "alman usulü"]
+      "anahtar": ["hesap böl", "hesap bölme", "hesabi bol", "ayrı ödeme", "bölünmüş", "kişi başı", "parçalı ödeme", "yarısı nakit", "ürün seçerek", "alman usulü"],
+      "video": [{ "id": "n_JDwbQ7peA", "t": 75, "baslik": "Kasiyer eğitimi · Hesap bölme ve kısmi ödeme" }]
     },
     {
       "id": "gun-sonu",
@@ -381,7 +413,8 @@
         ["Kasa çipinden “Gün sonu”na basın.", "Kasadaki nakdi sayıp “Sayımı kaydet” deyin.", "Yazar kasa yardımcısı açıksa Z raporu toplamını yazın.", "“Kapanışı tamamla”ya basın."]
       ],
       "anahtar": ["gün sonu", "gunsonu", "gün sonu al", "kasa kapat", "kasa kapanışı", "kapanış", "z raporu", "akşam", "günü kapat", "kapanışı tamamla", "sayım", "end of day"],
-      "ilgili": ["kasa-acilis", "qr-durdur"]
+      "ilgili": ["kasa-acilis", "qr-durdur"],
+      "video": [{ "id": "n_JDwbQ7peA", "t": 190, "baslik": "Kasiyer eğitimi · Gün sonu" }]
     },
     {
       "id": "iade",
@@ -390,7 +423,8 @@
       "soru": "Müşteriye iade nasıl yapılır?",
       "cevap": ["Kasa çipinden “İade”ye basın, ödemeyi seçin, ürünleri ve nedeni işaretleyin. Kasiyerin sınırını aşan iade işletme sahibine sorulur."],
       "anahtar": ["iade", "para iadesi", "geri ödeme", "iade et", "iade sınırı", "refund", "ürün iadesi", "müşteri geri istedi"],
-      "ilgili": ["odeme-turu-duzelt"]
+      "ilgili": ["odeme-turu-duzelt"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 99, "baslik": "Müdür eğitimi · Kasiyerin iade isteği", "kitle": ["owner", "manager"] }, { "id": "n_JDwbQ7peA", "t": 144, "baslik": "Kasiyer eğitimi · İade" }]
     },
     {
       "id": "iade-garson",
@@ -423,7 +457,8 @@
       "soru": "Ekmek, süt gibi bir gideri nasıl kaydederim?",
       "cevap": ["Kasa çipinden “Gider kaydet”e basın, tutarı yazın ve paranın kasadan çıkıp çıkmadığını seçin."],
       "anahtar": ["gider", "gider kaydet", "masraf", "harcama", "ekmek", "süt", "kasadan para", "fatura öde", "tedarikçi"],
-      "ilgili": ["kasa-hareketi"]
+      "ilgili": ["kasa-hareketi"],
+      "video": [{ "id": "n_JDwbQ7peA", "t": 174, "baslik": "Kasiyer eğitimi · Gider kaydetme" }]
     },
     {
       "id": "kasa-hareketi",
@@ -447,7 +482,8 @@
       "kitle": ["site", "owner"],
       "soru": "Kasa farkını kim görür?",
       "cevap": ["Beklenen tutarı ve kasa farkını yalnız işletme sahibi görür. Kör sayım gibi önlemleri Kasa ayarları → Kasa güvenliği’nde “Önerilenleri aç” ile açabilirsiniz."],
-      "anahtar": ["kasa farkı", "kasa açığı", "fark", "eksik para", "kör sayım", "kasa güvenliği", "pos toplamı", "kapanışlar", "beklenen tutar", "sayım farkı"]
+      "anahtar": ["kasa farkı", "kasa açığı", "fark", "eksik para", "kör sayım", "kasa güvenliği", "pos toplamı", "kapanışlar", "beklenen tutar", "sayım farkı"],
+      "video": [{ "id": "xAMiBM8M89I", "t": 111, "baslik": "Raporlar · Kasa kapanışları ve fark" }]
     },
     {
       "id": "yazar-kasa",
@@ -455,7 +491,8 @@
       "kitle": ["owner", "manager", "cashier"],
       "soru": "Mola yazar kasaya bağlanıyor mu?",
       "cevap": ["Hayır; yasal fişi yazar kasa keser. “Yazar kasa yardımcısı” açıksa her ödemeden sonra yazar kasaya girilecek tutar çıkar; girince “Girildi” deyin."],
-      "anahtar": ["yazar kasa", "yazarkasa", "ökc", "okc", "e-adisyon", "eadisyon", "yasal fiş", "z raporu", "kdv departmanı", "fatura", "mali fiş", "girildi"]
+      "anahtar": ["yazar kasa", "yazarkasa", "ökc", "okc", "e-adisyon", "eadisyon", "yasal fiş", "z raporu", "kdv departmanı", "fatura", "mali fiş", "girildi"],
+      "video": [{ "id": "2lbq7fz6BXs", "t": 157, "baslik": "İşletme sahibi ilk gün · Yazar kasa yardımcısı" }]
     },
     {
       "id": "raporlar",
@@ -463,7 +500,8 @@
       "kitle": ["site", "owner", "manager"],
       "soru": "Günün satışını ve raporları nereden görürüm?",
       "cevap": ["Satış ve Raporlar’da dönemi seçin; “Detaylı göster” ürünleri, kârlılığı ve KDV’yi açar. Muhasebeciniz için Yazdır ve paylaş → “Muhasebeci için indir”. “Bugün” 05:00’ten 05:00’e kadardır."],
-      "anahtar": ["rapor", "raporlar", "satış raporu", "gece yarısı", "iş günü", "hangi gün", "ciro", "günün satışı", "kârlılık", "muhasebeci", "muhasebe", "excel", "kdv dökümü", "elde kalan", "detaylı göster", "yazdır"]
+      "anahtar": ["rapor", "raporlar", "satış raporu", "gece yarısı", "iş günü", "hangi gün", "ciro", "günün satışı", "kârlılık", "muhasebeci", "muhasebe", "excel", "kdv dökümü", "elde kalan", "detaylı göster", "yazdır"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 171, "baslik": "Müdür eğitimi · Raporlar ve kapanışlar", "kitle": ["manager"] }, { "id": "xAMiBM8M89I", "t": 8, "baslik": "Raporlar · Bugünün özeti" }]
     },
     {
       "id": "eposta-rapor",
@@ -473,7 +511,8 @@
       "cevap": [
         ["Satış ve Raporlar → Yazdır ve paylaş → “Raporları gönder”e girin.", "E-posta hesabınızı yazın (Gmail’de “uygulama şifresi” gerekir).", "Alıcıları ekleyip “Deneme e-postası gönder”e basın."]
       ],
-      "anahtar": ["e-posta rapor", "eposta", "mail", "email", "rapor gönder", "gmail", "uygulama şifresi", "günlük rapor mail", "pdf rapor"]
+      "anahtar": ["e-posta rapor", "eposta", "mail", "email", "rapor gönder", "gmail", "uygulama şifresi", "günlük rapor mail", "pdf rapor"],
+      "video": [{ "id": "xAMiBM8M89I", "t": 217, "baslik": "Raporlar · E-posta raporları" }]
     },
     {
       "id": "qr-durdur",
@@ -481,7 +520,8 @@
       "kitle": ["site", "owner", "manager", "cashier"],
       "soru": "QR siparişlerini nasıl durdurur ya da açarım?",
       "cevap": ["Sol menünün üstündeki QR siparişleri kartında “Durdur”a basın. Açmak için “Siparişleri aç” deyin; sabah kasa açılınca kendiliğinden açılır."],
-      "anahtar": ["qr durdur", "siparişleri aç", "siparişleri durdur", "qr kapalı", "qr siparişleri kapalı", "sipariş almıyoruz", "mutfak yetişemiyor", "yoğunluk", "elle durduruldu"]
+      "anahtar": ["qr durdur", "siparişleri aç", "siparişleri durdur", "qr kapalı", "qr siparişleri kapalı", "sipariş almıyoruz", "mutfak yetişemiyor", "yoğunluk", "elle durduruldu"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 127, "baslik": "Müdür eğitimi · QR siparişlerini durdurma", "kitle": ["manager"] }, { "id": "GXqUnXGY5vo", "t": 136, "baslik": "QR menü ve QR sipariş · QR siparişlerini durdurma" }]
     },
 
     {
@@ -491,7 +531,8 @@
       "soru": "Menüye ürün nasıl eklenir, fiyat nasıl değiştirilir?",
       "cevap": ["Menü yönetimi → Ürünler’de “Ürün ekle”ye basın ya da ürüne dokunup fiyatı değiştirin. Değişiklik müşteri menüsüne hemen gider; QR kodları aynı kalır."],
       "anahtar": ["ürün ekle", "urun ekle", "yeni ürün", "fiyat", "fiyat değiştir", "fiyat güncelle", "zam", "menü", "menu", "kategori", "fotoğraf", "seçenek", "kdv", "hazır ürün", "menü yönetimi", "qr değişir mi"],
-      "ilgili": ["tukendi", "kampanya"]
+      "ilgili": ["tukendi", "kampanya"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 83, "baslik": "Müdür eğitimi · Fiyat değiştirme", "kitle": ["manager"] }, { "id": "2lbq7fz6BXs", "t": 26, "baslik": "İşletme sahibi ilk gün · Yeni ürün", "kitle": ["site", "owner"] }]
     },
     {
       "id": "tukendi",
@@ -499,7 +540,8 @@
       "kitle": ["site", "owner", "manager"],
       "soru": "Biten bir ürünü menüde nasıl kapatırım?",
       "cevap": ["Menü yönetimi’nde ürüne “Tükendi” deyin; müşteri menüsünde soluk görünür. Ürün gelince aynı yerden açın."],
-      "anahtar": ["tükendi", "tukendi", "bitti", "kalmadı", "stokta yok", "ürün kapat", "ürünü gizle", "satışa kapat", "geçici kapat"]
+      "anahtar": ["tükendi", "tukendi", "bitti", "kalmadı", "stokta yok", "ürün kapat", "ürünü gizle", "satışa kapat", "geçici kapat"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 60, "baslik": "Müdür eğitimi · Tükendi" }]
     },
     {
       "id": "tukendi-calisan",
@@ -518,7 +560,8 @@
         ["Menü yönetimi → Kampanyalar → “Kampanya ekle”.", "İndirimi ve ürünleri seçin.", "Geçerli olduğu günleri ve saatleri seçip kaydedin."]
       ],
       "anahtar": ["kampanya", "indirim", "happy hour", "promosyon", "fırsat", "iskonto", "öğrenci indirimi", "kampanya ekle", "yüzde indirim"],
-      "ilgili": ["kampanya-x-al-y-ode", "kampanya-hediye"]
+      "ilgili": ["kampanya-x-al-y-ode", "kampanya-hediye"],
+      "video": [{ "id": "dSAqQq_d3fE", "t": 18, "baslik": "Kampanyalar ve rezervasyon · Kampanya oluşturma" }]
     },
     {
       "id": "kampanya-x-al-y-ode",
@@ -530,7 +573,8 @@
         "Masanın hesabındaki bütün siparişler birlikte sayılır; bedava ya da indirimli olan, en ucuz üründür."
       ],
       "anahtar": ["2 al 1 öde", "3 al 2 öde", "x al y öde", "bir alana bir bedava", "ikincisi yarı fiyat", "ikincisi indirimli", "ikinci ürün indirimli", "ikinci kahve", "bedava ürün"],
-      "ilgili": ["kampanya", "kampanya-hediye"]
+      "ilgili": ["kampanya", "kampanya-hediye"],
+      "video": [{ "id": "dSAqQq_d3fE", "t": 22, "baslik": "Kampanyalar ve rezervasyon · Kampanya türleri" }]
     },
     {
       "id": "kampanya-hediye",
@@ -541,7 +585,8 @@
         "Kampanya türünde “Hediye ürün”ü seçin, koşul ürünlerini ve menüden hediyeyi seçin. Hediye mutfağa kendiliğinden gitmez: koşul tutunca garson ekranında “Kampanya: … bedava · Ekle” çıkar. Eklenen hediye hesapta ücretsiz görünür."
       ],
       "anahtar": ["hediye ürün", "hediye", "ikram", "bedava kahve", "çay alana kahve", "alana bedava", "hediye kampanyası", "kampanya ekle"],
-      "ilgili": ["kampanya", "kampanya-x-al-y-ode"]
+      "ilgili": ["kampanya", "kampanya-x-al-y-ode"],
+      "video": [{ "id": "dSAqQq_d3fE", "t": 61, "baslik": "Kampanyalar ve rezervasyon · Hediye ürün kampanyası" }, { "id": "dSAqQq_d3fE", "t": 97, "baslik": "Kampanyalar ve rezervasyon · Garson ekranında hediye" }]
     },
     {
       "id": "qr-bas",
@@ -553,7 +598,8 @@
         "Mat kâğıt kullanın; parlak yüzeyi kamera zor okur."
       ],
       "anahtar": ["qr", "qr kod", "karekod", "qr bas", "qr yazdır", "qr çıktı", "masa qr", "masa standı", "a6", "qr kodları", "baskı", "laminasyon"],
-      "ilgili": ["qr-kayboldu", "qr-musteri"]
+      "ilgili": ["qr-kayboldu", "qr-musteri"],
+      "video": [{ "id": "GXqUnXGY5vo", "t": 192, "baslik": "QR menü ve QR sipariş · QR kodlarını yazdırma" }]
     },
     {
       "id": "qr-kayboldu",
@@ -569,7 +615,8 @@
       "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
       "soru": "Müşteri QR’dan nasıl sipariş verir?",
       "cevap": ["Müşteri masadaki QR’ı telefon kamerasıyla okutur; uygulama ya da Wi-Fi şifresi gerekmez. Ürünleri seçip “Siparişi gönder”e basar; isterse garson çağırır ya da hesabı ister."],
-      "anahtar": ["müşteri sipariş", "qr menü", "qr sipariş", "dijital menü", "menü açılıyor", "müşteri telefonu", "garson çağır", "sepete ekle", "uygulama indirmeden"]
+      "anahtar": ["müşteri sipariş", "qr menü", "qr sipariş", "dijital menü", "menü açılıyor", "müşteri telefonu", "garson çağır", "sepete ekle", "uygulama indirmeden"],
+      "video": [{ "id": "wpMZdS5dPgw", "t": 8, "baslik": "Mola’yı 2 dakikada tanıyın · Misafirin QR siparişi", "kitle": ["site"] }, { "id": "GXqUnXGY5vo", "t": 8, "baslik": "QR menü ve QR sipariş · QR ile sipariş" }]
     },
 
     {
@@ -579,7 +626,8 @@
       "soru": "Çalışan hesabı nasıl açılır?",
       "cevap": ["Personel → Çalışanlar → “Çalışan ekle”: ad, kullanıcı adı, görev ve şifre. Herkese ayrı hesap açın; şifreyi unutan için aynı yerde “Şifreyi yenile”."],
       "anahtar": ["çalışan ekle", "calisan ekle", "personel", "personel ekle", "garson ekle", "kasiyer ekle", "kullanıcı", "kullanıcı ekle", "hesap aç", "rol", "görev", "yetki", "eleman", "şifreyi yenile"],
-      "ilgili": ["mudur", "calisan-ayrildi"]
+      "ilgili": ["mudur", "calisan-ayrildi"],
+      "video": [{ "id": "2lbq7fz6BXs", "t": 71, "baslik": "İşletme sahibi ilk gün · Çalışanlar" }]
     },
     {
       "id": "mudur",
@@ -587,7 +635,8 @@
       "kitle": ["site", "owner", "manager"],
       "soru": "Müdür neleri yapabilir?",
       "cevap": ["Müdür sipariş, ödeme, iade, stok, menü, kampanya ve raporlarla günü yönetir. Ayarlar, çalışan hesapları, kasa farkı, yedek ve destek işletme sahibindedir."],
-      "anahtar": ["müdür", "mudur", "yönetici", "sorumlu", "müdür yetkisi", "yetki", "şifremi paylaşmadan", "patron yokken"]
+      "anahtar": ["müdür", "mudur", "yönetici", "sorumlu", "müdür yetkisi", "yetki", "şifremi paylaşmadan", "patron yokken"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 8, "baslik": "Müdür eğitimi · Müdür’ün bölümleri" }]
     },
     {
       "id": "calisan-ayrildi",
@@ -595,7 +644,8 @@
       "kitle": ["site", "owner"],
       "soru": "Çalışan ayrıldı ya da telefonu kayboldu.",
       "cevap": ["Personel → Çalışanlar’da “Hesabı kapat” deyin; geçmişi silinmez. Kaybolan telefondaki oturumu aynı yerdeki “Açık oturumlar”dan kapatın."],
-      "anahtar": ["işten ayrıldı", "ayrıldı", "hesabı kapat", "çalışan sil", "personel çıkar", "telefon kayboldu", "açık oturumlar", "oturumu kapat", "çalındı"]
+      "anahtar": ["işten ayrıldı", "ayrıldı", "hesabı kapat", "çalışan sil", "personel çıkar", "telefon kayboldu", "açık oturumlar", "oturumu kapat", "çalındı"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 194, "baslik": "Uzaktan erişim ve güvenlik · Açık oturumlar" }]
     },
     {
       "id": "sifre-unuttum",
@@ -612,7 +662,8 @@
       "soru": "İşletme sahibi şifremi unuttum.",
       "cevap": ["Kasa bilgisayarındaki sol şeritten Güvenlik → “İşletme sahibi şifresini unuttum”a basın; kurtarma kodunuz gerekir."],
       "anahtar": ["şifre", "şifremi unuttum", "sifremi unuttum", "parola", "sahip şifresi", "giriş yapamıyorum", "şifre sıfırla", "password"],
-      "ilgili": ["kurtarma-kodu"]
+      "ilgili": ["kurtarma-kodu"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 245, "baslik": "Uzaktan erişim ve güvenlik · Kurtarma kodu" }]
     },
     {
       "id": "sifre-degistir",
@@ -638,7 +689,8 @@
       "kitle": ["site", "owner", "manager"],
       "soru": "Çalışma saatlerini ve bahşişi nereden görürüm?",
       "cevap": ["Personel → Vardiya ve bahşiş’te kimin kaç saat çalıştığını ve bahşiş paylarını görürsünüz. Vardiya takibini işletme sahibi Personel → Personel ayarları → Vardiya’dan açar."],
-      "anahtar": ["vardiya", "mesai", "çalışma saati", "bahşiş", "bahsis", "bahşiş paylaşımı", "geç kalma", "puantaj", "vardiya takibi"]
+      "anahtar": ["vardiya", "mesai", "çalışma saati", "bahşiş", "bahsis", "bahşiş paylaşımı", "geç kalma", "puantaj", "vardiya takibi"],
+      "video": [{ "id": "JxhE4ESU4H4", "t": 195, "baslik": "Müdür eğitimi · Vardiyalar" }]
     },
     {
       "id": "stok",
@@ -648,7 +700,8 @@
       "cevap": [
         ["Stok → Malzemeler’de malzemeleri ve uyarı sınırını girin.", "Reçetede ürünün içini yazın; satıldıkça stoktan düşer.", "Alış, sayım ve fireyi kaydedin."]
       ],
-      "anahtar": ["stok", "malzeme", "reçete", "recete", "fire", "sayım", "alış", "envanter", "depo", "azalan stok", "kârlılık", "maliyet"]
+      "anahtar": ["stok", "malzeme", "reçete", "recete", "fire", "sayım", "alış", "envanter", "depo", "azalan stok", "kârlılık", "maliyet"],
+      "video": [{ "id": "NDYQ_bvUIj0", "t": 8, "baslik": "Stok, reçete ve kârlılık · Malzemeler" }]
     },
     {
       "id": "recete-toplu",
@@ -656,7 +709,8 @@
       "kitle": ["owner", "manager"],
       "soru": "Toplu yapılan ürünün reçetesini nasıl yazarım?",
       "cevap": ["Stok → Reçeteler’de ürünü açıp “Toplu üretimden hesapla”ya basın. Bir seferde kullandığınız malzemeleri seçip toplam miktarlarını ve kaç porsiyon çıktığını yazın; “Reçeteye yaz” porsiyon başını reçeteye doldurur. Sonra “Reçeteyi kaydet”e basın."],
-      "anahtar": ["toplu", "toplu üretim", "toplu yapım", "toplu hesapla", "porsiyon", "porsiyon başı", "kaç porsiyon", "tepsi", "kazan", "börek", "pasta", "kek", "çorba", "reçete hesapla", "gramaj", "bölme"]
+      "anahtar": ["toplu", "toplu üretim", "toplu yapım", "toplu hesapla", "porsiyon", "porsiyon başı", "kaç porsiyon", "tepsi", "kazan", "börek", "pasta", "kek", "çorba", "reçete hesapla", "gramaj", "bölme"],
+      "video": [{ "id": "NDYQ_bvUIj0", "t": 116, "baslik": "Stok, reçete ve kârlılık · Toplu üretimden reçete" }]
     },
     {
       "id": "stok-mutfak",
@@ -664,7 +718,8 @@
       "kitle": ["kitchen"],
       "soru": "Mutfakta sayım ve fire nasıl girilir?",
       "cevap": ["Üstteki “Stok”a basın; sayımı ve fireyi oradan kaydedin. Panoya “Mutfak panosu” ile dönersiniz."],
-      "anahtar": ["stok", "sayım", "fire", "malzeme", "döküldü", "bozuldu", "envanter"]
+      "anahtar": ["stok", "sayım", "fire", "malzeme", "döküldü", "bozuldu", "envanter"],
+      "video": [{ "id": "H5iJWKpwtBY", "t": 132, "baslik": "Mutfak eğitimi · Stok: sayım ve fire" }]
     },
 
     {
@@ -673,7 +728,8 @@
       "kitle": ["site", "manager", "cashier", "waiter", "kitchen"],
       "soru": "Telefona ya da tablete nasıl giriş yaparım?",
       "cevap": ["Mola uygulamasını açın ve kendi kullanıcı adınızla şifrenizi yazın. Cihazda Mola yoksa işletme sahibinden bağlamasını isteyin."],
-      "anahtar": ["giriş", "giris", "tablet", "telefon", "giriş yap", "kullanıcı adı", "uygulama", "login", "oturum aç", "tabletten giriş"]
+      "anahtar": ["giriş", "giris", "tablet", "telefon", "giriş yap", "kullanıcı adı", "uygulama", "login", "oturum aç", "tabletten giriş"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 8, "baslik": "Garson eğitimi · Giriş", "kitle": ["waiter"] }, { "id": "n_JDwbQ7peA", "t": 8, "baslik": "Kasiyer eğitimi · Giriş", "kitle": ["cashier"] }, { "id": "H5iJWKpwtBY", "t": 8, "baslik": "Mutfak eğitimi · Giriş", "kitle": ["kitchen"] }, { "id": "JxhE4ESU4H4", "t": 8, "baslik": "Müdür eğitimi · Giriş", "kitle": ["manager"] }, { "id": "d49M0PuJO94", "t": 203, "baslik": "Kurulum · Garson tableti", "kitle": ["site"] }]
     },
     {
       "id": "yazici",
@@ -685,7 +741,8 @@
         "Mola ağ ve USB bağlantılı ESC/POS fiş yazıcılarıyla çalışır."
       ],
       "anahtar": ["yazıcı", "yazici", "yazıcı bağla", "yazıcı ekle", "fiş yazıcısı", "termal", "esc/pos", "escpos", "usb yazıcı", "ağ yazıcısı", "ethernet", "ip adresi", "a4", "printer", "fiş"],
-      "ilgili": ["fis-cikmiyor", "mutfak-fis"]
+      "ilgili": ["fis-cikmiyor", "mutfak-fis"],
+      "video": [{ "id": "d49M0PuJO94", "t": 213, "baslik": "Kurulum · Yazıcı" }]
     },
     {
       "id": "kafe-ici-cihazlar",
@@ -696,7 +753,8 @@
         ["Kasa bilgisayarında Ayarlar → Cihazlar → Kafe içi cihazlar’ı açın.", "Telefon kafenin Wi-Fi’sindeyken ekrandaki QR’ı okutun.", "Android’de Mola uygulamasını kurun; iPhone ve iPad’de Safari’de Paylaş → “Ana Ekrana Ekle”.", "Çalışan kendi kullanıcı adıyla girer."]
       ],
       "anahtar": ["kafe içi cihazlar", "kafe ici cihazlar", "tablet", "telefon", "android", "apk", "uygulama", "garson telefonu", "mutfak tableti", "cihaz bağla", "cihaz ekle", "bilinmeyen uygulamalar", "telefon bağlama", "iphone", "ipad", "ios", "safari", "ana ekrana ekle"],
-      "ilgili": ["kalici-baglanti", "baglanti-yok"]
+      "ilgili": ["kalici-baglanti", "baglanti-yok"],
+      "video": [{ "id": "d49M0PuJO94", "t": 187, "baslik": "Kurulum · Garson tableti" }]
     },
     {
       "id": "kalici-baglanti",
@@ -717,7 +775,8 @@
         ["Kasada Ayarlar → Uzaktan erişim’e girin.", "“1 · Telefon kodu”: doğrulama uygulamasıyla QR’ı okutup 6 haneli kodu yazın.", "“2 · E-posta”: adresinize gelen kodu yazın.", "Telefonunuzda isletme.molayazilim.com.tr adresini açıp girin."]
       ],
       "anahtar": ["işletmemi yönet", "kafemi yonet", "uzaktan", "uzaktan erişim", "uzaktan rapor", "telefondan rapor", "evden bakmak", "telefon kodu", "doğrulama uygulaması", "authenticator", "google authenticator", "raporlarım", "yonet"],
-      "ilgili": ["kafemi-yonet-giris", "kasa-kapali-son-durum"]
+      "ilgili": ["kafemi-yonet-giris", "kasa-kapali-son-durum"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 8, "baslik": "Uzaktan erişim ve güvenlik · Uzaktan erişim kurulumu" }]
     },
     {
       "id": "kafemi-yonet-giris",
@@ -729,7 +788,8 @@
         "En fazla 3 cihaz eşleşir. Yeni cihaz ilk kez girerken kasa bilgisayarı açık olmalı."
       ],
       "anahtar": ["giriş", "giris", "yönet giriş", "merkez", "merkez.molayazilim.com.tr", "yonet adresi", "uzaktan giriş", "telefon kodu", "6 haneli kod", "doğrulama kodu", "devam"],
-      "ilgili": ["kafemi-yonet-giremiyorum"]
+      "ilgili": ["kafemi-yonet-giremiyorum"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 66, "baslik": "Uzaktan erişim ve güvenlik · Telefondan giriş" }]
     },
     {
       "id": "kasa-kapali-son-durum",
@@ -737,7 +797,8 @@
       "kitle": ["site", "owner"],
       "soru": "Kasa bilgisayarı kapalıyken telefondan ne görürüm?",
       "cevap": ["İşletmemi yönet “Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum” yazar ve son raporu gösterir. Kafenin interneti kesildiğinde de aynısı görünür. Kasa açılıp internete bağlanınca güncel bilgiler gelir."],
-      "anahtar": ["kasa kapalı", "son durum", "bilgisayar kapalı", "kapalıyken", "son rapor", "kasa bilgisayarı kapalı", "güncel değil", "eski rapor"]
+      "anahtar": ["kasa kapalı", "son durum", "bilgisayar kapalı", "kapalıyken", "son rapor", "kasa bilgisayarı kapalı", "güncel değil", "eski rapor"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 119, "baslik": "Uzaktan erişim ve güvenlik · İnternet kesilince" }]
     },
     {
       "id": "cihaz-kaldir",
@@ -745,7 +806,8 @@
       "kitle": ["site", "owner"],
       "soru": "İşletmemi yönet’e girdiğim telefon kayboldu.",
       "cevap": ["Kasada Ayarlar → Uzaktan erişim → “4 · Eşleşmiş cihazlar”dan o telefonu kaldırın; şifreniz sorulur."],
-      "anahtar": ["cihaz kaldır", "eşleşmiş cihazlar", "telefon kayboldu", "telefon çalındı", "cihaz sil", "çıkış", "cikis", "3 cihaz", "yeni telefon", "cihazı kaldır"]
+      "anahtar": ["cihaz kaldır", "eşleşmiş cihazlar", "telefon kayboldu", "telefon çalındı", "cihaz sil", "çıkış", "cikis", "3 cihaz", "yeni telefon", "cihazı kaldır"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 172, "baslik": "Uzaktan erişim ve güvenlik · Eşleşmiş cihazlar" }]
     },
     {
       "id": "uzaktan-yonetim",
@@ -753,7 +815,8 @@
       "kitle": ["site", "owner"],
       "soru": "Kafeye gitmeden fiyat değiştirebilir miyim?",
       "cevap": ["Evet. Kafede bir kez Ayarlar → Uzaktan erişim → “5 · Uzaktan yönetim”i açın. Sonra İşletmemi yönet’ten, kasa açıkken kafenin ekranlarını kullanırsınız; her uzaktan giriş size bildirilir."],
-      "anahtar": ["uzaktan yönetim", "uzaktan yonetim", "evden fiyat", "uzaktan fiyat", "işletmeyi yönet", "kafeyi yönet", "uzaktan ayar", "kafeye gitmeden", "dışarıdan yönetmek"]
+      "anahtar": ["uzaktan yönetim", "uzaktan yonetim", "evden fiyat", "uzaktan fiyat", "işletmeyi yönet", "kafeyi yönet", "uzaktan ayar", "kafeye gitmeden", "dışarıdan yönetmek"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 91, "baslik": "Uzaktan erişim ve güvenlik · Uzaktan fiyat değişikliği" }, { "id": "WYMVLdIAsVs", "t": 48, "baslik": "Uzaktan erişim ve güvenlik · Uzaktan yönetimi açma" }]
     },
     {
       "id": "kafemi-yonet-giremiyorum",
@@ -774,7 +837,8 @@
       "soru": "Yedek ne zaman alınır, nerede durur?",
       "cevap": ["Mola her gün sonundan sonra ve gece kendiliğinden yedek alır; istediğiniz an kasa bilgisayarının şeridinden Yedekle → “Şimdi yedekle”. Son yedekleri Ayarlar → Güvenlik ve yedek’te görürsünüz."],
       "anahtar": ["yedek", "yedekleme", "backup", "yedek al", "yedek hatası", "yedek alınamadı", "disk dolu", "şimdi yedekle", "yedekler nerede", "otomatik yedek", "bulut yedek", "gece yedeği"],
-      "ilgili": ["usb-yedek", "yeni-bilgisayar"]
+      "ilgili": ["usb-yedek", "yeni-bilgisayar"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 219, "baslik": "Uzaktan erişim ve güvenlik · Yedek ve kurtarma kodu" }]
     },
     {
       "id": "usb-yedek",
@@ -826,7 +890,8 @@
       "soru": "İnternet kesilirse ne olur?",
       "cevap": ["Modem ve Wi-Fi açık oldukça sipariş, mutfak, kasa ve yazıcı çalışmaya devam eder. Müşteri QR’dan sipariş veremez; siparişi garson alır."],
       "anahtar": ["internet", "internet kesildi", "internet yok", "internetsiz", "çevrimdışı", "offline", "bağlantı koptu", "modem", "wifi", "wi-fi", "hotspot", "elektrik"],
-      "ilgili": ["baglanti-yok"]
+      "ilgili": ["baglanti-yok"],
+      "video": [{ "id": "WYMVLdIAsVs", "t": 119, "baslik": "Uzaktan erişim ve güvenlik · İnternet kesilince" }]
     },
     {
       "id": "baglanti-yok",
@@ -855,7 +920,8 @@
       "soru": "Müşteri QR’dan sipariş veremiyor.",
       "cevap": ["“Şu an sipariş almıyoruz” görünüyorsa QR siparişleri kapalıdır; kasada “Siparişleri aç” denir. “Şu an sipariş alınamıyor” görünüyorsa kafenin interneti ya da kasa bilgisayarı kapalıdır."],
       "anahtar": ["qr açılmıyor", "qr menü açılmıyor", "qr calismiyor", "sipariş almıyoruz", "sipariş alınamıyor", "müşteri sipariş veremiyor", "menü açılmıyor", "qr bozuk", "bağlı değil"],
-      "ilgili": ["qr-durdur"]
+      "ilgili": ["qr-durdur"],
+      "video": [{ "id": "GXqUnXGY5vo", "t": 146, "baslik": "QR menü ve QR sipariş · Siparişler durdurulunca" }]
     },
     {
       "id": "mola-destek",
@@ -863,7 +929,8 @@
       "kitle": ["site", "owner"],
       "soru": "Mola ekibine nasıl ulaşırım?",
       "cevap": ["Programın içinden Destek → Talepler → “Yeni talep” ile yazın; yanıt aynı yere gelir. Ekranınıza bakmamız gerekirse izni Destek → Mola desteği’nde siz açarsınız."],
-      "anahtar": ["destek", "yardım", "iletişim", "mola ekibi", "talep", "destek talebi", "uzaktan destek", "mola desteği", "bağlanabilsin", "ekibe yaz", "whatsapp", "telefon"]
+      "anahtar": ["destek", "yardım", "iletişim", "mola ekibi", "talep", "destek talebi", "uzaktan destek", "mola desteği", "bağlanabilsin", "ekibe yaz", "whatsapp", "telefon"],
+      "video": [{ "id": "2lbq7fz6BXs", "t": 192, "baslik": "İşletme sahibi ilk gün · Destek talebi", "kitle": ["owner"] }, { "id": "wpMZdS5dPgw", "t": 98, "baslik": "Mola’yı 2 dakikada tanıyın · Destek", "kitle": ["site"] }, { "id": "WYMVLdIAsVs", "t": 255, "baslik": "Uzaktan erişim ve güvenlik · Mola desteği" }]
     },
     {
       "id": "destek-calisan",
@@ -872,6 +939,15 @@
       "soru": "Bir sorun var, kime söylemeliyim?",
       "cevap": ["Mola ekibine destek talebini işletme sahibi açar. Sorunu ve hangi ekranda olduğunu ona söyleyin."],
       "anahtar": ["destek", "yardım", "sorun", "hata", "mola ekibi", "talep", "destek talebi", "kime sorayım", "çalışmıyor"]
+    },
+    {
+      "id": "egitim-videolari",
+      "konu": "sorun",
+      "kitle": ["site", "owner", "manager", "cashier", "waiter", "kitchen"],
+      "soru": "Eğitim videoları nerede?",
+      "cevap": ["Bütün videolar YouTube’daki Mola kanalında: youtube.com/@molayazilim. Garson, kasiyer, mutfak, müdür ve işletme sahibi için ayrı eğitim videoları var; size uygun olan aşağıda."],
+      "anahtar": ["eğitim", "eğitim videosu", "eğitim videoları", "video", "videolar", "videolu anlatım", "youtube", "kanal", "izle", "izlemek", "kullanım videosu", "öğrenmek"],
+      "video": [{ "id": "uxh2tuyR6oY", "t": 0, "baslik": "Garson eğitimi · Baştan sona", "kitle": ["waiter"] }, { "id": "n_JDwbQ7peA", "t": 0, "baslik": "Kasiyer eğitimi · Baştan sona", "kitle": ["cashier"] }, { "id": "H5iJWKpwtBY", "t": 0, "baslik": "Mutfak eğitimi · Baştan sona", "kitle": ["kitchen"] }, { "id": "JxhE4ESU4H4", "t": 0, "baslik": "Müdür eğitimi · Baştan sona", "kitle": ["manager"] }, { "id": "2lbq7fz6BXs", "t": 0, "baslik": "İşletme sahibi ilk gün · Baştan sona", "kitle": ["owner"] }, { "id": "wpMZdS5dPgw", "t": 0, "baslik": "Mola’yı 2 dakikada tanıyın · Kısa tanıtım", "kitle": ["site"] }]
     }
   ]
 }

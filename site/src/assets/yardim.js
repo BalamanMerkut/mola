@@ -1,7 +1,8 @@
 /* Mola Yardım: Mola'yı kullanan ve tanımak isteyen kafeler için hazır sorular ve cevaplar. Yapay zekâ yok, sunucu yok.
  * Sorular derlemede site/src/assets/yardim.json'dan buraya gömülür (scripts/site-yardim.ts; yalnız kitlesi "site" olanlar);
  * site.js bu dosyayı yalnız yardımcı ilk açılınca yükler. Arama packages/domain/yardim.ts ile aynıdır (programın "?"ı). Bu dosya hiçbir ağ isteği yapmaz, çerez ve tarayıcı deposu kullanmaz; yazılan soru
- * tarayıcıdan çıkmaz. Her şey DOM ile ve textContent ile çizilir (innerHTML yok, eval yok, kullanıcıdan düzenli ifade yok). */
+ * tarayıcıdan çıkmaz. Her şey DOM ile ve textContent ile çizilir (innerHTML yok, eval yok, kullanıcıdan düzenli ifade yok).
+ * 19 Ekim: yazım hatalarına pay (yine yapay zekâ yok) ve cevabın altında "Videoda izleyin" (YouTube, yalnız tıklanınca, yeni sekmede). */
 (function (root) {
   'use strict';
   var DATA = __YARDIM_VERISI__;
@@ -25,64 +26,118 @@
   function words(text) { var n = normalize(text); return n ? n.split(' ') : []; }
   function meaningful(list) { return list.filter(function (w) { return w.length >= 2 && !BOS[w]; }); }
   function flat(blocks) { var out = []; blocks.forEach(function (b) { out = out.concat(b); }); return out; }
-  // One letter added, missing or wrong ("yazci", "odme"): still the same word.
-  function oneEdit(a, b) {
-    var la = a.length, lb = b.length, i = 0, j = 0, edits = 0;
-    if (Math.abs(la - lb) > 1) return false;
-    while (i < la && j < lb) {
-      if (a.charAt(i) === b.charAt(j)) { i++; j++; continue; }
-      if (++edits > 1) return false;
-      if (la > lb) i++; else if (lb > la) j++; else { i++; j++; }
+  // 19 Ekim: yazım hatası payı, yapay zekâ olmadan ("giderr nasl kaydedlr", "kasyer"): soruların bilmediği bir kelime, bilinen
+  // bir kelimeye bir-iki harf uzaksa (harf eksik, fazla, yanlış ya da yer değiştirmiş) yine sayılır, ama tam eşleşmeden az
+  // puanla; eşit puanda üç harflik parçaların benzerliği öne geçirir. Emin olunamayınca cevap yerine "Bunu mu demek istediniz?".
+  var BOS_UZUN = Object.keys(BOS).filter(function (w) { return w.length >= 4; });
+  /** How many letters a typo may be off: one in a short word (up to 5 letters), two in a longer one. */
+  function allowed(n) { return n <= 5 ? 1 : 2; }
+  /** Letters added, missing, wrong or swapped ("kasyer" → "kasiyer": 1); more than `max` gives max + 1 (stops early). */
+  function editDistance(a, b, max) {
+    var la = a.length, lb = b.length, older = [], prev = [], i, j;
+    if (Math.abs(la - lb) > max) return max + 1;
+    for (j = 0; j <= lb; j++) prev[j] = j;
+    for (i = 1; i <= la; i++) {
+      var cur = [i], low = i;
+      for (j = 1; j <= lb; j++) {
+        var v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+        if (i > 1 && j > 1 && a.charAt(i - 1) === b.charAt(j - 2) && a.charAt(i - 2) === b.charAt(j - 1)) v = Math.min(v, older[j - 2] + 1);
+        cur[j] = v; if (v < low) low = v;
+      }
+      if (low > max) return max + 1;
+      older = prev; prev = cur;
     }
-    return edits + (la - i) + (lb - j) <= 1;
+    return prev[lb];
   }
-  function wordScore(t, w, full) {
-    if (t === w) return full;
-    if (t.length >= 3 && w.indexOf(t) === 0) return full - 1; // still typing: "yaz" → "yazici"
-    if (w.length >= 4 && t.indexOf(w) === 0) return full - 1; // with a suffix: "odemeyi" → "odeme"
-    if (t.length >= 4 && w.length >= 5 && oneEdit(t, w)) return full - 1;
-    return 0;
+  /** 3: the same word; 2: still typing ("yaz" → "yazici") or with a suffix ("odemeyi" → "odeme"); 1: a typo; 0: another word. */
+  function wordTier(t, w, typo) {
+    if (t === w) return 3;
+    if (t.length >= 3 && w.indexOf(t) === 0) return 2;
+    if (w.length >= 4 && t.indexOf(w) === 0) return 2;
+    if (!typo || t.length < 4 || w.length < 4) return 0;
+    if (editDistance(t, w, allowed(t.length)) <= allowed(t.length)) return 1;
+    // A typo with a suffix ("kaydedlr" → "kaydet") or half typed ("kasye" → "kasiyer").
+    if (t.length > w.length) return w.length >= 5 && editDistance(t.slice(0, w.length), w, allowed(w.length)) <= allowed(w.length) ? 1 : 0;
+    return t.length >= 5 && editDistance(t, w.slice(0, t.length), allowed(t.length)) <= allowed(t.length) ? 1 : 0;
+  }
+  /** The three-letter pieces of the words (" ka", "kas", "asa", "sa "): how alike two texts look, for a tie. */
+  function trigrams(list) {
+    var out = { set: Object.create(null), size: 0 };
+    list.forEach(function (w) {
+      var p = ' ' + w + ' ';
+      for (var i = 0; i + 3 <= p.length; i++) { var g = p.slice(i, i + 3); if (!out.set[g]) { out.set[g] = true; out.size++; } }
+    });
+    return out;
+  }
+  function likeness(a, b) {
+    if (!a.size || !b.size) return 0;
+    var same = 0;
+    for (var g in a.set) if (b.set[g]) same++;
+    return Math.round(200 * same / (a.size + b.size)) / 100;
   }
 
-  var index = null, byId = Object.create(null), topicName = Object.create(null);
+  var index = null, byId = Object.create(null), topicName = Object.create(null), known = Object.create(null);
   function build() {
     DATA.konular.forEach(function (k) { topicName[k.id] = k.ad; });
     index = DATA.sorular.map(function (q, order) {
-      var phrases = [], kw = Object.create(null), qw = Object.create(null), aw = Object.create(null);
+      var phrases = [], kw = Object.create(null), qw = Object.create(null), aw = Object.create(null), look = [];
       byId[q.id] = q;
       // kw[w]: 2 when the word is a keyword on its own ("yazici"), 1 when it is part of one ("yazici calismiyor").
-      q.anahtar.forEach(function (k) { var n = normalize(k); if (!n) return; phrases.push(n); meaningful(n.split(' ')).forEach(function (w) { kw[w] = Math.max(kw[w] || 0, n === w ? 2 : 1); }); });
-      meaningful(words(q.soru)).forEach(function (w) { qw[w] = true; });
-      flat(q.cevap).forEach(function (t) { meaningful(words(t)).forEach(function (w) { aw[w] = true; }); });
-      return { q: q, order: order, phrases: phrases, kw: kw, kwList: Object.keys(kw), qw: Object.keys(qw), aw: aw };
+      q.anahtar.forEach(function (k) { var n = normalize(k); if (!n) return; phrases.push(n); meaningful(n.split(' ')).forEach(function (w) { kw[w] = Math.max(kw[w] || 0, n === w ? 2 : 1); look.push(w); known[w] = true; }); });
+      meaningful(words(q.soru)).forEach(function (w) { qw[w] = true; look.push(w); known[w] = true; });
+      flat(q.cevap).forEach(function (t) { meaningful(words(t)).forEach(function (w) { aw[w] = true; known[w] = true; }); });
+      return { q: q, order: order, phrases: phrases, kw: kw, kwList: Object.keys(kw), qw: Object.keys(qw), aw: aw, tri: trigrams(look) };
     });
   }
-  /** The best questions for what was typed, best first; [] when nothing fits. */
-  function search(text, limit) {
+  function rank(text) {
     if (!index) build();
-    var n = normalize(text), toks = meaningful(n ? n.split(' ') : []), padded = ' ' + n + ' ', found = [];
-    if (!toks.length) return [];
+    var n = normalize(text), padded = ' ' + n + ' ', found = [];
+    // A typo of "nasıl", "nedir"… ("nasl") is left out too; a word the questions know never is.
+    var toks = meaningful(n ? n.split(' ') : []).filter(function (t) { return known[t] || !BOS_UZUN.some(function (b) { return editDistance(t, b, 1) <= 1; }); });
+    if (!n) return [];
+    // Only small words ("Mola nedir?"): a keyword written just so still answers.
+    var typo = toks.map(function (t) { return !known[t]; }), anyTypo = typo.indexOf(true) >= 0, tri = trigrams(toks);
     index.forEach(function (e) {
-      var s = 0, hit = 0;
+      var s = 0, hit = 0, fuzzy = 0;
       e.phrases.forEach(function (p) {
         if (p === n) s += 12;
         else if (p.indexOf(' ') > 0 && padded.indexOf(' ' + p + ' ') >= 0) s += 6;
       });
-      toks.forEach(function (t) {
-        var best = 0;
-        e.kwList.forEach(function (w) { best = Math.max(best, wordScore(t, w, e.kw[w] === 2 ? 6 : 5)); });
-        e.qw.forEach(function (w) { best = Math.max(best, wordScore(t, w, 4)); });
-        if (!best && e.aw[t]) best = 1;
-        if (best) { hit++; s += best; }
+      toks.forEach(function (t, i) {
+        var best = 0, tier = 0;
+        // A keyword: 6 on its own, 5 as part of one; a word of the question: 4. One less with a suffix, two less with a typo.
+        e.kwList.forEach(function (w) { var r = wordTier(t, w, typo[i]); if (r) { best = Math.max(best, (e.kw[w] === 2 ? 3 : 2) + r); tier = Math.max(tier, r); } });
+        e.qw.forEach(function (w) { var r = wordTier(t, w, typo[i]); if (r) { best = Math.max(best, 1 + r); tier = Math.max(tier, r); } });
+        if (!best && e.aw[t]) { best = 1; tier = 3; }
+        if (best) { hit++; s += best; if (tier === 1) fuzzy++; }
       });
-      if (hit && s >= 4) found.push({ id: e.q.id, soru: e.q.soru, score: s + (hit === toks.length ? 3 : 0), order: e.order });
+      // A typo alone ("kasyer") counts when it is all that was asked.
+      if ((hit && (s >= 4 || (hit === toks.length && s >= 3))) || (!toks.length && s >= 12)) found.push({ id: e.q.id, soru: e.q.soru, score: s + (hit === toks.length ? 3 : 0), order: e.order, like: likeness(tri, e.tri), fuzzy: fuzzy, all: hit === toks.length });
     });
-    found.sort(function (a, b) { return b.score - a.score || a.order - b.order; });
-    return found.slice(0, limit || 6);
+    // A tie: with a typo the more alike question first; otherwise the audience's own first (forAudience's order).
+    found.sort(function (a, b) { return b.score - a.score || (anyTypo ? b.like - a.like : 0) || a.order - b.order; });
+    return found;
+  }
+  function plain(h) { return { id: h.id, soru: h.soru, score: h.score }; }
+  /** The best questions for what was typed, best first; [] when nothing fits. */
+  function search(text, limit) { return rank(text).slice(0, limit || 6).map(plain); }
+  /**
+   * What the panel shows for what was typed: the answer when sure (every word matched as written, or the typos still point
+   * clearly to one question: all words found and two points ahead of the next), otherwise up to three to choose from.
+   */
+  function ask(text, limit) {
+    var found = rank(text), top = found[0], next = found[1];
+    if (!top) return { sure: false, hits: [] };
+    var sure = !top.fuzzy || (top.all && (!next || top.score - next.score >= 2));
+    return { sure: sure, hits: found.slice(0, sure ? limit || 4 : 3).map(plain) };
   }
   function get(id) { if (!index) build(); return has.call(byId, id) ? byId[id] : null; }
 
-  var api = root.MolaYardim = { normalize: normalize, search: search, get: get, data: DATA };
+  // 19 Ekim: a video's moment as a link ("Videoda izleyin: Kasiyer eğitimi · 2:54"); YouTube ids are 11 letters.
+  function videoUrl(v) { return /^[A-Za-z0-9_-]{11}$/.test(v.id) && v.t >= 0 ? 'https://www.youtube.com/watch?v=' + v.id + '&t=' + Math.floor(v.t) + 's' : null; }
+  function videoTime(t) { var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+
+  var api = root.MolaYardim = { normalize: normalize, search: search, ask: ask, get: get, videoUrl: videoUrl, data: DATA };
   if (!root.document) return;
 
   // ---- Panel: a short conversation (16 Ekim) ----
@@ -143,6 +198,33 @@
     });
     return rel;
   }
+  /**
+   * 19 Ekim: under the text, the video that shows it at that moment: "Videoda izleyin: Kasiyer eğitimi · 2:54" and under it
+   * what it shows ("Gider kaydetme"). YouTube in a new tab; the panel stays open.
+   */
+  function videoLinks(films) {
+    var box = el('div', { 'class': 'yardim-videolar' });
+    films.forEach(function (v) {
+      var cut = v.baslik.indexOf(' · '), name = cut > 0 ? v.baslik.slice(0, cut) : v.baslik, what = cut > 0 ? v.baslik.slice(cut + 3) : '';
+      var label = 'Videoda izleyin: ' + name + ' · ' + videoTime(v.t);
+      var a = el('a', { 'class': 'yardim-video', href: videoUrl(v), target: '_blank', rel: 'noopener noreferrer', title: v.baslik + ' (YouTube, yeni sekmede açılır)', 'aria-label': label + (what ? ', ' + what : '') + ' (YouTube, yeni sekmede)' });
+      a.appendChild(icon(['M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4a2.5 2.5 0 0 0-1.8 1.8C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8z', 'm10 15 5-3-5-3z']));
+      var words = el('span', { 'class': 'yardim-video-yazi' });
+      words.appendChild(el('span', null, label));
+      if (what) words.appendChild(el('small', null, what));
+      a.appendChild(words);
+      box.appendChild(a);
+    });
+    return box;
+  }
+  /** 19 Ekim: not sure what was meant (a typo): the closest questions to choose from, never a wrong answer. */
+  function guessBubble(items) {
+    var box = el('div', { 'class': 'yardim-balonu yardim-tahmin' });
+    box.appendChild(el('p', { 'class': 'yardim-tahmin-baslik' }, 'Bunu mu demek istediniz?'));
+    box.appendChild(questionList(items, false));
+    box.appendChild(el('p', { 'class': 'yardim-tahmin-not' }, 'Hiçbiri değilse başka kelimelerle yazın.'));
+    return box;
+  }
   function answerBubble(q, others) {
     var id = 'yardim-cevap-' + (++said), a = el('article', { 'class': 'yardim-balonu yardim-cevap', 'aria-labelledby': id });
     a.appendChild(el('span', { 'class': 'chip' }, topicName[q.konu] || ''));
@@ -153,6 +235,8 @@
       b.forEach(function (step) { ol.appendChild(el('li', null, step)); });
       a.appendChild(ol);
     });
+    var films = (q.video || []).filter(videoUrl);
+    if (films.length) a.appendChild(videoLinks(films));
     var related = (q.ilgili || []).map(get).filter(Boolean);
     if (related.length) a.appendChild(chipsUnder('İlgili:', related));
     if (others && others.length) a.appendChild(chipsUnder('Başka sorular:', others));
@@ -192,8 +276,9 @@
     var text = input.value.trim().slice(0, 120);
     if (!text) { input.focus(); return; }
     input.value = '';
-    var results = meaningful(words(text)).length ? search(text, 4) : [];
+    var found = ask(text, 4), results = found.hits;
     if (!results.length) { say(text, notFoundBubble()); return; }
+    if (!found.sure) { say(text, guessBubble(results.map(function (r) { return get(r.id); }))); return; }
     say(text, answerBubble(get(results[0].id), results.slice(1, 4).map(function (r) { return get(r.id); })));
   }
 
@@ -243,8 +328,9 @@
 
     panel.appendChild(head); panel.appendChild(bodyEl); panel.appendChild(compose);
     panel.addEventListener('keydown', onKey);
-    // A link inside (Destek ve İletişim) closes the panel first: the page underneath is where it goes.
-    panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a) close(true); });
+    // A link inside (Destek ve İletişim) closes the panel first: the page underneath is where it goes. A video opens in a
+    // new tab: the panel stays as it was.
+    panel.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[href]'); if (a && a.target !== '_blank') close(true); });
     doc.body.appendChild(backdrop); doc.body.appendChild(panel);
     if (root.MolaKaydir) measureChips = root.MolaKaydir(chips, chipBox, 'Önceki konular', 'Sonraki konular');
   }

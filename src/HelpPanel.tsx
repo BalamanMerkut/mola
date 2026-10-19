@@ -1,8 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ChevronLeft, ChevronRight, SendHorizontal, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CirclePlay, SendHorizontal, X } from 'lucide-react';
 import raw from '../site/src/assets/yardim.json';
 import avatar from '../brand/merkut-studios/yardimci/yardimci-96.png';
-import { appAudience, checkYardim, createYardimSearch, forAudience, meaningfulWords, type YardimSoru, type YardimVerisi } from '../packages/domain/yardim';
+import { appAudience, checkYardim, createYardimSearch, forAudience, yardimVideoSure, yardimVideoUrl, type YardimSoru, type YardimVerisi, type YardimVideo } from '../packages/domain/yardim';
 import './help-panel.css';
 
 /*
@@ -17,6 +17,10 @@ import './help-panel.css';
  * related questions as chips; the box to type in at the bottom with a send button. Nothing found: "Bunu bilmiyorum." and,
  * for the owner, "Destek talebi aç" (Destek → Talepler with the question written in); the others are told to ask the owner.
  * The conversation is a polite live log. Plain text only (React text nodes); nothing typed leaves the device.
+ * 19 Ekim: typos still find the answer (packages/domain/yardim.ts); when unsure, "Bunu mu demek istediniz?" with the closest
+ * two or three questions. Under an answer, the video that shows it ("Videoda izleyin: Kasiyer eğitimi · 2:54", the asker's own
+ * training video first): YouTube in a new window, as the app's other outside links (the desktop window opens the browser,
+ * the Android app hands it to YouTube: mobile/android MainActivity yonlendir).
  */
 export type HelpRole = 'owner' | 'manager' | 'cashier' | 'waiter' | 'kitchen';
 const all = checkYardim(raw as Partial<YardimVerisi>);
@@ -73,7 +77,18 @@ function useSwipeRow() {
 }
 
 /** One exchange of the conversation: what was asked (right) and Mola Yardım's reply (left). */
-type Exchange = { key: number; ask: string } & ({ kind: 'answer'; q: YardimSoru; others: YardimSoru[] } | { kind: 'topic'; topic: string } | { kind: 'none'; text: string });
+type Exchange = { key: number; ask: string } & ({ kind: 'answer'; q: YardimSoru; others: YardimSoru[] } | { kind: 'guess'; items: YardimSoru[] } | { kind: 'topic'; topic: string } | { kind: 'none'; text: string });
+/** 19 Ekim: "Videoda izleyin: Kasiyer eğitimi · 2:54" and, under it, what that moment shows. */
+function VideoLinks({ films }: { films: YardimVideo[] }) {
+  return <div className="help-videos">{films.map(v => {
+    const cut = v.baslik.indexOf(' · '), name = cut > 0 ? v.baslik.slice(0, cut) : v.baslik, what = cut > 0 ? v.baslik.slice(cut + 3) : '';
+    const label = `Videoda izleyin: ${name} · ${yardimVideoSure(v.t)}`;
+    return <a key={`${v.id}-${v.t}`} className="help-video" href={yardimVideoUrl(v)} target="_blank" rel="noopener noreferrer" title={`${v.baslik} (YouTube, yeni pencerede açılır)`} aria-label={`${label}${what ? `, ${what}` : ''} (YouTube, yeni pencerede)`}>
+      <CirclePlay size={24} aria-hidden="true" />
+      <span className="help-video-text"><span>{label}</span>{what && <small>{what}</small>}</span>
+    </a>;
+  })}</div>;
+}
 /** The conversation keeps this many exchanges (the oldest goes first). */
 const KEEP = 6;
 
@@ -111,9 +126,10 @@ export function HelpBody({ role, view, onTicket, autoFocus = false, scroll = fal
     const t = text.trim().slice(0, 120);
     if (!t) return;
     setText('');
-    const hits = meaningfulWords(t).length ? finder.search(t, 4) : [], first = hits[0] && finder.get(hits[0].id);
-    if (!first) { add({ key: ++counter.current, kind: 'none', ask: t, text: t }); return; }
-    add({ key: ++counter.current, kind: 'answer', ask: t, q: first, others: hits.slice(1).map(h => finder.get(h.id)).filter((q): q is YardimSoru => !!q) });
+    const found = finder.ask(t, 4), hits = found.hits.map(h => finder.get(h.id)).filter((q): q is YardimSoru => !!q);
+    if (!hits.length) { add({ key: ++counter.current, kind: 'none', ask: t, text: t }); return; }
+    if (!found.sure) { add({ key: ++counter.current, kind: 'guess', ask: t, items: hits }); return; }
+    add({ key: ++counter.current, kind: 'answer', ask: t, q: hits[0], others: hits.slice(1) });
   };
   const near = here ? data.sorular.filter(q => q.konu === here).slice(0, 6) : [];
   const common = data.sikSorulanlar.map(finder.get).filter((q): q is YardimSoru => !!q && !near.includes(q));
@@ -138,9 +154,11 @@ export function HelpBody({ role, view, onTicket, autoFocus = false, scroll = fal
           <span className="help-answer-topic">{topicName.get(e.q.konu)}</span>
           <h3 id={`${id}-a${e.key}`}>{e.q.soru}</h3>
           {e.q.cevap.map((b, i) => typeof b === 'string' ? <p key={i}>{b}</p> : <ol key={i}>{b.map((s, j) => <li key={j}>{s}</li>)}</ol>)}
+          {!!e.q.video?.length && <VideoLinks films={e.q.video} />}
           {chipsUnder('İlgili:', (e.q.ilgili ?? []).map(r => finder.get(r)).filter((q): q is YardimSoru => !!q))}
           {chipsUnder('Başka sorular:', e.others)}
         </article>)}
+        {e.kind === 'guess' && bot('g', <section className="help-balloon help-list help-guess" aria-label="Bunu mu demek istediniz?"><p className="help-guess-title">Bunu mu demek istediniz?</p>{list(e.items, false)}<p className="help-guess-note">Hiçbiri değilse başka kelimelerle yazın.</p></section>)}
         {e.kind === 'topic' && bot('t', <section className="help-balloon help-list" aria-label={topicName.get(e.topic)}><p>{topicName.get(e.topic)} hakkında sorulanlar:</p>{list(data.sorular.filter(q => q.konu === e.topic), false)}</section>)}
         {e.kind === 'none' && bot('n', <div className="help-balloon help-none">
           <p className="help-none-title">Bunu bilmiyorum.</p>
