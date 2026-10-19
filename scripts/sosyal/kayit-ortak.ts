@@ -1,7 +1,7 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
  * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts, youtube-sahip-kayit.ts,
- * youtube-tanitim-kayit.ts, youtube-stok-kayit.ts, youtube-rapor-kayit.ts).
+ * youtube-tanitim-kayit.ts, youtube-stok-kayit.ts, youtube-rapor-kayit.ts, youtube-kampanya-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -20,6 +20,8 @@ import { chromium, type APIRequestContext, type Browser, type BrowserContext, ty
 import QRCode from 'qrcode';
 import { totp } from '../../server/totp';
 import { decodeParts, fakeSmtp } from '../../tests/fake-smtp';
+import { cartLineTotal } from '../../packages/domain/lines';
+import type { Product as MenuProduct } from '../../packages/domain/types';
 
 export const ROOT = resolve('.');
 export const PASSWORD = 'MolaDemo!2026';
@@ -130,6 +132,30 @@ export async function choose(page: Page, rec: Recorder, name: string, select: Lo
   await select.focus(); await pause(page, 500);
   await select.selectOption({ label });
   await pause(page, 1200);
+}
+/** A field's text replaced: the tap, everything selected, the new text typed. */
+export async function retype(page: Page, rec: Recorder, name: string, field: Locator, text: string, delay = 110) {
+  await rec.tap(page, name, field, { lead: 700, hold: 150 });
+  await page.keyboard.press('Control+A'); await pause(page, 150);
+  await field.pressSequentially(text, { delay });
+  await pause(page, 300);
+}
+/** The open window (the last dialog), a main menu item of the side bar, a table's card on Masalar. */
+export const dialog = (page: Page) => page.getByRole('dialog').last();
+export const nav = (page: Page, name: string) => page.locator('aside nav').getByRole('button', { name: new RegExp(`^${name}`) });
+export const tableCard = (page: Page, table: string) => page.locator('.table-card', { has: page.locator('h3', { hasText: new RegExp(`^${table}$`) }) }).first();
+/** Scrolls so that `target` stands `at` px below the top of the window. */
+export async function bring(page: Page, target: Locator, at: number, ms = 1000) {
+  const y = await target.evaluate((e, a) => e.getBoundingClientRect().top - a, at);
+  if (Math.abs(y) > 4) { await smoothScroll(page, Math.round(y), ms); await pause(page, 500); }
+}
+/** Scrolls the open window (a dialog) so that `target` stands `at` px below the dialog's top. */
+export async function bringIn(page: Page, target: Locator, at: number) {
+  await target.evaluate((e, a) => {
+    const box = e.closest('dialog') as HTMLElement | null; if (!box) return;
+    box.scrollBy({ top: e.getBoundingClientRect().top - box.getBoundingClientRect().top - a, behavior: 'smooth' });
+  }, at);
+  await pause(page, 1000);
 }
 /** An init script: no spell-check squiggles under typed names; Mola Yardım's one-time hint stays closed (as in playwright.config.ts). */
 export const NO_HINTS = `try { localStorage.setItem('mola-yardim-ipucu', 'off'); localStorage.setItem('mola-campaign-ended', 'off'); } catch (e) {}
@@ -362,6 +388,21 @@ export function kit(o: KitOptions) {
     await check.close();
     console.log(`Salon sakin: açık sipariş ${after.orders.filter(o => !['served', 'cancelled', 'rejected'].includes(o.status)).length}, çağrı ${after.serviceCalls.length}`);
   }
+  /**
+   * The owner on the café computer's Mola window: signed in fresh (after a jump of the clock the old session is locked), sounds
+   * unlocked (a click on the header), Mola Yardım's hint off. `campaignWindow`: the "Kampanya bitti" window may open on this
+   * screen (the other screens keep it silenced, as the browser tests do).
+   */
+  async function ownerWindow(o: { campaignWindow?: boolean } = {}) {
+    const ctx = await desktopContext(); await ctx.addInitScript(o.campaignWindow ? NO_HINTS.replace(` localStorage.setItem('mola-campaign-ended', 'off');`, '') : NO_HINTS);
+    const page = await ctx.newPage();
+    await login(page, 'isletme');
+    await page.goto(`${KAFE}/`); await pause(page, 1500);
+    await page.mouse.click(640, 20); await pause(page, 600);
+    const sound = page.getByText(/Ses kapalı/).first();
+    if (await sound.isVisible().catch(() => false)) { await sound.click(); await pause(page, 600); }
+    return { ctx, page };
+  }
   /** Ayarlar values changed through the owner's API between the clips (garson onayı, change window, QR siparişleri açık/kapalı). */
   async function setPrefs(browser: Browser, patch: { waiterApproval?: boolean; changeSeconds?: number; qrOpen?: boolean }) {
     const api = await ownerApi(browser);
@@ -380,8 +421,8 @@ export function kit(o: KitOptions) {
   const floorOf = async (req: APIRequestContext) => (await (await req.get(`${KAFE}/api/staff/state`)).json()) as Floor;
   /** The waiter's order, as the tablet sends it (`Want`: a required choice without a named option takes its first). */
   async function order(table: string, wants: Want[]) {
-    const w = await as('garson'), s = await floorOf(w.req), t = s.tables.find(x => x.name === table)!;
-    const cart = wants.map(x => cartLine(s, x));
+    const w = await as('garson'), s = await floorOf(w.req), t = [...s.tables, ...(s.eventTables ?? [])].find(x => x.name === table)!;
+    const cart = wants.map(x => cartLine(s, x, wants));
     await post(w.req, '/api/staff/orders', { requestId: randomUUID(), tableId: t.id, lines: cart.map(c => c.line), expectedTotal: cart.reduce((n, c) => n + c.total, 0) });
     await w.close();
   }
@@ -397,7 +438,7 @@ export function kit(o: KitOptions) {
   }
   /** The cashier takes a whole bill (off camera). */
   async function pays(table: string, method: 'cash' | 'card') {
-    const c = await as('kasiyer'), s = await floorOf(c.req), a = [...s.tables, ...(s.takeaways ?? [])].find(t => t.name === table)!.account!;
+    const c = await as('kasiyer'), s = await floorOf(c.req), a = [...s.tables, ...(s.takeaways ?? []), ...(s.eventTables ?? [])].find(t => t.name === table)!.account!;
     await post(c.req, '/api/staff/payments', { requestId: randomUUID(), paymentContext: s.paymentContext, accountId: a.id, version: a.version, method, amount: a.balance, tendered: method === 'cash' ? Math.ceil(a.balance / 10000) * 10000 : a.balance });
     await c.close();
   }
@@ -462,7 +503,7 @@ export function kit(o: KitOptions) {
   }
   /** A masasız ticket at the counter (Sipariş al → Masasız sipariş, by the cashier, off camera); returns its name ("Masasız #3"). */
   async function takeaway(wants: Want[], label?: string) {
-    const c = await as('kasiyer'), s = await floorOf(c.req), cart = wants.map(x => cartLine(s, x));
+    const c = await as('kasiyer'), s = await floorOf(c.req), cart = wants.map(x => cartLine(s, x, wants));
     const r = await post(c.req, '/api/staff/takeaway/orders', { requestId: randomUUID(), lines: cart.map(x => x.line), expectedTotal: cart.reduce((n, x) => n + x.total, 0), ...(label ? { label } : {}) }) as { tableName: string };
     await c.close();
     return r.tableName;
@@ -601,7 +642,7 @@ export function kit(o: KitOptions) {
     await call('/contact', { phone: '', whatsapp: '', email: '', hours: '', web: '', ...c });
   }
   return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
-    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, takeaway, serveDay, merkezAdmin, ownerRemote, ownerPhone, molaContact, readNotifications, setUpStock, stockLevels,
+    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, takeaway, serveDay, merkezAdmin, ownerRemote, ownerPhone, molaContact, readNotifications, setUpStock, stockLevels, ownerWindow,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
 /**
@@ -633,17 +674,22 @@ export type StockSeed = { name: string; unit: 'g' | 'ml' | 'piece'; initial: num
 export type RecipeSeed = { product: string; items: [string, number][]; options?: { group: string; option: string; scale?: number; add?: [string, number][]; replace?: [string, string][] }[] };
 type FloorAccount = { id: string; version: number; balance: number; total: number; paid: number };
 type FloorTable = { id: string; name: string; epoch: number; token: string; needsCleaning?: boolean; account: FloorAccount | null };
-/** One line of a waiter's order and its total (a required choice without a named option takes its first). */
-export function cartLine(s: { products: FloorProduct[] }, [name, quantity, opts = [], note]: Want) {
+/**
+ * One line of a waiter's order and its total (a required choice without a named option takes its first), priced as the café
+ * prices it (packages/domain/lines.ts cartLineTotal): a running percent or TL campaign included. `cart`: the whole order, for
+ * campaigns with a quantity condition (the product's pieces in it are counted together).
+ */
+export function cartLine(s: { products: FloorProduct[] }, [name, quantity, opts = [], note]: Want, cart: Want[] = []) {
   const p = s.products.find(x => x.name === name);
   if (!p) throw new Error(`Ürün yok: ${name}`);
   const picked = p.groups.flatMap(g => { const o = g.options.find(o => opts.includes(o.name)) ?? (g.required ? g.options[0] : undefined); return o ? [{ g, o }] : []; });
-  const unit = p.price + picked.reduce((n, x) => n + x.o.extra, 0);
-  return { line: { productId: p.id, quantity, selections: picked.map(x => ({ groupId: x.g.id, optionId: x.o.id })), ...(note ? { note } : {}) }, total: unit * quantity };
+  const line = { productId: p.id, quantity, selections: picked.map(x => ({ groupId: x.g.id, optionId: x.o.id })), ...(note ? { note } : {}) };
+  const count = cart.filter(([n]) => n === name).reduce((n, [, q]) => n + q, 0) || quantity;
+  return { line, total: cartLineTotal(p as unknown as MenuProduct, line, count) };
 }
-type FloorProduct = { id: string; name: string; price: number; groups: { id: string; name: string; required: boolean; options: { id: string; name: string; extra: number }[] }[] };
+type FloorProduct = { id: string; name: string; price: number; unit?: string; discounts?: unknown[]; groups: { id: string; name: string; required: boolean; options: { id: string; name: string; extra: number }[] }[] };
 /** The staff snapshot as these helpers read it. */
-type Floor = { paymentContext: string; tables: FloorTable[]; takeaways?: FloorTable[];
+type Floor = { paymentContext: string; tables: FloorTable[]; takeaways?: FloorTable[]; eventTables?: FloorTable[];
   products: FloorProduct[];
   orders: { id: string; status: string; version: number; tableName?: string }[] };
 /** A time of the Istanbul day `day` days from today's (real) date, as ms (for kit({ saat }) and setClock). */

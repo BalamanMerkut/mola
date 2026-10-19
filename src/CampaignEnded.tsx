@@ -15,6 +15,9 @@ type Results = { row: Row | null; profit: number | null };
 const number = (n: number) => n.toLocaleString('tr-TR', { maximumFractionDigits: 1 });
 /** Browser tests' devices say "off" (playwright.config.ts): a campaign another spec ended must not cover their screens. */
 const silenced = () => { try { return localStorage.getItem('mola-campaign-ended') === 'off'; } catch { return false; } };
+/** 19 Ekim: the licence agreement window comes first; this one waited on top of it and covered "Okudum, kabul ediyorum".
+ *  The agreement window says when it closes (NOTIFICATIONS_CHANGED), so this one opens right after. */
+const agreementOpen = () => !!document.querySelector('.agreement-dialog');
 
 /**
  * "Kampanya bitti" (10 Ekim, sahibin onayı): the owner's one-time window for a campaign that ended (its end time passed or its
@@ -26,7 +29,7 @@ const silenced = () => { try { return localStorage.getItem('mola-campaign-ended'
 export function CampaignEnded({ products }: { products: Product[] }) {
   const [item, setItem] = useState<NotificationItem | null>(null), [results, setResults] = useState<Results | null>(null);
   const look = useCallback(async () => {
-    if (document.hidden || silenced()) return;
+    if (document.hidden || silenced() || agreementOpen()) return;
     try {
       const { items } = await api<{ items: NotificationItem[] }>('/api/staff/notifications');
       const next = items.filter(n => n.kind === 'campaign' && !n.read && n.campaign).sort((a, b) => a.at.localeCompare(b.at))[0] ?? null;

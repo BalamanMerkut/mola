@@ -56,6 +56,9 @@ test('Satış ve Raporlar → Raporları gönder (once Ayarlar → İşletme →
     await account.getByLabel('Kullanıcı adı').fill('kafe@example.com');
     await account.getByLabel('Şifre', { exact: true }).fill(PASSWORD);
     await account.getByLabel('Raporların gideceği adresler').fill('sahip@example.com, yanlis-adres');
+    // 19 Ekim: not while typing, once the field is left.
+    await expect(account.getByText('Adres geçersiz: yanlis-adres')).toHaveCount(0);
+    await account.getByLabel('Raporların gideceği adresler').blur();
     await expect(account.getByText('Adres geçersiz: yanlis-adres').first()).toBeVisible();
     await account.getByLabel('Raporların gideceği adresler').fill('sahip@example.com, muhasebe@example.com');
     await account.getByRole('button', { name: 'Hesabı kaydet' }).click();

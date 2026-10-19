@@ -6,6 +6,7 @@ import { AGREEMENT_NAME, AGREEMENT_VERSION } from '../packages/domain/agreement'
 import { api, ApiError } from './api';
 import { postponeAgreement, rememberAccepted, shouldAsk } from './agreementPrompt';
 import { Modal } from './components';
+import { notificationsChanged } from './notificationCount';
 import './license-agreement.css';
 
 /** **bold** inside a line; everything else is plain text (React escapes it). */
@@ -85,6 +86,8 @@ export function OwnerAgreementPrompt({ username }: { username: string }) {
     window.addEventListener('focus', back); document.addEventListener('visibilitychange', back);
     return () => { live = false; window.removeEventListener('focus', back); document.removeEventListener('visibilitychange', back); };
   }, [username]);
+  // Closed (accepted or "Daha sonra"): windows that waited for it ("Kampanya bitti", src/CampaignEnded.tsx) look again.
+  useEffect(() => { if (!open && seen.current.loaded) notificationsChanged(); }, [open]);
   if (!open || !state) return null;
   const later = () => { postponeAgreement(username, state.version); setOpen(false); };
   async function accept() {

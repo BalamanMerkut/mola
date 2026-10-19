@@ -488,9 +488,10 @@ export function Workspace() {
     {/* Mola Lisans Sözleşmesi: the owner only, once per sign-in while a (new) text is not accepted; never staff (src/LicenseAgreement.tsx). */}
     {/* Keys unique among these siblings (10 Ekim son kullanıcı testi): both windows were keyed by the user name, and React's
         "two children with the same key" opened the agreement window twice on about a third of the owner's sign-ins. */}
-    {owner && <OwnerAgreementPrompt key={`agreement:${data.username}`} username={data.username ?? ''} />}
-    {/* "Kampanya bitti": the owner's one-time window (the Müdür has only the notification in Bildirimler). */}
+    {/* "Kampanya bitti": the owner's one-time window (the Müdür has only the notification in Bildirimler). Before the agreement
+        (19 Ekim): if both open at once, the agreement, later in the page, stays on top and its button can be pressed. */}
     {owner && data.setupCompleted && <CampaignEnded key={`campaign-ended:${data.username}`} products={data.products} />}
+    {owner && <OwnerAgreementPrompt key={`agreement:${data.username}`} username={data.username ?? ''} />}
     {/* Duyurular: an Önemli one opens this window for the owner (after signing in, and at the next look); never for staff. */}
     {owner && <ImportantAnnouncement key={`announcement:${data.username}`} state={announcements} onOpenList={() => { setSupportDraft(null); setSupportTab('announcements'); setView('support'); }} />}
     {/* "Gider kaydet" on the cash strip / chip: the counter's payout (cashier, Müdür), the owner's bookkeeping form (date, method). */}

@@ -443,7 +443,7 @@ function ReportView({ r, live }: { r: PhoneReport; live: boolean }) {
         <div className="rp-meter" aria-hidden="true"><i style={{ width: `${Math.max(3, c.amount / channelMax * 100)}%` }} /></div><small>{c.orders.toLocaleString('tr-TR')} sipariş</small></div></li>)}</ul></section>}
     <section className="rp-card rp-o5" aria-label="Son kasa kapanışı"><h2>Son kasa kapanışı</h2>
       {r.lastClosing ? <><p className="rp-muted">{dayName(r.lastClosing.day, false)} · {clock(r.lastClosing.at)} · {r.lastClosing.byName}{r.lastClosing.extra ? ' · ek kapanış' : ''}</p>
-        <ul className="rp-rows"><li><span>Sayılan</span><strong>{tl(r.lastClosing.counted)}</strong></li><li><span>Olması gereken</span><strong>{tl(r.lastClosing.expected)}</strong></li><li className={r.lastClosing.difference ? 'rp-diff' : 'rp-even'}><span>Fark</span><strong>{r.lastClosing.difference > 0 ? '+' : ''}{tl(r.lastClosing.difference)}</strong></li></ul></>
+        <ul className="rp-rows"><li><span>Sayılan</span><strong>{tl(r.lastClosing.counted)}</strong></li><li><span>Olması gereken</span><strong>{tl(r.lastClosing.expected)}</strong></li><li className={r.lastClosing.difference ? 'rp-diff' : 'rp-even'}><span>Fark</span><strong>{r.lastClosing.difference > 0 ? '+' : r.lastClosing.difference < 0 ? '−' : ''}{tl(Math.abs(r.lastClosing.difference))}</strong></li></ul></>
         : <p className="rp-empty-line">Henüz kasa kapanışı yapılmadı.</p>}
     </section>
     </div>

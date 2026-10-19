@@ -42,6 +42,8 @@ export function EmailReports() {
   const take = (v: View, refill = true) => { setView(v); if (refill) setForm(formOf(v)); };
   useEffect(() => { void api<View>('/api/staff/email-reports').then(v => take(v)).catch(e => setError((e as Error).message)); }, []);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => { setNotice(''); setForm(f => ({ ...f, [k]: v })); };
+  // 19 Ekim: "Adres geçersiz" waits until the field is left (it showed while the address was still being typed); saving checks anyway.
+  const [toLeft, setToLeft] = useState(false);
 
   const saved = view?.account, gmail = form.provider === 'gmail';
   const to = addresses(form.to), badTo = to.find(a => !EMAIL.test(a));
@@ -84,8 +86,8 @@ export function EmailReports() {
           <Field label={gmail ? 'Uygulama şifresi' : 'Şifre'} hint={gmail ? 'Normal Gmail şifreniz çalışmaz: Google hesabı → Güvenlik → 2 Adımlı Doğrulama → Uygulama şifreleri’nde oluşturulan 16 harflik şifre.' : undefined}>
             <input type="password" maxLength={200} autoComplete="new-password" disabled={busy} value={form.password} placeholder={saved?.hasPassword ? 'Kayıtlı · değiştirmek için yazın' : ''} onChange={e => set('password', e.target.value)} /></Field>
           {!gmail && <Field label="Gönderen adresi" hint={userIsAddress ? 'Boşsa kullanıcı adresi.' : 'Kullanıcı adı bir e-posta adresi değilse gerekli.'}><input type="email" maxLength={200} disabled={busy} value={form.from} placeholder={userIsAddress ? form.user.trim() : 'ör. rapor@alanadi.com'} onChange={e => set('from', e.target.value)} /></Field>}
-          <Field className="wide" label="Raporların gideceği adresler" hint="En fazla 5 adres; aralarına virgül koyun." error={badTo ? `Adres geçersiz: ${badTo}` : undefined}>
-            <input type="text" inputMode="email" maxLength={600} disabled={busy} value={form.to} placeholder="ör. sahip@ornek.com, muhasebe@ornek.com" onChange={e => set('to', e.target.value)} /></Field>
+          <Field className="wide" label="Raporların gideceği adresler" hint="En fazla 5 adres; aralarına virgül koyun." error={toLeft && badTo ? `Adres geçersiz: ${badTo}` : undefined}>
+            <input type="text" inputMode="email" maxLength={600} disabled={busy} value={form.to} placeholder="ör. sahip@ornek.com, muhasebe@ornek.com" onBlur={() => setToLeft(true)} onChange={e => set('to', e.target.value)} /></Field>
         </div>
         {error && <Notice tone="error">{error}</Notice>}{notice && <Notice tone="success">{notice}</Notice>}
         <div className="settings-actions">
