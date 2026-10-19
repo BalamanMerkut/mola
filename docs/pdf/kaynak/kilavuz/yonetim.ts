@@ -221,6 +221,7 @@ function satisPaket() {
       'Paket kartı: Düzenle, Kopyala, Arşivle. Kullanımdaki bir paket değişirse ek onay istenir ve o paketteki bütün işletmelerin lisansı güncellenir.',
       '<b>Hizmet fiyatları</b>: her hizmet için aylık ve yıllık tutar; yıllık boşsa aylıktan hesaplanır. Fiyatlar KDV hariçtir. Satır sonundaki simge başlangıç değerine döndürür.',
       'Tek işletmeye indirim: işletme sayfası → Hizmet → <b>Bu işletme için fiyat</b>.',
+      'Web sitesindeki fiyatlar (KDV dahil) buradan değil, packages/domain/features.ts\'ten gelir. Fiyat burada değişince features.ts de değiştirilip site yeniden derlenir.',
     ]),
   ].join('');
 }
@@ -243,7 +244,7 @@ function guncellemeler() {
     tablo(['Adım', 'Kafe'], [
       ['İndirme', 'Yayındaki sürümü arka planda kendiliğinden indirir.'],
       ['Güncelleme penceresi', 'Sahip ekranında pencere açılır: <b>Şimdi güncelle</b>, <b>1 saat sonra hatırlat</b>, <b>Kapanışta kur</b>.'],
-      ['Şimdi güncelle', 'Önce yedek alınır; ilerleme yüzdeyle gösterilir; bitince sayfa kendiliğinden yenilenir. Açık masa ya da bitmemiş sipariş varken bu düğme kapalıdır.'],
+      ['Şimdi güncelle', 'Önce yedek alınır; ilerleme yüzdeyle gösterilir; bitince sayfa kendiliğinden yenilenir. Açık masa, açık masada bitmemiş sipariş ya da onay bekleyen QR siparişi varken bu düğme kapalıdır; pencere neyin beklediğini yazar. Ödenmiş masanın siparişi bekletmez.'],
       ['Ertelenirse', 'Kapanışta, sabah açılışta ya da boştayken, önce yedek alınarak kurulur.'],
       ['Hata', 'Yeni sürüm açılmazsa önceki sürüme kendiliğinden döner; olay Bildirim merkezine düşer.'],
       ['Açık ekranlar', 'Tablet, telefon ve diğer açık sayfalar sessiz bir anda kendiliğinden yenilenir.'],
@@ -278,11 +279,18 @@ function yedekAyarlar() {
       ['<b>Hesap güvenliği</b>', 'Yönetici şifresi, İki adımlı giriş, Kurtarma kodları.'],
       ['<b>Kullanıcılar</b>', 'Yetkili ekleme, yeni ilk şifre, silme (yalnız admin).'],
       ['<b>E-posta bildirimleri</b>', 'SMTP hesabı, adresler, deneme e-postası, son e-postalar.'],
-      ['<b>İletişim bilgileri</b>', 'Mola ekibinin telefonu, WhatsApp\'ı, e-postası, çalışma saatleri. Kafelerdeki "Mola ekibine ulaşın" ve web sitesi bunları gösterir.'],
+      ['<b>İletişim bilgileri</b>', 'Mola ekibinin telefonu, WhatsApp\'ı, e-postası, çalışma saatleri. Kafelerdeki "Mola ekibine ulaşın" ve web sitesi bunları gösterir. <b>Sosyal medya</b>: Mola\'nın Instagram, Facebook, X ve YouTube adresleri; yalnız web sitesinin altında görünür, kafelere gitmez.'],
       ['<b>İşlem kayıtları</b>', 'Mola Yönetim\'de yapılan her işlemin değiştirilemez kaydı.'],
       ['<b>Çalışma klasörü</b>', 'Durum özeti ve işlem kayıtlarının günlük kopyası; vds:cek bilgisayara çeker.'],
       ['<b>Geliştirici erişimi</b>', 'Yayınlama komutu için erişim anahtarı; bir kez gösterilir, iptal edilebilir.'],
     ], 'kucuk'),
+    h2('İletişim bilgileri ve sosyal medya'),
+    sekil('y-iletisim', { genislik: 560, aciklamalar: ['Mola ekibinin iletişim bilgileri: kafelere en geç 10 dakikada ulaşır.', 'Sosyal medya: yalnız web sitesinin alt kısmındaki simgeler.', '"İletişim bilgilerini kaydet".'] }),
+    liste([
+      'Boş bırakılan iletişim alanı kafelerde gösterilmez; sitede sitenin kendi bilgisi (site/config.json) kalır. Site kaydedilen bilgiyi 1 dakika içinde gösterir.',
+      'Sosyal medya alanlarına tam adres yazılır (https://…). Hiçbiri kaydedilmediyse site config.json\'daki listeyi gösterir; bir kez kaydedildikten sonra boş bırakılan hesap sitede gizlenir.',
+      'Her değişiklik İşlem kayıtları\'na eski → yeni değeriyle yazılır.',
+    ]),
     h2('E-posta bildirimleri'),
     p('Önemli olaylar, şifre sıfırlama kodu, İşletmem var kodları ve duyuru kopyaları bu hesapla gönderilir. Her SMTP hesabı kullanılabilir.'),
     adimlar([
@@ -365,7 +373,7 @@ function sunucu() {
     ], 'kucuk'),
     not('Sunucuda <b>MERKEZ_MENU_ORIGIN=https://menu.molayazilim.com.tr</b> ve <b>MERKEZ_SITE_ORIGIN=https://molayazilim.com.tr</b> ayarlı olmalıdır (/etc/mola-merkez/ayarlar.env). Toplu QR basımından önce pilot kafede Wi-Fi\'si kapalı bir telefonla deneme siparişi verilir.', 'dikkat'),
     h2('Web sitesi'),
-    p('molayazilim.com.tr düz HTML\'dir; çerez, analiz aracı ve fiyat içermez. İletişim bilgileri Ayarlar → İletişim bilgileri\'nden gelir. Yasal sayfalar avukat onayına kadar taslaktır (config.json: legalDraft).'),
+    p('molayazilim.com.tr düz HTML\'dir; çerez ve analiz aracı yoktur. İletişim ve sosyal medya bilgileri Ayarlar → İletişim bilgileri\'nden gelir. Yasal sayfalar avukat onayına kadar taslaktır (config.json: legalDraft).'),
     p('<b>Yayınlama:</b> yedek iletişim bilgileri <b>site/config.json</b>\'a yazılır. İndirme sayfası için <b>npm.cmd run installer</b> (MOLA_MERKEZ_URL ile), <b>npm.cmd run site:indir</b> ve config.json\'da <b>downloads.enabled: true</b>. Ardından <b>npm.cmd run site:build</b>; site/dist içeriği sunucuda /var/www/molayazilim klasörüne yüklenir.'),
   ].join('');
 }

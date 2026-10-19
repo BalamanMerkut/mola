@@ -274,11 +274,24 @@ const yonetim: Grup = async browser => {
           await p.getByLabel(/WhatsApp/).first().fill('0532 765 43 21').catch(() => {});
           await p.getByLabel(/E-posta/).first().fill('destek@molayazilim.com.tr').catch(() => {});
           await p.getByLabel(/Çalışma saatleri/).first().fill('Hafta içi 09:00–18:00').catch(() => {});
-          await dugme(p, /Kaydet/).click().catch(() => {}); await onayla(p); await sleep(1000);
+          // Sosyal medya (19 Ekim): yalnız web sitesinin altbilgisi.
+          await p.getByLabel('Instagram', { exact: true }).fill('https://www.instagram.com/molayazilim/').catch(() => {});
+          await p.getByLabel('YouTube', { exact: true }).fill('https://www.youtube.com/@molayazilim').catch(() => {});
+          await dugme(p, 'İletişim bilgilerini kaydet').click().catch(() => {}); await onayla(p); await sleep(1000);
         }
       }
-      await p.setViewportSize({ width: 1280, height: dosya === 'y-paketler' || dosya === 'y-yedek' ? 1300 : 900 });
+      await p.setViewportSize({ width: 1280, height: dosya === 'y-paketler' || dosya === 'y-yedek' ? 1300 : dosya === 'y-iletisim' ? 1100 : 900 });
       await sleep(500);
+      if (dosya === 'y-iletisim') {
+        const panel = p.getByRole('region', { name: 'Mola ekibi iletişim bilgileri' });
+        await cek(p, dosya, { kirp: panel, pay: 16, isaretler: [
+          { n: 1, loc: p.getByLabel(/Telefon/).first(), yon: 'ust' },
+          { n: 2, loc: panel.locator('.contact-social-title'), yon: 'ust' },
+          { n: 3, loc: dugme(panel, 'İletişim bilgilerini kaydet'), yon: 'sag' },
+        ] });
+        await p.setViewportSize({ width: 1280, height: 900 });
+        return;
+      }
       // İşlem kayıtları (8 Ekim): bütünlük kartı, Rapor al, dönem çipleri, diğer süzgeçler "Süzgeçler"de.
       if (dosya === 'y-islem-kayitlari') await cek(p, dosya, { isaretler: [
         { n: 1, loc: p.getByRole('status', { name: 'Bütünlük denetimi' }), yon: 'alt' },

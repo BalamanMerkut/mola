@@ -350,6 +350,28 @@ const sahipStok: Grup = async (browser, { sahip, id, ok }) => {
   ] }));
   await s.locator('main').getByRole('button', { name: /^Reçeteler/ }).first().click(); await sleep(800);
   await dene('s-stok-receteler', () => cek(s, 's-stok-receteler', { isaretler: [{ n: 1, loc: s.locator('.stock-row').filter({ hasText: 'Caffè Latte' }).first(), yon: 'sol' }] }));
+  // "Toplu üretimden hesapla" (0.1.33-0.1.34): bir sürahi limonata = 20 limon + 300 g şeker, 10 bardak. Kaydedilmez (Escape).
+  await dene('s-recete-toplu', async () => {
+    await s.setViewportSize({ width: 1280, height: 1100 }); await sleep(400);
+    await s.getByRole('button', { name: /Limonata reçetesi$/ }).first().click();
+    const pen = s.getByRole('dialog', { name: /Limonata · Reçete$/ }); await pen.waitFor(); await sleep(600);
+    const ac = dugme(pen, 'Toplu üretimden hesapla'); await ac.click(); await sleep(500);
+    const panel = pen.getByRole('region', { name: 'Bir seferde ne kadar hazırladınız?' });
+    await panel.getByLabel('Limon toplam miktarı', { exact: true }).fill('20');
+    await panel.getByLabel('Şeker toplam miktarı', { exact: true }).fill('300');
+    const porsiyon = panel.getByLabel('Kaç porsiyon çıktı?', { exact: true }); await porsiyon.fill('10');
+    const sonuc = panel.locator('.stock-batch-result'); await sonuc.getByText(/^1 porsiyon:/).waitFor({ timeout: 5000 });
+    await panel.scrollIntoViewIfNeeded(); await sleep(400);
+    await cek(s, 's-recete-toplu', { kirp: [pen.locator('.stock-recipe-head'), panel], pay: 16, isaretler: [
+      { n: 1, loc: ac, yon: 'ust' },
+      { n: 2, loc: panel.getByLabel('Limon toplam miktarı', { exact: true }), yon: 'sag' },
+      { n: 3, loc: porsiyon, yon: 'sag' },
+      { n: 4, loc: sonuc, yon: 'sag' },
+      { n: 5, loc: dugme(panel, 'Reçeteye yaz'), yon: 'sag' },
+    ] });
+    await s.keyboard.press('Escape'); await sleep(500);
+    await s.setViewportSize({ width: 1280, height: 900 }); await sleep(300);
+  });
   await s.locator('main').getByRole('button', { name: /^Ürünler/ }).first().click(); await sleep(800);
   // "Sınırlayan malzeme: Süt" ve ⓘ (8 Ekim).
   const sinir = s.locator('.stock-row').filter({ hasText: 'Caffè Latte' }).first();
@@ -572,7 +594,22 @@ const sahipDestek: Grup = async browser => {
     { n: 1, loc: s.getByRole('tab', { name: /Talepler/ }), yon: 'alt' },
     { n: 2, loc: s.getByRole('tab', { name: /Duyurular/ }), yon: 'alt' },
     { n: 3, loc: s.getByRole('tab', { name: /Mola desteği/ }), yon: 'alt' },
+    { n: 4, loc: s.getByRole('tab', { name: /^Yardım/ }), yon: 'alt' },
   ] }));
+  // Mola Yardım (üst çubuktaki kartal): bir soru, hazır cevap ve "Videoda izleyin" (0.1.38).
+  await dene('s-yardim', async () => {
+    await s.locator('header.topbar').getByRole('button', { name: 'Mola Yardım' }).click();
+    const y = s.getByRole('dialog', { name: 'Mola Yardım' }); await y.waitFor(); await sleep(600);
+    const kutu = y.getByLabel('Sorunuzu yazın');
+    await kutu.fill('Toplu yapılan ürünün reçetesini nasıl yazarım?'); await kutu.press('Enter');
+    const cevap = y.locator('.help-answer').last(); await cevap.waitFor(); await sleep(900);
+    await cek(s, 's-yardim', { kirp: y, isaretler: [
+      { n: 1, loc: kutu, yon: 'ust' },
+      { n: 2, loc: cevap.locator('h3'), yon: 'sol' },
+      { n: 3, loc: cevap.locator('.help-video').first(), yon: 'sol' },
+    ] });
+    await s.keyboard.press('Escape'); await sleep(500);
+  });
   // Bildirimler: the bell on the top bar (10 Ekim).
   await s.locator('header.topbar').getByRole('button', { name: /^Bildirimler/ }).click(); await sleep(900);
   await dene('s-bildirimler', () => cek(s, 's-bildirimler'));

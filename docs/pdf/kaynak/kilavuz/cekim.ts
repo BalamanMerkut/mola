@@ -120,7 +120,8 @@ export async function yeniSayfa(browser: Browser, cihaz: Cihaz, o: { yukseklik?:
   if (o.yukseklik) size.height = o.yukseklik;
   const phone = cihaz === 'telefon';
   const ctx = await browser.newContext({ viewport: size, deviceScaleFactor: 2, isMobile: phone, hasTouch: phone, locale: 'tr-TR', timezoneId: 'Europe/Istanbul', colorScheme: 'light', reducedMotion: 'reduce', ...(o.userAgent ? { userAgent: o.userAgent } : {}),
-    storageState: o.detay ? { cookies: [], origins: [{ origin: KAFE, localStorage: [{ name: 'mola-report-view', value: 'detail' }] }] } : undefined });
+    // Mola Yardım'ın tek seferlik ipucu ("Takıldığınız yerde bana sorabilirsiniz.") ekranların üstüne binmesin.
+    storageState: { cookies: [], origins: [{ origin: KAFE, localStorage: [{ name: 'mola-yardim-ipucu', value: 'off' }, ...(o.detay ? [{ name: 'mola-report-view', value: 'detail' }] : [])] }] } });
   return ctx.newPage();
 }
 

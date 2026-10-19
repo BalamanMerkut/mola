@@ -121,7 +121,7 @@ function kasiyer() {
     sekil('c-kasa-menu', { genislik: 300, yan: true, aciklamalar: ['Kasa çipi: ne zamandan beri açık.', '"Gider kaydet": ekmek, süt gibi bir ödeme. Kasadan mı, kasa dışından mı çıktı seçilir.', '"İade": müşteriye para iadesi.', '"Gün sonu": kasayı kapatır.'] }),
     liste([
       '<b>Kasa hareketi:</b> kasaya para konması ya da alınması. <b>Para bozdurma:</b> toplam değişmez.',
-      '<b>İade:</b> bugünkü ödemelerden birini seçin, ürünleri ve nedeni işaretleyin. Kasiyerin iade sınırı vardır; fazlası işletme sahibine sorulur.',
+      '<b>İade:</b> bugünkü ödemelerden birini seçin, ürünleri ve nedeni işaretleyin. Kasiyerin iade sınırı vardır. Sınırı aşan iade için <b>Sahibe iade isteği gönder</b>: istek işletme sahibine ve müdüre Bildirimler\'de gider; biri yapar ya da reddeder.',
     ]),
     h2('Gün sonu'),
     adimlar([
@@ -146,9 +146,9 @@ function kasiyer() {
 function mutfak() {
   return [
     bolum('Mutfak', 'Mutfak ya bir tablet ya da ekranda (Ekran), ya da mutfak yazıcısından çıkan fişlerle (Fiş) çalışır.'),
-    sekil('k-pano', { genislik: 560, aciklamalar: ['Yeni siparişler.', 'Hazırlananlar.', 'Hazır olanlar.', '"Stok": sayım ve fire.'] }),
+    sekil('k-pano', { genislik: 470, aciklamalar: ['Yeni siparişler.', 'Hazırlananlar.', 'Hazır olanlar.', '"Stok": sayım ve fire.'] }),
     liste([
-      'Her kart bir siparişdir: masa, kaç dakikadır beklediği, ürünler ve notlar.',
+      'Her kart bir sipariştir: masa, kaç dakikadır beklediği, ürünler ve notlar.',
       'Müşterinin değiştirme süresi açıksa QR siparişi bu süre bitince karta düşer (fiş de o an basılır); o ana kadar müşteri değiştirebilir ya da iptal edebilir.',
       '<b>Hazırlamaya başla</b>, sonra <b>Hazır olarak işaretle</b>. Garsonun telefonu o anda haber alır. Yanlış basarsanız 5 saniye içinde <b>Geri al</b>.',
       '10 dakikayı geçen kart turuncu, 20 dakikayı geçen kırmızı olur.',
@@ -169,6 +169,7 @@ function mudur() {
       'Sipariş, ödeme, iptal, masa taşıma, QR onayı<br>QR siparişlerini durdurma ve açma<br>Kasa ve giderler (kasa farkı hariç), iadeler<br>Stok<br>Ürünler ve kampanyalar<br>Vardiya ve bahşişi görme<br>Rezervasyon ve etkinlik<br>Satış ve Raporlar',
       'Ayarlar ve bölümlerin ayar sekmeleri<br>Çalışan hesapları<br>Kasadan "Sahip aldı / Bankaya", kapanış düzeltme<br>Gider düzeltme ve silme, otomatik giderler<br>Masa ekleme ve çıkarma, QR yenileme<br>Destek, lisans, yedek, güncelleme',
     ]]),
+    p('Müdürün de sağ üstte <b>zil</b>i vardır. Orada yalnız kasiyerin iade istekleri ve biten kampanyalar görünür. İade isteğindeki <b>İadeyi yap</b> düğmesi Kasa ve giderler → İadeler\'i açar.'),
     not('Müdür kasa farkını hiçbir yerde görmez. Raporlar için telefon kodu kurduysanız müdür raporları açarken sizin telefonunuzdaki 6 haneli kodu yazar.', 'bilgi'),
   ].join('');
 }
@@ -232,6 +233,15 @@ function sahip() {
       'Yanlış kayıt: satırın sonundaki üç nokta → <b>Bu kaydı geri al</b> (yalnız bugünün kayıtları).',
       'Satış ve Raporlar → Kârlılık: hangi ürün ne kadar kazandırıyor.',
     ]),
+    h3('Toplu üretimden reçete'),
+    p('Börek, limonata, çorba gibi bir seferde çok yapılan üründe porsiyon başı miktarı Mola hesaplar.'),
+    adimlar([
+      'Stok → Reçeteler\'de ürünü açın, <b>Toplu üretimden hesapla</b>\'ya basın.',
+      'Bir seferde kullandığınız malzemelerin toplam miktarını yazın. Reçetede olmayan malzemeyi <b>Malzeme ekle</b> ile seçin.',
+      '<b>Kaç porsiyon çıktı?</b> kutusunu doldurun (kiloyla satılan üründe: kaç kg çıktı). Altta porsiyon başı miktar görünür.',
+      '<b>Reçeteye yaz</b> miktarları reçeteye doldurur; reçetede olmayan malzeme yeni satır olur. Sonra <b>Reçeteyi kaydet</b>.',
+    ]),
+    sekil('s-recete-toplu', { genislik: 560, aciklamalar: ['"Toplu üretimden hesapla".', 'Bir seferde kullanılan toplam miktarlar.', 'Kaç porsiyon çıktı.', 'Porsiyon başı miktar.', '"Reçeteye yaz".'] }),
 
     h2('Satış ve Raporlar'),
     sekil('s-rapor-sade', { genislik: 600, aciklamalar: ['Dönem: Bugün, 7 gün, 30 gün, Yıl, Tümü, Tarih seç.', 'Günün tek cümlelik özeti.', '"Detaylı göster": bütün raporlar.', '"Yazdır ve paylaş".'] }),
@@ -244,7 +254,7 @@ function sahip() {
     not('Mola\'nın bastığı fiş bilgi fişidir; resmi fiş yazar kasadan kesilir. KDV dökümü bilgi içindir, beyanı mali müşaviriniz yapar.', 'bilgi'),
     h3('Raporlar e-postayla'),
     hizmet('email-reports', 'Gün sonu, haftalık ve aylık rapor e-postanıza gelir.'),
-    p('Yazdır ve paylaş → <b>Raporları gönder</b>. Kendi e-posta hesabınızı yazın (Gmail\'de "uygulama şifresi" denen 16 harflik özel şifre gerekir), en fazla 5 alıcı ekleyin, <b>Deneme e-postası gönder</b> ile deneyin.'),
+    p('Yazdır ve paylaş → <b>Raporları gönder</b>. Kendi e-posta hesabınızı yazın (Gmail\'de "uygulama şifresi" denen 16 harflik özel şifre gerekir), en fazla 5 alıcı ekleyin (aralarına virgül koyun), <b>Deneme e-postası gönder</b> ile deneyin. Yanlış yazılan adres, alandan çıkınca "Adres geçersiz" diye gösterilir.'),
 
     h2('Rezervasyon ve etkinlik'),
     hizmet('reservations', 'Masa ayırma ve kapora düzenli olur.'),
@@ -340,7 +350,7 @@ function yedekGuncelleme() {
       ['<b>Kapanışta kur</b>', 'Gün sonunda ya da yarın açılışta kendiliğinden, yedek alınarak kurulur.'],
     ]),
     liste([
-      'Açık masa ya da bitmemiş sipariş varken <b>Şimdi güncelle</b> kapalıdır; hesaplar kapanınca güncelleyebilirsiniz.',
+      'Açık iş varken <b>Şimdi güncelle</b> kapalıdır: açık masa, açık masada bitmemiş sipariş ya da onay bekleyen QR siparişi. Pencere neyin beklediğini yazar (ör. "1 açık masa ve 1 onay bekleyen QR siparişi var"); bunlar bitince güncelleyebilirsiniz. Ödenmiş masanın siparişi bekletmez.',
       'Erteleseniz de Masalar\'ın üstünde "Yeni sürüm hazır" yazar; <b>Şimdi kur</b> pencereyi yeniden açar.',
       'Yeni sürüm açılmazsa Mola önceki sürüme kendiliğinden döner, verileriniz yerinde kalır.',
       'Tablet, telefon ve diğer açık ekranlar boş bir anda kendiliğinden yenilenir.',
@@ -356,13 +366,13 @@ function uzaktan() {
     sekil('t-raporlarim', { genislik: 220, yan: true, aciklamalar: ['Bugünün satışı: nakit, kart, sipariş sayısı.'] }),
     p('Kasada bir kez: <b>Ayarlar → Uzaktan erişim</b>. Sonra her yerden tek adres: <b>isletme.molayazilim.com.tr</b>.'),
     adimlar([
-      '<b>1 · Telefon kodu</b>: telefona ücretsiz bir doğrulama uygulaması kurun, ekrandaki QR kodu okutun, uygulamadaki 6 haneli kodu yazın. Kurtarma kodlarını kâğıda yazın.',
+      '<b>1 · Telefon kodu</b>: telefona ücretsiz bir doğrulama uygulaması kurun, ekrandaki QR kodu okutun, uygulamadaki 6 haneli kodu yazın. Ekrana gelen kurtarma kodlarını kâğıda yazıp <b>Kodları sakladım</b>\'a basın; kodlar bir daha gösterilmez.',
       '<b>2 · E-posta</b>: adresinizi yazın, gelen 6 haneli kodu girin.',
       'Telefonunuzda ya da laptopunuzda <b>isletme.molayazilim.com.tr</b> adresini açın. E-posta ve şifrenizi yazıp <b>Devam</b>\'a basın.',
       'Sonraki ekranda doğrulama uygulamasındaki 6 haneli kodu yazıp <b>Giriş yap</b>\'a basın. Hangi cihazla önce girdiğiniz fark etmez.',
     ]),
     p('Cihaz kendine ad verir (ör. "iPhone · 15 Ekim") ve hatırlanır. Yeni cihaz girerken kasa bilgisayarı açık olmalı; kasa kapalıyken sayfa "Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum" ile son raporu gösterir.'),
-    p('En fazla 3 cihaz. Kaybolan telefonu kasada <b>4 · Eşleşmiş cihazlar</b>\'dan kaldırın: şifreniz sorulur, telefon kodu sorulmaz.'),
+    p('En fazla 3 cihaz. Kaybolan telefonu kasada <b>4 · Eşleşmiş cihazlar</b>\'dan kaldırın: şifreniz sorulur, telefon kodu sorulmaz. O cihazın açık uzaktan yönetim oturumu da hemen kapanır.'),
     p('<b>Çıkış</b> cihazı kilitler. Yeniden girmek için e-posta ve şifreniz yeter; kasa kapalıyken de son durumu görürsünüz. Cihazı tamamen silmek için Çıkış penceresinde <b>Bu cihazı tamamen kaldır</b>.'),
     h2('Uzaktan yönetim'),
     p('<b>Uzaktan erişim</b> hizmetine dahildir; bir kez kafede açılır. Kafeye gitmeden fiyat değiştirir, kampanya açar, çalışan hesabı kapatırsınız.'),
@@ -376,13 +386,22 @@ function uzaktan() {
     hizmet('split-screen', 'Kasa bilgisayarında ekranı ikiye bölersiniz: solda kasa, sağda mutfak ya da ikinci kasiyer.'),
     p('Şeritten <b>İkiye böl</b>. Her yarıya ayrı hesapla girilir; <b>Tek ekran</b> ile geri dönersiniz.'),
     h3('Bildirimler'),
-    p('Sağ üstteki <b>zil</b> kasa farkı, iade isteği, azalan stok, lisans ve yedek uyarılarını toplar. Her bildirimin yanındaki düğme ilgili yeri açar.'),
+    p('Sağ üstteki <b>zil</b> kasa farkı, iade isteği, azalan stok, lisans ve yedek uyarılarını toplar. Her bildirimin yanındaki düğme ilgili yeri açar. Müdürün zilinde yalnız kasiyerin iade istekleri ve biten kampanyalar görünür.'),
     h2('Destek'),
-    sekil('s-destek', { genislik: 560, aciklamalar: ['Talepler: Mola ekibiyle yazışma.', 'Duyurular: Mola ekibinin duyuruları.', 'Mola desteği: destek izni.'] }),
+    sekil('s-destek', { genislik: 560, aciklamalar: ['Talepler: Mola ekibiyle yazışma.', 'Duyurular: Mola ekibinin duyuruları.', 'Mola desteği: destek izni.', 'Yardım: Mola Yardım\'ın hazır cevapları.'] }),
     liste([
       '<b>Talepler → Yeni talep:</b> sorunu yazın, isterseniz ekran fotoğrafı ekleyin. Yanıt aynı yazışmaya gelir.',
       '<b>Duyurular:</b> Mola ekibinin duyuruları. Önemli olanlar girişte pencereyle gelir.',
       '<b>Mola desteği:</b> <b>Mola ekibi bağlanabilsin</b> açıkken ekibimiz ekranlarınızı açıp yardım eder. Satışlarınızı, ödemeleri, kasa kapanışlarını ve şifreleri göremez. Siz kapatana kadar açık kalır.',
+    ]),
+    h3('Mola Yardım'),
+    p('Üst çubuktaki kartal resmi <b>Mola Yardım</b>\'ı açar (işletme sahibi, müdür ve kasiyerde yanında "Yardım" yazar). Herkes kendi görevinin sorularını görür. Cevaplar programın içindedir: internetsiz de çalışır, yazdığınız soru bir yere gönderilmez.'),
+    sekil('s-yardim', { genislik: 280, yan: true, aciklamalar: ['Sorunuzu yazın.', 'Hazır cevap.', '"Videoda izleyin": konuyu anlatan video, ilgili saniyeden.'] }),
+    liste([
+      'Yazım hatası olsa da cevap bulunur. Mola emin olamazsa <b>Bunu mu demek istediniz?</b> ile en yakın soruları sıralar; birine dokunun.',
+      'Bazı cevapların altında <b>Videoda izleyin</b> bağlantısı vardır. Video YouTube\'da, anlatılan saniyeden açılır; önce kendi görevinizin eğitim videosu gelir.',
+      'Cevap yoksa "Bunu bilmiyorum" yazar. İşletme sahibi oradan <b>Destek talebi aç</b> ile soruyu Mola ekibine gönderir; çalışanlara işletme sahibine sormaları söylenir.',
+      'Bütün eğitim videoları: <b>youtube.com/@molayazilim</b>. Garson, kasiyer, mutfak, müdür ve işletme sahibi için ayrı video vardır.',
     ]),
   ].join('');
 }
