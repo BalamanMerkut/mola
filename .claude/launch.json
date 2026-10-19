@@ -54,6 +54,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "4180", "--directory", "site/dist"],
       "port": 4180
+    },
+    {
+      "name": "mola-pazarlama",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "npm.cmd run pazarlama"],
+      "port": 3700
     }
   ]
 }
