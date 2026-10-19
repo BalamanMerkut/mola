@@ -248,22 +248,7 @@ async function main() {
     // outside). Last: from here on the owner's sign-in asks for the phone code. =====
     const remote = await k.ownerRemote({ email: OWNER_EMAIL, admin: true });
     console.log('Kayıt: p1-telefon');
-    { const tctx = await k.phoneContext(); await tctx.addInitScript('window.__molaNoFinger = true');
-      await tctx.route(`${k.KAFE}/**`, r => r.abort());
-      const tel = await tctx.newPage();
-      await tel.goto(`${k.MERKEZ}/yonet`);
-      const login = tel.getByRole('form', { name: 'Giriş yap' });
-      await login.getByLabel('E-posta').fill(OWNER_EMAIL);
-      await login.getByLabel('Şifre', { exact: true }).fill('MolaDemo!2026');
-      await login.getByRole('button', { name: 'Devam' }).click();
-      const codeForm = tel.getByRole('form', { name: 'Telefon kodu' });
-      await codeForm.getByLabel('Telefon kodu').fill(await remote.code());
-      await codeForm.getByRole('button', { name: 'Giriş yap' }).click();
-      // With Uzaktan yönetim on, the phone opens on the café's screens ("Uzaktan"); its bar's "Raporlar" goes to the reports.
-      const hero = tel.getByRole('region', { name: 'Bugünün satışı' }), reports = tel.getByRole('button', { name: 'Raporlar', exact: true });
-      await hero.or(reports).first().waitFor({ timeout: 30000 });
-      if (await reports.isVisible().catch(() => false)) { await pause(tel, 1500); await reports.click(); }
-      await hero.waitFor({ timeout: 30000 }).catch(async e => { await tel.screenshot({ path: join(BASE, 'hata-telefon.png') }); throw e; });
+    { const { ctx: tctx, page: tel, hero } = await k.ownerPhone(remote, OWNER_EMAIL);
       await pause(tel, 2500); await tel.evaluate('scrollTo(0, 0)'); await imagesOnScreen(tel);
       const rec = new Recorder(tel, join(OUT, 'p1-telefon'), PHONE);
       await rec.start(); await pause(tel, 1200);

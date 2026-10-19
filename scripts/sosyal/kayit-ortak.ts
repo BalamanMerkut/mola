@@ -1,7 +1,7 @@
 /*
  * Shared parts of the social-video recorders (scripts/sosyal/blok1-kayit.ts, youtube-qr-kayit.ts, youtube-kurulum-kayit.ts,
  * youtube-garson-kayit.ts, youtube-kasiyer-kayit.ts, youtube-mutfak-kayit.ts, youtube-mudur-kayit.ts, youtube-sahip-kayit.ts,
- * youtube-tanitim-kayit.ts, youtube-stok-kayit.ts).
+ * youtube-tanitim-kayit.ts, youtube-stok-kayit.ts, youtube-rapor-kayit.ts).
  * Never real data: every run makes a fresh Mola Merkez and a fresh demo café ("Mola Örnek Kafe", scripts/demo-template.ts)
  * in its own run folder, gives its menu the template photos (templates/gorseller) the way an owner uploads a photo, and records
  * the real screens (served dist/: needs `npm run build`).
@@ -155,8 +155,9 @@ export async function imagesOnScreen(page: Page) {
 /**
  * `saat`: the run plays at another time of day (ms, the shifted "now" at the start; scripts/sosyal/kayit-saat.mjs in the
  * run's own servers, Playwright's clock in its screens). `setClock` moves it forward later (a gün sonu at night).
+ * `gun`: days of history the demo café is made with (scripts/demo-template.ts --gun, 3–90; default 5).
  */
-export type KitOptions = { run: string; reuse?: boolean; kafePort: number; merkezPort: number; saat?: number };
+export type KitOptions = { run: string; reuse?: boolean; kafePort: number; merkezPort: number; saat?: number; gun?: number };
 /** Servers, the demo café and the screens of one run. */
 export function kit(o: KitOptions) {
   const KAFE = `http://127.0.0.1:${o.kafePort}`, MERKEZ = `http://127.0.0.1:${o.merkezPort}`;
@@ -200,7 +201,7 @@ export function kit(o: KitOptions) {
     await waitFor(`${MERKEZ}/api/merkez/v1/health`, 'Mola Merkez');
     if (!o.reuse) {
       console.log('Örnek işletme hazırlanıyor…');
-      const demo = spawnSync(process.execPath, [...pre, '--import', 'tsx', 'scripts/demo-template.ts', kafeDir, '--gun=5'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], env: { ...quiet,
+      const demo = spawnSync(process.execPath, [...pre, '--import', 'tsx', 'scripts/demo-template.ts', kafeDir, `--gun=${o.gun ?? 5}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], env: { ...quiet,
         MOLA_MERKEZ_URL: MERKEZ, MERKEZ_DATA_DIR: merkezDir, MERKEZ_ADMIN_PASSWORD: ADMIN_PASSWORD } });
       if (!/Örnek işletme hazır:/.test(demo.stdout ?? '')) { process.stdout.write(demo.stdout ?? ''); throw new Error('Örnek işletme hazırlanamadı.'); }
     }
@@ -224,6 +225,9 @@ export function kit(o: KitOptions) {
     await page.reload();
     await page.waitForLoadState('networkidle').catch(() => {});
     await pause(page, 800);
+    // A campaign that ended in a longer history opens its one-time window on top of everything: closed first.
+    const ended = page.locator('dialog.campaign-ended-dialog');
+    if (await ended.isVisible().catch(() => false)) { await page.keyboard.press('Escape'); await pause(page, 600); }
     const agree = page.getByRole('button', { name: 'Okudum, kabul ediyorum' });
     if (await agree.isVisible().catch(() => false)) { await agree.click(); await pause(page, 800); }
   }
@@ -422,7 +426,7 @@ export function kit(o: KitOptions) {
   }
   /**
    * The cashier's gün sonu (off camera): the drawer counted (`count` from the expected cash, default exactly that, never below 0) and `left`
-   * kept in it for tomorrow. Returns the expected cash (null: no kasa was open).
+   * kept in it for tomorrow (at most what was counted). Returns the expected cash (null: no kasa was open).
    */
   async function closeKasa(o: { count?: (expected: number) => number; left?: number } = {}) {
     const api = await ownerApi(deskBrowser);
@@ -431,8 +435,10 @@ export function kit(o: KitOptions) {
     // null: no kasa open (that day's gün sonu is done already), nothing to close.
     if (expected === null) return null;
     const c = await as('kasiyer');
-    const counted = await post(c.req, '/api/staff/cash/count', { requestId: randomUUID(), mode: 'final', counted: o.count ? o.count(expected) : Math.max(0, expected), pos: null }) as { id: string };
-    await post(c.req, '/api/staff/cash/finish', { id: counted.id, left: o.left ?? 50000 });
+    const amount = o.count ? o.count(expected) : Math.max(0, expected);
+    const counted = await post(c.req, '/api/staff/cash/count', { requestId: randomUUID(), mode: 'final', counted: amount, pos: null }) as { id: string };
+    // Never more left in the drawer than was counted.
+    await post(c.req, '/api/staff/cash/finish', { id: counted.id, left: Math.min(o.left ?? 50000, amount) });
     await c.close();
     return expected;
   }
@@ -454,18 +460,28 @@ export function kit(o: KitOptions) {
     await page.getByText(/gönderildi|alındı/).first().waitFor({ timeout: 15000 });
     await ctx.close();
   }
+  /** A masasız ticket at the counter (Sipariş al → Masasız sipariş, by the cashier, off camera); returns its name ("Masasız #3"). */
+  async function takeaway(wants: Want[], label?: string) {
+    const c = await as('kasiyer'), s = await floorOf(c.req), cart = wants.map(x => cartLine(s, x));
+    const r = await post(c.req, '/api/staff/takeaway/orders', { requestId: randomUUID(), lines: cart.map(x => x.line), expectedTotal: cart.reduce((n, x) => n + x.total, 0), ...(label ? { label } : {}) }) as { tableName: string };
+    await c.close();
+    return r.tableName;
+  }
   /**
    * A day of the floor (off camera, on the recording clock): each visit is ordered at its minute of the day (by the waiter, or
-   * by the guest's phone with `qr`), goes through the kitchen and is paid 35 minutes later. Tables are cleaned at the end.
+   * by the guest's phone with `qr`, or as a masasız ticket at the counter with `masasiz`, its call name or ''), goes through
+   * the kitchen and is paid 35 minutes later. Tables are cleaned at the end. `day`: days from today (istanbul), default today.
    */
-  async function serveDay(visits: { table: string; at: number; lines: Want[]; method: 'cash' | 'card'; qr?: boolean }[]) {
+  async function serveDay(visits: { table: string; at: number; lines: Want[]; method: 'cash' | 'card'; qr?: boolean; masasiz?: string }[], day = 0) {
     for (const v of visits) {
-      await setClock(istanbul(0, Math.floor(v.at / 60), v.at % 60));
-      if (v.qr) await guestOrder(v.table, v.lines.flatMap(([name, n]) => Array<string>(n).fill(name)));
+      await setClock(istanbul(day, Math.floor(v.at / 60), v.at % 60));
+      let table = v.table;
+      if (v.masasiz !== undefined) table = await takeaway(v.lines, v.masasiz || undefined);
+      else if (v.qr) await guestOrder(v.table, v.lines.flatMap(([name, n]) => Array<string>(n).fill(name)));
       else await order(v.table, v.lines);
-      await advance(['preparing', 'ready', 'served'], v.table);
-      await setClock(istanbul(0, Math.floor(v.at / 60), v.at % 60 + 35));
-      await pays(v.table, v.method);
+      await advance(['preparing', 'ready', 'served'], table);
+      await setClock(istanbul(day, Math.floor(v.at / 60), v.at % 60 + 35));
+      await pays(table, v.method);
     }
     await cleanAll();
   }
@@ -526,6 +542,29 @@ export function kit(o: KitOptions) {
     return { code };
   }
   /**
+   * İşletmemi yönet on the owner's phone (after ownerRemote; only through Mola Merkez, as from outside: the café's own address
+   * is blocked for this phone): signed in with the e-mail, the password and the phone code; returns once "Bugünün satışı" is
+   * on screen (with Uzaktan yönetim on, from the café's screens through their bar's "Raporlar"). No finger on this phone.
+   */
+  async function ownerPhone(remote: { code: () => Promise<string> }, email: string) {
+    const ctx = await phoneContext(); await ctx.addInitScript('window.__molaNoFinger = true');
+    await ctx.route(`${KAFE}/**`, r => r.abort());
+    const page = await ctx.newPage();
+    await page.goto(`${MERKEZ}/yonet`);
+    const login = page.getByRole('form', { name: 'Giriş yap' });
+    await login.getByLabel('E-posta').fill(email);
+    await login.getByLabel('Şifre', { exact: true }).fill(PASSWORD);
+    await login.getByRole('button', { name: 'Devam' }).click();
+    const codeForm = page.getByRole('form', { name: 'Telefon kodu' });
+    await codeForm.getByLabel('Telefon kodu').fill(await remote.code());
+    await codeForm.getByRole('button', { name: 'Giriş yap' }).click();
+    const hero = page.getByRole('region', { name: 'Bugünün satışı' }), reports = page.getByRole('button', { name: 'Raporlar', exact: true });
+    await hero.or(reports).first().waitFor({ timeout: 30000 });
+    if (await reports.isVisible().catch(() => false)) { await pause(page, 1500); await reports.click(); }
+    await hero.waitFor({ timeout: 30000 });
+    return { ctx, page, hero };
+  }
+  /**
    * Stok set up off camera as the owner does it there (Stok → Malzemeler, Reçeteler): the ingredients with what is on the shelf
    * now, an optional "Uyarı sınırı" and unit price (`price`: TL per kg, L or piece, as the form asks), then the recipes by product
    * and option names (`scale`: Büyük boy 1.5; `add`: [item, amount]; `replace`: [instead of, item]). Amounts in g, ml or pieces.
@@ -562,9 +601,30 @@ export function kit(o: KitOptions) {
     await call('/contact', { phone: '', whatsapp: '', email: '', hours: '', web: '', ...c });
   }
   return { KAFE, MERKEZ, run: o.run, now, setClock, startServers, stopAll, post, state, login, ownerApi, settings, prepareMenu, calm, setPrefs, launch, close, phoneContext, desktopContext, tabletContext, freeTable, guestUrl, openMenu, staffScreen,
-    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, serveDay, merkezAdmin, ownerRemote, molaContact, readNotifications, setUpStock, stockLevels,
+    as, order, advance, pays, cleanAll, settleAll, openKasa, closeKasa, guestOrder, takeaway, serveDay, merkezAdmin, ownerRemote, ownerPhone, molaContact, readNotifications, setUpStock, stockLevels,
     get phoneBrowser() { return phoneBrowser; }, get deskBrowser() { return deskBrowser; } };
 }
+/**
+ * The demo café's Stok as an owner sets it up (Kit.setUpStock; prices in TL per kg, L or piece): video 02 adds Yulaf sütü and
+ * writes Caffè Latte and San Sebastian on camera.
+ */
+export const DEMO_STOCK: StockSeed[] = [
+  { name: 'Espresso çekirdeği', unit: 'g', initial: 2400, min: 500, price: 900 }, { name: 'Süt', unit: 'ml', initial: 9000, min: 4000, price: 36 },
+  { name: 'Türk kahvesi', unit: 'g', initial: 1200, min: 250, price: 800 }, { name: 'Siyah çay', unit: 'g', initial: 1500, min: 300, price: 300 },
+  { name: 'Ihlamur', unit: 'g', initial: 400, min: 100, price: 2000 }, { name: 'Limon', unit: 'piece', initial: 40, min: 10, price: 8 },
+  { name: 'Şeker', unit: 'g', initial: 5000, min: 1000, price: 40 }, { name: 'Krem peynir', unit: 'g', initial: 3200, min: 1000, price: 400 },
+  { name: 'Yumurta', unit: 'piece', initial: 60, min: 15, price: 5 }, { name: 'Krema', unit: 'ml', initial: 2000, min: 500, price: 200 },
+  { name: 'Tel kadayıf', unit: 'g', initial: 2000, min: 500, price: 160 }, { name: 'Künefe peyniri', unit: 'g', initial: 1800, min: 500, price: 450 },
+];
+/** The recipes written before Kârlılık is looked at (video 02 writes Caffè Latte and San Sebastian on camera). */
+export const DEMO_RECIPES: RecipeSeed[] = [
+  { product: 'Americano', items: [['Espresso çekirdeği', 18]], options: [{ group: 'Boy', option: 'Büyük', scale: 1.5 }] },
+  { product: 'Türk Kahvesi', items: [['Türk kahvesi', 7]] },
+  { product: 'Demleme Çay', items: [['Siyah çay', 6]] },
+  { product: 'Ihlamur', items: [['Ihlamur', 5], ['Limon', 1]] },
+  { product: 'Ev Yapımı Limonata', items: [['Limon', 3], ['Şeker', 40]] },
+  { product: 'Künefe', items: [['Tel kadayıf', 60], ['Künefe peyniri', 80]] },
+];
 /** [product, quantity, option names, note] of a waiter's order line. */
 export type Want = [string, number, string[]?, string?];
 /** An ingredient of Kit.setUpStock: `initial` and `min` in g, ml or pieces; `price` in TL per kg, L or piece. */

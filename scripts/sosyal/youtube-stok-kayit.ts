@@ -33,7 +33,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Locator, Page } from '@playwright/test';
-import { DESKTOP, NO_HINTS, ROOT, Recorder, TABLET, choose, istanbul, kit, pause, smoothScroll, typeIn, type RecipeSeed, type StockSeed, type Want } from './kayit-ortak';
+import { DEMO_RECIPES, DEMO_STOCK, DESKTOP, NO_HINTS, ROOT, Recorder, TABLET, choose, istanbul, kit, pause, smoothScroll, typeIn, type Want } from './kayit-ortak';
 
 const BASE = join(ROOT, '.local', 'sosyal', 'youtube', 'stok');
 const OUT = join(BASE, 'kayit');
@@ -43,24 +43,8 @@ mkdirSync(OUT, { recursive: true });
 const info: Record<string, unknown> = {};
 const ist = (ms: number) => new Date(ms).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
 
-/** This morning's Stok (prices in TL per kg, L or piece). Yulaf sütü is added on camera. */
-const ITEMS: StockSeed[] = [
-  { name: 'Espresso çekirdeği', unit: 'g', initial: 2400, min: 500, price: 900 }, { name: 'Süt', unit: 'ml', initial: 9000, min: 4000, price: 36 },
-  { name: 'Türk kahvesi', unit: 'g', initial: 1200, min: 250, price: 800 }, { name: 'Siyah çay', unit: 'g', initial: 1500, min: 300, price: 300 },
-  { name: 'Ihlamur', unit: 'g', initial: 400, min: 100, price: 2000 }, { name: 'Limon', unit: 'piece', initial: 40, min: 10, price: 8 },
-  { name: 'Şeker', unit: 'g', initial: 5000, min: 1000, price: 40 }, { name: 'Krem peynir', unit: 'g', initial: 3200, min: 1000, price: 400 },
-  { name: 'Yumurta', unit: 'piece', initial: 60, min: 15, price: 5 }, { name: 'Krema', unit: 'ml', initial: 2000, min: 500, price: 200 },
-  { name: 'Tel kadayıf', unit: 'g', initial: 2000, min: 500, price: 160 }, { name: 'Künefe peyniri', unit: 'g', initial: 1800, min: 500, price: 450 },
-];
-/** The recipes written before (Caffè Latte and San Sebastian are written on camera). */
-const RECIPES: RecipeSeed[] = [
-  { product: 'Americano', items: [['Espresso çekirdeği', 18]], options: [{ group: 'Boy', option: 'Büyük', scale: 1.5 }] },
-  { product: 'Türk Kahvesi', items: [['Türk kahvesi', 7]] },
-  { product: 'Demleme Çay', items: [['Siyah çay', 6]] },
-  { product: 'Ihlamur', items: [['Ihlamur', 5], ['Limon', 1]] },
-  { product: 'Ev Yapımı Limonata', items: [['Limon', 3], ['Şeker', 40]] },
-  { product: 'Künefe', items: [['Tel kadayıf', 60], ['Künefe peyniri', 80]] },
-];
+/** This morning's Stok and the recipes written before (kayit-ortak.ts DEMO_STOCK, DEMO_RECIPES): Yulaf sütü, Caffè Latte and San Sebastian come on camera. */
+const ITEMS = DEMO_STOCK, RECIPES = DEMO_RECIPES;
 /** The morning (off camera): each visit ordered at its minute, made, served and paid 35 minutes later. */
 const MORNING: { table: string; at: number; lines: Want[]; method: 'cash' | 'card' }[] = [
   { table: 'Masa 02', at: 8 * 60 + 50, lines: [['Türk Kahvesi', 2, ['Orta']], ['Demleme Çay', 2]], method: 'cash' },
