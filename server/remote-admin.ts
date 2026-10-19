@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { DomainError, requireRole } from '../packages/domain/engine.js';
 import { cafePrivateKey, randomB64u } from '../packages/domain/remote-crypto.js';
 import { cafeSession, openCall, PART_CHARS, readAdminOpen, sealOpenAnswer, sealReply, type AdminAnswer, type AdminOpenAnswer, type TunnelRequest, type TunnelResponse } from '../packages/domain/remote-admin-crypto.js';
+import { saatEki } from '../packages/domain/saat-eki.js';
 import type { Actor, Role } from '../packages/domain/types.js';
 import { passwordMatches } from './accounts.js';
 import type { MerkezLink } from './kafe-link.js';
@@ -161,6 +162,8 @@ export class RemoteAdmin {
   /** Live remote sessions of a business (the owner's list; "current" marks the asking one). */
   active(tenant: string) { return [...this.live.values()].filter(l => l.tenant === tenant).map(l => ({ id: l.id, device: l.device, startedAt: new Date(l.startedAt).toISOString() })); }
   view(tenant: string, current?: string) {
+    // 19 Ekim: a session that must end (its device just removed in card 4, …) ends before the list, not at the next 30 s sweep.
+    for (const l of [...this.live.values()]) if (l.tenant === tenant) { const why = this.stale(l); if (why) this.end(l.id, why); }
     const r = this.read(tenant), s = this.store.read(tenant), phones = this.reports().read(tenant).phones;
     const owners = (s.staffUsers ?? []).filter(u => u.role === 'owner' && u.active);
     return { on: r.on, since: r.since ?? null, by: r.by ?? null, code: owners.some(u => !!u.mfa), activated: this.activated(), devices: phones.map(p => p.name),
@@ -252,7 +255,7 @@ export class RemoteAdmin {
     this.write(tenant, r => { r.sessions.push({ id: sid, phone: p.id, device, startedAt: new Date(t).toISOString() }); });
     this.audit(tenant, 'remote_admin.login', user.id, p.id);
     this.link?.reportRemoteAdmin?.({ tenantId: tenant, session: sid, event: 'start', at: new Date(t).toISOString() });
-    this.notify(tenant, `remote-admin:${sid}`, 'Uzaktan yönetim girişi', `${device} ile ${clock(t)}'de kafeye uzaktan girildi. Siz değilseniz Ayarlar → Uzaktan erişim → Uzaktan yönetim → “Bütün uzak oturumları kapat”a basın ve şifrenizi değiştirin.`);
+    this.notify(tenant, `remote-admin:${sid}`, 'Uzaktan yönetim girişi', `${device} ile ${saatEki(clock(t), 'de')} kafeye uzaktan girildi. Siz değilseniz Ayarlar → Uzaktan erişim → Uzaktan yönetim → “Bütün uzak oturumları kapat”a basın ve şifrenizi değiştirin.`);
     if (user.mfa) try { this.sessions.grantReports?.(tenant, user.id, token, user.mfa.secret); } catch { /* the reports ask the code */ }
     return answer({ ok: true, sid, eph: session.eph, business: fresh.name, expiresAt: new Date(expires).toISOString(), device });
   }

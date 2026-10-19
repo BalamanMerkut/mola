@@ -39,6 +39,9 @@ const KIND_NAME: Record<DeviceKind | 'unknown', string> = { unknown: 'Cihaz', ph
 export function RemoteAccess() {
   const [view, setView] = useState<View | null>(null), [error, setError] = useState(''), [ownerOnly, setOwnerOnly] = useState(false);
   const [email, setEmail] = useState<Email | null | undefined>(undefined);
+  // 19 Ekim: the one-time recovery codes stay in card 1 until "Kodları sakladım", whatever the 8 s refresh says (it already
+  // has the code set up); card 5 is asked again when a device is removed (its remote sessions end with it).
+  const [savingCodes, setSavingCodes] = useState(false), [adminReload, setAdminReload] = useState(0);
   const cafe = onCafeComputer(), remote = remoteMode();
   const load = useCallback(() => api<View>('/api/staff/remote-reports').then(v => { setView(v); setError(''); })
     .catch(e => { if (e instanceof ApiError && e.status === 403) setOwnerOnly(true); else setError((e as Error).message); }), []);
@@ -51,13 +54,13 @@ export function RemoteAccess() {
   const ready = !!view.code && email?.source === 'owner';
   return <div className="remote-access">
     <Card icon={<KeyRound size={18} aria-hidden="true" />} title="1 · Telefon kodu" className="remote-step">
-      {view.code ? <p className="remote-done" role="status"><CheckCircle2 size={16} aria-hidden="true" />Kurulu ✓</p>
+      {view.code && !savingCodes ? <p className="remote-done" role="status"><CheckCircle2 size={16} aria-hidden="true" />Kurulu ✓</p>
         : remote ? <p className="settings-card-note">Telefon kodu yalnız kafedeki bilgisayardan kurulur.</p>
-        : <PhoneCode onPhone={!cafe && deviceKindOf(navigator.userAgent, navigator.maxTouchPoints) === 'phone'} onDone={() => void load()} />}
+        : <PhoneCode onPhone={!cafe && deviceKindOf(navigator.userAgent, navigator.maxTouchPoints) === 'phone'} onCodes={() => setSavingCodes(true)} onDone={() => { setSavingCodes(false); void load(); }} />}
     </Card>
 
     <Card icon={<Mail size={18} aria-hidden="true" />} title="2 · E-posta" className="remote-step">
-      <LoginEmail email={email} onChange={() => void loadEmail()} />
+      <LoginEmail email={email} onChange={loadEmail} />
     </Card>
 
     <Card icon={<Globe2 size={18} aria-hidden="true" />} title="3 · Cihaz eşleştirme" className="remote-step">
@@ -65,24 +68,24 @@ export function RemoteAccess() {
     </Card>
 
     <Card icon={<ListChecks size={18} aria-hidden="true" />} title="4 · Eşleşmiş cihazlar" className="remote-step">
-      <Devices view={view} remote={remote} onChange={setView} />
+      <Devices view={view} remote={remote} onChange={setView} onRemoved={() => setAdminReload(n => n + 1)} />
     </Card>
 
     {/* Drawn again once the phone code is set up above (its "Aç" needs the code). */}
-    <RemoteAdminSettings key={view.code ? 'kod' : 'kodsuz'} title="5 · Uzaktan yönetim" address={view.address} />
+    <RemoteAdminSettings key={view.code ? 'kod' : 'kodsuz'} title="5 · Uzaktan yönetim" address={view.address} reload={adminReload} />
     {error && <Notice tone="error">{error}</Notice>}
   </div>;
 }
 
 /** Raporlar için telefon kodu, set up right here: the password, then the authenticator app (otpauth:// link on the phone, QR on a computer), then its code. */
-function PhoneCode({ onPhone, onDone }: { onPhone: boolean; onDone: () => void }) {
+function PhoneCode({ onPhone, onCodes, onDone }: { onPhone: boolean; onCodes: () => void; onDone: () => void }) {
   const id = useId();
   const [password, setPassword] = useState(''), [setup, setSetup] = useState<{ secret: string; uri: string } | null>(null), [image, setImage] = useState('');
   const [code, setCode] = useState(''), [codes, setCodes] = useState<string[]>([]), [busy, setBusy] = useState(false), [error, setError] = useState(''), [copied, setCopied] = useState(false);
   useEffect(() => { let live = true; if (setup && !onPhone) void QRCode.toDataURL(setup.uri, { width: 200, margin: 1 }).then(v => { if (live) setImage(v); }); return () => { live = false; }; }, [setup, onPhone]);
   async function send<T>(path: string, body: unknown) { setBusy(true); setError(''); try { return await api<T>(path, body); } catch (e) { setError((e as Error).message); return null; } finally { setBusy(false); } }
   async function start(e: FormEvent) { e.preventDefault(); const typed = password; setPassword(''); const v = await send<{ secret: string; uri: string }>('/api/staff/report-security/setup', { password: typed }); if (v) setSetup(v); }
-  async function confirm(e: FormEvent) { e.preventDefault(); const v = await send<{ recoveryCodes?: string[] }>('/api/staff/report-security/enable', { code }); setCode(''); if (v?.recoveryCodes?.length) setCodes(v.recoveryCodes); else if (v) onDone(); }
+  async function confirm(e: FormEvent) { e.preventDefault(); const v = await send<{ recoveryCodes?: string[] }>('/api/staff/report-security/enable', { code }); setCode(''); if (v?.recoveryCodes?.length) { setCodes(v.recoveryCodes); onCodes(); } else if (v) onDone(); }
   if (codes.length) return <div className="remote-code">
     <Notice tone="success">Telefon kodu kuruldu. Kurtarma kodlarını kâğıda yazıp saklayın; bir daha gösterilmez.</Notice>
     <textarea aria-label="Kurtarma kodları" readOnly rows={Math.min(8, codes.length)} value={codes.join('\n')} />
@@ -113,7 +116,7 @@ function PhoneCode({ onPhone, onDone }: { onPhone: boolean; onDone: () => void }
 }
 
 /** The address devices sign in with: verified here when there is none (a code to it; Mola Merkez keeps it). */
-function LoginEmail({ email, onChange }: { email: Email | null | undefined; onChange: () => void }) {
+function LoginEmail({ email, onChange }: { email: Email | null | undefined; onChange: () => Promise<void> }) {
   const id = useId();
   const [typed, setTyped] = useState(''), [password, setPassword] = useState(''), [code, setCode] = useState(''), [sent, setSent] = useState<{ ticket: string; email: string } | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
@@ -122,7 +125,8 @@ function LoginEmail({ email, onChange }: { email: Email | null | undefined; onCh
   if (!email.available) return <p className="settings-card-note">{email.reason}</p>;
   if (email.source === 'owner') return <p className="remote-done" role="status"><CheckCircle2 size={16} aria-hidden="true" />{email.email} ✓</p>;
   const run = async (fn: () => Promise<void>) => { setBusy(true); setError(''); try { await fn(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
-  if (sent) return <form className="remote-email" aria-label="E-postayı doğrula" onSubmit={e => { e.preventDefault(); void run(async () => { await api('/api/staff/owner-email/confirm', { ticket: sent.ticket, code }); setSent(null); setCode(''); onChange(); }); }}>
+  // 19 Ekim: after "Doğrula" this form stays until the reloaded e-mail is here ("✓"), so the empty form never flashes.
+  if (sent) return <form className="remote-email" aria-label="E-postayı doğrula" onSubmit={e => { e.preventDefault(); void run(async () => { await api('/api/staff/owner-email/confirm', { ticket: sent.ticket, code }); await onChange(); setSent(null); setCode(''); }); }}>
     <p className="settings-field-hint">{sent.email} adresine 6 haneli kod gönderildi. Kod 10 dakika geçerlidir.</p>
     <label htmlFor={`${id}-code`}>E-postadaki kod</label>
     <input id={`${id}-code`} value={code} inputMode="numeric" autoComplete="one-time-code" maxLength={6} required placeholder="6 haneli kod" disabled={busy} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
@@ -155,12 +159,12 @@ function Connect({ address, line = 'Telefonunuzda ve laptopunuzda bu adresi aç�
   </div>;
 }
 
-function Devices({ view, remote, onChange }: { view: View; remote: boolean; onChange: (v: View) => void }) {
+function Devices({ view, remote, onChange, onRemoved }: { view: View; remote: boolean; onChange: (v: View) => void; onRemoved: () => void }) {
   const [removing, setRemoving] = useState(''), [password, setPassword] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
   async function remove(e: FormEvent, phoneId: string) {
     e.preventDefault(); setBusy(true); setError('');
     const typed = password; setPassword('');
-    try { onChange(await api<View>('/api/staff/remote-reports/phones/remove', { id: phoneId, password: typed })); setRemoving(''); }
+    try { onChange(await api<View>('/api/staff/remote-reports/phones/remove', { id: phoneId, password: typed })); setRemoving(''); onRemoved(); }
     catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   }
   if (!view.phones.length) return <p className="settings-card-note">Henüz cihaz yok.</p>;

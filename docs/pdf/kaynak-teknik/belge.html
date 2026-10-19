@@ -363,7 +363,7 @@
 <figcaption><b>Şema 3.</b> İşletmemi yönet girişi ve rapor kutusu. Şifre ve kod yalnız kafenin açabileceği biçimde mühürlenir. Kutu anahtarı iki Diffie-Hellman sonucundan türer: yalnız kafe (sabit anahtarıyla) cihazın kabul edeceği bir kutu yapabilir, yalnız cihaz açabilir.</figcaption>
 </figure>
 <ul>
-  <li><strong>Posta kutusu:</strong> kafe açıkken 5 dakikada bir, gün sonunda ve kapanırken her cihaz için raporun tamamını şifreli bırakır; kasa kapalıyken cihaz "Kasa bilgisayarı kapalı · Son durum" gösterir. Kutu alınınca ya da 7 günde silinir, Merkez yedeğine girmez.</li>
+  <li><strong>Posta kutusu:</strong> kafe açıkken 5 dakikada bir, gün sonunda ve kapanırken her cihaz için raporun tamamını şifreli bırakır; kasa kapalıyken cihaz "Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum" gösterir. Kutu alınınca ya da 7 günde silinir, Merkez yedeğine girmez.</li>
   <li><strong>Çıkış ve yerel doğrulayıcı:</strong> Çıkış cihazı kilitler, anahtarlar kalır. Yeniden girişte kasa açıksa kafe denetler; kapalıysa cihaz, kafenin son onayladığı şifreden üretilmiş yerel doğrulayıcıyla denetler (PBKDF2-SHA256, 310 000 tur, rastgele tuz; <code>packages/domain/local-verifier.ts</code>). Şifre hiçbir yerde tutulmaz.</li>
   <li><strong>Güven notu (TOFU):</strong> cihaz kafenin açık anahtarını ilk girişte Merkez'den alır. Kötü niyetli bir Merkez o ilk girişin şifresini okuyabilir; bağlı cihazların sonraki raporları ve oturumları etkilenmez.</li>
 </ul>

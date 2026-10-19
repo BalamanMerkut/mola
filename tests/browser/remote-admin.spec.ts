@@ -1,5 +1,6 @@
 import { test, expect, devices, type Request as PwRequest } from '@playwright/test';
 import sharp from 'sharp';
+import { saatEki } from '../../packages/domain/saat-eki';
 import { ensureSetup, MERKEZ, openSettings, openView, OWNER_EMAIL, ownerEmailOn, phoneCodeOn, raporlarimLogin, remoteLoginOpen, reportAction } from './helpers';
 
 /*
@@ -38,7 +39,10 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     await on.getByLabel('Şifreniz').fill(PASSWORD);
     await on.getByLabel('Telefon kodu').fill(await phoneCode.code());
     await on.getByRole('button', { name: 'Uzaktan yönetimi aç' }).click();
-    await expect(card).toContainText(/Açık · .*'den beri/);
+    // 19 Ekim: the time with its own ending (11:30'dan, 13:00'ten, 11:50'den), not a fixed "'den".
+    await expect(card).toContainText(/Açık · \d+ \S+ \d\d:\d\d'[dt][ea]n beri/);
+    const shown = /(\d\d:\d\d'[dt][ea]n) beri/.exec(await card.getByRole('status').first().innerText())![1];
+    expect(shown).toBe(saatEki(shown.slice(0, 5), 'den'));
     await expect(card.locator('.remote-address-text')).toHaveText(`${MERKEZ}/yonet`.replace(/^https?:\/\//, ''));
     await expect(card.getByRole('list', { name: 'Açık uzak oturumlar' })).toHaveCount(0);
     await owner.screenshot({ path: info.outputPath('sahip-uzaktan-yonetim.png'), fullPage: true });
@@ -132,7 +136,7 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     await expect(lost).toHaveCount(0, { timeout: 5000 });
     await expect(device.getByText('Kaydediliyor…')).toHaveCount(0);
     // The last report with "Kasa bilgisayarı kapalı", not an empty screen.
-    await expect(device.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 60_000 });
+    await expect(device.getByText(/^Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 60_000 });
     await expect(device.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
     await expect(device.getByText('İşletmeyi yönet: kasa açıkken')).toBeVisible();
     await device.screenshot({ path: info.outputPath('laptop-3-kasa-kapali.png'), fullPage: true });
@@ -158,8 +162,18 @@ test('İşletmemi yönet: sign in → the café screens at once, a price, report
     await owner.reload(); await openSettings(owner, 'Uzaktan erişim');
     const list = card.getByRole('list', { name: 'Açık uzak oturumlar' });
     await expect(list).toContainText('Windows laptop ·');
-    const notes = await (await cafe.request.get('/api/staff/notifications')).json() as { items: { title: string }[] };
+    const notes = await (await cafe.request.get('/api/staff/notifications')).json() as { items: { title: string; text: string }[] };
     expect(notes.items.some(n => n.title === 'Uzaktan yönetim girişi')).toBe(true);
+    for (const n of notes.items.filter(x => x.title === 'Uzaktan yönetim girişi')) { const at = / ile (\d\d:\d\d)'/.exec(n.text)![1]; expect(n.text).toContain(`${saatEki(at, 'de')} kafeye uzaktan girildi.`); }
+    // 19 Ekim: the phone removed in card 4: card 5 drops its open session at once (asked again, no reopening).
+    await expect(list).toContainText('Android telefon ·');
+    const devicesCard = owner.locator('section.settings-card', { has: owner.getByRole('heading', { name: '4 · Eşleşmiş cihazlar' }) });
+    await devicesCard.getByRole('button', { name: /^Android telefon · .* cihazını kaldır$/ }).click();
+    await devicesCard.getByRole('form', { name: /cihazını kaldır$/ }).getByLabel('Şifreniz').fill(PASSWORD);
+    await devicesCard.getByRole('button', { name: 'Evet, kaldır' }).click();
+    await expect(devicesCard.getByRole('button', { name: /^Android telefon · .* cihazını kaldır$/ })).toHaveCount(0);
+    await expect(list).not.toContainText('Android telefon', { timeout: 5000 });
+    await expect(list).toContainText('Windows laptop ·');
     await card.getByRole('button', { name: 'Bütün uzak oturumları kapat' }).click();
     const unlock = device.getByRole('form', { name: 'İşletmeyi yönet' });
     await expect(unlock).toBeVisible({ timeout: 30_000 });

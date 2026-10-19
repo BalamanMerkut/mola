@@ -39,7 +39,7 @@ import { featureRefusal } from './feature-guard.js';
  *            is the report sealed for that device, bound to the question.
  *   Postbox  Every RELAY postbox period while this computer runs (MOLA_POSTBOX_MS, 5 minutes), after a gün sonu and when Mola
  *            closes, the very same report is sealed for each device and left at Merkez (one box per device, deleted on fetch
- *            or after 7 days), so the device shows it as "Kasa bilgisayarı kapalı · Son durum 23:40" while this computer is off.
+ *            or after 7 days), so the device shows it as "Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum 23:40" while this computer is off.
  * Only an active owner's devices are answered: a device paired by an owner whose account was closed gets nothing.
  */
 type Phone = { id: string; name: string; pub: string; ownerId: string; ownerName: string; pairedAt: string; lastSeenAt?: string; kind?: DeviceKind; device?: string };

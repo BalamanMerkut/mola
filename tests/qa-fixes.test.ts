@@ -32,6 +32,11 @@ test('Turkish endings after a clock time follow the last word read aloud', () =>
   const cases: [string, 'den' | 'de' | 'e', string][] = [['01:24', 'den', "01:24'ten"], ['01:24', 'de', "01:24'te"], ['09:02', 'den', "09:02'den"], ['14:30', 'de', "14:30'da"], ['12:40', 'den', "12:40'tan"],
     ['05:00', 'e', "05:00'e"], ['05:00', 'de', "05:00'te"], ['06:00', 'e', "06:00'ya"], ['10:00', 'de', "10:00'da"], ['23:00', 'e', "23:00'e"], ['18:05', 'den', "18:05'ten"], ['21:09', 'de', "21:09'da"], ['20:00', 'den', "20:00'den"], ['13:50', 'e', "13:50'ye"], ['07:03', 'de', "07:03'te"]];
   for (const [time, ek, want] of cases) assert.equal(saatEki(time, ek), want, `${time} + ${ek}`);
+  // 19 Ekim: a date before the time ("Açık · 19 Ekim 11:30'dan beri", a campaign "… 14:00'e kadar"); the endings the old fixed
+  // "'de"/"'den" got wrong (14:30'de, 13:00'de, 15:40'de).
+  const more: [string, 'den' | 'de' | 'e', string][] = [['19 Ekim 11:30', 'den', "19 Ekim 11:30'dan"], ['19 Eki 2026 14:00', 'e', "19 Eki 2026 14:00'e"], ['3 Kasım 15:40', 'de', "3 Kasım 15:40'ta"],
+    ['14:30', 'de', "14:30'da"], ['11:50', 'den', "11:50'den"], ['13:00', 'de', "13:00'te"], ['13:00', 'den', "13:00'ten"], ['15:40', 'de', "15:40'ta"], ['19 Ekim', 'den', "19 Ekim'den"]];
+  for (const [time, ek, want] of more) assert.equal(saatEki(time, ek), want, `${time} + ${ek}`);
 });
 
 test('Rezervasyon: a normal table merged into an event bill neither counts as an event table nor inflates the reserved part of the payment', () => {

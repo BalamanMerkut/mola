@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
 import { Copy, Globe2, LockKeyhole } from 'lucide-react';
+import { saatEki } from '../packages/domain/saat-eki';
 import { api } from './api';
 import { Notice } from './components';
 import { copyText } from './PermanentLink';
@@ -17,12 +18,13 @@ type Session = { id: string; device: string; startedAt: string; endedAt?: string
 type View = { on: boolean; since: string | null; code: boolean; activated: boolean; devices: string[]; active: { id: string; device: string; startedAt: string; current: boolean }[]; sessions: Session[]; remote: boolean };
 const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
-export function RemoteAdminSettings({ title = 'Uzaktan yönetim', address }: { title?: string; address?: string | null }) {
+export function RemoteAdminSettings({ title = 'Uzaktan yönetim', address, reload = 0 }: { title?: string; address?: string | null; reload?: number }) {
   const id = useId();
   const [view, setView] = useState<View | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false), [asking, setAsking] = useState(false), [copied, setCopied] = useState(false);
   const [password, setPassword] = useState(''), [code, setCode] = useState(''), [hidden, setHidden] = useState(false);
   const load = useCallback(() => api<View>('/api/staff/remote-admin').then(v => { setView(v); setError(''); }).catch(e => { if ((e as { status?: number }).status === 403) setHidden(true); else setError((e as Error).message); }), []);
-  useEffect(() => { void load(); }, [load]);
+  // 19 Ekim: `reload` changes when Uzaktan erişim removes a device (the server ended its sessions): asked again in place.
+  useEffect(() => { void load(); }, [load, reload]);
   async function send(body: unknown, path = '/api/staff/remote-admin') {
     setBusy(true); setError('');
     try { setView(await api<View>(path, body)); setAsking(false); } catch (e) { setError((e as Error).message); } finally { setBusy(false); setPassword(''); setCode(''); }
@@ -33,7 +35,7 @@ export function RemoteAdminSettings({ title = 'Uzaktan yönetim', address }: { t
     lead="Kafenin bütün ekranlarını eşleşmiş cihazınızdan her yerden açın.">
     {!view ? (error ? <Notice tone="error">{error}</Notice> : <p className="settings-card-note" aria-busy="true">Yükleniyor…</p>) : <>
       {/* What keeps it closed is said in the status line itself; "Aç" shows only when it can open. */}
-      <div className="settings-row"><div className="settings-row-copy"><div className="settings-row-title"><strong>Durum</strong></div><p role="status">{view.on ? `Açık${view.since ? ` · ${when(view.since)}'den beri` : ''}`
+      <div className="settings-row"><div className="settings-row-copy"><div className="settings-row-title"><strong>Durum</strong></div><p role="status">{view.on ? `Açık${view.since ? ` · ${saatEki(when(view.since), 'den')} beri` : ''}`
           : view.remote ? 'Kapalı.' : !view.code ? 'Kapalı. Açmak için önce 1. adımda telefon kodunu kurun.' : !view.activated ? 'Kapalı. Mola bu bilgisayarda etkinleştirilince açılabilir.' : 'Kapalı · uzaktan giriş yapılamaz.'}</p></div>
         <div className="settings-row-control">{view.on ? <button type="button" className="btn secondary" disabled={busy} onClick={() => void send({ on: false })}>Kapat</button>
           : !view.remote && view.code && view.activated && <button type="button" className="btn primary" disabled={busy || asking} onClick={() => { setAsking(true); setError(''); }}>Aç</button>}</div>

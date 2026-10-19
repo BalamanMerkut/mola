@@ -361,7 +361,7 @@ function uzaktan() {
       'Telefonunuzda ya da laptopunuzda <b>isletme.molayazilim.com.tr</b> adresini açın. E-posta ve şifrenizi yazıp <b>Devam</b>\'a basın.',
       'Sonraki ekranda doğrulama uygulamasındaki 6 haneli kodu yazıp <b>Giriş yap</b>\'a basın. Hangi cihazla önce girdiğiniz fark etmez.',
     ]),
-    p('Cihaz kendine ad verir (ör. "iPhone · 15 Ekim") ve hatırlanır. Yeni cihaz girerken kasa bilgisayarı açık olmalı; kasa kapalıyken sayfa "Kasa bilgisayarı kapalı · Son durum" ile son raporu gösterir.'),
+    p('Cihaz kendine ad verir (ör. "iPhone · 15 Ekim") ve hatırlanır. Yeni cihaz girerken kasa bilgisayarı açık olmalı; kasa kapalıyken sayfa "Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum" ile son raporu gösterir.'),
     p('En fazla 3 cihaz. Kaybolan telefonu kasada <b>4 · Eşleşmiş cihazlar</b>\'dan kaldırın: şifreniz sorulur, telefon kodu sorulmaz.'),
     p('<b>Çıkış</b> cihazı kilitler. Yeniden girmek için e-posta ve şifreniz yeter; kasa kapalıyken de son durumu görürsünüz. Cihazı tamamen silmek için Çıkış penceresinde <b>Bu cihazı tamamen kaldır</b>.'),
     h2('Uzaktan yönetim'),

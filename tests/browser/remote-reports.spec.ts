@@ -7,7 +7,7 @@ import { codesOf, ensureSetup, MERKEZ, merkezMail, openSettings, OWNER_EMAIL, ra
  * on screen, then the address. A device that is not signed in opens that address (typed with Turkish letters too) and sees
  * "Giriş yap": the e-mail and the password ("Devam", checked by the café computer at once), then the phone code. Any device
  * may be first (no phone-first rule); it names itself ("Windows laptop · 15 Ekim"). Then the live report; the café computer
- * off (the köprü stopped, POST /api/test/relay) shows the last encrypted report with "Kasa bilgisayarı kapalı · Son durum …",
+ * off (the köprü stopped, POST /api/test/relay) shows the last encrypted report with "Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum …",
  * also after a reload; back on, live again. "Çıkış" (0.1.24) locks the laptop and keeps it: with the café off the e-mail and
  * the password open the last report (checked on the laptop, no code); with it on, the café checks them and asks the code.
  * "Bu cihazı tamamen kaldır" forgets it and the café drops it; the owner's "Kaldır" sends the phone back to the sign-in.
@@ -50,8 +50,15 @@ test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first
     await step1.getByText('QR okutamıyorum').click();
     const code = codesOf((await step1.locator('details code').innerText()).trim());
     await step1.getByLabel('Uygulamadaki 6 haneli kod').fill(await code());
+    // 19 Ekim: the page's 8 s refresh soon knows the code is set up; the one-time codes still stay until "Kodları sakladım".
+    const refreshed = owner.waitForResponse(async r => new URL(r.url()).pathname === '/api/staff/remote-reports' && r.request().method() === 'GET' && (await r.json() as { code?: boolean }).code === true, { timeout: 20_000 });
     await step1.getByRole('button', { name: 'Kodu onayla' }).click();
-    recovery = (await step1.getByRole('textbox', { name: 'Kurtarma kodları' }).inputValue()).split('\n')[0];
+    const recoveryBox = step1.getByRole('textbox', { name: 'Kurtarma kodları' });
+    await expect(recoveryBox).toBeVisible();
+    await refreshed; await owner.waitForTimeout(500);
+    await expect(recoveryBox).toBeVisible();
+    await expect(step1.getByText('Kurulu ✓')).toHaveCount(0);
+    recovery = (await recoveryBox.inputValue()).split('\n')[0];
     await step1.getByRole('button', { name: 'Kodları sakladım' }).click();
     await expect(step1.getByRole('status')).toHaveText('Kurulu ✓');
     // 2: the e-mail, verified with the code sent to it (Mola Merkez keeps it).
@@ -61,8 +68,13 @@ test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first
     await email.getByRole('button', { name: 'Kod gönder' }).click();
     const verify = step2.getByRole('form', { name: 'E-postayı doğrula' });
     await verify.getByLabel('E-postadaki kod').fill(await mail.lastCode(OWNER_EMAIL));
+    // 19 Ekim: between "Doğrula" and "✓" the empty e-mail form never shows (the reloaded e-mail is slowed down here).
+    await owner.route('**/api/staff/owner-email', async route => { await new Promise(r => setTimeout(r, 1500)); await route.continue(); });
+    await owner.evaluate(() => { const w = window as unknown as { __emptyEmail: boolean }; w.__emptyEmail = false; new MutationObserver(() => { if (document.querySelector('form[aria-label="E-postanızı doğrulayın"]')) w.__emptyEmail = true; }).observe(document.body, { subtree: true, childList: true }); });
     await verify.getByRole('button', { name: 'Doğrula' }).click();
     await expect(step2.getByRole('status')).toHaveText(/^s\S*@ornekkafe\.com ✓$/);
+    expect(await owner.evaluate(() => (window as unknown as { __emptyEmail: boolean }).__emptyEmail)).toBe(false);
+    await owner.unroute('**/api/staff/owner-email');
     // 3: the plain address in big letters, Kopyala, its small QR; nothing else.
     const address = `${MERKEZ}/yonet`;
     await expect(step3.locator('.remote-address-text')).toHaveText(address.replace(/^https?:\/\//, ''));
@@ -131,10 +143,10 @@ test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first
     await expect(list).toContainText(/Son rapor: \d/, { timeout: 15_000 });
 
     // The café computer off (its köprü stops; Merkez calls it off a few seconds later): the last report from the postbox,
-    // "Kasa bilgisayarı kapalı · Son durum", and "İşletmeyi yönet: kasa açıkken".
+    // "Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum", and "İşletmeyi yönet: kasa açıkken".
     let boxes = 0; phone.on('response', r => { if (r.url().endsWith('/phone/postbox') && r.status() === 200) void r.json().then((b: { box?: unknown }) => { if (b.box) boxes++; }).catch(() => {}); });
     expect((await relay(false)).ok()).toBe(true);
-    const offLine = phone.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/);
+    const offLine = phone.getByText(/^Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum \d\d:\d\d$/);
     await expect(async () => { await phone.getByRole('button', { name: 'Yenile' }).click(); await expect(offLine).toBeVisible({ timeout: 3000 }); }).toPass({ timeout: 60_000 });
     await expect(phone.getByRole('region', { name: 'Bugünün satışı' })).toContainText('Son durum ·');
     await expect(phone.getByText('İşletmeyi yönet: kasa açıkken')).toBeVisible();
@@ -148,7 +160,7 @@ test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first
     await expect(phone.getByText('Giriş yapıldı ✓')).toHaveCount(0);
     // The laptop opened while the café is off: the same.
     await laptop.reload();
-    await expect(laptop.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
+    await expect(laptop.getByText(/^Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum \d\d:\d\d$/)).toBeVisible({ timeout: 30_000 });
     await laptop.screenshot({ path: info.outputPath('laptop-4-kasa-kapali.png'), fullPage: true });
     // Back on: live again.
     expect((await relay(true)).ok()).toBe(true);
@@ -165,7 +177,7 @@ test('Uzaktan erişim → five plain cards; İşletmemi yönet: any device first
     // "Çıkış" on the laptop while the café computer is off (0.1.24, the owner's case: he was locked out): the device is
     // kept; the e-mail and the password open the last report, checked on the laptop itself (no code step offline).
     expect((await relay(false)).ok()).toBe(true);
-    const laptopOff = laptop.getByText(/^Kasa bilgisayarı kapalı · Son durum \d\d:\d\d$/);
+    const laptopOff = laptop.getByText(/^Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum \d\d:\d\d$/);
     await expect(async () => { await laptop.getByRole('button', { name: 'Yenile' }).click(); await expect(laptopOff).toBeVisible({ timeout: 3000 }); }).toPass({ timeout: 60_000 });
     await laptop.getByRole('button', { name: 'Çıkış', exact: true }).click();
     const leave = laptop.getByRole('group', { name: 'Çıkış' });

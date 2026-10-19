@@ -10,6 +10,7 @@ import type { Product } from '../packages/domain/types';
 import { api, ApiError, money, moneyError, parseMoney, requestId } from './api';
 import { Modal, Notice, ProductArt } from './components';
 import { renewedTiming } from '../packages/domain/campaign-ends';
+import { saatEki } from '../packages/domain/saat-eki';
 import { DateTimeField, TimeField } from './TimeField';
 import { Choice, Step } from './StepForm';
 const DAY = 86400000, WEEK = 7 * DAY;
@@ -164,7 +165,7 @@ function CampaignEditor({ initial, copy = false, revision, products, categories,
   const now = Date.now(), timingOk = !timingError && !!timing.startsAt && timing.endsAt !== '';
   const previewTiming = { ...timing, enabled, remainingQuantity: null, minQuantity };
   const previewState: CampaignState = !enabled ? 'draft' : timingOk ? campaignState(previewTiming, now) : 'planned';
-  const previewWhen = !timingOk ? 'Tarihleri tamamlayın' : previewState === 'active' && !timing.schedule ? (timing.endsAt ? `Şimdi başlar · ${shortTime(timing.endsAt)}'e kadar` : 'Şimdi başlar · süresiz') : campaignWhen(previewTiming, now);
+  const previewWhen = !timingOk ? 'Tarihleri tamamlayın' : previewState === 'active' && !timing.schedule ? (timing.endsAt ? `Şimdi başlar · ${saatEki(shortTime(timing.endsAt), 'e')} kadar` : 'Şimdi başlar · süresiz') : campaignWhen(previewTiming, now);
   const offer: DiscountOffer | null = validDiscount && !deal ? { id: 'onizleme', name: name || 'Kampanya', combine, minQuantity, ...(byCategory ? { categories: cats } : {}), ...discount } : null;
   async function save() {
     if (busy) return; setBusy(true); setError('');

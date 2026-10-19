@@ -210,7 +210,7 @@ function ShiftPlanDialog({ user, plan, onClose, onSaved }: { user: { id: string;
       <span className="shift-plan-dash" aria-hidden="true">–</span>
       <label htmlFor={`${id}-end`}>Bitiş<TimeField id={`${id}-end`} value={end} onChange={setEnd} required /></label>
     </div>
-    {isTime(start) && isTime(end) && end < start && <p className="muted small shift-plan-night">Gece vardiyası: ertesi gün {end}'de biter.</p>}
+    {isTime(start) && isTime(end) && end < start && <p className="muted small shift-plan-night">Gece vardiyası: ertesi gün {saatEki(end, 'de')} biter.</p>}
     <fieldset className="shift-plan-dayset"><legend>Çalıştığı günler</legend>
       <div className="shift-plan-days">{weekdayNames.map((n, i) => { const d = i + 1, on = days.includes(d); return <button type="button" key={n} aria-pressed={on} className={on ? 'selected' : ''} onClick={() => setDays(v => on ? v.filter(x => x !== d) : [...v, d])}>{n}</button>; })}</div>
       <div className="shift-plan-quick"><button type="button" className="text-btn" onClick={() => setAll([1, 2, 3, 4, 5])}>Hafta içi</button><button type="button" className="text-btn" onClick={() => setAll([1, 2, 3, 4, 5, 6, 7])}>Her gün</button></div>

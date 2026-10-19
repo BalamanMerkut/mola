@@ -323,6 +323,8 @@ test('the session ends: switched off, device removed, end-all, Açık oturumlar,
   d = await login();
   const phone = (await owner2('/staff/remote-reports')).data.phones[0].id;
   assert.equal((await owner2('/staff/remote-reports/phones/remove', { id: phone, password: DEMO_PASSWORD })).status, 200);
+  // 19 Ekim: card 5, asked again right after "Kaldır", no longer lists it as open (before any sweep or call from the device).
+  assert.deepEqual((await owner2('/staff/remote-admin')).data.active, []);
   const gone = await d.call('GET', '/api/staff/me');
   assert.ok(['REMOTE_ENDED', 'PHONE_UNKNOWN', 'PHONE_REVOKED'].includes(gone.code!), JSON.stringify(gone));
   admin.sweep();

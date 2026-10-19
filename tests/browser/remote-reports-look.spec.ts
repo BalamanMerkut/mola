@@ -47,7 +47,7 @@ async function signedIn(page: Page, r: PhoneReport) {
     });
   }, r);
   await page.reload();
-  await expect(page.getByText(/^Kasa bilgisayarı kapalı · Son durum/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/^Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum/)).toBeVisible({ timeout: 30_000 });
 }
 const wide = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 

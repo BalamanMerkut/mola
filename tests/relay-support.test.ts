@@ -10,6 +10,7 @@ import { supportAllowed, describe as describeChange } from '../server/support-se
 import type { RelayClient } from '../server/relay.js';
 import type { RelayHub } from '../server/merkez/relay.js';
 import { merkezPair } from './merkez-fixture.js';
+import { saatEki } from '../packages/domain/saat-eki.js';
 
 const rid = () => randomUUID().replace(/-/g, '');
 /** A start time at least an hour clear of 05:00 (tests that move their clock forward would otherwise end the business day). */
@@ -97,6 +98,9 @@ test('owner allows support → vendor connects through Mola Merkez, edits a pric
   // The owner was told it started.
   const inbox = (await owner('/staff/notifications')).data.items;
   assert.ok(inbox.some((n: any) => n.title === 'Mola ekibi bağlandı'));
+  // 19 Ekim: the time with its own ending (14:30'da, 13:00'te), not a fixed "'de".
+  const told = inbox.find((n: any) => n.title === 'Mola ekibi bağlandı'), startedAt = /oturumu (\d\d:\d\d)'/.exec(told.text)?.[1] ?? '';
+  assert.ok(told.text.startsWith(`Uzaktan destek oturumu ${saatEki(startedAt, 'de')} başladı.`), told.text);
   // Switching off (no password needed) cuts the session at once, at the café and at Merkez.
   assert.equal((await owner('/staff/remote-support', { on: false })).status, 200);
   const after = await vendor('/api/staff/state');
@@ -105,7 +109,10 @@ test('owner allows support → vendor connects through Mola Merkez, edits a pric
   assert.equal((await cashier('/staff/state')).data.supportConnected, undefined);
   const history = (await pair.admin(`/support-sessions?tenantId=${tenant}`)).data;
   assert.equal(history.access.on, false); assert.equal(history.history[0].endedBy !== null, true);
-  assert.ok((await owner('/staff/notifications')).data.items.some((n: any) => n.title === 'Mola destek oturumu bitti'));
+  const ended = (await owner('/staff/notifications')).data.items.find((n: any) => n.title === 'Mola destek oturumu bitti');
+  assert.ok(ended);
+  const endedAt = /^Oturum (\d\d:\d\d)'/.exec(ended.text)?.[1] ?? '';
+  assert.ok(ended.text.startsWith(`Oturum ${saatEki(endedAt, 'de')} bitti`), ended.text);
   // Off again: a new connection is refused, and the café stops polling.
   assert.equal((await connect()).data.code, 'SUPPORT_OFF');
   await wait(() => !relay.needed());

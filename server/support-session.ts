@@ -9,6 +9,7 @@ import { newProductIds } from '../packages/domain/new-products.js';
 import { SUPPORT_CAN, SUPPORT_CANNOT } from '../packages/domain/roles.js';
 import { sectorOf } from '../packages/domain/sector.js';
 import { socialLinksOf } from '../packages/domain/social-links.js';
+import { saatEki } from '../packages/domain/saat-eki.js';
 import { floorTables } from '../packages/domain/takeaway.js';
 import type { Actor, StaffSnapshot, State } from '../packages/domain/types.js';
 import { APP_VERSION } from './license.js';
@@ -111,7 +112,7 @@ export class SupportDesk {
       const t = this.now();
       this.live.set(r.session, { id: r.session, tenant: r.tenantId, startedAt: t.getTime(), lastAt: t.getTime() });
       this.write(r.tenantId, x => { x.sessions.push({ id: r.session, startedAt: t.toISOString(), actions: 0 }); x.log.push({ at: t.toISOString(), session: r.session, text: 'Mola ekibi bağlandı.' }); });
-      this.notify(r.tenantId, `support:start:${r.session}`, 'Mola ekibi bağlandı', `Uzaktan destek oturumu ${clock(t.getTime())}'de başladı. Yapılan her değişiklik Destek → Mola desteği'nde görünür; izni oradan kapatabilirsiniz.`);
+      this.notify(r.tenantId, `support:start:${r.session}`, 'Mola ekibi bağlandı', `Uzaktan destek oturumu ${saatEki(clock(t.getTime()), 'de')} başladı. Yapılan her değişiklik Destek → Mola desteği'nde görünür; izni oradan kapatabilirsiniz.`);
     }
     return { status: 200, json: { ok: true } };
   }
@@ -122,7 +123,7 @@ export class SupportDesk {
     let actions = 0;
     try {
       this.write(l.tenant, x => { const row = x.sessions.find(s => s.id === session); if (row && !row.endedAt) { row.endedAt = at; row.endedBy = why; actions = row.actions; } x.log.push({ at, session, text: why === 'off' ? 'Oturum kapandı: izin kapatıldı.' : why === 'owner' ? 'Oturumu işletme sahibi kesti.' : why === 'timeout' ? 'Oturum kapandı: 30 dakika işlem yapılmadı.' : 'Mola ekibi oturumu kapattı.' }); });
-      this.notify(l.tenant, `support:end:${session}`, 'Mola destek oturumu bitti', `Oturum ${clock(at)}'de bitti${actions ? ` · ${actions} değişiklik` : ' · değişiklik yapılmadı'}. Ayrıntılar Destek → Mola desteği'nde.`);
+      this.notify(l.tenant, `support:end:${session}`, 'Mola destek oturumu bitti', `Oturum ${saatEki(clock(at), 'de')} bitti${actions ? ` · ${actions} değişiklik` : ' · değişiklik yapılmadı'}. Ayrıntılar Destek → Mola desteği'nde.`);
     } catch { /* store closing */ }
     // Merkez hears that this café ended it (the vendor's screen says "oturum kapandı").
     if (why === 'owner' || why === 'off' || why === 'timeout') void this.relay.announce();

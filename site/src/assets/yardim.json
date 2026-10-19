@@ -736,7 +736,7 @@
       "konu": "uzaktan",
       "kitle": ["site", "owner"],
       "soru": "Kasa bilgisayarı kapalıyken telefondan ne görürüm?",
-      "cevap": ["İşletmemi yönet “Kasa bilgisayarı kapalı · Son durum” yazar ve son raporu gösterir. Kasa açılınca güncel bilgiler gelir."],
+      "cevap": ["İşletmemi yönet “Kasa bilgisayarı kapalı ya da internete bağlı değil · Son durum” yazar ve son raporu gösterir. Kafenin interneti kesildiğinde de aynısı görünür. Kasa açılıp internete bağlanınca güncel bilgiler gelir."],
       "anahtar": ["kasa kapalı", "son durum", "bilgisayar kapalı", "kapalıyken", "son rapor", "kasa bilgisayarı kapalı", "güncel değil", "eski rapor"]
     },
     {

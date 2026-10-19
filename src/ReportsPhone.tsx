@@ -19,8 +19,8 @@ import './reports-phone.css';
  *   Kafe açık    with Uzaktan yönetim on: straight into the café's own screens (src/RemoteAdmin.tsx, sealed tunnel
  *                src/remoteTransport.ts). Right after the sign-in its one-time grant opens them; later the password and the
  *                phone code once per session (until 05:00). Without it (package or switched off): the live report.
- *   Kafe kapalı  the last report the café left at Mola Merkez (encrypted for this device) with "Kasa bilgisayarı kapalı · Son
- *                durum 23:40"; when the connection drops during a session "Bağlantı koptu" first, then that report; once it
+ *   Kafe kapalı  the last report the café left at Mola Merkez (encrypted for this device) with "Kasa bilgisayarı kapalı ya da
+ *                internete bağlı değil · Son durum 23:40" (19 Ekim: Merkez cannot tell the two apart); when the connection drops during a session "Bağlantı koptu" first, then that report; once it
  *                answers again "Kasa açıldı · İşletmeyi yönet" brings the screens back without typing anything.
  * Until the page knows which of these it is, only "Açılıyor…" (0.1.24: F5 on "İşletmeyi yönet" showed the report for a moment;
  * the device may see the report, so no leak, but never a flash of another view).
@@ -280,7 +280,7 @@ function Home({ paired, fresh, k, onGone, onLocked }: { paired: Paired; fresh: {
     if (g) { grant.current = undefined; void openRemote(current.current, { grant: g }).then(s => { setSession(s); setView('manage'); }, () => setView('unlock')); return; }
     setView('unlock');
   }, [resumed, live, admin, session, view]);
-  /** The last report, "Kasa bilgisayarı kapalı"; the session stays for the café's return ("Kasa açıldı · İşletmeyi yönet"). */
+  /** The last report, "Kasa bilgisayarı kapalı ya da internete bağlı değil"; the session stays for the café's return ("Kasa açıldı · İşletmeyi yönet"). */
   const toReports = useCallback(() => { stay.current = true; setDropped(false); setBack(true); setView('reports'); setStatus({ kind: 'offline' }); }, []);
   useEffect(() => {
     // In the screens: "Bağlantı koptu" over them first (whatever was being saved did not reach the café), then the report.
@@ -309,7 +309,7 @@ function Home({ paired, fresh, k, onGone, onLocked }: { paired: Paired; fresh: {
   </>;
   const off = status.kind === 'offline', business = r?.business ?? paired.business;
   const line = live && r ? <p className="rp-status live" role="status"><span className="rp-dot" aria-hidden="true" />Canlı · {clock(r.at)}</p>
-    : off ? <p className="rp-status off" role="status">Kasa bilgisayarı kapalı{r ? ` · Son durum ${when(r.at)}` : ''}</p>
+    : off ? <p className="rp-status off" role="status">Kasa bilgisayarı kapalı ya da internete bağlı değil{r ? ` · Son durum ${when(r.at)}` : ''}</p>
     : status.kind === 'error' ? <p className="rp-status off" role="status">{r ? `${status.text?.replace(/\.$/, '')} · Son durum ${when(r.at)}` : status.text}</p>
     : <p className="rp-status" role="status" aria-busy="true">Güncelleniyor…</p>;
   return <Shell business={business} k={k} theme={r?.theme} action={<button type="button" className="rp-logout" onClick={() => setLeaving(true)}>Çıkış</button>}>

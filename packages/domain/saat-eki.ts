@@ -1,7 +1,8 @@
 /*
  * Turkish case endings after a clock time, as it is read aloud: "01:24" is "bir yirmi dört", so "01:24'ten"; "14:30" is
  * "on dört otuz", so "14:30'da"; "05:00" is "beş", so "05:00'e kadar". The ending follows the last word read: its last vowel
- * (e or a), a hard last consonant (t instead of d) and, for "-e", a vowel at the end (y before it).
+ * (e or a), a hard last consonant (t instead of d) and, for "-e", a vowel at the end (y before it). 19 Ekim: a date before the
+ * time ("19 Ekim 11:30") is read the same way: the ending follows the time at the end.
  */
 export type Ek = 'den' | 'de' | 'e';
 const ONES = ['', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'];
@@ -10,9 +11,9 @@ const TENS = ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli'];
 function lastWord(n: number) { return n === 0 ? 'sıfır' : n % 10 ? ONES[n % 10] : TENS[Math.floor(n / 10)]; }
 const FRONT = 'eiöü', VOWELS = 'aeıioöuü', HARD = 'fstkçşhp';
 
-/** "01:24" + "den" → "01:24'ten"; anything that is not HH:MM gets the plain ending. */
+/** "01:24" + "den" → "01:24'ten", "19 Ekim 11:30" + "den" → "19 Ekim 11:30'dan"; anything not ending in HH:MM gets the plain ending. */
 export function saatEki(time: string, ek: Ek) {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  const m = /(?:^|\s)(\d{1,2}):(\d{2})$/.exec(time.trim());
   const word = m ? lastWord(Number(m[2]) || Number(m[1])) : 'bir';
   const vowel = [...word].reverse().find(c => VOWELS.includes(c)) ?? 'e', front = FRONT.includes(vowel), end = word.at(-1)!;
   const d = HARD.includes(end) ? 't' : 'd';
