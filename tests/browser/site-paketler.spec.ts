@@ -84,7 +84,7 @@ for (const [width, height, name] of [[1280, 900, 'paketler-masaustu.png'], [390,
       await expect(card(page, p.id).locator('.net')).toContainText(lira(price.monthly));
     }
     // The note under the cards says which price is which.
-    await expect(section.locator('.package-note')).toContainText('Büyük yazan fiyatlara %20 KDV dahildir; KDV hariç hizmet bedeli altında yazar.');
+    await expect(section.locator('.package-note')).toHaveText('Deneme bitince kendiliğinden ücretli aboneliğe geçmez; karar sizindir.');
     // Özel: no per-service prices, a way to İletişim.
     const custom = card(page, 'ozel');
     await expect(custom).toContainText('İhtiyacınız olan hizmetleri birlikte seçelim');
