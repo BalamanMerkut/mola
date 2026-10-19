@@ -20,27 +20,27 @@
   "downloads": {
     "enabled": true,
     "version": "0.1.36",
-    "builtAt": "2026-10-19T09:27:32.530Z",
+    "builtAt": "2026-10-19T09:51:13.403Z",
     "files": {
       "windows": {
         "file": "Mola-Windows-0.1.36.zip",
-        "size": 46334235,
-        "sha256": "bb00da33d555a676f40eb9d9f8ce6a30904d19e519e33c8a7a55458219ac1fe0"
+        "size": 46334681,
+        "sha256": "7e0a380bca3bd5ddf2e4c59bc4d12b9663cde3d4f6b78d3017240b3214ae5486"
       },
       "macos-arm64": {
         "file": "Mola-macOS-AppleSilicon-0.1.36.tar.gz",
-        "size": 51494955,
-        "sha256": "155946023dd0b4cf33705f68b674a559a116536edebfcb3fa76f548a3fcb04ff"
+        "size": 51496482,
+        "sha256": "754bc486f5b3cbb6d175a725468612f1ce3663bc5b3d5e7dfb1639f8f155474f"
       },
       "macos-x64": {
         "file": "Mola-macOS-Intel-0.1.36.tar.gz",
-        "size": 53063070,
-        "sha256": "abeeb1f3ad4eb1dd7ae667f4bc85ee03100213ac1eaadb7baf9ac78e2bf44c5f"
+        "size": 53062724,
+        "sha256": "848e60b679bd42fc6b1b4d51ab3b9a02d5d1a644d8508c3bc04bbbfce3cf24a3"
       },
       "linux-x64": {
         "file": "Mola-Linux-x64-0.1.36.tar.gz",
-        "size": 56558655,
-        "sha256": "86f4e5c2e69db8fb282f8657010d160c56accc21e11955891ea4adad4bfa8653"
+        "size": 56559699,
+        "sha256": "0eb1323c4e54bbe00dc43512c6bcc2492e7b3ecf2af03a312d43920958575c8b"
       },
       "android": {
         "file": "Mola-Android-0.1.36.apk",
