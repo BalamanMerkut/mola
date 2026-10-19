@@ -25,7 +25,7 @@
 import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
-import { C, ROOT, chapters, dirs, endCard, fmt, guestScene, holdEnd, holdStart, introCard, introThumb, marks, meta, ownerScene, screenSplitScene, shootThumb, splitScene, staffScene, stepped, taps, uret, yer, type Box, type CaptionsOf, type Scene } from './youtube-sahne';
+import { C, ROOT, chapters, dirs, endCard, fmt, guestScene, holdEnd, holdStart, introCard, introThumb, THUMB_TONES, marks, meta, ownerScene, screenSplitScene, shootThumb, splitScene, staffScene, stepped, taps, uret, yer, type Box, type CaptionsOf, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'kampanya', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'kampanya', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', '04 Kampanyalar ve rezervasyon')) });
@@ -236,7 +236,7 @@ Mola, Mola adisyon, kafe kampanya, happy hour, hediye ürün kampanyası, QR men
 const tagBadge = `<svg viewBox="0 0 24 24" width="70" height="70" fill="none" stroke="${C.green}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="${C.green}"/></svg>`;
 async function thumbnail(browser: Browser) {
   // The guest's Kahveler with the campaign prices, shot off camera by the recorder.
-  await shootThumb(browser, introThumb({ title: 'Kampanyalar ve<br>rezervasyon', shot: join(dirs.rec, 'kapak-telefon.png'), badge: tagBadge }));
+  await shootThumb(browser, introThumb({ tone: THUMB_TONES.kampanya, title: 'Kampanyalar ve<br>rezervasyon', shot: join(dirs.rec, 'kapak-telefon.png'), badge: tagBadge }));
 }
 
 await uret({ mp4: 'Kampanyalar ve rezervasyon.mp4', music: MUSIC, description, thumbnail, scenes,

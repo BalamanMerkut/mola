@@ -22,7 +22,7 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
 import sharp from 'sharp';
-import { ROOT, chapters, dirs, endCard, img, introCard, introThumb, marks, meta, ownerScene, guestScene, qrBadge, setGuestSteps, shootThumb, splitScene, staffScene, taps, uret, yer, type Scene } from './youtube-sahne';
+import { ROOT, chapters, dirs, endCard, img, introCard, introThumb, THUMB_TONES, marks, meta, ownerScene, guestScene, qrBadge, setGuestSteps, shootThumb, splitScene, staffScene, taps, uret, yer, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', '01 QR menü ve QR sipariş')) });
@@ -208,7 +208,7 @@ async function thumbnail(browser: Browser) {
   const m = meta('a-siparis'), mk = marks('a-siparis'), at = mk.menuReady + 2.2;
   const i = m.frames.findLastIndex(x => x.t - m.marks.start <= at);
   await sharp(join(REC, 'a-siparis', m.frames[i].file)).png().toFile(join(WORK, 'kapak-menu.png'));
-  await shootThumb(browser, introThumb({ title: 'QR menü<br>ve QR sipariş', shot: join(WORK, 'kapak-menu.png'), badge: qrBadge }));
+  await shootThumb(browser, introThumb({ tone: THUMB_TONES.qr, title: 'QR menü<br>ve QR sipariş', shot: join(WORK, 'kapak-menu.png'), badge: qrBadge }));
 }
 
 await uret({ mp4: 'QR menü ve QR sipariş.mp4', music: 'canli-uzun', description, thumbnail,

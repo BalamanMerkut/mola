@@ -25,7 +25,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
-import { C, ROOT, chapters, cutLeads, dirs, endCard, fmt, guestScene, holdEnd, holdStart, introCard, introThumb, marks, meta, ownerScene, shootThumb, splitScene, staffScene, stepped, tapMarks, taps, uret, yer, type Blur, type Box, type CaptionsOf, type Layer, type Scene } from './youtube-sahne';
+import { C, ROOT, chapters, cutLeads, dirs, endCard, fmt, guestScene, holdEnd, holdStart, introCard, introThumb, THUMB_TONES, marks, meta, ownerScene, shootThumb, splitScene, staffScene, stepped, tapMarks, taps, uret, yer, type Blur, type Box, type CaptionsOf, type Layer, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'uzaktan', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'uzaktan', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', '05 Uzaktan erişim ve güvenlik')) });
@@ -264,7 +264,7 @@ Mola, Mola adisyon, adisyon programı, uzaktan erişim, telefondan kafe yönetim
 const shieldBadge = `<svg viewBox="0 0 24 24" width="70" height="70" fill="none" stroke="${C.green}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10 11V9.5a2 2 0 0 1 4 0V11"/></svg>`;
 async function thumbnail(browser: Browser) {
   // The owner's iPhone on İşletmemi yönet ("Canlı", today's sales), shot off camera by the recorder.
-  await shootThumb(browser, introThumb({ title: 'Uzaktan<br>erişim ve<br>güvenlik', shot: join(dirs.rec, 'kapak-telefon.png'), badge: shieldBadge }));
+  await shootThumb(browser, introThumb({ tone: THUMB_TONES.uzaktan, title: 'Uzaktan<br>erişim ve<br>güvenlik', shot: join(dirs.rec, 'kapak-telefon.png'), badge: shieldBadge }));
 }
 
 await uret({ mp4: 'Uzaktan erişim ve güvenlik.mp4', music: MUSIC, description, thumbnail, scenes,

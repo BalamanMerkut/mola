@@ -19,7 +19,7 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
 import sharp from 'sharp';
-import { C, H, ROOT, W, base, chapters, cutLeads, dirs, endCard, focusKeys, frameFile, img, introCard, mark, marks, meta, outlinesOf, around, shootThumb, staffScene, stepped, tapMarks, taps, uret, yer, type Blur, type Cam, type Caption, type CaptionsOf, type Scene } from './youtube-sahne';
+import { C, H, ROOT, W, base, chapters, cutLeads, dirs, endCard, focusKeys, frameFile, img, introCard, mark, marks, meta, outlinesOf, around, shootThumb, staffScene, THUMB_TONES, toneBg, stepped, tapMarks, taps, uret, yer, type Blur, type Cam, type Caption, type CaptionsOf, type Scene } from './youtube-sahne';
 import { EX, FOLDER_ROWS, ZIP_ROW, contextMenu, drawn, explorer, extractDialog, installer, smartScreen, uac, windowsCss, type Piece } from './youtube-kurulum-cizim';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'kurulum', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'kurulum', 'kurgu'),
@@ -310,7 +310,7 @@ function thumbHtml() {
     <div class="brand">${mark(60)}<span class="serif">mola<i>.</i></span></div></div>
   <div class="win"><div class="bar">${mark(18)}<em>Mola</em></div><img src="${img(shot)}"></div>
   <div class="steps"><span>1 İndir</span><span>2 Kur</span><span>3 Başvur</span></div>`, `
-  body{background:radial-gradient(80% 90% at 25% 40%,#2a5848 0%,${C.green} 58%,#1d4134 100%);color:${C.cup}}
+  body{background:${toneBg(THUMB_TONES.kurulum)};color:${C.cup}}
   .left{position:absolute;left:64px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center}
   h1{font-weight:400;font-size:132px;line-height:1;letter-spacing:-.03em}
   .left p{margin-top:22px;font:600 34px/1.25 'Segoe UI',system-ui,sans-serif;color:rgba(243,235,221,.9)}

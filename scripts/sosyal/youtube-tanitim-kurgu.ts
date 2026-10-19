@@ -23,7 +23,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
 import sharp from 'sharp';
-import { ROOT, W, chapters, cutLeads, dirs, endCard, fmt, focusKeys, frameFile, guestScene, around, introCard, introThumb, marks, meta, outlinesOf, shootThumb, staffScene, tapMarks, taps, uret, yer, type Cam, type CaptionsOf, type Layer, type Scene } from './youtube-sahne';
+import { ROOT, W, chapters, cutLeads, dirs, endCard, fmt, focusKeys, frameFile, guestScene, around, introCard, introThumb, THUMB_TONES, marks, meta, outlinesOf, shootThumb, staffScene, tapMarks, taps, uret, yer, type Cam, type CaptionsOf, type Layer, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'tanitim', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'tanitim', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', "00 Mola'yı 2 dakikada tanıyın")) });
@@ -159,7 +159,7 @@ async function thumbnail(browser: Browser) {
   // The guest's menu on the phone, as in video 01's thumbnail (the Caffè Latte's card with its photo).
   const shot = join(dirs.work, 'kapak-telefon.png');
   await sharp(frameFile('q1-misafir', marks('q1-misafir').menuReady + 2.2)).png().toFile(shot);
-  await shootThumb(browser, introThumb({ title: 'Mola’yı<br>2 dakikada<br>tanıyın', shot }));
+  await shootThumb(browser, introThumb({ tone: THUMB_TONES.tanitim, title: 'Mola’yı<br>2 dakikada<br>tanıyın', shot }));
 }
 
 await uret({ mp4: "Mola'yı 2 dakikada tanıyın.mp4", music: MUSIC, description, thumbnail, scenes,

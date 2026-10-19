@@ -572,13 +572,21 @@ export const qrBadge = `<svg viewBox="0 0 24 24" width="74" height="74" fill="no
  * the left, a phone screen of the app (`shot`, a PNG of a recorded phone frame) tilted at the right, and optionally a round badge
  * (`badge`: its symbol, e.g. qrBadge) at the phone's lower left.
  */
-export function introThumb(o: { title: string; shot: string; badge?: string }) {
+/** 19 Ekim (owner): each introduction video's thumbnail has its own colour so they tell apart in YouTube's lists; the training
+ *  series keeps the green. [light, middle, dark] of the background's radial gradient; the cream text reads on all of them. */
+export const THUMB_TONES = {
+  tanitim: ['#b5693f', '#9a4f2c', '#73391d'], qr: ['#2f5d8a', '#1f3b5c', '#142a41'], stok: ['#9c6b20', '#7d5414', '#5a3c0d'],
+  rapor: ['#6f4767', '#563451', '#3c2338'], kampanya: ['#953c47', '#7a2833', '#571b24'], uzaktan: ['#2b7378', '#1d5a5e', '#123f42'],
+  kurulum: ['#5d4536', '#3d2b22', '#291c16'],
+} as const;
+export const toneBg = (t: readonly string[] = ['#2a5848', C.green, '#1d4134']) => `radial-gradient(80% 90% at 25% 40%,${t[0]} 0%,${t[1]} 58%,${t[2]} 100%)`;
+export function introThumb(o: { title: string; shot: string; badge?: string; tone?: readonly string[] }) {
   return base(1280, 720, `
   <div class="left"><h1 class="serif">${o.title}</h1>
     <div class="brand">${mark(64)}<span class="serif">mola<i>.</i></span></div></div>
   <div class="phone"><div class="screen"><img src="${img(o.shot)}"></div></div>${o.badge ? `
   <div class="qr">${o.badge}</div>` : ''}`, `
-  body{background:radial-gradient(80% 90% at 25% 40%,#2a5848 0%,${C.green} 58%,#1d4134 100%);color:${C.cup}}
+  body{background:${toneBg(o.tone)};color:${C.cup}}
   .left{position:absolute;left:70px;top:0;bottom:0;width:690px;display:flex;flex-direction:column;justify-content:center}
   h1{font-weight:400;font-size:120px;line-height:1.0;letter-spacing:-.03em}
   .brand{display:flex;align-items:center;gap:16px;margin-top:46px;font-size:52px}.brand svg{border-radius:14px;box-shadow:0 0 0 2px rgba(243,235,221,.3)}.brand i{font-style:normal;color:${C.dot}}

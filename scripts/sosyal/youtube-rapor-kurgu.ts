@@ -24,7 +24,7 @@
 import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Browser } from '@playwright/test';
-import { C, ROOT, chapters, dirs, endCard, fmt, guestScene, holdEnd, holdStart, introCard, introThumb, marks, ownerScene, screenSplitScene, shootThumb, staffScene, stepped, taps, uret, yer, type CaptionsOf, type Layer, type Scene } from './youtube-sahne';
+import { C, ROOT, chapters, dirs, endCard, fmt, guestScene, holdEnd, holdStart, introCard, introThumb, THUMB_TONES, marks, ownerScene, screenSplitScene, shootThumb, staffScene, stepped, taps, uret, yer, type CaptionsOf, type Layer, type Scene } from './youtube-sahne';
 
 yer({ rec: join(ROOT, '.local', 'sosyal', 'youtube', 'rapor', 'kayit'), work: join(ROOT, '.local', 'sosyal', 'youtube', 'rapor', 'kurgu'),
   out: resolve(process.env.SOSYAL_CIKTI ?? join(ROOT, '..', 'Mola YouTube', '03 Raporlar')) });
@@ -216,7 +216,7 @@ Mola, Mola adisyon, satış raporu, kafe raporu, restoran raporu, gün sonu rapo
 const reportBadge = `<svg viewBox="0 0 24 24" width="70" height="70" fill="none" stroke="${C.green}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>`;
 async function thumbnail(browser: Browser) {
   // The owner's İşletmemi yönet on the phone (Bugünün satışı on top), shot off camera by the recorder.
-  await shootThumb(browser, introThumb({ title: 'Satış ve<br>Raporlar', shot: join(dirs.rec, 'kapak-telefon.png'), badge: reportBadge }));
+  await shootThumb(browser, introThumb({ tone: THUMB_TONES.rapor, title: 'Satış ve<br>Raporlar', shot: join(dirs.rec, 'kapak-telefon.png'), badge: reportBadge }));
 }
 
 await uret({ mp4: 'Raporlar.mp4', music: MUSIC, description, thumbnail, scenes,
