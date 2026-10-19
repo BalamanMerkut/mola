@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { finished } from 'node:stream/promises';
 import { DomainError } from '../packages/domain/engine.js';
+import { busyText, type Activity } from '../packages/domain/update-busy.js';
 import { DATA_VERSION } from './data-version.js';
 import { writeAtomic } from './key-vault.js';
 import { APP_VERSION } from './license.js';
@@ -50,7 +51,7 @@ export type Pending = {
 };
 /** Written by the applier (scripts/desktop/guncelleyici.mjs). `retry`: the cause may pass (disk space), so the version is not refused. */
 export type Outcome = { v: 1; version: string; from: string; result: 'installed' | 'rolled_back' | 'failed'; reason?: string; retry?: boolean; at: string };
-export type Activity = { openAccounts: number; pendingOrders: number };
+export type { Activity };
 export type UpdateLink = { signedGet(path: string, headers?: Record<string, string>, signal?: AbortSignal): Promise<Response> };
 export type UpdateAgentOptions = {
   dir: string; link: UpdateLink; publicKey: () => KeyObject | undefined;
@@ -319,7 +320,7 @@ export class UpdateAgent {
   private busy() { return this.options.activity?.() ?? { openAccounts: 0, pendingOrders: 0 }; }
   private assertQuiet() {
     const a = this.busy();
-    if (a.openAccounts || a.pendingOrders) throw new DomainError('UPDATE_BUSY', `${[a.openAccounts && `${a.openAccounts} açık masa`, a.pendingOrders && `${a.pendingOrders} bitmemiş sipariş`].filter(Boolean).join(' ve ')} var. Güncelleme hesaplar kapanınca kurulabilir; yoksa kapanışta ya da yarın açılışta kendiliğinden kurulur.`, 409);
+    if (a.openAccounts || a.pendingOrders) throw new DomainError('UPDATE_BUSY', `${busyText(a)} var. Güncelleme bunlar bitince kurulabilir; yoksa kapanışta ya da yarın açılışta kendiliğinden kurulur.`, 409);
   }
   /**
    * "Şimdi kur" (and the idle install): only when nothing is open, after the server's own verified backup. Returns the step
@@ -356,7 +357,7 @@ export class UpdateAgent {
     const s = this.saved, a = this.busy();
     return { current: this.current, state: s.state, version: s.version ?? null, notes: s.notes ?? '', error: s.error ?? null, from: s.from ?? null, seen: !!s.seen,
       progress: s.state === 'downloading' ? Math.round(this.progress) : null, idleInstall: this.idle, idleMinutes: this.options.idleMinutes ?? IDLE_MINUTES,
-      canInstallNow: s.state === 'ready' && !!this.options.canApply && !a.openAccounts && !a.pendingOrders, openAccounts: a.openAccounts, pendingOrders: a.pendingOrders, restartable: !!this.options.canApply };
+      canInstallNow: s.state === 'ready' && !!this.options.canApply && !a.openAccounts && !a.pendingOrders, openAccounts: a.openAccounts, pendingOrders: a.pendingOrders, qrApprovals: a.qrApprovals ?? 0, platformWaiting: a.platformWaiting ?? 0, restartable: !!this.options.canApply };
   }
   /**
    * An update was installed less than ms ago (server/year-packer.ts waits: a bad update can still be rolled back by hand to the

@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { Clock3, CloudDownload, X } from 'lucide-react';
+import { busyText } from '../packages/domain/update-busy';
 import { api } from './api';
 import { Modal, Notice } from './components';
 import './update-banner.css';
@@ -7,7 +8,7 @@ import './update-banner.css';
 /** GET /api/staff/update (server/update-routes.ts): the café's own update state. */
 export type UpdateView = {
   current: string; state: 'idle' | 'downloading' | 'ready' | 'installing' | 'installed' | 'failed' | 'rolled_back'; version: string | null; notes: string; error: string | null; from: string | null; seen: boolean;
-  progress: number | null; idleInstall: boolean; idleMinutes: number; canInstallNow: boolean; openAccounts: number; pendingOrders: number; restartable: boolean;
+  progress: number | null; idleInstall: boolean; idleMinutes: number; canInstallNow: boolean; openAccounts: number; pendingOrders: number; qrApprovals?: number; platformWaiting?: number; restartable: boolean;
 };
 function useUpdate() {
   const [view, setView] = useState<UpdateView | null>(null);
@@ -20,7 +21,6 @@ function useUpdate() {
   }, []);
   return [view, setView] as const;
 }
-const busyText = (v: UpdateView) => [v.openAccounts && `${v.openAccounts} açık masa`, v.pendingOrders && `${v.pendingOrders} bitmemiş sipariş`].filter(Boolean).join(' ve ');
 
 /** "1 saat sonra hatırlat": per browser, per version (a newer version asks again at once). */
 const SNOOZE = 'mola-guncelleme-ertele';
@@ -60,7 +60,7 @@ export function UpdateBanner() {
 type Phase = 'ask' | 'backup' | 'restart' | 'done' | 'slow';
 function UpdateDialog({ view, onLater }: { view: UpdateView; onLater: (ms: number) => void }) {
   const [phase, setPhase] = useState<Phase>('ask'), [percent, setPercent] = useState(0), [error, setError] = useState('');
-  const busy = view.openAccounts || view.pendingOrders ? `${busyText(view)} var. Hesaplar kapanınca güncelleyebilirsiniz; yoksa kapanışta ya da yarın açılışta kendiliğinden kurulur.` : '';
+  const busy = view.openAccounts || view.pendingOrders ? `${busyText(view)} var. Bunlar bitince güncelleyebilirsiniz; yoksa kapanışta ya da yarın açılışta kendiliğinden kurulur.` : '';
   const working = phase !== 'ask';
   // The bar: the backup (5 → 35 %) while the request runs, then the restart (35 → 95 %) until the new version answers.
   useEffect(() => {

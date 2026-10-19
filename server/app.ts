@@ -1,5 +1,6 @@
 import { COMMISSION_TOO_HIGH, commissionAllowed } from '../packages/domain/commission.js';
 import { newProductIds } from '../packages/domain/new-products.js';
+import type { Activity } from '../packages/domain/update-busy.js';
 import { consumeAdminFactor } from './admin-factor.js';
 import { integrationRoutes } from './integrations.js';
 import { IntegrationManager } from './integrations/manager.js';
@@ -950,17 +951,23 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
   const integrations = new IntegrationManager(store, now); integrations.onChange = () => backups?.changed(); externalOrderRoutes(app, store, staffActor, now, integrations); integrations.start(); app.locals.integrations = integrations;
   printingRoutes(app, store, staffActor, now, printService);
   /**
-   * Open tables and orders not yet served (and delivery platform orders waiting for Kabul/Reddet), over every business here:
-   * the installer asks before an update, and otomatik güncelleme installs while running only when all are zero.
+   * Open tables, orders not yet served on an open table, QR orders waiting for the waiter and delivery platform orders waiting
+   * for Kabul/Reddet, over every business here: the installer asks before an update, and otomatik güncelleme installs while
+   * running only when all are zero. 19 Ekim: a paid table's order the kitchen never marked, and finished platform orders (kept
+   * 48 hours, test orders too), no longer count; the parts are sent so the sentence says what waits (packages/domain/update-busy.ts).
    */
-  function activity() {
-    let openAccounts = 0, pendingOrders = 0;
+  function activity(): Activity {
+    let openAccounts = 0, kitchen = 0, qrApprovals = 0, platformWaiting = 0;
     for (const { tenant } of store.db.prepare('SELECT tenant FROM snapshots').all() as { tenant: string }[]) {
-      const s = store.read(tenant);
-      openAccounts += s.accounts.filter(a => a.status === 'open').length;
-      pendingOrders += s.orders.filter(o => ['awaiting_approval', 'new', 'preparing', 'ready'].includes(o.status)).length + (s.externalOrders?.length ?? 0);
+      const s = store.read(tenant), open = new Set(s.accounts.filter(a => a.status === 'open').map(a => a.id));
+      openAccounts += open.size;
+      for (const o of s.orders) {
+        if (o.status === 'awaiting_approval') qrApprovals++;
+        else if (['new', 'preparing', 'ready'].includes(o.status) && open.has(o.accountId)) kitchen++;
+      }
+      platformWaiting += (s.externalOrders ?? []).filter(e => e.stage === 'pending').length;
     }
-    return { openAccounts, pendingOrders };
+    return { openAccounts, pendingOrders: kitchen + qrApprovals + platformWaiting, qrApprovals, platformWaiting };
   }
   desktopRoutes(app, desktop, network, backups, () => {
     const view = recoveryView(security), second = backups?.second?.status();
