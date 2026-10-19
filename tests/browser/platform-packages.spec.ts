@@ -196,7 +196,7 @@ test('İşletme → Hizmet: Özel with a discount (confirmed), Lisans → "Ödem
   // Start from the Çay bahçesi-like core + QR menü: untick what is not needed, tick Stok.
   const picker = detail.getByRole('group', { name: 'Bu işletmenin hizmetleri' });
   await expect(picker).not.toContainText('Müdür rolü');
-  for (const name of ['QR menü', 'Gelişmiş raporlar', 'Rezervasyon ve etkinlik', 'Vardiya, bahşiş ve personel raporu', 'Uzaktan erişim', 'İki ekran', 'Bulutta şifreli yedek']) {
+  for (const name of ['QR menü', 'Gelişmiş raporlar', 'Rezervasyon ve etkinlik', 'Vardiya, bahşiş ve personel raporu', 'Uzaktan erişim', 'Bölünmüş iki ekran', 'Bulutta şifreli yedek']) {
     const box = picker.getByRole('checkbox', { name: new RegExp(`^${name.replace(/[()]/g, '\\$&')}`) });
     if (await box.isChecked()) await picker.getByText(name, { exact: true }).click();
   }

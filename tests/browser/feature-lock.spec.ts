@@ -195,7 +195,7 @@ test('the café computer\'s window: "İkiye böl" faded without İki ekran; the 
   await expect(split).toContainText('Pakette yok', { timeout: 15000 });
   await split.click();
   const modal = page.getByRole('dialog', { name: 'Bu hizmet paketinizde yok' });
-  await expect(modal).toContainText('İki ekran');
+  await expect(modal).toContainText('Bölünmüş iki ekran');
   await modal.getByRole('button', { name: 'Kapat', exact: true }).last().click();
   await expect(page.locator('iframe[name="mola-pane-1"]')).toHaveCount(0);
   // The server refuses a pane's key too.

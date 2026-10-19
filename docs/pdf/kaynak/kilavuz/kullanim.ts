@@ -372,7 +372,7 @@ function uzaktan() {
       'Gün bitince (05:00) ya da oturumu kapatınca yalnız şifre ve telefon kodu sorulur. Kasa kapanırsa son rapor görünür; kasa açılınca <b>İşletmeyi yönet</b>\'e basın.',
     ]),
     p('Her uzaktan giriş size bildirilir. Yedekten geri yükleme, kurtarma kodu, cihaz kaldırma, telefon kodunu kurma ve güncelleme kurma yalnız kafede yapılır.'),
-    h3('İki ekran'),
+    h3('Bölünmüş iki ekran'),
     hizmet('split-screen', 'Kasa bilgisayarında ekranı ikiye bölersiniz: solda kasa, sağda mutfak ya da ikinci kasiyer.'),
     p('Şeritten <b>İkiye böl</b>. Her yarıya ayrı hesapla girilir; <b>Tek ekran</b> ile geri dönersiniz.'),
     h3('Bildirimler'),

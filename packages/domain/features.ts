@@ -64,7 +64,7 @@ export const features: Feature[] = [
     description: 'Uzaktan erişimin parçası: kasa açıkken şifre ve telefon koduyla kafenin bütün ekranları; kafede Ayarlar → Uzaktan erişim’den açılır.' },
   { id: 'email-reports', name: 'E-posta raporları', group: 'Uzaktan', monthly: 50 * TL,
     description: 'Gün, hafta, ay ve yıl sonu raporları PDF ekiyle e-postaya gelir.' },
-  { id: 'split-screen', name: 'İki ekran', group: 'Cihaz ve güvenlik', monthly: 50 * TL,
+  { id: 'split-screen', name: 'Bölünmüş iki ekran', group: 'Cihaz ve güvenlik', monthly: 50 * TL,
     description: 'Kasa bilgisayarında ekranı ikiye bölüp iki hesap yan yana.' },
   { id: 'cloud-backup', name: 'Bulutta şifreli yedek', group: 'Cihaz ve güvenlik', monthly: 250 * TL,
     description: 'Yedeklerin şifreli kopyası Mola sunucusunda; yeni bilgisayara kolay taşıma.' },

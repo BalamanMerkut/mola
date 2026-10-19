@@ -283,7 +283,7 @@ test('catalogue step 5 (17 Ekim): the owner’s newer prices once, only over wha
   assert.deepEqual(change('Paket servis platformları'), { field: 'Paket servis platformları', from: '₺125/ay · ₺1.250/yıl (×10)', to: '₺100/ay · ₺1.000/yıl (×10)' });
   assert.deepEqual(change('Kafe Standart paket indirimi'), { field: 'Kafe Standart paket indirimi', from: '₺110/ay indirim', to: 'yok' });
   assert.deepEqual(change('Restoran Pro paket indirimi'), { field: 'Restoran Pro paket indirimi', from: 'yok', to: '₺35/ay indirim' });
-  for (const kept of ['Stok, reçete ve kârlılık', 'E-posta raporları', 'Çay bahçesi paket indirimi', 'İki ekran']) assert.equal(change(kept), undefined, kept);
+  for (const kept of ['Stok, reçete ve kârlılık', 'E-posta raporları', 'Çay bahçesi paket indirimi', 'Bölünmüş iki ekran']) assert.equal(change(kept), undefined, kept);
   // A second start changes nothing; what the owner changes afterwards survives a restart.
   createMerkezApp(store);
   store.mutate(x => { x.catalog!.prices.core = { monthly: 600 * TL }; x.catalog!.packages.find(p => p.id === 'kafe-standart')!.discount = { kind: 'amount', value: 60 * TL }; });
