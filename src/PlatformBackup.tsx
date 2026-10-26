@@ -20,7 +20,7 @@ type BackupCard = {
 export type CloudOverview = {
   staleDays: number;
   total: { businesses: number; copies: number; bytes: number; lastUploadAt: string | null; attention: number };
-  businesses: { tenantId: string; name: string; packageName: string; scope: 'full' | 'cloud' | 'none'; suspended: boolean; lastUploadAt: string | null; count: number; bytes: number; days: number | null; status: 'ok' | 'stale' | 'none' | 'error' | 'suspended'; statusText: string }[];
+  businesses: { tenantId: string; name: string; packageName: string; scope: 'full' | 'cloud' | 'none'; suspended: boolean; lastUploadAt: string | null; count: number; bytes: number; days: number | null; status: 'ok' | 'stale' | 'none' | 'error' | 'suspended' | 'ending'; statusText: string; eraseAt?: string | null }[];
 };
 /** Printed through a hidden frame: the code on paper, with what it is for. Nothing is saved by the page. */
 function printCode(code: string) {
@@ -40,7 +40,7 @@ const TIPS = {
   list: 'Bulutta şifreli yedeği olan işletmeler. Kopyaları yalnız işletmenin kendisi kendi kurtarma koduyla açar; Mola Yönetim’den indirilemez ve açılamaz (KVKK). Bilgisayarı bozulan işletmeye işletme sayfasındaki Lisans → “Taşıma kodu ver” ile yardım edilir. Saklama ve kopya sınırı işletme sayfasının Özet bölümünden değişir.',
 };
 const SCOPE: Record<CloudOverview['businesses'][number]['scope'], [string, 'ok' | 'info' | 'idle']> = { full: ['Tam paket', 'ok'], cloud: ['Bulut yedek', 'info'], none: ['Pakette yok', 'idle'] };
-const STATE_TONE = { ok: 'ok', stale: 'bad', error: 'bad', none: 'warn', suspended: 'idle' } as const;
+const STATE_TONE = { ok: 'ok', stale: 'bad', error: 'bad', none: 'warn', suspended: 'idle', ending: 'warn' } as const;
 
 /** Read once and every minute (Ayarlar → Yedek). */
 function useCloudOverview() {

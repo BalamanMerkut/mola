@@ -209,7 +209,7 @@ export const MENU_ORIGIN_FLAG = 'guest.menu-origin';
 // 'owner.email' (13 Ekim): it keeps a verified e-mail per business for İşletmem var (POST /owner-email/*, server/merkez/owner-login.ts).
 // 'lan.link' (14 Ekim): Kalıcı bağlantı: the café's network addresses up (`lan`), its businesses' `/k/<kod>` codes down (`lanLink`).
 // 'remote.login' (0.1.22): Raporlarım giriş: each business's public key and phone-code state up (`remote`).
-export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login', 'owner.email', 'lan.link', 'remote.login'];
+export const MERKEZ_ACCEPTS = ['backup.second', 'update', 'ticket.attachments', 'demo', 'remote_admin', 'cloud.backup', 'agreement', 'integrity', 'announcements', 'cloud.backup.binary', 'social', FEATURES_SOCIAL, 'guest.tunnel', 'menu.mirror', 'owner.login', 'owner.email', 'lan.link', 'remote.login', 'cloud.backup.erase'];
 /** Activation answer: the install credentials (kept only on the café computer, sealed) and the first signed licence. */
 export type ActivationResult = { installId: string; secret: string; tenantId: string; name: string; sector?: typeof sectors[number]; license: SignedLicense; serverTime: string };
 // ---------- Hesap açma başvurusu ----------

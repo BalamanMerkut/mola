@@ -27,6 +27,7 @@ import { TableLayout } from './TableLayout';
 import { UpdateSettings } from './UpdateBanner';
 // "Mutfak nasıl çalışıyor?" (Ekran / Fiş; Sipariş ve mutfak → Mutfak): its own card, src/KitchenModeCard.tsx.
 import { KitchenModeCard } from './KitchenModeCard';
+import { CloudCopies } from './CloudCopies';
 // The "Tanıtım işletmesi" card (Güvenlik ve yedek → Yedek): its own file.
 import { DemoResetCard } from './DemoResetCard';
 // Hizmet paketi: a closed service's card is a faded row that opens the package card (src/FeatureLock.tsx).
@@ -397,6 +398,7 @@ export function BackupPage({ backup }: { backup: Backup | null }) {
       {desktop ? <div className="settings-actions"><button type="button" className="btn secondary" onClick={() => openRail('backup')}><DatabaseBackup size={16} aria-hidden="true" />Yedekle ve ikinci yer</button><button type="button" className="btn secondary" onClick={() => openRail('recovery')}><KeyRound size={16} aria-hidden="true" />Kurtarma kodu</button></div>
         : <p className="settings-field-hint">“Şimdi yedekle”, ikinci yedek yeri ve kurtarma kodu kasa bilgisayarındaki Mola penceresindedir: sol şerit → Yedekle / Güvenlik.</p>}
     </Card>
+    {backup?.enabled && <CloudCopies serviceOn={pk.has('cloud-backup')} />}
     <DemoResetCard />
     <div className="home-links"><PlaceLink to={{ view: 'users', tab: 'staff' }}>Açık oturumlar (kaybolan tableti çıkarma): Personel → Çalışanlar</PlaceLink></div>
   </>;

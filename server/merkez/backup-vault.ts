@@ -47,6 +47,11 @@ export const NEAR_CAP = 0.8, LARGE_BYTES = envMb('MERKEZ_YEDEK_BUYUK_MB', 10_240
 export const sizeText = (n: number) => n >= GB ? `${(n / GB).toLocaleString('tr-TR', { maximumFractionDigits: 1 })} GB` : `${Math.max(n ? 1 : 0, Math.round(n / MB)).toLocaleString('tr-TR')} MB`;
 /** "Sunucu yedeği alınmadı" after this many days without an upload. */
 export const STALE_DAYS = 2;
+/**
+ * 27 Ekim (KVKK: Merkut Studios keeps these copies only for the café, as its veri işleyen): the service gone from the café's
+ * licence, its copies and year packages here are erased this many days later (the café and Mola Yönetim show the date).
+ */
+export const ERASE_DAYS = 30;
 const UPLOAD_DAYS = 3, CODE_HOURS = 24, TICKET_HOURS = 12;
 /** durum.json `lastError` of a copy refused for being above the per-copy cap (Mola Yönetim shows it as a warning). */
 const CAP_ERROR = 'Kopya üst sınırı aşıldı';
@@ -58,7 +63,8 @@ export type VaultFile = z.infer<typeof fileSchema>;
 export type Settings = { daily: number; weekly: number; capMb: number };
 export type Copy = { id: string; installId: string; createdAt: string; uploadedAt: string; appVersion: string; dataVersion?: number; files: VaultFile[]; bytes: number; verified: true };
 type Upload = { id: string; copyId: string; createdAt: string; appVersion: string; dataVersion?: number; files: VaultFile[]; startedAt: string; updatedAt: string };
-type InstallState = { firstAttemptAt?: string; lastAttemptAt?: string; lastUploadAt?: string; lastCopyId?: string; lastError?: string; quotaRemoved?: number };
+/** offSince (27 Ekim): when Merkez first saw this install without the "Bulutta şifreli yedek" service but with copies here. */
+type InstallState = { firstAttemptAt?: string; lastAttemptAt?: string; lastUploadAt?: string; lastCopyId?: string; lastError?: string; quotaRemoved?: number; offSince?: string };
 type TransferCode = { hash: string; tenantId: string; createdAt: string; expiresAt: string; boundTo?: string; usedAt?: string };
 type Ticket = { hash: string; tenantId: string; installId: string; requester: string; expiresAt: string };
 type TransferBook = { codes: TransferCode[]; tickets: Ticket[] };
@@ -303,6 +309,17 @@ export class BackupVault {
     try { let got = 0; while (got < n) { const r = readSync(fd, out, got, n - got, offset + got); if (!r) break; got += r; } if (got !== n) throw new DomainError('CLOUD_INTEGRITY', 'Yedek dosyası eksik.', 500); } finally { closeSync(fd); }
     return out;
   }
+  /** Copies or year packages kept here for this install. */
+  hasData(install: string) { return this.copies(install).length > 0 || Object.keys(this.years(install)).length > 0; }
+  /** The service left the licence (a time) or is back (undefined). */
+  markOff(install: string, at: string | undefined) { this.saveState(install, { offSince: at }); }
+  /** When this install's copies go (the service left the licence ERASE_DAYS before); null: not planned. */
+  eraseAt(install: string) { const off = Date.parse(this.state(install).offSince ?? ''); return Number.isFinite(off) ? new Date(off + ERASE_DAYS * DAY).toISOString() : null; }
+  /**
+   * 27 Ekim: every copy, year package, upload and state of this install goes (the owner's "Sunucudaki yedekleri sil", or the
+   * service ended ERASE_DAYS ago). The business, its settings and taşıma codes stay; a later upload starts afresh.
+   */
+  erase(install: string) { rmSync(this.dir(install), { recursive: true, force: true }); }
   /** A deleted business's install: every copy, blob and upload goes; its taşıma codes too. */
   forget(install: string | undefined, tenantId: string) {
     if (install && /^[a-f0-9-]{36}$/.test(install)) rmSync(this.dir(install), { recursive: true, force: true });
@@ -390,6 +407,8 @@ export function businessView(vault: BackupVault, d: MerkezData, tenantId: string
     // The room this business may use now (grows with its copies) and the per-copy cap.
     limit: install ? vault.limit(install, settings) : 0, cap,
     stale: !!b && !!install && !b.suspended && !!last && since > STALE_DAYS * DAY, transfer: vault.codeState(tenantId, now),
+    // 27 Ekim: the service left the licence; the copies here go on this day.
+    eraseAt: install ? vault.eraseAt(install) : null,
     warning: cloudWarning(state.lastError, newest, bytes, cap),
   };
 }
@@ -410,7 +429,8 @@ export function cloudWarning(lastError: string | undefined, newest: number, byte
 export type CloudOverviewRow = {
   tenantId: string; name: string; packageName: string; scope: 'full' | 'cloud' | 'none'; suspended: boolean;
   lastUploadAt: string | null; count: number; bytes: number; days: number | null;
-  status: 'ok' | 'stale' | 'none' | 'error' | 'suspended'; statusText: string;
+  /** 'ending' (27 Ekim): the service left the licence; eraseAt says when the copies here go. */
+  status: 'ok' | 'stale' | 'none' | 'error' | 'suspended' | 'ending'; statusText: string; eraseAt: string | null;
 };
 export function cloudOverview(vault: BackupVault, d: MerkezData, now: Date) {
   const sellable = sellableFeatures(), rows: CloudOverviewRow[] = [];
@@ -421,21 +441,52 @@ export function cloudOverview(vault: BackupVault, d: MerkezData, now: Date) {
     if (!inLicense && !v.count && !v.lastUploadAt) continue;
     const scope: CloudOverviewRow['scope'] = !inLicense ? 'none' : sellable.every(f => open.includes(f)) ? 'full' : 'cloud';
     const since = v.lastUploadAt ?? v.lastAttemptAt, days = since ? Math.floor((now.getTime() - Date.parse(since)) / DAY) : null;
-    const status: CloudOverviewRow['status'] = b.suspended ? 'suspended' : v.lastError === CAP_ERROR ? 'error' : !v.lastUploadAt ? (v.stale ? 'stale' : 'none') : v.stale ? 'stale' : 'ok';
-    const statusText = status === 'suspended' ? 'Hizmet askıda' : status === 'error' ? 'Son yedek sınırı aştı, alınamadı'
+    const status: CloudOverviewRow['status'] = b.suspended ? 'suspended' : !inLicense ? 'ending' : v.lastError === CAP_ERROR ? 'error' : !v.lastUploadAt ? (v.stale ? 'stale' : 'none') : v.stale ? 'stale' : 'ok';
+    const statusText = status === 'suspended' ? 'Hizmet askıda' : status === 'ending' ? (v.eraseAt ? `Hizmet bitti · ${longDate(v.eraseAt)} silinecek` : 'Hizmet bitti') : status === 'error' ? 'Son yedek sınırı aştı, alınamadı'
       : status === 'stale' ? `${Math.max(STALE_DAYS, days ?? STALE_DAYS)} gündür yedek gelmedi` : status === 'none' ? 'Henüz yedek gelmedi' : 'Sağlıklı';
     rows.push({ tenantId: b.tenantId, name: b.name, packageName: b.kind === 'trial' ? 'Deneme' : servicesView(d, b).packageName, scope, suspended: !!b.suspended,
-      lastUploadAt: v.lastUploadAt, count: v.count, bytes: v.bytes, days: v.lastUploadAt ? Math.floor((now.getTime() - Date.parse(v.lastUploadAt)) / DAY) : null, status, statusText });
+      lastUploadAt: v.lastUploadAt, count: v.count, bytes: v.bytes, days: v.lastUploadAt ? Math.floor((now.getTime() - Date.parse(v.lastUploadAt)) / DAY) : null, status, statusText, eraseAt: v.eraseAt });
   }
   // What needs a look first, then the newest upload.
-  const rank = { error: 0, stale: 1, none: 2, ok: 3, suspended: 4 } as const;
+  const rank = { error: 0, stale: 1, ending: 2, none: 3, ok: 4, suspended: 5 } as const;
   rows.sort((a, b) => rank[a.status] - rank[b.status] || (b.lastUploadAt ?? '').localeCompare(a.lastUploadAt ?? '') || a.name.localeCompare(b.name, 'tr'));
   const last = rows.map(r => r.lastUploadAt).filter((x): x is string => !!x).sort().at(-1) ?? null;
   return { staleDays: STALE_DAYS, total: { businesses: rows.filter(r => r.count > 0).length, copies: rows.reduce((n, r) => n + r.count, 0), bytes: rows.reduce((n, r) => n + r.bytes, 0), lastUploadAt: last, attention: rows.filter(r => r.status === 'stale' || r.status === 'error').length }, businesses: rows };
 }
+const longDate = (iso: string) => new Date(iso).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', year: 'numeric' });
+/**
+ * 27 Ekim (KVKK, veri işleyen): an install whose licence no longer has "Bulutta şifreli yedek" but whose copies are still here
+ * gets a date (Bildirim merkezi says it once); ERASE_DAYS later every copy and year package of it goes (İşlem kayıtları,
+ * Bildirim merkezi). The service back in the licence before then: the date is dropped, nothing is erased. Nothing kept here:
+ * no clock.
+ */
+export function serviceEnded(vault: BackupVault, store: MerkezStore, now: Date) {
+  const d = store.read(), byInstall = new Map<string, MerkezData['businesses']>();
+  for (const b of d.businesses) if (b.installId) byInstall.set(b.installId, [...(byInstall.get(b.installId) ?? []), b]);
+  const time = now.toISOString(), notes: { tenantId: string; key: string; text: string; erased?: string }[] = [];
+  for (const [install, mine] of byInstall) {
+    const has = mine.some(b => licenseFeatures(b).includes('cloud-backup')), off = vault.state(install).offSince;
+    if (has || !vault.hasData(install)) { if (off) vault.markOff(install, undefined); continue; }
+    const names = mine.map(b => b.name).join(', ');
+    if (!off) {
+      vault.markOff(install, time);
+      notes.push({ tenantId: mine[0].tenantId, key: `cloud-ending:${mine[0].tenantId}:${time.slice(0, 10)}`, text: `${names}: “Bulutta şifreli yedek” paketinde artık yok. Sunucudaki yedekleri ${longDate(vault.eraseAt(install)!)} tarihinde silinecek (işletme isterse daha önce kendisi silebilir).` });
+    } else if (now.getTime() >= Date.parse(vault.eraseAt(install)!)) {
+      vault.erase(install);
+      notes.push({ tenantId: mine[0].tenantId, key: `cloud-erased:${mine[0].tenantId}:${time.slice(0, 10)}`, text: `${names}: “Bulutta şifreli yedek” hizmeti ${ERASE_DAYS} gün önce bittiği için sunucudaki yedekleri silindi.`, erased: 'Bulut yedek hizmeti bittiği için sunucudaki yedekler silindi' });
+    }
+  }
+  if (notes.length) store.mutate(x => {
+    for (const n of notes) {
+      if (n.erased) x.audit.push({ action: 'cloud.erased', target: n.tenantId, at: time, by: 'system', detail: n.erased });
+      if (!(x.alerts ?? []).some(a => a.key === n.key)) addAlert(x, time, 'cafe.cloud_backup', n.text, { tenantId: n.tenantId, key: n.key, priority: 'low' });
+    }
+  });
+}
 /** "Sunucu yedeği alınmadı" (each once per last upload) and a full disk (once a day): Bildirim merkezi. */
 export function sweepVault(vault: BackupVault, store: MerkezStore, now: Date) {
   vault.sweep(now);
+  serviceEnded(vault, store, now);
   const d = store.read(), due: [string, string, string][] = [];
   for (const b of d.businesses) {
     if (!b.installId) continue;
@@ -519,7 +570,20 @@ export function backupVaultRoutes(app: Express, deps: () => Deps) {
   app.post(`${MERKEZ_API}/cloud-backup/list`, (req, res) => {
     const { install, nonce } = cafe(req, 'list', 60), { vault, sendSigned } = deps();
     z.object({}).strict().parse(req.body ?? {});
-    sendSigned(res, install.secret, nonce, { copies: vault.copies(install.id).map(summary), bytes: vault.used(install.id), state: vault.state(install.id) });
+    sendSigned(res, install.secret, nonce, { copies: vault.copies(install.id).map(summary), bytes: vault.used(install.id), state: vault.state(install.id), eraseAt: vault.eraseAt(install.id), years: Object.keys(vault.years(install.id)).length });
+  });
+  // 27 Ekim: the owner's "Sunucudaki yedekleri sil" (Ayarlar → Güvenlik ve yedek → Yedek; the café asked the owner's password).
+  // Every copy and year package of this install goes at once; İşlem kayıtları and Bildirim merkezi hear it.
+  app.post(`${MERKEZ_API}/cloud-backup/erase`, (req, res) => {
+    const { install, nonce, mine } = cafe(req, 'erase', 5), { vault, store, now, sendSigned } = deps();
+    z.object({}).strict().parse(req.body ?? {});
+    const had = vault.copies(install.id).length, time = at(now());
+    vault.erase(install.id);
+    store.mutate(d => {
+      d.audit.push({ action: 'cloud.erased', target: mine[0].tenantId, at: time, by: 'cafe', detail: `İşletme sahibi sunucudaki yedekleri sildi (${had} kopya)` });
+      addAlert(d, time, 'cafe.cloud_backup', `${mine.map(m => m.name).join(', ')}: işletme sahibi sunucudaki yedekleri sildi.`, { tenantId: mine[0].tenantId, priority: 'low' });
+    });
+    sendSigned(res, install.secret, nonce, { ok: true, erased: had });
   });
   app.post(`${MERKEZ_API}/cloud-backup/read`, (req, res) => {
     const { install, nonce } = cafe(req, 'read', 600), { vault, sendSigned } = deps();

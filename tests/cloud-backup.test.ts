@@ -15,7 +15,7 @@ import { MerkezLink } from '../server/kafe-link.js';
 import { publicKeyFrom } from '../server/license.js';
 import { createMerkezApp } from '../server/merkez/app.js';
 import { MerkezStore } from '../server/merkez/store.js';
-import { BackupVault, cloudWarning, LARGE_BYTES, retained, sweepVault } from '../server/merkez/backup-vault.js';
+import { BackupVault, cloudWarning, ERASE_DAYS, LARGE_BYTES, retained, sweepVault } from '../server/merkez/backup-vault.js';
 import { DomainError } from '../packages/domain/engine.js';
 import { FAST_KDF, assertNoSecrets, fakeOsLock } from './fake-os-lock.js';
 import { client, MERKEZ_PASSWORD, temp } from './merkez-fixture.js';
@@ -51,7 +51,7 @@ async function world(name: string, options: { spy?: (path: string, body: any) =>
     assert.equal((await link.sync()).ok, true);
     const folders = { backups: join(dir, folder, 'backups'), keys: join(dir, folder, 'keys'), checks: join(dir, folder, 'checks') };
     // `binary`: this café can send raw pieces (postBytes); `oldMerkez`: its Merkez does not list 'cloud.backup.binary'.
-    const cloudLink: CloudLink = { ready: () => link.relayReady(), accepts: () => link.read()?.accepts?.filter(a => !options.oldMerkez || a !== 'cloud.backup.binary'), post: (path, body, timeout) => { options.spy?.(path, body); return link.relayPost(path, body, timeout); },
+    const cloudLink: CloudLink = { ready: () => link.relayReady(), linked: () => link.relayReady(), accepts: () => link.read()?.accepts?.filter(a => !options.oldMerkez || a !== 'cloud.backup.binary'), post: (path, body, timeout) => { options.spy?.(path, body); return link.relayPost(path, body, timeout); },
       ...(options.binary ? { postBytes: <T,>(path: string, data: Buffer, timeout?: number) => { options.spy?.(path, { data }); return link.relayPostBytes<T>(path, data, timeout); } } : {}) };
     const cloud = new CloudBackup(join(folders.backups, 'sunucu-yedegi.json'), cloudLink, { now, retryDelays: [], chunkRetryMs: [], chunkBytes: options.chunk ?? 16 * 1024 });
     const changes = options.changes ? new ChangeMarker(store.db, now) : undefined;
@@ -325,7 +325,7 @@ test('Ayarlar → Yedek → "Kafelerin bulut yedekleri": a read-only line per bu
     assert.equal(row.status, 'ok'); assert.equal(row.statusText, 'Sağlıklı'); assert.equal(typeof row.packageName, 'string');
     assert.deepEqual(view.data.total, { businesses: 1, copies: 1, bytes: row.bytes, lastUploadAt: row.lastUploadAt, attention: 0 });
     // Read only and nothing to fetch a copy with: no copy ids, no files, no transfer state, no settings.
-    assert.deepEqual(Object.keys(row).sort(), ['bytes', 'count', 'days', 'lastUploadAt', 'name', 'packageName', 'scope', 'status', 'statusText', 'suspended', 'tenantId']);
+    assert.deepEqual(Object.keys(row).sort(), ['bytes', 'count', 'days', 'eraseAt', 'lastUploadAt', 'name', 'packageName', 'scope', 'status', 'statusText', 'suspended', 'tenantId']);
     assert.ok(!JSON.stringify(view.data).includes(w.merkezVault.copies(a.installId)[0].id), 'no copy id in the list');
     assert.equal((await w.admin('/cloud-backups/overview', {})).status, 404);
     // Three days without an upload: "3 gündür yedek gelmedi", first in the list, counted for the summary.
@@ -395,5 +395,72 @@ test('a night with nothing new takes no backup and uploads nothing; the next rea
     const next = await a.scheduler.runNow('auto'); await a.scheduler.uploading;
     assert.equal(next.lastError, undefined); assert.ok(next.lastSuccessAt! > closing.lastSuccessAt!);
     assert.ok(calls.includes('/cloud-backup/commit'), calls.join());
+  } finally { await w.close(); }
+});
+// 27 Ekim (KVKK: Merkut Studios keeps these copies only for the café, as its veri işleyen).
+test('the service gone from the package: the café and Mola Yönetim see the day, 30 days later the copies go; the service back stops the clock', async () => {
+  const w = await world('cloud-ending');
+  try {
+    const a = await w.cafe('eski', 'bulut-a', NAME, 'eski-pc');
+    await a.scheduler.runNow(); await a.scheduler.uploading;
+    const give = (features: string[]) => w.merkezStore.mutate(d => { const b = d.businesses.find(x => x.tenantId === 'bulut-a')!; b.services = { packageId: null, features: features as never, updatedAt: new Date(w.clock.t).toISOString() }; });
+    const row = async () => { await w.admin('/login', { username: 'admin', password: MERKEZ_PASSWORD }); return (await w.admin('/cloud-backups/overview')).data.businesses.find((x: { tenantId: string }) => x.tenantId === 'bulut-a'); };
+    // With the service: no date.
+    sweepVault(w.merkezVault, w.merkezStore, w.now());
+    assert.equal((await a.cloud.remote())!.eraseAt, null);
+    give(['core', 'qr-menu']);
+    sweepVault(w.merkezVault, w.merkezStore, w.now());
+    const at = new Date(w.clock.t + ERASE_DAYS * 86400000).toISOString();
+    assert.equal(w.merkezVault.eraseAt(a.installId), at);
+    let r = await row();
+    assert.equal(r.status, 'ending'); assert.equal(r.eraseAt, at); assert.match(r.statusText, /^Hizmet bitti · .+ silinecek$/);
+    // The café sees what is kept there and the day (also without the service).
+    const remote = await a.cloud.remote();
+    assert.equal(remote!.copies, 1); assert.ok(remote!.bytes > 0); assert.equal(remote!.eraseAt, at);
+    // Bildirim merkezi once.
+    sweepVault(w.merkezVault, w.merkezStore, w.now());
+    assert.equal(w.merkezStore.read().alerts!.filter(x => x.key?.startsWith('cloud-ending:bulut-a')).length, 1);
+    // The service back before the day: the date goes, nothing is erased.
+    w.clock.t += 10 * 86400000;
+    give(['core', 'qr-menu', 'cloud-backup']);
+    sweepVault(w.merkezVault, w.merkezStore, w.now());
+    assert.equal(w.merkezVault.eraseAt(a.installId), null); assert.equal(w.merkezVault.copies(a.installId).length, 1);
+    // Gone again: a new date; a day before it everything is still there, on the day it goes.
+    give(['core']);
+    sweepVault(w.merkezVault, w.merkezStore, w.now());
+    w.clock.t += (ERASE_DAYS - 1) * 86400000;
+    sweepVault(w.merkezVault, w.merkezStore, w.now());
+    assert.equal(w.merkezVault.copies(a.installId).length, 1);
+    w.clock.t += 86400000;
+    sweepVault(w.merkezVault, w.merkezStore, w.now());
+    assert.equal(existsSync(join(w.vaultDir, a.installId)), false);
+    assert.ok(w.merkezStore.read().audit.some(x => x.action === 'cloud.erased' && x.target === 'bulut-a' && x.by === 'system'));
+    assert.ok(w.merkezStore.read().alerts!.some(x => x.key?.startsWith('cloud-erased:bulut-a')));
+    // Nothing kept any more: no line, no clock.
+    r = await row();
+    assert.equal(r, undefined);
+    assert.equal((await a.cloud.remote())!.copies, 0); assert.equal(w.merkezVault.eraseAt(a.installId), null);
+  } finally { await w.close(); }
+});
+
+test('"Sunucudaki yedekleri sil": the owner erases every copy on Mola Merkez at once; this computer keeps its backups; İşlem kayıtları hear it', async () => {
+  const w = await world('cloud-erase');
+  try {
+    const a = await w.cafe('eski', 'bulut-a', NAME, 'eski-pc'), b = await w.cafe('diger', 'bulut-b', 'Diğer Kafe', 'diger-pc');
+    await a.scheduler.runNow(); await a.scheduler.uploading; await b.scheduler.runNow(); await b.scheduler.uploading;
+    assert.equal(w.merkezVault.copies(a.installId).length, 1);
+    assert.equal(await a.cloud.erase(), 1);
+    assert.equal(w.merkezVault.copies(a.installId).length, 0); assert.equal(w.merkezVault.hasData(a.installId), false);
+    // Only its own: the other café's copy stays.
+    assert.equal(w.merkezVault.copies(b.installId).length, 1);
+    // This computer's backups stay; the status no longer says a copy is there.
+    assert.ok(a.scheduler.status().lastSuccessAt);
+    assert.equal(a.cloud.status().copies, 0); assert.equal(a.cloud.status().lastSuccessAt, undefined);
+    assert.ok(w.merkezStore.read().audit.some(x => x.action === 'cloud.erased' && x.target === 'bulut-a' && x.by === 'cafe'));
+    assert.deepEqual(await a.cloud.remote(), { copies: 0, bytes: 0, years: 0, newest: null, eraseAt: null });
+    // An older Merkez (no 'cloud.backup.erase'): nothing offered, nothing called.
+    const old = new CloudBackup(join(w.dir, 'eski-merkez.json'), { ready: () => true, linked: () => true, accepts: () => ['cloud.backup'], post: () => { throw new Error('çağrılmamalı'); } });
+    assert.equal(await old.remote(), null);
+    await assert.rejects(old.erase(), (e: DomainError) => e.code === 'NOT_AVAILABLE');
   } finally { await w.close(); }
 });

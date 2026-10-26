@@ -837,7 +837,7 @@
       "soru": "Yedek ne zaman alınır, nerede durur?",
       "cevap": ["Mola her gün sonundan sonra ve gece kendiliğinden yedek alır; istediğiniz an kasa bilgisayarının şeridinden Yedekle → “Şimdi yedekle”. Son yedekleri Ayarlar → Güvenlik ve yedek’te görürsünüz."],
       "anahtar": ["yedek", "yedekleme", "backup", "yedek al", "yedek hatası", "yedek alınamadı", "disk dolu", "şimdi yedekle", "yedekler nerede", "otomatik yedek", "bulut yedek", "gece yedeği"],
-      "ilgili": ["usb-yedek", "yeni-bilgisayar"],
+      "ilgili": ["usb-yedek", "yeni-bilgisayar", "sunucu-yedek-sil"],
       "video": [{ "id": "WYMVLdIAsVs", "t": 219, "baslik": "Uzaktan erişim ve güvenlik · Yedek ve kurtarma kodu" }]
     },
     {
@@ -847,6 +847,15 @@
       "soru": "USB belleğe ikinci yedek nasıl ayarlanır?",
       "cevap": ["Kasa bilgisayarının şeridinden Yedekle’ye basın ve ikinci yer olarak USB belleği seçin. Kurtarma kodunu bu belleğe koymayın."],
       "anahtar": ["usb", "usb bellek", "flash bellek", "flaş", "ikinci yedek", "harici disk", "yedek yeri", "kopya"]
+    },
+    {
+      "id": "sunucu-yedek-sil",
+      "konu": "yedek",
+      "kitle": ["site", "owner"],
+      "soru": "Bulut yedek hizmeti bitince buluttaki yedeklerime ne olur?",
+      "cevap": ["Bulut yedek hizmeti paketinizden çıkarsa buluttaki şifreli yedekleriniz 30 gün sonra kendiliğinden silinir; tarih Ayarlar → Güvenlik ve yedek’te yazar. Daha önce silmek isterseniz aynı yerde “Sunucudaki yedekleri sil”e basıp şifrenizi yazın. Bu bilgisayardaki yedekler etkilenmez."],
+      "anahtar": ["sunucudaki yedek", "sunucu yedeği", "yedekleri sil", "yedeğimi sil", "bulut yedeği sil", "bulut yedek iptal", "bulut yedek bitti", "verilerimi silin", "kvkk", "hizmet bitince", "30 gün sonra silinir"],
+      "ilgili": ["yedek", "yeni-bilgisayar"]
     },
     {
       "id": "yeni-bilgisayar",

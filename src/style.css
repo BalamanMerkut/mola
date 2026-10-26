@@ -322,7 +322,7 @@ input[type="checkbox"]{border-radius:4px}
 @media (max-width:640px){.backup-place{grid-template-columns:auto 1fr;grid-template-areas:'i t' 's a'}.backup-place-icon{grid-area:i}.backup-place-text{grid-area:t}.backup-place-state{grid-area:s;justify-self:start}.backup-place-action{grid-area:a;justify-self:end}}
 /* Güvenlik ve yedek → Yeni bilgisayar için e-posta (13 Ekim): the current address with Değiştir, or one step of the
    verification at a time (password, old code + new address, new code). */
-.owner-email,.owner-email-form{display:flex;flex-direction:column;gap:10px}
+.owner-email,.owner-email-form,.cloud-copies,.cloud-copies-form{display:flex;flex-direction:column;gap:10px}
 .owner-email-current{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-soft,#f6f8f4)}
 .owner-email-current span{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
 .owner-email-current small{color:var(--green);font-weight:600}

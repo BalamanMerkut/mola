@@ -31,6 +31,8 @@ export const NOT_A_CHANGE: readonly string[] = [
   '/api/desktop/owner-login/start', '/api/desktop/owner-login/verify',
   // Yeni bilgisayar için e-posta: kept by Mola Merkez, not in this computer's data.
   '/api/staff/owner-email/old-code', '/api/staff/owner-email/new-code', '/api/staff/owner-email/confirm', '/api/staff/owner-email/lock',
+  // "Sunucudaki yedekleri sil" (27 Ekim): the copies on Mola Merkez go; this computer's data does not change.
+  '/api/staff/backup/cloud-erase',
 ];
 /** Orders, payments, menu, tables, settings, staff, expenses, cash, stock, shifts, reservations, platforms, licence, support… */
 export const REAL_CHANGES: readonly string[] = [

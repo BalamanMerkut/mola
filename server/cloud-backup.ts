@@ -27,8 +27,14 @@ import type { Security } from './security-routes.js';
  *     6 hours (Gün sonu at 23:40 covers 03:30); "Şimdi yedekle" and Gün sonu always upload.
  *   - Only when this install is activated, its record is open and its Merkez lists 'cloud.backup'.
  */
-/** `postBytes`: the signed call with a raw body; used for the pieces only when Merkez lists 'cloud.backup.binary'. */
-export type CloudLink = { ready(): boolean; accepts(): string[] | undefined; post<T>(path: string, body: unknown, timeout?: number): Promise<T>; postBytes?<T>(path: string, data: Buffer, timeout?: number): Promise<T> };
+/**
+ * `postBytes`: the signed call with a raw body; used for the pieces only when Merkez lists 'cloud.backup.binary'.
+ * `linked`: the signed link works, with or without the service (27 Ekim: the copies kept there can be seen and erased after
+ * the service left the licence).
+ */
+export type CloudLink = { ready(): boolean; linked?(): boolean; accepts(): string[] | undefined; post<T>(path: string, body: unknown, timeout?: number): Promise<T>; postBytes?<T>(path: string, data: Buffer, timeout?: number): Promise<T> };
+/** 27 Ekim: what Mola Merkez keeps for this computer; eraseAt: the service left the licence, the copies go on that day. */
+export type CloudRemote = { copies: number; bytes: number; years: number; newest: string | null; eraseAt: string | null };
 export type CloudStatus = { enabled: boolean; running: boolean; lastAttemptAt?: string; lastSuccessAt?: string; lastBackup?: string; lastError?: string; copies?: number; bytes?: number; progress?: { sent: number; total: number } };
 type Saved = Pick<CloudStatus, 'lastAttemptAt' | 'lastSuccessAt' | 'lastBackup' | 'lastError' | 'copies' | 'bytes'>;
 type FileInfo = { name: string; size: number; sha256: string };
@@ -171,6 +177,27 @@ export class CloudBackup {
       await fs.rm(part, { force: true });
     }
     return false;
+  }
+  /** Whether this Merkez can show and erase the copies it keeps (an older one cannot: nothing is offered). */
+  get erasable() { try { return !!this.link.linked?.() && !!this.link.accepts()?.includes('cloud.backup.erase'); } catch { return false; } }
+  /** 27 Ekim: the copies Mola Merkez keeps for this computer (also after the service left the licence); null: cannot ask. */
+  async remote(): Promise<CloudRemote | null> {
+    if (!this.erasable) return null;
+    const r = await this.call<{ copies: { createdAt: string }[]; bytes: number; eraseAt?: string | null; years?: number }>('/cloud-backup/list', {}, 30_000);
+    return { copies: r.copies.length, bytes: r.bytes, years: r.years ?? 0, newest: r.copies[0]?.createdAt ?? null, eraseAt: r.eraseAt ?? null };
+  }
+  /**
+   * 27 Ekim: "Sunucudaki yedekleri sil" (the owner, with the password): every copy and year package on Mola Merkez goes.
+   * The backups on this computer and the second place stay. While the service is on, the next backup sends a new copy.
+   */
+  async erase() {
+    if (!this.erasable) throw new DomainError('NOT_AVAILABLE', 'Mola Merkez’e şu an ulaşılamıyor; sunucudaki yedekler silinemedi.', 409);
+    if (this.running) await this.running.catch(() => undefined);
+    this.stop();
+    const r = await this.call<{ erased: number }>('/cloud-backup/erase', {}, 60_000);
+    this.saved = { lastAttemptAt: this.saved.lastAttemptAt, copies: 0, bytes: 0 };
+    await this.save();
+    return r.erased;
   }
   /** A call with short retries for a shaky line; Merkez's refusals go straight up. */
   private async call<T>(path: string, body: unknown, timeout: number, bytes?: Buffer): Promise<T> {

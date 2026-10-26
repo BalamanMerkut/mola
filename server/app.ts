@@ -920,6 +920,22 @@ export function createApp(store: Store, now: () => Date = () => new Date(), proc
       ...(backups ? { folder: backups.folder, kept: (s?.set?.length ?? 0) + (s?.packages?.length ?? 0), canDownload: !!s?.lastDirectory } : {}),
       second: second?.folder ? { folder: second.folder, kind: second.kind ?? 'folder', label: second.label ?? null, lastCopyAt: second.lastCopyAt ?? null, lastError: second.lastError ?? null } : null });
   });
+  // 27 Ekim (KVKK): what Mola Merkez keeps for this computer, also after the service left the package (then with the day
+  // it is erased), and the owner's "Sunucudaki yedekleri sil" (password asked again). null: an older Merkez or no link.
+  app.get('/api/staff/backup/cloud-remote', async (req, res) => {
+    const a = staffActor(req); requireRole(store.read(a.tenantId), a, ['owner']);
+    res.setHeader('Cache-Control', 'no-store');
+    let remote = null; try { remote = await backups?.cloud?.remote() ?? null; } catch { /* Merkez out of reach: nothing shown */ }
+    res.json({ remote });
+  });
+  app.post('/api/staff/backup/cloud-erase', async (req, res) => {
+    const a = staffActor(req); requireRole(store.read(a.tenantId), a, ['owner']);
+    await confirmPassword(req, a, z.object({ password: z.string().max(200).optional() }).strict().parse(req.body ?? {}).password);
+    if (!backups?.cloud) throw new DomainError('NOT_AVAILABLE', 'Bu kurulumda sunucu yedeği yok.', 409);
+    const erased = await backups.cloud.erase();
+    link.audit('cloud.erased');
+    res.json({ ok: true, erased });
+  });
   // "En yeni yedeği indir" (13 Ekim): the newest verified backup as one ZIP. Its files are the same encrypted ones the
   // Sunucu yedeği sends to Mola Merkez; they open only with the recovery code (or the owner's "İşletmem var" sign-in).
   app.get('/api/staff/backup-download', async (req, res) => {

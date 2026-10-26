@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { protectedPort, protectedServer, scenario } from './protected-server';
 import { AGREEMENT_VERSION } from '../../packages/domain/agreement';
-import { ADMIN_API, MERKEZ, detailTab, e2eRun, merkezPassword, openBusiness, openYonetim } from './helpers';
+import { ADMIN_API, MERKEZ, detailTab, e2eRun, merkezPassword, openBusiness, openSettings, openYonetim } from './helpers';
 
 /*
  * Sunucu yedeği ("B planı"): a protected café linked to the test Mola Merkez sends its encrypted backup there; the rail shows
@@ -85,4 +85,50 @@ test('sunucu yedeği: the rail shows it; a clean install restores from Mola Merk
   } finally {
     await server?.stop(); await old.stop(); await owner.dispose(); await vendor.dispose();
   }
+});
+
+// 27 Ekim (KVKK): the owner sees what Mola Merkez keeps and erases it with the password; this computer keeps its backups.
+test('Ayarlar → Yedek → "Sunucudaki yedekleriniz": the owner erases the copies on Mola Merkez with the password', async ({ page }, info) => {
+  test.setTimeout(180_000);
+  const ERASE = 'Bulut Silme Kafesi';
+  const env = { MOLA_MERKEZ_URL: MERKEZ, MOLA_MERKEZ_PUBLIC_KEY: join(e2eRun(), 'merkez', 'merkez-public-key.txt'), MOLA_SYNC_SOON_MS: '1000', MOLA_HEARTBEAT_MS: '2000' };
+  const vendor = await playwrightRequest.newContext();
+  expect((await vendor.post(`${ADMIN_API}/login`, { data: { username: 'admin', password: merkezPassword() } })).ok()).toBe(true);
+  const created = await (await vendor.post(`${ADMIN_API}/businesses`, { data: { requestId: randomUUID().replace(/-/g, ''), name: ERASE, kind: 'trial', sector: 'cafe' } })).json();
+  const cafe = await protectedServer(scenario('cloud-erase'), protectedPort(6), 'silme-pc', true, env);
+  const owner = await playwrightRequest.newContext({ baseURL: cafe.base });
+  try {
+    expect((await owner.post('/api/activation/code', { data: { code: created.code, agreement: { version: AGREEMENT_VERSION } } })).ok()).toBe(true);
+    expect((await owner.post('/api/activation/owner', { data: { username: 'silmesahip', password: 'SilmeSahip!2026', name: 'Ayşe' } })).ok()).toBe(true);
+    await cafe.desktop('/api/desktop/recovery/show', {}); await cafe.desktop('/api/desktop/recovery/confirm', {});
+    await expect.poll(async () => !!(await cafe.desktop<{ backup: { cloud?: unknown } }>('/api/desktop/status')).data.backup.cloud, { timeout: 30000 }).toBe(true);
+    expect((await cafe.desktop<{ lastError: string | null }>('/api/desktop/backup', {})).data.lastError).toBeNull();
+    await expect.poll(async () => (await cafe.desktop<{ backup: { cloud?: { lastSuccessAt: string | null } } }>('/api/desktop/status')).data.backup.cloud?.lastSuccessAt ?? null, { timeout: 60000 }).not.toBeNull();
+    // Not for a waiter, not without the owner's password.
+    expect([401, 403]).toContain((await owner.post('/api/staff/backup/cloud-erase', { data: { password: 'yanlis-sifre' } })).status());
+    await page.goto(cafe.base);
+    await page.getByLabel('Kullanıcı adı', { exact: true }).fill('silmesahip');
+    await page.getByLabel('Şifre', { exact: true }).fill('SilmeSahip!2026');
+    await page.getByRole('button', { name: 'Çalışma alanını aç' }).click();
+    // The setup questions answered as an owner does, then the workspace.
+    await expect(page.getByRole('heading', { name: 'İşletmenizi hazırlayalım' })).toBeVisible();
+    const version = (await (await page.request.get(`${cafe.base}/api/staff/state`)).json()).businessRevision ?? 0;
+    expect((await page.request.post(`${cafe.base}/api/staff/setup`, { data: { requestId: 'silme-setup', version, name: ERASE, tableCount: 6, changeSeconds: 0, commissionBps: null } })).ok()).toBe(true);
+    await page.reload();
+    await openSettings(page, 'Yedek');
+    const card = page.locator('.cloud-copies-card');
+    await expect(card).toContainText(/Mola Merkez’de 1 şifreli yedek kopyası var/);
+    await card.getByRole('button', { name: 'Sunucudaki yedekleri sil' }).click();
+    await card.getByLabel('İşletme sahibi şifresi').fill('yanlis');
+    await card.getByRole('button', { name: 'Sil' }).click();
+    await expect(card.getByText(/Şifre yanlış/)).toBeVisible();
+    await card.getByLabel('İşletme sahibi şifresi').fill('SilmeSahip!2026');
+    await card.getByRole('button', { name: 'Sil' }).click();
+    await expect(card.getByText('Sunucudaki yedekleriniz silindi.', { exact: false })).toBeVisible({ timeout: 30000 });
+    await card.screenshot({ path: info.outputPath('sunucudaki-yedekler-silindi.png') });
+    // Mola Merkez keeps nothing for it any more; this computer's backup is still there.
+    const row = (await (await vendor.get(`${ADMIN_API}/cloud-backups`)).json()).businesses.find((b: { tenantId: string; count: number }) => b.count === 0 && b.tenantId === created.tenantId);
+    expect(row).toBeTruthy();
+    expect((await cafe.desktop<{ backup: { lastSuccessAt: string | null } }>('/api/desktop/status')).data.backup.lastSuccessAt).not.toBeNull();
+  } finally { await cafe.stop(); await owner.dispose(); await vendor.dispose(); }
 });
